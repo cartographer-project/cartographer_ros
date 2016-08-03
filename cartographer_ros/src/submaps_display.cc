@@ -79,12 +79,12 @@ SubmapsDisplay::SubmapsDisplay()
       QString::fromStdString(
           ros::message_traits::datatype<::cartographer_ros_msgs::SubmapList>()),
       "cartographer_ros_msgs::SubmapList topic to subscribe to.", this,
-      SLOT(UpdateTopic()));
+      SLOT(UpdateSubmapTopicOrService()));
   submap_query_service_property_ = new ::rviz::StringProperty(
       "Submap query service",
       QString("/cartographer/") + kSubmapQueryServiceName,
       "Submap query service to connect to.", this,
-      SLOT(UpdateSubmapQueryServiceName()));
+      SLOT(UpdateSubmapTopicOrService()));
   map_frame_property_ = new ::rviz::StringProperty(
       "Map frame", kDefaultMapFrame, "Map frame, used for fading out submaps.",
       this);
@@ -104,11 +104,7 @@ SubmapsDisplay::SubmapsDisplay()
   Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
 }
 
-SubmapsDisplay::~SubmapsDisplay() {
-  Unsubscribe();
-  client_.shutdown();
-  Clear();
-}
+SubmapsDisplay::~SubmapsDisplay() { UnsubscribeAndClear(); }
 
 void SubmapsDisplay::onInitialize() {
   submaps_scene_manager_ =
@@ -138,43 +134,30 @@ void SubmapsDisplay::onInitialize() {
       kSubmapTexturesGroup);
 
   scene_manager_->addListener(&scene_manager_listener_);
-  // TODO(whess): Combine UpdateTopic()/UpdateSubmapQueryServiceName().
-  UpdateSubmapQueryServiceName();
+  UpdateSubmapTopicOrService();
 }
 
-void SubmapsDisplay::UpdateTopic() {
-  Unsubscribe();
-  Clear();
-  Subscribe();
-}
-
-void SubmapsDisplay::UpdateSubmapQueryServiceName() {
-  Unsubscribe();
-  Clear();
-  client_.shutdown();
-  client_ = update_nh_.serviceClient<::cartographer_ros_msgs::SubmapQuery>(
-      submap_query_service_property_->getStdString());
+void SubmapsDisplay::UpdateSubmapTopicOrService() {
+  UnsubscribeAndClear();
   Subscribe();
 }
 
 void SubmapsDisplay::reset() {
   Display::reset();
-
-  Clear();
-  UpdateTopic();
+  UpdateSubmapTopicOrService();
 }
 
 void SubmapsDisplay::onEnable() { Subscribe(); }
 
-void SubmapsDisplay::onDisable() {
-  Unsubscribe();
-  Clear();
-}
+void SubmapsDisplay::onDisable() { UnsubscribeAndClear(); }
 
 void SubmapsDisplay::Subscribe() {
   if (!isEnabled()) {
     return;
   }
+
+  client_ = update_nh_.serviceClient<::cartographer_ros_msgs::SubmapQuery>(
+      submap_query_service_property_->getStdString());
 
   if (!topic_property_->getTopic().isEmpty()) {
     try {
@@ -190,15 +173,15 @@ void SubmapsDisplay::Subscribe() {
   }
 }
 
-void SubmapsDisplay::Unsubscribe() { submap_list_subscriber_.shutdown(); }
-
 void SubmapsDisplay::IncomingSubmapList(
     const ::cartographer_ros_msgs::SubmapList::ConstPtr& msg) {
   submap_list_ = *msg;
   Q_EMIT SubmapListUpdated();
 }
 
-void SubmapsDisplay::Clear() {
+void SubmapsDisplay::UnsubscribeAndClear() {
+  submap_list_subscriber_.shutdown();
+  client_.shutdown();
   ::cartographer::common::MutexLocker locker(&mutex_);
   submaps_scene_manager_->clearScene();
   if (!rttTexture_.isNull()) {

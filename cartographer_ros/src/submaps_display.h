@@ -72,8 +72,7 @@ class SubmapsDisplay : public ::rviz::Display {
 
  private Q_SLOTS:
   void RequestNewSubmaps();
-  void UpdateTopic();
-  void UpdateSubmapQueryServiceName();
+  void UpdateSubmapTopicOrService();
 
  private:
   class SceneManagerListener : public Ogre::SceneManager::Listener {
@@ -91,13 +90,10 @@ class SubmapsDisplay : public ::rviz::Display {
   void onEnable() override;
   void onDisable() override;
   void Subscribe();
-  void Unsubscribe();
+  void UnsubscribeAndClear();
   void UpdateMapTexture();
   void IncomingSubmapList(
       const ::cartographer_ros_msgs::SubmapList::ConstPtr& msg);
-  // Clears the current map.
-  void Clear();
-  void UpdateCurrentTrackingZ(const tf::tfMessage::ConstPtr& msg);
 
   int rtt_count_;
   SceneManagerListener scene_manager_listener_;
