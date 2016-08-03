@@ -42,14 +42,14 @@
 #include "cartographer/sensor/proto/sensor.pb.h"
 #include "cartographer/transform/rigid_transform.h"
 #include "cartographer/transform/transform.h"
-#include "geometry_msgs/Transform.h"
-#include "geometry_msgs/TransformStamped.h"
-#include "glog/log_severity.h"
-#include "glog/logging.h"
 #include "cartographer_ros_msgs/SubmapEntry.h"
 #include "cartographer_ros_msgs/SubmapList.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
 #include "cartographer_ros_msgs/TrajectorySubmapList.h"
+#include "geometry_msgs/Transform.h"
+#include "geometry_msgs/TransformStamped.h"
+#include "glog/log_severity.h"
+#include "glog/logging.h"
 #include "pcl/point_cloud.h"
 #include "pcl/point_types.h"
 #include "pcl_conversions/pcl_conversions.h"
@@ -78,6 +78,7 @@ constexpr int64 kTrajectoryId = 0;
 constexpr int kSubscriberQueueSize = 150;
 constexpr int kSubmapPublishPeriodInUts = 300 * 10000ll;  // 300 milliseconds
 constexpr int kPosePublishPeriodInUts = 5 * 10000ll;      // 5 milliseconds
+constexpr double kMaxTransformDelaySeconds = 1.;
 
 Rigid3d ToRidig3d(const geometry_msgs::TransformStamped& transform) {
   return Rigid3d(Eigen::Vector3d(transform.transform.translation.x,
@@ -165,12 +166,10 @@ class Node {
   template <typename T>
   const T GetParamOrDie(const string& name);
 
-  // Returns true if a transform for 'frame_id' to 'tracking_frame_' exists at
-  // 'time'.
-  bool CanTransform(ros::Time time, const string& frame_id);
-
-  Rigid3d LookupToTrackingTransformOrDie(ros::Time time,
-                                         const string& frame_id);
+  // Returns a transform for 'frame_id' to 'tracking_frame_' if it exists at
+  // 'time' or throws tf2::TransformException if it does not exist.
+  Rigid3d LookupToTrackingTransformOrThrow(::cartographer::common::Time time,
+                                           const string& frame_id);
 
   bool HandleSubmapQuery(
       ::cartographer_ros_msgs::SubmapQuery::Request& request,
@@ -217,21 +216,11 @@ Node::Node()
       last_submap_list_publish_timestamp_(0),
       last_pose_publish_timestamp_(0) {}
 
-bool Node::CanTransform(ros::Time time, const string& frame_id) {
-  return tf_buffer_.canTransform(tracking_frame_, frame_id, time);
-}
-
-Rigid3d Node::LookupToTrackingTransformOrDie(ros::Time time,
-                                             const string& frame_id) {
-  geometry_msgs::TransformStamped stamped_transform;
-  try {
-    stamped_transform = tf_buffer_.lookupTransform(tracking_frame_, frame_id,
-                                                   time, ros::Duration(1.));
-  } catch (tf2::TransformException& ex) {
-    LOG(FATAL) << "Timed out while waiting for transform: " << frame_id
-               << " -> " << tracking_frame_ << ": " << ex.what();
-  }
-  return ToRidig3d(stamped_transform);
+Rigid3d Node::LookupToTrackingTransformOrThrow(
+    const ::cartographer::common::Time time, const string& frame_id) {
+  return ToRidig3d(
+      tf_buffer_.lookupTransform(tracking_frame_, frame_id, ToRos(time),
+                                 ros::Duration(kMaxTransformDelaySeconds)));
 }
 
 void Node::ImuMessageCallback(const sensor_msgs::Imu::ConstPtr& msg) {
@@ -247,22 +236,23 @@ void Node::AddImu(const int64 timestamp, const string& frame_id,
                   const proto::Imu& imu) {
   const ::cartographer::common::Time time =
       ::cartographer::common::FromUniversal(timestamp);
-
-  if (!CanTransform(ToRos(time), frame_id)) {
-    LOG(WARNING) << "Cannot transform to " << frame_id;
-    return;
+  try {
+    const Rigid3d sensor_to_tracking =
+        LookupToTrackingTransformOrThrow(time, frame_id);
+    CHECK(sensor_to_tracking.translation().norm() < 1e-5)
+        << "The IMU is not colocated with the tracking frame. This makes it "
+           "hard "
+           "and inprecise to transform its linear accelaration into the "
+           "tracking_frame and will decrease the quality of the SLAM.";
+    trajectory_builder_->AddImuData(
+        time, sensor_to_tracking.rotation() *
+                  ::cartographer::transform::ToEigen(imu.linear_acceleration()),
+        sensor_to_tracking.rotation() *
+            ::cartographer::transform::ToEigen(imu.angular_velocity()));
+  } catch (tf2::TransformException& ex) {
+    LOG(WARNING) << "Cannot transform " << frame_id << " -> " << tracking_frame_
+                 << ": " << ex.what();
   }
-  const Rigid3d sensor_to_tracking =
-      LookupToTrackingTransformOrDie(ToRos(time), frame_id);
-  CHECK(sensor_to_tracking.translation().norm() < 1e-5)
-      << "The IMU is not colocated with the tracking frame. This makes it hard "
-         "and inprecise to transform its linear accelaration into the "
-         "tracking_frame and will decrease the quality of the SLAM.";
-  trajectory_builder_->AddImuData(
-      time, sensor_to_tracking.rotation() *
-                ::cartographer::transform::ToEigen(imu.linear_acceleration()),
-      sensor_to_tracking.rotation() *
-          ::cartographer::transform::ToEigen(imu.angular_velocity()));
 }
 
 void Node::LaserScanMessageCallback(
@@ -279,29 +269,33 @@ void Node::AddHorizontalLaserFan(const int64 timestamp, const string& frame_id,
                                  const proto::LaserScan& laser_scan) {
   const ::cartographer::common::Time time =
       ::cartographer::common::FromUniversal(timestamp);
-  if (!CanTransform(ToRos(time), frame_id)) {
-    LOG(WARNING) << "Cannot transform to " << frame_id;
-    return;
+  try {
+    const Rigid3d sensor_to_tracking =
+        LookupToTrackingTransformOrThrow(time, frame_id);
+    // TODO(hrapp): Make things configurable? Through Lua? Through ROS params?
+    const ::cartographer::sensor::LaserFan laser_fan =
+        ::cartographer::sensor::ToLaserFan(laser_scan, laser_min_range_m_,
+                                           laser_max_range_m_,
+                                           laser_missing_echo_ray_length_m_);
+
+    const auto laser_fan_3d = ::cartographer::sensor::TransformLaserFan3D(
+        ::cartographer::sensor::ToLaserFan3D(laser_fan),
+        sensor_to_tracking.cast<float>());
+    trajectory_builder_->AddHorizontalLaserFan(time, laser_fan_3d);
+  } catch (tf2::TransformException& ex) {
+    LOG(WARNING) << "Cannot transform " << frame_id << " -> " << tracking_frame_
+                 << ": " << ex.what();
   }
-  const Rigid3d sensor_to_tracking =
-      LookupToTrackingTransformOrDie(ToRos(time), frame_id);
-
-  // TODO(hrapp): Make things configurable? Through Lua? Through ROS params?
-  const ::cartographer::sensor::LaserFan laser_fan =
-      ::cartographer::sensor::ToLaserFan(laser_scan, laser_min_range_m_,
-                                         laser_max_range_m_,
-                                         laser_missing_echo_ray_length_m_);
-
-  const auto laser_fan_3d = ::cartographer::sensor::TransformLaserFan3D(
-      ::cartographer::sensor::ToLaserFan3D(laser_fan),
-      sensor_to_tracking.cast<float>());
-  trajectory_builder_->AddHorizontalLaserFan(time, laser_fan_3d);
 }
 
 void Node::MultiEchoLaserScanCallback(
     const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
-  // TODO(hrapp): Do something useful.
-  LOG(INFO) << "LaserScan message: " << msg->header.stamp;
+  auto sensor_data = ::cartographer::common::make_unique<SensorData>(
+      msg->header.frame_id, ToCartographer(*msg));
+  sensor_collator_.AddSensorData(
+      kTrajectoryId,
+      ::cartographer::common::ToUniversal(FromRos(msg->header.stamp)),
+      laser_2d_subscriber_.getTopic(), std::move(sensor_data));
 }
 
 void Node::PointCloud2MessageCallback(
@@ -321,17 +315,17 @@ void Node::AddLaserFan3D(const int64 timestamp, const string& frame_id,
                          const proto::LaserFan3D& laser_fan_3d) {
   const ::cartographer::common::Time time =
       ::cartographer::common::FromUniversal(timestamp);
-  if (!CanTransform(ToRos(time), frame_id)) {
-    LOG(WARNING) << "Cannot transform to " << frame_id;
-    return;
+  try {
+    const Rigid3d sensor_to_tracking =
+        LookupToTrackingTransformOrThrow(time, frame_id);
+    trajectory_builder_->AddLaserFan3D(
+        time, ::cartographer::sensor::TransformLaserFan3D(
+                  ::cartographer::sensor::FromProto(laser_fan_3d),
+                  sensor_to_tracking.cast<float>()));
+  } catch (tf2::TransformException& ex) {
+    LOG(WARNING) << "Cannot transform " << frame_id << " -> " << tracking_frame_
+                 << ": " << ex.what();
   }
-  const Rigid3d sensor_to_tracking =
-      LookupToTrackingTransformOrDie(ToRos(time), frame_id);
-
-  trajectory_builder_->AddLaserFan3D(
-      time, ::cartographer::sensor::TransformLaserFan3D(
-                ::cartographer::sensor::FromProto(laser_fan_3d),
-                sensor_to_tracking.cast<float>()));
 }
 
 template <typename T>

@@ -34,9 +34,9 @@
 #include <OgreTextureManager.h>
 #include <OgreViewport.h>
 #include <cartographer/common/mutex.h>
-#include <geometry_msgs/TransformStamped.h>
 #include <cartographer_ros_msgs/SubmapList.h>
 #include <cartographer_ros_msgs/SubmapQuery.h>
+#include <geometry_msgs/TransformStamped.h>
 #include <pluginlib/class_list_macros.h>
 #include <ros/package.h>
 #include <ros/ros.h>
@@ -44,6 +44,8 @@
 #include <rviz/frame_manager.h>
 #include <rviz/properties/ros_topic_property.h>
 #include <rviz/properties/string_property.h>
+
+#include "node_constants.h"
 
 namespace cartographer_ros {
 namespace rviz {
@@ -55,8 +57,7 @@ constexpr char kMaterialsDirectory[] = "/ogre_media/materials";
 constexpr char kGlsl120Directory[] = "/glsl120";
 constexpr char kScriptsDirectory[] = "/scripts";
 constexpr char kScreenBlitMaterialName[] = "ScreenBlitMaterial";
-constexpr char kScreenBlitSourceMaterialName[] =
-    "cartographer_ros/ScreenBlit";
+constexpr char kScreenBlitSourceMaterialName[] = "cartographer_ros/ScreenBlit";
 constexpr char kSubmapsRttPrefix[] = "SubmapsRtt";
 constexpr char kMapTextureName[] = "MapTexture";
 constexpr char kMapOverlayName[] = "MapOverlay";
@@ -74,13 +75,15 @@ SubmapsDisplay::SubmapsDisplay()
       tf_listener_(tf_buffer_) {
   connect(this, SIGNAL(SubmapListUpdated()), this, SLOT(RequestNewSubmaps()));
   topic_property_ = new ::rviz::RosTopicProperty(
-      "Topic", "",
-      QString::fromStdString(ros::message_traits::datatype<
-                             ::cartographer_ros_msgs::SubmapList>()),
+      "Topic", QString("/cartographer/") + kSubmapListTopic,
+      QString::fromStdString(
+          ros::message_traits::datatype<::cartographer_ros_msgs::SubmapList>()),
       "cartographer_ros_msgs::SubmapList topic to subscribe to.", this,
       SLOT(UpdateTopic()));
   submap_query_service_property_ = new ::rviz::StringProperty(
-      "Submap query service", "", "Submap query service to connect to.", this,
+      "Submap query service",
+      QString("/cartographer/") + kSubmapQueryServiceName,
+      "Submap query service to connect to.", this,
       SLOT(UpdateSubmapQueryServiceName()));
   map_frame_property_ = new ::rviz::StringProperty(
       "Map frame", kDefaultMapFrame, "Map frame, used for fading out submaps.",
@@ -88,8 +91,7 @@ SubmapsDisplay::SubmapsDisplay()
   tracking_frame_property_ = new ::rviz::StringProperty(
       "Tracking frame", kDefaultTrackingFrame,
       "Tracking frame, used for fading out submaps.", this);
-  client_ =
-      update_nh_.serviceClient<::cartographer_ros_msgs::SubmapQuery>("");
+  client_ = update_nh_.serviceClient<::cartographer_ros_msgs::SubmapQuery>("");
   const std::string package_path = ::ros::package::getPath(ROS_PACKAGE_NAME);
   Ogre::ResourceGroupManager::getSingleton().addResourceLocation(
       package_path + kMaterialsDirectory, "FileSystem", ROS_PACKAGE_NAME);
@@ -136,7 +138,8 @@ void SubmapsDisplay::onInitialize() {
       kSubmapTexturesGroup);
 
   scene_manager_->addListener(&scene_manager_listener_);
-  UpdateTopic();
+  // TODO(whess): Combine UpdateTopic()/UpdateSubmapQueryServiceName().
+  UpdateSubmapQueryServiceName();
 }
 
 void SubmapsDisplay::UpdateTopic() {
