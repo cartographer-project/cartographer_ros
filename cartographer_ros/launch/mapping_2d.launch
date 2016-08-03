@@ -25,7 +25,9 @@
       type="cartographer_node" output="screen" >
     <rosparam subst_value="true">
       map_frame: "map"
+      odom_frame: "odom"
       tracking_frame: "base_link"
+      provide_odom: true
       configuration_files_directories: [
         "$(find cartographer_ros)/configuration_files"
       ]
