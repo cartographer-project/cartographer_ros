@@ -24,6 +24,7 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
+  <build_depend>cartographer</build_depend>
   <build_depend>eigen_conversions</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>cartographer_ros_msgs</build_depend>
