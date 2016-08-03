@@ -138,6 +138,7 @@ void SubmapsDisplay::onInitialize() {
       kSubmapTexturesGroup);
 
   scene_manager_->addListener(&scene_manager_listener_);
+  // TODO(whess): Combine UpdateTopic()/UpdateSubmapQueryServiceName().
   UpdateSubmapQueryServiceName();
 }
 

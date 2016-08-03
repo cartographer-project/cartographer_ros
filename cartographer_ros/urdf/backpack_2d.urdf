@@ -65,7 +65,7 @@
     </visual>
   </link>
 
-  <joint name="base_link_joint" type="fixed">
+  <joint name="imu_link_joint" type="fixed">
     <parent link="base_link"/>
     <child link="imu_link"/>
     <origin xyz="0 0 0" rpy="0 0 3.1416"/>
