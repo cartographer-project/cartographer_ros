@@ -14,22 +14,19 @@
  * limitations under the License.
  */
 
-fragment_program google_cartographer/glsl120/submap.frag glsl
+material cartographer_ros/Submap
 {
-  source submap.frag
-}
+  technique
+  {
+    pass
+    {
+      vertex_program_ref cartographer_ros/glsl120/submap.vert {}
 
-vertex_program google_cartographer/glsl120/submap.vert glsl
-{
-  source submap.vert
-}
-
-fragment_program google_cartographer/glsl120/screen_blit.frag glsl
-{
-  source screen_blit.frag
-}
-
-vertex_program google_cartographer/glsl120/screen_blit.vert glsl
-{
-  source screen_blit.vert
+      fragment_program_ref cartographer_ros/glsl120/submap.frag
+      {
+        param_named u_submap int 0
+        param_named u_alpha float 1.0
+      }
+    }
+  }
 }

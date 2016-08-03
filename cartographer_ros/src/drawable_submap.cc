@@ -20,7 +20,7 @@
 #include <OgreImage.h>
 #include <cartographer/common/port.h>
 #include <eigen_conversions/eigen_msg.h>
-#include <google_cartographer_msgs/SubmapQuery.h>
+#include <cartographer_ros_msgs/SubmapQuery.h>
 #include <ros/ros.h>
 #include <rviz/display_context.h>
 #include <rviz/frame_manager.h>
@@ -42,7 +42,7 @@ constexpr char kMapFrame[] = "/map";
 constexpr char kSubmapTexturePrefix[] = "SubmapTexture";
 constexpr char kManualObjectPrefix[] = "ManualObjectSubmap";
 constexpr char kSubmapMaterialPrefix[] = "SubmapMaterial";
-constexpr char kSubmapSourceMaterialName[] = "google_cartographer/Submap";
+constexpr char kSubmapSourceMaterialName[] = "cartographer_ros/Submap";
 
 // Distance before which the submap will be shown at full opacity, and distance
 // over which the submap will then fade out.
@@ -89,7 +89,7 @@ DrawableSubmap::~DrawableSubmap() {
 }
 
 bool DrawableSubmap::Update(
-    const ::google_cartographer_msgs::SubmapEntry& metadata,
+    const ::cartographer_ros_msgs::SubmapEntry& metadata,
     ros::ServiceClient* const client) {
   ::cartographer::common::MutexLocker locker(&mutex_);
   tf::poseMsgToEigen(metadata.pose, submap_pose_);
@@ -113,11 +113,11 @@ void DrawableSubmap::QuerySubmap(const int submap_id, const int trajectory_id,
                                  ros::ServiceClient* const client) {
   rpc_request_future_ = std::async(
       std::launch::async, [this, submap_id, trajectory_id, client]() {
-        ::google_cartographer_msgs::SubmapQuery srv;
+        ::cartographer_ros_msgs::SubmapQuery srv;
         srv.request.submap_id = submap_id;
         srv.request.trajectory_id = trajectory_id;
         if (client->call(srv)) {
-          response_.reset(new ::google_cartographer_msgs::SubmapQuery::Response(
+          response_.reset(new ::cartographer_ros_msgs::SubmapQuery::Response(
               srv.response));
           Q_EMIT RequestSucceeded();
         } else {

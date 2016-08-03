@@ -75,18 +75,18 @@
   </node>
 
   <param name="robot_description"
-    textfile="$(find google_cartographer)/urdf/backpack_3d.urdf" />
+    textfile="$(find cartographer_ros)/urdf/backpack_3d.urdf" />
 
   <node name="robot_state_publisher" pkg="robot_state_publisher"
     type="robot_state_publisher" />
 
-  <node name="cartographer" pkg="google_cartographer"
+  <node name="cartographer" pkg="cartographer_ros"
       type="cartographer_node" output="screen" >
     <rosparam subst_value="true">
       map_frame: "map"
       tracking_frame: "base_link"
       configuration_files_directories: [
-        "$(find google_cartographer)/configuration_files"
+        "$(find cartographer_ros)/configuration_files"
       ]
       mapping_configuration_basename: "3d_mapping.lua"
       imu_topic: "/imu"

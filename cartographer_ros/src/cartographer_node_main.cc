@@ -46,10 +46,10 @@
 #include "geometry_msgs/TransformStamped.h"
 #include "glog/log_severity.h"
 #include "glog/logging.h"
-#include "google_cartographer_msgs/SubmapEntry.h"
-#include "google_cartographer_msgs/SubmapList.h"
-#include "google_cartographer_msgs/SubmapQuery.h"
-#include "google_cartographer_msgs/TrajectorySubmapList.h"
+#include "cartographer_ros_msgs/SubmapEntry.h"
+#include "cartographer_ros_msgs/SubmapList.h"
+#include "cartographer_ros_msgs/SubmapQuery.h"
+#include "cartographer_ros_msgs/TrajectorySubmapList.h"
 #include "pcl/point_cloud.h"
 #include "pcl/point_types.h"
 #include "pcl_conversions/pcl_conversions.h"
@@ -173,8 +173,8 @@ class Node {
                                          const string& frame_id);
 
   bool HandleSubmapQuery(
-      ::google_cartographer_msgs::SubmapQuery::Request& request,
-      ::google_cartographer_msgs::SubmapQuery::Response& response);
+      ::cartographer_ros_msgs::SubmapQuery::Request& request,
+      ::cartographer_ros_msgs::SubmapQuery::Response& response);
 
   void PublishSubmapList(int64 timestamp);
   void PublishPose(int64 timestamp);
@@ -441,15 +441,15 @@ void Node::Initialize() {
       });
 
   submap_list_publisher_ =
-      node_handle_.advertise<::google_cartographer_msgs::SubmapList>(
+      node_handle_.advertise<::cartographer_ros_msgs::SubmapList>(
           kSubmapListTopic, 10);
   submap_query_server_ = node_handle_.advertiseService(
       kSubmapQueryServiceName, &Node::HandleSubmapQuery, this);
 }
 
 bool Node::HandleSubmapQuery(
-    ::google_cartographer_msgs::SubmapQuery::Request& request,
-    ::google_cartographer_msgs::SubmapQuery::Response& response) {
+    ::cartographer_ros_msgs::SubmapQuery::Request& request,
+    ::cartographer_ros_msgs::SubmapQuery::Response& response) {
   if (request.trajectory_id != 0) {
     return false;
   }
@@ -506,15 +506,15 @@ void Node::PublishSubmapList(int64 timestamp) {
       sparse_pose_graph_->GetSubmapTransforms(*submaps);
   CHECK_EQ(submap_transforms.size(), submaps->size());
 
-  ::google_cartographer_msgs::TrajectorySubmapList ros_trajectory;
+  ::cartographer_ros_msgs::TrajectorySubmapList ros_trajectory;
   for (int i = 0; i != submaps->size(); ++i) {
-    ::google_cartographer_msgs::SubmapEntry ros_submap;
+    ::cartographer_ros_msgs::SubmapEntry ros_submap;
     ros_submap.submap_version = submaps->Get(i)->end_laser_fan_index;
     ros_submap.pose = ToGeometryMsgPose(submap_transforms[i]);
     ros_trajectory.submap.push_back(ros_submap);
   }
 
-  ::google_cartographer_msgs::SubmapList ros_submap_list;
+  ::cartographer_ros_msgs::SubmapList ros_submap_list;
   ros_submap_list.trajectory.push_back(ros_trajectory);
   submap_list_publisher_.publish(ros_submap_list);
   last_submap_list_publish_timestamp_ = timestamp;

@@ -26,7 +26,7 @@
 #include <OgreVector3.h>
 #include <cartographer/common/mutex.h>
 #include <cartographer/common/port.h>
-#include <google_cartographer_msgs/SubmapList.h>
+#include <cartographer_ros_msgs/SubmapList.h>
 #include <nav_msgs/MapMetaData.h>
 #include <ros/time.h>
 #include <rviz/display.h>
@@ -94,14 +94,14 @@ class SubmapsDisplay : public ::rviz::Display {
   void Unsubscribe();
   void UpdateMapTexture();
   void IncomingSubmapList(
-      const ::google_cartographer_msgs::SubmapList::ConstPtr& msg);
+      const ::cartographer_ros_msgs::SubmapList::ConstPtr& msg);
   // Clears the current map.
   void Clear();
   void UpdateCurrentTrackingZ(const tf::tfMessage::ConstPtr& msg);
 
   int rtt_count_;
   SceneManagerListener scene_manager_listener_;
-  ::google_cartographer_msgs::SubmapList submap_list_;
+  ::cartographer_ros_msgs::SubmapList submap_list_;
   ros::Subscriber submap_list_subscriber_;
   ::tf2_ros::Buffer tf_buffer_;
   ::tf2_ros::TransformListener tf_listener_;

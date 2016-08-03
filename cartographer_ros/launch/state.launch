@@ -16,12 +16,12 @@
 
 <launch>
   <param name="robot_description"
-    textfile="$(find google_cartographer)/urdf/backpack_3d.urdf" />
+    textfile="$(find cartographer_ros)/urdf/backpack_3d.urdf" />
 
   <node name="robot_state_publisher" pkg="robot_state_publisher"
     type="robot_state_publisher" />
 
-  <node name="cartographer" pkg="google_cartographer"
+  <node name="cartographer" pkg="cartographer_ros"
       type="cartographer_node" output="screen" >
     <rosparam subst_value="true">
       # This node publishes the transformation between the tracking and map
@@ -35,7 +35,7 @@
       # want to add your own configuration overwrites in your own node
       # directories - you should add the path here as first entry then.
       configuration_files_directories: [
-        "$(find google_cartographer)/configuration_files"
+        "$(find cartographer_ros)/configuration_files"
       ]
 
       # Configuration file for SLAM. The settings in here are tweaked to the

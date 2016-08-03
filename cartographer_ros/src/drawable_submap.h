@@ -23,8 +23,8 @@
 #include <OgreSceneNode.h>
 #include <OgreTexture.h>
 #include <cartographer/common/mutex.h>
-#include <google_cartographer_msgs/SubmapEntry.h>
-#include <google_cartographer_msgs/SubmapQuery.h>
+#include <cartographer_ros_msgs/SubmapEntry.h>
+#include <cartographer_ros_msgs/SubmapQuery.h>
 #include <ros/ros.h>
 #include <rviz/display_context.h>
 #include <Eigen/Core>
@@ -55,7 +55,7 @@ class DrawableSubmap : public QObject {
   // 'submap_entry' contains metadata which is used to find out whether this
   // 'DrawableSubmap' should update itself. If an update is needed, it will send
   // an RPC using 'client' to request the new data for the submap.
-  bool Update(const ::google_cartographer_msgs::SubmapEntry& submap_entry,
+  bool Update(const ::cartographer_ros_msgs::SubmapEntry& submap_entry,
               ros::ServiceClient* client);
 
   // Returns whether an RPC is in progress.
@@ -105,7 +105,7 @@ class DrawableSubmap : public QObject {
   double last_query_slice_height_ GUARDED_BY(mutex_);
   std::future<void> rpc_request_future_;
   std::string cells_ GUARDED_BY(mutex_);
-  std::unique_ptr<::google_cartographer_msgs::SubmapQuery::Response> response_
+  std::unique_ptr<::cartographer_ros_msgs::SubmapQuery::Response> response_
       GUARDED_BY(mutex_);
   int texture_count_;
   float current_alpha_;

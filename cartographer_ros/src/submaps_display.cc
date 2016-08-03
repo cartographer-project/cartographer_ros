@@ -35,8 +35,8 @@
 #include <OgreViewport.h>
 #include <cartographer/common/mutex.h>
 #include <geometry_msgs/TransformStamped.h>
-#include <google_cartographer_msgs/SubmapList.h>
-#include <google_cartographer_msgs/SubmapQuery.h>
+#include <cartographer_ros_msgs/SubmapList.h>
+#include <cartographer_ros_msgs/SubmapQuery.h>
 #include <pluginlib/class_list_macros.h>
 #include <ros/package.h>
 #include <ros/ros.h>
@@ -56,7 +56,7 @@ constexpr char kGlsl120Directory[] = "/glsl120";
 constexpr char kScriptsDirectory[] = "/scripts";
 constexpr char kScreenBlitMaterialName[] = "ScreenBlitMaterial";
 constexpr char kScreenBlitSourceMaterialName[] =
-    "google_cartographer/ScreenBlit";
+    "cartographer_ros/ScreenBlit";
 constexpr char kSubmapsRttPrefix[] = "SubmapsRtt";
 constexpr char kMapTextureName[] = "MapTexture";
 constexpr char kMapOverlayName[] = "MapOverlay";
@@ -76,8 +76,8 @@ SubmapsDisplay::SubmapsDisplay()
   topic_property_ = new ::rviz::RosTopicProperty(
       "Topic", "",
       QString::fromStdString(ros::message_traits::datatype<
-                             ::google_cartographer_msgs::SubmapList>()),
-      "google_cartographer_msgs::SubmapList topic to subscribe to.", this,
+                             ::cartographer_ros_msgs::SubmapList>()),
+      "cartographer_ros_msgs::SubmapList topic to subscribe to.", this,
       SLOT(UpdateTopic()));
   submap_query_service_property_ = new ::rviz::StringProperty(
       "Submap query service", "", "Submap query service to connect to.", this,
@@ -89,7 +89,7 @@ SubmapsDisplay::SubmapsDisplay()
       "Tracking frame", kDefaultTrackingFrame,
       "Tracking frame, used for fading out submaps.", this);
   client_ =
-      update_nh_.serviceClient<::google_cartographer_msgs::SubmapQuery>("");
+      update_nh_.serviceClient<::cartographer_ros_msgs::SubmapQuery>("");
   const std::string package_path = ::ros::package::getPath(ROS_PACKAGE_NAME);
   Ogre::ResourceGroupManager::getSingleton().addResourceLocation(
       package_path + kMaterialsDirectory, "FileSystem", ROS_PACKAGE_NAME);
@@ -149,7 +149,7 @@ void SubmapsDisplay::UpdateSubmapQueryServiceName() {
   Unsubscribe();
   Clear();
   client_.shutdown();
-  client_ = update_nh_.serviceClient<::google_cartographer_msgs::SubmapQuery>(
+  client_ = update_nh_.serviceClient<::cartographer_ros_msgs::SubmapQuery>(
       submap_query_service_property_->getStdString());
   Subscribe();
 }
@@ -190,7 +190,7 @@ void SubmapsDisplay::Subscribe() {
 void SubmapsDisplay::Unsubscribe() { submap_list_subscriber_.shutdown(); }
 
 void SubmapsDisplay::IncomingSubmapList(
-    const ::google_cartographer_msgs::SubmapList::ConstPtr& msg) {
+    const ::cartographer_ros_msgs::SubmapList::ConstPtr& msg) {
   submap_list_ = *msg;
   Q_EMIT SubmapListUpdated();
 }
@@ -215,7 +215,7 @@ void SubmapsDisplay::RequestNewSubmaps() {
     if (trajectory_id >= trajectories_.size()) {
       trajectories_.emplace_back(new Trajectory);
     }
-    const std::vector<::google_cartographer_msgs::SubmapEntry>& submap_entries =
+    const std::vector<::cartographer_ros_msgs::SubmapEntry>& submap_entries =
         submap_list_.trajectory[trajectory_id].submap;
     if (submap_entries.empty()) {
       return;
@@ -240,7 +240,7 @@ void SubmapsDisplay::RequestNewSubmaps() {
   }
   for (int trajectory_id = 0; trajectory_id < submap_list_.trajectory.size();
        ++trajectory_id) {
-    const std::vector<::google_cartographer_msgs::SubmapEntry>& submap_entries =
+    const std::vector<::cartographer_ros_msgs::SubmapEntry>& submap_entries =
         submap_list_.trajectory[trajectory_id].submap;
     for (int submap_id = submap_entries.size() - 1; submap_id >= 0;
          --submap_id) {

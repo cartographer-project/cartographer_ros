@@ -16,9 +16,9 @@
 -->
 
 <package>
-  <name>google_cartographer</name>
+  <name>cartographer_ros</name>
   <version>1.0.0</version>
-  <description>The google_cartographer package.</description>
+  <description>The cartographer_ros package.</description>
   <maintainer email="nobody@google.com">Google</maintainer>
   <license>Apache 2.0</license>
 
@@ -26,7 +26,7 @@
 
   <build_depend>eigen_conversions</build_depend>
   <build_depend>geometry_msgs</build_depend>
-  <build_depend>google_cartographer_msgs</build_depend>
+  <build_depend>cartographer_ros_msgs</build_depend>
   <build_depend>libpcl-all-dev</build_depend>
   <build_depend>message_generation</build_depend>
   <build_depend>nav_msgs</build_depend>
@@ -44,7 +44,7 @@
 
   <run_depend>eigen_conversions</run_depend>
   <run_depend>geometry_msgs</run_depend>
-  <run_depend>google_cartographer_msgs</run_depend>
+  <run_depend>cartographer_ros_msgs</run_depend>
   <run_depend>libpcl-all</run_depend>
   <run_depend>libqt5-core</run_depend>
   <run_depend>libqt5-gui</run_depend>

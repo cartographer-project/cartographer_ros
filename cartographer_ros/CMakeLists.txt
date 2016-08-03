@@ -14,12 +14,12 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-project(google_cartographer)
+project(cartographer_ros)
 
 set(PACKAGE_DEPENDENCIES
   eigen_conversions
   geometry_msgs
-  google_cartographer_msgs
+  cartographer_ros_msgs
   roscpp
   rviz
   sensor_msgs

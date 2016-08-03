@@ -14,18 +14,22 @@
  * limitations under the License.
  */
 
-material google_cartographer/ScreenBlit
+fragment_program cartographer_ros/glsl120/submap.frag glsl
 {
-  technique
-  {
-    pass
-    {
-      vertex_program_ref google_cartographer/glsl120/screen_blit.vert {}
+  source submap.frag
+}
 
-      fragment_program_ref google_cartographer/glsl120/screen_blit.frag
-      {
-        param_named u_texture int 0
-      }
-    }
-  }
+vertex_program cartographer_ros/glsl120/submap.vert glsl
+{
+  source submap.vert
+}
+
+fragment_program cartographer_ros/glsl120/screen_blit.frag glsl
+{
+  source screen_blit.frag
+}
+
+vertex_program cartographer_ros/glsl120/screen_blit.vert glsl
+{
+  source screen_blit.vert
 }

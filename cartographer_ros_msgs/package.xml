@@ -15,10 +15,10 @@
 -->
 
 <package>
-  <name>google_cartographer_msgs</name>
+  <name>cartographer_ros_msgs</name>
   <version>1.0.0</version>
   <description>
-    The google_cartographer_msgs package.
+    The cartographer_ros_msgs package.
   </description>
   <maintainer email="nobody@google.com">Google</maintainer>
   <license>Apache 2.0</license>
