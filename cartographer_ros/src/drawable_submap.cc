@@ -19,8 +19,8 @@
 #include <OgreGpuProgramParams.h>
 #include <OgreImage.h>
 #include <cartographer/common/port.h>
-#include <eigen_conversions/eigen_msg.h>
 #include <cartographer_ros_msgs/SubmapQuery.h>
+#include <eigen_conversions/eigen_msg.h>
 #include <ros/ros.h>
 #include <rviz/display_context.h>
 #include <rviz/frame_manager.h>
@@ -117,8 +117,8 @@ void DrawableSubmap::QuerySubmap(const int submap_id, const int trajectory_id,
         srv.request.submap_id = submap_id;
         srv.request.trajectory_id = trajectory_id;
         if (client->call(srv)) {
-          response_.reset(new ::cartographer_ros_msgs::SubmapQuery::Response(
-              srv.response));
+          response_.reset(
+              new ::cartographer_ros_msgs::SubmapQuery::Response(srv.response));
           Q_EMIT RequestSucceeded();
         } else {
           OnRequestFailure();

@@ -49,6 +49,9 @@ sensor_msgs::PointCloud2 ToPointCloud2Message(
 ::cartographer::sensor::proto::LaserScan ToCartographer(
     const sensor_msgs::LaserScan& msg);
 
+::cartographer::sensor::proto::LaserScan ToCartographer(
+    const sensor_msgs::MultiEchoLaserScan& msg);
+
 ::cartographer::sensor::proto::LaserFan3D ToCartographer(
     const pcl::PointCloud<pcl::PointXYZ>& pcl_points);
 

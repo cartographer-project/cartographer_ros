@@ -240,6 +240,32 @@ sensor_msgs::PointCloud2 ToPointCloud2Message(
   return proto;
 }
 
+::cartographer::sensor::proto::LaserScan ToCartographer(
+    const sensor_msgs::MultiEchoLaserScan& msg) {
+  ::cartographer::sensor::proto::LaserScan proto;
+  proto.set_angle_min(msg.angle_min);
+  proto.set_angle_max(msg.angle_max);
+  proto.set_angle_increment(msg.angle_increment);
+  proto.set_time_increment(msg.time_increment);
+  proto.set_scan_time(msg.scan_time);
+  proto.set_range_min(msg.range_min);
+  proto.set_range_max(msg.range_max);
+
+  for (const auto& range : msg.ranges) {
+    auto* proto_echoes = proto.add_range()->mutable_value();
+    for (const auto& echo : range.echoes) {
+      proto_echoes->Add(echo);
+    }
+  }
+  for (const auto& intensity : msg.intensities) {
+    auto* proto_echoes = proto.add_intensity()->mutable_value();
+    for (const auto& echo : intensity.echoes) {
+      proto_echoes->Add(echo);
+    }
+  }
+  return proto;
+}
+
 ::cartographer::sensor::proto::LaserFan3D ToCartographer(
     const pcl::PointCloud<pcl::PointXYZ>& pcl_points) {
   ::cartographer::sensor::proto::LaserFan3D proto;

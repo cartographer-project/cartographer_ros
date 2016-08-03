@@ -97,10 +97,11 @@ target_link_libraries(cartographer_node
 add_library(cartographer_rviz_submaps_visualization
   src/drawable_submap.cc
   src/drawable_submap.h
+  src/node_constants.h
   src/submaps_display.cc
   src/submaps_display.h
-  src/trajectory.h
   src/trajectory.cc
+  src/trajectory.h
 )
 target_link_libraries(cartographer_rviz_submaps_visualization
   ${Boost_LIBRARIES}
