@@ -72,7 +72,7 @@ class SubmapsDisplay : public ::rviz::Display {
 
  private Q_SLOTS:
   void RequestNewSubmaps();
-  void UpdateSubmapTopicOrQuery();
+  void UpdateSubmapTopicOrService();
 
  private:
   class SceneManagerListener : public Ogre::SceneManager::Listener {

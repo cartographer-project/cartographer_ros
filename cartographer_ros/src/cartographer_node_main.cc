@@ -251,7 +251,7 @@ void Node::AddImu(const int64 timestamp, const string& frame_id,
                   ::cartographer::transform::ToEigen(imu.linear_acceleration()),
         sensor_to_tracking.rotation() *
             ::cartographer::transform::ToEigen(imu.angular_velocity()));
-  } catch (tf2::TransformException& ex) {
+  } catch (const tf2::TransformException& ex) {
     LOG(WARNING) << "Cannot transform " << frame_id << " -> " << tracking_frame_
                  << ": " << ex.what();
   }
@@ -284,7 +284,7 @@ void Node::AddHorizontalLaserFan(const int64 timestamp, const string& frame_id,
         ::cartographer::sensor::ToLaserFan3D(laser_fan),
         sensor_to_tracking.cast<float>());
     trajectory_builder_->AddHorizontalLaserFan(time, laser_fan_3d);
-  } catch (tf2::TransformException& ex) {
+  } catch (const tf2::TransformException& ex) {
     LOG(WARNING) << "Cannot transform " << frame_id << " -> " << tracking_frame_
                  << ": " << ex.what();
   }
@@ -324,7 +324,7 @@ void Node::AddLaserFan3D(const int64 timestamp, const string& frame_id,
         time, ::cartographer::sensor::TransformLaserFan3D(
                   ::cartographer::sensor::FromProto(laser_fan_3d),
                   sensor_to_tracking.cast<float>()));
-  } catch (tf2::TransformException& ex) {
+  } catch (const tf2::TransformException& ex) {
     LOG(WARNING) << "Cannot transform " << frame_id << " -> " << tracking_frame_
                  << ": " << ex.what();
   }
@@ -549,7 +549,7 @@ void Node::PublishPose(int64 timestamp) {
       const Rigid3d odom_to_map = tracking_to_map * tracking_to_odom.inverse();
       stamped_transform.transform = ToGeometryMsgTransform(odom_to_map);
       tf_broadcaster_.sendTransform(stamped_transform);
-    } catch (tf2::TransformException& ex) {
+    } catch (const tf2::TransformException& ex) {
       LOG(WARNING) << "Cannot transform " << tracking_frame_ << " -> "
                    << odom_frame_ << ": " << ex.what();
     }

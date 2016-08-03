@@ -79,12 +79,12 @@ SubmapsDisplay::SubmapsDisplay()
       QString::fromStdString(
           ros::message_traits::datatype<::cartographer_ros_msgs::SubmapList>()),
       "cartographer_ros_msgs::SubmapList topic to subscribe to.", this,
-      SLOT(UpdateSubmapTopicOrQuery()));
+      SLOT(UpdateSubmapTopicOrService()));
   submap_query_service_property_ = new ::rviz::StringProperty(
       "Submap query service",
       QString("/cartographer/") + kSubmapQueryServiceName,
       "Submap query service to connect to.", this,
-      SLOT(UpdateSubmapTopicOrQuery()));
+      SLOT(UpdateSubmapTopicOrService()));
   map_frame_property_ = new ::rviz::StringProperty(
       "Map frame", kDefaultMapFrame, "Map frame, used for fading out submaps.",
       this);
@@ -134,17 +134,17 @@ void SubmapsDisplay::onInitialize() {
       kSubmapTexturesGroup);
 
   scene_manager_->addListener(&scene_manager_listener_);
-  UpdateSubmapTopicOrQuery();
+  UpdateSubmapTopicOrService();
 }
 
-void SubmapsDisplay::UpdateSubmapTopicOrQuery() {
+void SubmapsDisplay::UpdateSubmapTopicOrService() {
   UnsubscribeAndClear();
   Subscribe();
 }
 
 void SubmapsDisplay::reset() {
   Display::reset();
-  UpdateSubmapTopicOrQuery();
+  UpdateSubmapTopicOrService();
 }
 
 void SubmapsDisplay::onEnable() { Subscribe(); }
