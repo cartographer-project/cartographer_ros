@@ -90,7 +90,7 @@
       configuration_files_directories: [
         "$(find cartographer_ros)/configuration_files"
       ]
-      mapping_configuration_basename: "3d_mapping.lua"
+      mapping_configuration_basename: "backpack_3d.lua"
       imu_topic: "/imu"
       laser_scan_3d_topics: ["/horizontal_3d_laser", "/vertical_3d_laser"]
       laser_min_range_m: 0.

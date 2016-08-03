@@ -80,7 +80,7 @@ constexpr int kSubmapPublishPeriodInUts = 300 * 10000ll;  // 300 milliseconds
 constexpr int kPosePublishPeriodInUts = 5 * 10000ll;      // 5 milliseconds
 constexpr double kMaxTransformDelaySeconds = 1.;
 
-Rigid3d ToRidig3d(const geometry_msgs::TransformStamped& transform) {
+Rigid3d ToRigid3d(const geometry_msgs::TransformStamped& transform) {
   return Rigid3d(Eigen::Vector3d(transform.transform.translation.x,
                                  transform.transform.translation.y,
                                  transform.transform.translation.z),
@@ -220,7 +220,7 @@ Node::Node()
 
 Rigid3d Node::LookupToTrackingTransformOrThrow(
     const ::cartographer::common::Time time, const string& frame_id) {
-  return ToRidig3d(
+  return ToRigid3d(
       tf_buffer_.lookupTransform(tracking_frame_, frame_id, ToRos(time),
                                  ros::Duration(kMaxTransformDelaySeconds)));
 }
