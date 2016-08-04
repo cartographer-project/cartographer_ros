@@ -496,7 +496,7 @@ bool Node::HandleSubmapQuery(
   return true;
 }
 
-void Node::PublishSubmapList(int64 timestamp) {
+void Node::PublishSubmapList(const int64 timestamp) {
   ::cartographer::common::MutexLocker lock(&mutex_);
   const ::cartographer::mapping::Submaps* submaps =
       trajectory_builder_->submaps();
@@ -513,12 +513,15 @@ void Node::PublishSubmapList(int64 timestamp) {
   }
 
   ::cartographer_ros_msgs::SubmapList ros_submap_list;
+  ros_submap_list.header.stamp =
+      ToRos(::cartographer::common::FromUniversal(timestamp));
+  ros_submap_list.header.frame_id = map_frame_;
   ros_submap_list.trajectory.push_back(ros_trajectory);
   submap_list_publisher_.publish(ros_submap_list);
   last_submap_list_publish_timestamp_ = timestamp;
 }
 
-void Node::PublishPose(int64 timestamp) {
+void Node::PublishPose(const int64 timestamp) {
   const ::cartographer::common::Time time =
       ::cartographer::common::FromUniversal(timestamp);
   const Rigid3d tracking_to_map = trajectory_builder_->pose_estimate().pose;
