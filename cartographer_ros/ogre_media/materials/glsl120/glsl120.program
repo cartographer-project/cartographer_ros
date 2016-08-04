@@ -23,13 +23,3 @@ vertex_program cartographer_ros/glsl120/submap.vert glsl
 {
   source submap.vert
 }
-
-fragment_program cartographer_ros/glsl120/screen_blit.frag glsl
-{
-  source screen_blit.frag
-}
-
-vertex_program cartographer_ros/glsl120/screen_blit.vert glsl
-{
-  source screen_blit.vert
-}

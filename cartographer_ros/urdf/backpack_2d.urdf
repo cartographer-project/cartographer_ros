@@ -27,9 +27,9 @@
 
   <link name="imu_link">
     <visual>
-      <origin xyz="0.01 0.01 -0.01"/>
+      <origin xyz="0.0 0.0 0.0"/>
       <geometry>
-        <box size="0.055 0.055 0.02"/>
+        <box size="0.06 0.04 0.02"/>
       </geometry>
       <material name="orange"/>
     </visual>
@@ -37,7 +37,7 @@
 
   <link name="horizontal_laser_link">
     <visual>
-      <origin xyz="0.0 0.0 -0.01"/>
+      <origin xyz="0.0 0.0 0.0"/>
       <geometry>
         <cylinder length="0.09" radius="0.03"/>
       </geometry>
@@ -47,7 +47,7 @@
 
   <link name="vertical_laser_link">
     <visual>
-      <origin xyz="0.0 0.0 -0.01"/>
+      <origin xyz="0.0 0.0 0.0"/>
       <geometry>
         <cylinder length="0.09" radius="0.03"/>
       </geometry>
@@ -55,15 +55,7 @@
     </visual>
   </link>
 
-  <link name="base_link">
-    <visual>
-      <origin xyz="0.18 0.0 0.2"/>
-      <geometry>
-        <box size="0.03 0.4 0.8"/>
-      </geometry>
-      <material name="green"/>
-    </visual>
-  </link>
+  <link name="base_link" />
 
   <joint name="imu_link_joint" type="fixed">
     <parent link="base_link"/>

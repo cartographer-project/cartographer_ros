@@ -89,6 +89,7 @@ class DrawableSubmap : public QObject {
 
   ::cartographer::common::Mutex mutex_;
   ::rviz::FrameManager* frame_manager_;
+  Ogre::SceneManager* const scene_manager_;
   Ogre::SceneNode* const scene_node_;
   Ogre::ManualObject* manual_object_;
   Ogre::TexturePtr texture_;

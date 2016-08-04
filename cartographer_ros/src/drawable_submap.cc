@@ -60,6 +60,7 @@ DrawableSubmap::DrawableSubmap(const int submap_id, const int trajectory_id,
                                ::rviz::FrameManager* const frame_manager,
                                Ogre::SceneManager* const scene_manager)
     : frame_manager_(frame_manager),
+      scene_manager_(scene_manager),
       scene_node_(scene_manager->getRootSceneNode()->createChildSceneNode()),
       manual_object_(scene_manager->createManualObject(
           kManualObjectPrefix + GetSubmapIdentifier(trajectory_id, submap_id))),
@@ -86,6 +87,8 @@ DrawableSubmap::~DrawableSubmap() {
     Ogre::TextureManager::getSingleton().remove(texture_->getHandle());
     texture_.setNull();
   }
+  scene_manager_->destroySceneNode(scene_node_);
+  scene_manager_->destroyManualObject(manual_object_);
 }
 
 bool DrawableSubmap::Update(

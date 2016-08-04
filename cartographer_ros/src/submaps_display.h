@@ -18,8 +18,6 @@
 #define CARTOGRAPHER_ROS_GOOGLE_CARTOGRAPHER_SRC_SUBMAPS_DISPLAY_H_
 
 #include <OgreMaterial.h>
-#include <OgreOverlay.h>
-#include <OgreOverlayContainer.h>
 #include <OgreSceneManager.h>
 #include <OgreSharedPtr.h>
 #include <OgreTexture.h>
@@ -46,12 +44,9 @@ namespace rviz {
 // RViz plugin used for displaying maps which are represented by a collection of
 // submaps.
 //
-// We keep a separate Ogre scene to the one provided by rviz and in it we place
-// every submap as a SceneNode. We show an X-ray view of the map which is
-// achieved by shipping textures for every submap containing pre-multiplied
-// alpha and grayscale values, these are then alpha blended together onto an
-// offscreen texture. This offscreen texture is then screen blit onto the screen
-// as a grayscale image.
+// We show an X-ray view of the map which is achieved by shipping textures for
+// every submap containing pre-multiplied alpha and grayscale values, these are
+// then alpha blended together.
 class SubmapsDisplay : public ::rviz::Display {
   Q_OBJECT
 
@@ -95,7 +90,6 @@ class SubmapsDisplay : public ::rviz::Display {
   void IncomingSubmapList(
       const ::cartographer_ros_msgs::SubmapList::ConstPtr& msg);
 
-  int rtt_count_;
   SceneManagerListener scene_manager_listener_;
   ::cartographer_ros_msgs::SubmapList submap_list_;
   ros::Subscriber submap_list_subscriber_;
@@ -107,13 +101,6 @@ class SubmapsDisplay : public ::rviz::Display {
   ::rviz::StringProperty* map_frame_property_;
   ::rviz::StringProperty* tracking_frame_property_;
   std::vector<std::unique_ptr<Trajectory>> trajectories_ GUARDED_BY(mutex_);
-  Ogre::SceneManager* submaps_scene_manager_;
-  Ogre::Camera* submaps_scene_camera_;
-  Ogre::MaterialPtr submap_scene_material_;
-  Ogre::MaterialPtr screen_blit_material_;
-  Ogre::Overlay* overlay_;
-  Ogre::OverlayContainer* panel_;
-  Ogre::TexturePtr rttTexture_;
   ::cartographer::common::Mutex mutex_;
 };
 

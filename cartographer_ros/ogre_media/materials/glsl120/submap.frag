@@ -24,8 +24,7 @@ uniform float u_alpha;
 void main()
 {
   vec2 texture_value = texture2D(u_submap, out_submap_texture_coordinate).rg;
-  float value = texture_value.r;
-  float alpha = texture_value.g;
-  float is_known = step(1e-3, alpha + value);
-  gl_FragColor = vec4(u_alpha * value, u_alpha * is_known, 0., u_alpha * alpha);
+  float value = u_alpha * texture_value.r;
+  float alpha = u_alpha * texture_value.g;
+  gl_FragColor = vec4(value, value, value, alpha);
 }
