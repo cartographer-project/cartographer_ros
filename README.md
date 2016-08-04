@@ -4,7 +4,9 @@ See https://github.com/googlecartographer/cartographer
 
 ## Installation
 
-On Ubuntu 14.04 (Trusty) with ROS Indigo installed:
+Installation has been tested on Ubuntu 14.04 (Trusty) with ROS Indigo. There are multiple options for building cartographer_ros as part of a ROS workspace. Two common use cases are described below.
+
+These dependencies always have to be installed:
 
     # Install the required libraries that are available as debs
     sudo apt-get install \
@@ -20,6 +22,9 @@ On Ubuntu 14.04 (Trusty) with ROS Indigo installed:
       libblas-dev \
       liblapack-dev \
       libpcap-dev  # For 3D SLAM with Velodynes
+
+
+### Standalone Workspace
 
     # Set up your Catkin workspace
     mkdir -p ~/catkin_ws/src
@@ -41,3 +46,17 @@ On Ubuntu 14.04 (Trusty) with ROS Indigo installed:
     cd ~/catkin_ws
     catkin_make_isolated
     source devel_isolated/setup.bash
+
+### Using wstool
+
+If cartographer_ros is to be used as part of a pre-existing workspace/existing project, using [wstool](http://wiki.ros.org/wstool) is recommended.
+
+    # Enter workspace root (i.e. the folder that has "src" as a subfolder)
+    # Merge the cartographer_ros rosinstall file
+    wstool merge https://raw.githubusercontent.com/googlecartographer/cartographer_ros/master/cartographer_ros.rosinstall
+
+    # Update workspace
+    wstool update
+
+    # Build workspace contents. It is recommended to use catkin tools:
+    catkin build
