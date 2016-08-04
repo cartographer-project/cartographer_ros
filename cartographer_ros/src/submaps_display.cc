@@ -101,9 +101,7 @@ void SubmapsDisplay::CreateClient() {
       submap_query_service_property_->getStdString());
 }
 
-void SubmapsDisplay::Reset() {
-  reset();
-}
+void SubmapsDisplay::Reset() { reset(); }
 
 void SubmapsDisplay::RequestNewSubmaps() {
   ::cartographer::common::MutexLocker locker(&mutex_);
