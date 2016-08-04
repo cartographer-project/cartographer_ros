@@ -27,8 +27,7 @@
 #include <cartographer_ros_msgs/SubmapList.h>
 #include <nav_msgs/MapMetaData.h>
 #include <ros/time.h>
-#include <rviz/display.h>
-#include <rviz/properties/ros_topic_property.h>
+#include <rviz/message_filter_display.h>
 #include <tf/tfMessage.h>
 #include <tf2_ros/transform_listener.h>
 
@@ -36,7 +35,6 @@
 #include <vector>
 
 #include "drawable_submap.h"
-#include "trajectory.h"
 
 namespace cartographer_ros {
 namespace rviz {
@@ -47,7 +45,8 @@ namespace rviz {
 // We show an X-ray view of the map which is achieved by shipping textures for
 // every submap containing pre-multiplied alpha and grayscale values, these are
 // then alpha blended together.
-class SubmapsDisplay : public ::rviz::Display {
+class SubmapsDisplay
+    : public ::rviz::MessageFilterDisplay<::cartographer_ros_msgs::SubmapList> {
   Q_OBJECT
 
  public:
@@ -57,17 +56,11 @@ class SubmapsDisplay : public ::rviz::Display {
   SubmapsDisplay(const SubmapsDisplay&) = delete;
   SubmapsDisplay& operator=(const SubmapsDisplay&) = delete;
 
-  // Called by RViz on initialization of the plugin.
-  void onInitialize() override;
-  // Called to tell the display to clear its state.
-  void reset() override;
-
  Q_SIGNALS:
   void SubmapListUpdated();
 
  private Q_SLOTS:
   void RequestNewSubmaps();
-  void UpdateSubmapTopicOrService();
 
  private:
   class SceneManagerListener : public Ogre::SceneManager::Listener {
@@ -82,13 +75,13 @@ class SubmapsDisplay : public ::rviz::Display {
     std::function<void()> callback_;
   };
 
-  void onEnable() override;
-  void onDisable() override;
-  void Subscribe();
-  void UnsubscribeAndClear();
+  void onInitialize() override;
+  void reset() override;
+  void processMessage(
+      const ::cartographer_ros_msgs::SubmapList::ConstPtr& msg) override;
+
+  void CreateClient();
   void UpdateMapTexture();
-  void IncomingSubmapList(
-      const ::cartographer_ros_msgs::SubmapList::ConstPtr& msg);
 
   SceneManagerListener scene_manager_listener_;
   ::cartographer_ros_msgs::SubmapList submap_list_;
@@ -96,11 +89,11 @@ class SubmapsDisplay : public ::rviz::Display {
   ::tf2_ros::Buffer tf_buffer_;
   ::tf2_ros::TransformListener tf_listener_;
   ros::ServiceClient client_;
-  ::rviz::RosTopicProperty* topic_property_;
   ::rviz::StringProperty* submap_query_service_property_;
   ::rviz::StringProperty* map_frame_property_;
   ::rviz::StringProperty* tracking_frame_property_;
-  std::vector<std::unique_ptr<Trajectory>> trajectories_ GUARDED_BY(mutex_);
+  using Trajectory = std::vector<std::unique_ptr<DrawableSubmap>>;
+  std::vector<Trajectory> trajectories_ GUARDED_BY(mutex_);
   ::cartographer::common::Mutex mutex_;
 };
 
