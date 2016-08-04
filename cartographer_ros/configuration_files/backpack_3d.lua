@@ -29,6 +29,6 @@ options.sparse_pose_graph.constraint_builder.adaptive_voxel_filter = TRAJECTORY_
 options.sparse_pose_graph.constraint_builder.min_score = 0.62
 options.sparse_pose_graph.constraint_builder.log_matches = true
 
-options.trajectory_builder.scans_per_accumulation = 2
+options.trajectory_builder.scans_per_accumulation = 20
 
 return options

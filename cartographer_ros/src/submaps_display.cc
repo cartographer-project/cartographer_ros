@@ -16,23 +16,8 @@
 
 #include "submaps_display.h"
 
-#include <OgreColourValue.h>
-#include <OgreHardwarePixelBuffer.h>
-#include <OgreManualObject.h>
-#include <OgreMaterialManager.h>
-#include <OgreOverlay.h>
-#include <OgreOverlayContainer.h>
-#include <OgreOverlayManager.h>
-#include <OgreRenderTexture.h>
 #include <OgreResourceGroupManager.h>
-#include <OgreRoot.h>
 #include <OgreSceneManager.h>
-#include <OgreSceneNode.h>
-#include <OgreSharedPtr.h>
-#include <OgreTechnique.h>
-#include <OgreTexture.h>
-#include <OgreTextureManager.h>
-#include <OgreViewport.h>
 #include <cartographer/common/mutex.h>
 #include <cartographer_ros_msgs/SubmapList.h>
 #include <cartographer_ros_msgs/SubmapQuery.h>
@@ -56,13 +41,6 @@ constexpr int kMaxOnGoingRequests = 6;
 constexpr char kMaterialsDirectory[] = "/ogre_media/materials";
 constexpr char kGlsl120Directory[] = "/glsl120";
 constexpr char kScriptsDirectory[] = "/scripts";
-constexpr char kScreenBlitMaterialName[] = "ScreenBlitMaterial";
-constexpr char kScreenBlitSourceMaterialName[] = "cartographer_ros/ScreenBlit";
-constexpr char kSubmapsRttPrefix[] = "SubmapsRtt";
-constexpr char kMapTextureName[] = "MapTexture";
-constexpr char kMapOverlayName[] = "MapOverlay";
-constexpr char kSubmapsSceneCameraName[] = "SubmapsSceneCamera";
-constexpr char kSubmapTexturesGroup[] = "SubmapTexturesGroup";
 constexpr char kDefaultMapFrame[] = "map";
 constexpr char kDefaultTrackingFrame[] = "base_link";
 
@@ -70,7 +48,6 @@ constexpr char kDefaultTrackingFrame[] = "base_link";
 
 SubmapsDisplay::SubmapsDisplay()
     : Display(),
-      rtt_count_(0),
       scene_manager_listener_([this]() { UpdateMapTexture(); }),
       tf_listener_(tf_buffer_) {
   connect(this, SIGNAL(SubmapListUpdated()), this, SLOT(RequestNewSubmaps()));
@@ -107,32 +84,6 @@ SubmapsDisplay::SubmapsDisplay()
 SubmapsDisplay::~SubmapsDisplay() { UnsubscribeAndClear(); }
 
 void SubmapsDisplay::onInitialize() {
-  submaps_scene_manager_ =
-      Ogre::Root::getSingletonPtr()->createSceneManager(Ogre::ST_GENERIC);
-  submaps_scene_camera_ =
-      submaps_scene_manager_->createCamera(kSubmapsSceneCameraName);
-  submap_scene_material_ = Ogre::MaterialManager::getSingleton().create(
-      kMapTextureName, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-
-  screen_blit_material_ = Ogre::MaterialManager::getSingleton().getByName(
-      kScreenBlitSourceMaterialName);
-  screen_blit_material_ = screen_blit_material_->clone(kScreenBlitMaterialName);
-  screen_blit_material_->setReceiveShadows(false);
-  screen_blit_material_->getTechnique(0)->setLightingEnabled(false);
-  screen_blit_material_->setDepthWriteEnabled(false);
-
-  Ogre::OverlayManager& overlay_manager = Ogre::OverlayManager::getSingleton();
-  overlay_ = overlay_manager.create(kMapOverlayName);
-  panel_ = static_cast<Ogre::OverlayContainer*>(
-      overlay_manager.createOverlayElement("Panel", "PanelName"));
-  overlay_->add2D(panel_);
-  panel_->setPosition(0.0, 0.0);
-  panel_->setDimensions(1., 1.);
-  panel_->setMaterialName(kScreenBlitMaterialName);
-
-  Ogre::ResourceGroupManager::getSingleton().createResourceGroup(
-      kSubmapTexturesGroup);
-
   scene_manager_->addListener(&scene_manager_listener_);
   UpdateSubmapTopicOrService();
 }
@@ -166,9 +117,9 @@ void SubmapsDisplay::Subscribe() {
                                &SubmapsDisplay::IncomingSubmapList, this,
                                ros::TransportHints().reliable());
       setStatus(::rviz::StatusProperty::Ok, "Topic", "OK");
-    } catch (ros::Exception& e) {
+    } catch (const ros::Exception& ex) {
       setStatus(::rviz::StatusProperty::Error, "Topic",
-                QString("Error subscribing: ") + e.what());
+                QString("Error subscribing: ") + ex.what());
     }
   }
 }
@@ -183,15 +134,7 @@ void SubmapsDisplay::UnsubscribeAndClear() {
   submap_list_subscriber_.shutdown();
   client_.shutdown();
   ::cartographer::common::MutexLocker locker(&mutex_);
-  submaps_scene_manager_->clearScene();
-  if (!rttTexture_.isNull()) {
-    rttTexture_->unload();
-    rttTexture_.setNull();
-  }
-  Ogre::ResourceGroupManager::getSingleton().clearResourceGroup(
-      kSubmapTexturesGroup);
   trajectories_.clear();
-  overlay_->hide();
 }
 
 void SubmapsDisplay::RequestNewSubmaps() {
@@ -210,7 +153,7 @@ void SubmapsDisplay::RequestNewSubmaps() {
          submap_id < submap_entries.size(); ++submap_id) {
       trajectories_[trajectory_id]->Add(submap_id, trajectory_id,
                                         context_->getFrameManager(),
-                                        submaps_scene_manager_);
+                                        context_->getSceneManager());
     }
   }
   int num_ongoing_requests = 0;
@@ -242,73 +185,22 @@ void SubmapsDisplay::RequestNewSubmaps() {
 }
 
 void SubmapsDisplay::UpdateMapTexture() {
-  if (trajectories_.empty()) {
-    return;
-  }
-  const int width = scene_manager_->getCurrentViewport()->getActualWidth();
-  const int height = scene_manager_->getCurrentViewport()->getActualHeight();
-  if (!rttTexture_.isNull()) {
-    rttTexture_->unload();
-    rttTexture_.setNull();
-  }
-  // If the rtt texture is freed every time UpdateMapTexture() is called, the
-  // code slows down a lot. Therefore, we assign them to a group and free them
-  // every 100th texture.
-  if (rtt_count_ % 100 == 0) {
-    Ogre::ResourceGroupManager::getSingleton().clearResourceGroup(
-        kSubmapTexturesGroup);
-  }
-  rttTexture_ =
-      Ogre::Root::getSingletonPtr()->getTextureManager()->createManual(
-          kSubmapsRttPrefix + std::to_string(rtt_count_), kSubmapTexturesGroup,
-          Ogre::TEX_TYPE_2D, width, height, 0, Ogre::PF_RG8,
-          Ogre::TU_RENDERTARGET);
-  rtt_count_++;
-
-  Ogre::Pass* rtt_pass = submap_scene_material_->getTechnique(0)->getPass(0);
-  Ogre::TextureUnitState* const rtt_tex_unit =
-      rtt_pass->getNumTextureUnitStates() > 0
-          ? rtt_pass->getTextureUnitState(0)
-          : rtt_pass->createTextureUnitState();
-  rtt_tex_unit->setTexture(rttTexture_);
-
-  Ogre::RenderTexture* const renderTexture =
-      rttTexture_->getBuffer()->getRenderTarget();
-  renderTexture->addViewport(submaps_scene_camera_)
-      ->setBackgroundColour(Ogre::ColourValue(0.5f, 0.f, 0.f));
-  {
-    ::cartographer::common::MutexLocker locker(&mutex_);
-    // TODO(pedrofernandez): Add support for more than one trajectory.
-    for (int i = 0; i < trajectories_.front()->Size(); ++i) {
-      trajectories_.front()->Get(i).Transform(ros::Time());
+  ::cartographer::common::MutexLocker locker(&mutex_);
+  for (auto& trajectory : trajectories_) {
+    for (int i = 0; i < trajectory->Size(); ++i) {
+      trajectory->Get(i).Transform(ros::Time(0) /* latest */);
       try {
         const ::geometry_msgs::TransformStamped transform_stamped =
             tf_buffer_.lookupTransform(map_frame_property_->getStdString(),
                                        tracking_frame_property_->getStdString(),
                                        ros::Time(0) /* latest */);
-        trajectories_.front()->Get(i).SetAlpha(
+        trajectory->Get(i).SetAlpha(
             transform_stamped.transform.translation.z);
-      } catch (tf2::TransformException& e) {
-        ROS_WARN("Could not compute submap fading: %s", e.what());
+      } catch (const tf2::TransformException& ex) {
+        ROS_WARN("Could not compute submap fading: %s", ex.what());
       }
     }
   }
-  Ogre::Camera* const actual_camera =
-      scene_manager_->getCurrentViewport()->getCamera();
-  submaps_scene_camera_->synchroniseBaseSettingsWith(actual_camera);
-  submaps_scene_camera_->setCustomProjectionMatrix(
-      true, actual_camera->getProjectionMatrix());
-  renderTexture->update();
-
-  Ogre::Pass* const pass = screen_blit_material_->getTechnique(0)->getPass(0);
-  pass->setSceneBlending(Ogre::SBF_SOURCE_ALPHA,
-                         Ogre::SBF_ONE_MINUS_SOURCE_ALPHA);
-  Ogre::TextureUnitState* const tex_unit = pass->getNumTextureUnitStates() > 0
-                                               ? pass->getTextureUnitState(0)
-                                               : pass->createTextureUnitState();
-  tex_unit->setTextureName(rttTexture_->getName());
-  tex_unit->setTextureFiltering(Ogre::TFO_NONE);
-  overlay_->show();
 }
 
 }  // namespace rviz
