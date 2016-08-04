@@ -524,7 +524,13 @@ void Node::PublishSubmapList(const int64 timestamp) {
 void Node::PublishPose(const int64 timestamp) {
   const ::cartographer::common::Time time =
       ::cartographer::common::FromUniversal(timestamp);
-  const Rigid3d tracking_to_map = trajectory_builder_->pose_estimate().pose;
+  const Rigid3d tracking_to_local = trajectory_builder_->pose_estimate().pose;
+  const ::cartographer::mapping::Submaps* submaps =
+      trajectory_builder_->submaps();
+  const Rigid3d local_to_map =
+      sparse_pose_graph_->GetOdometryToMapTransform(*submaps);
+  const Rigid3d tracking_to_map = local_to_map * tracking_to_local;
+
   geometry_msgs::TransformStamped stamped_transform;
   stamped_transform.header.stamp = ToRos(time);
   stamped_transform.header.frame_id = map_frame_;
@@ -532,18 +538,12 @@ void Node::PublishPose(const int64 timestamp) {
 
   if (provide_odom_) {
     ::cartographer::common::MutexLocker lock(&mutex_);
-    const ::cartographer::mapping::Submaps* submaps =
-        trajectory_builder_->submaps();
-    const ::cartographer::transform::Rigid3d odom_to_map =
-        sparse_pose_graph_->GetOdometryToMapTransform(*submaps);
-    stamped_transform.transform = ToGeometryMsgTransform(odom_to_map);
+    stamped_transform.transform = ToGeometryMsgTransform(local_to_map);
     tf_broadcaster_.sendTransform(stamped_transform);
 
     stamped_transform.header.frame_id = odom_frame_;
     stamped_transform.child_frame_id = tracking_frame_;
-    const ::cartographer::transform::Rigid3d tracking_to_odom =
-        odom_to_map.inverse() * tracking_to_map;
-    stamped_transform.transform = ToGeometryMsgTransform(tracking_to_odom);
+    stamped_transform.transform = ToGeometryMsgTransform(tracking_to_local);
     tf_broadcaster_.sendTransform(stamped_transform);
   } else {
     try {
