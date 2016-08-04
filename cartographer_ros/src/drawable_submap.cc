@@ -68,6 +68,7 @@ DrawableSubmap::DrawableSubmap(const int submap_id, const int trajectory_id,
       trajectory_id_(trajectory_id),
       last_query_timestamp_(0),
       query_in_progress_(false),
+      version_(0),
       texture_count_(0),
       current_alpha_(0) {
   material_ = Ogre::MaterialManager::getSingleton().getByName(

@@ -60,6 +60,7 @@ class SubmapsDisplay
   void SubmapListUpdated();
 
  private Q_SLOTS:
+  void Reset();
   void RequestNewSubmaps();
 
  private:

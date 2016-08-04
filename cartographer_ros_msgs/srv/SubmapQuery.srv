@@ -15,7 +15,6 @@
 int32 submap_id
 int32 trajectory_id
 ---
-int32 submap_id
 int32 submap_version
 uint8[] cells
 int32 width
