@@ -470,7 +470,6 @@ bool Node::HandleSubmapQuery(
                          sparse_pose_graph_->GetTrajectoryNodes(),
                          submap_transforms[request.submap_id], &response_proto);
 
-  response.submap_id = response_proto.submap_id();
   response.submap_version = response_proto.submap_version();
   response.cells.insert(response.cells.begin(), response_proto.cells().begin(),
                         response_proto.cells().end());

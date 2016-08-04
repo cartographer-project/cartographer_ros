@@ -54,7 +54,7 @@ SubmapsDisplay::SubmapsDisplay()
   submap_query_service_property_ = new ::rviz::StringProperty(
       "Submap query service",
       QString("/cartographer/") + kSubmapQueryServiceName,
-      "Submap query service to connect to.", this, SLOT(reset()));
+      "Submap query service to connect to.", this, SLOT(Reset()));
   map_frame_property_ = new ::rviz::StringProperty(
       "Map frame", kDefaultMapFrame, "Map frame, used for fading out submaps.",
       this);
@@ -100,6 +100,8 @@ void SubmapsDisplay::CreateClient() {
   client_ = update_nh_.serviceClient<::cartographer_ros_msgs::SubmapQuery>(
       submap_query_service_property_->getStdString());
 }
+
+void SubmapsDisplay::Reset() { reset(); }
 
 void SubmapsDisplay::RequestNewSubmaps() {
   ::cartographer::common::MutexLocker locker(&mutex_);
