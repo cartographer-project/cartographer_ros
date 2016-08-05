@@ -116,6 +116,8 @@ void DrawableSubmap::QuerySubmap(ros::ServiceClient* const client) {
     srv.request.submap_id = submap_id_;
     srv.request.trajectory_id = trajectory_id_;
     if (client->call(srv)) {
+      // We emit a signal to update in the right thread, and pass via the
+      // 'response_' member to simplify the signal-slot connection slightly.
       ::cartographer::common::MutexLocker locker(&mutex_);
       response_ = srv.response;
       Q_EMIT RequestSucceeded();
