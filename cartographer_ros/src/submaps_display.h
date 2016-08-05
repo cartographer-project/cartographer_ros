@@ -56,12 +56,8 @@ class SubmapsDisplay
   SubmapsDisplay(const SubmapsDisplay&) = delete;
   SubmapsDisplay& operator=(const SubmapsDisplay&) = delete;
 
- Q_SIGNALS:
-  void SubmapListUpdated();
-
  private Q_SLOTS:
   void Reset();
-  void RequestNewSubmaps();
 
  private:
   class SceneManagerListener : public Ogre::SceneManager::Listener {
@@ -76,17 +72,17 @@ class SubmapsDisplay
     std::function<void()> callback_;
   };
 
+  void CreateClient();
+
   void onInitialize() override;
   void reset() override;
   void processMessage(
       const ::cartographer_ros_msgs::SubmapList::ConstPtr& msg) override;
+  void update(float wall_dt, float ros_dt) override;
 
-  void CreateClient();
-  void UpdateMapTexture();
+  void UpdateTransforms();
 
   SceneManagerListener scene_manager_listener_;
-  ::cartographer_ros_msgs::SubmapList submap_list_;
-  ros::Subscriber submap_list_subscriber_;
   ::tf2_ros::Buffer tf_buffer_;
   ::tf2_ros::TransformListener tf_listener_;
   ros::ServiceClient client_;

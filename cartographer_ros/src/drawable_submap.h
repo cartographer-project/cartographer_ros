@@ -41,12 +41,9 @@ class DrawableSubmap : public QObject {
   Q_OBJECT
 
  public:
-  // Each submap is identified by a 'trajectory_id' plus a 'submap_id'. The
-  // 'frame_manager' is needed to transform the scene node before rendering
-  // onto the offscreen texture. 'scene_manager' is the Ogre scene manager which
-  // contains all submaps.
+  // Each submap is identified by a 'trajectory_id' plus a 'submap_id'.
+  // 'scene_manager' is the Ogre scene manager to which to add a node.
   DrawableSubmap(int submap_id, int trajectory_id,
-                 ::rviz::FrameManager* frame_manager,
                  Ogre::SceneManager* scene_manager);
   ~DrawableSubmap() override;
   DrawableSubmap(const DrawableSubmap&) = delete;
@@ -63,7 +60,7 @@ class DrawableSubmap : public QObject {
 
   // Transforms the scene node for this submap before being rendered onto a
   // texture.
-  void Transform(const ros::Time& ros_time);
+  void Transform(::rviz::FrameManager* frame_manager);
 
   // Sets the alpha of the submap taking into account its slice height and the
   // 'current_tracking_z'.
@@ -88,7 +85,6 @@ class DrawableSubmap : public QObject {
   const int trajectory_id_;
 
   ::cartographer::common::Mutex mutex_;
-  ::rviz::FrameManager* frame_manager_;
   Ogre::SceneManager* const scene_manager_;
   Ogre::SceneNode* const scene_node_;
   Ogre::ManualObject* manual_object_;

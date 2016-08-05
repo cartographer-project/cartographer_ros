@@ -15,11 +15,12 @@
 -->
 
 <library path="lib/libcartographer_rviz_submaps_visualization">
-  <class name="Cartographer Submap visualization"
+  <class name="Submaps"
          type="cartographer_ros::rviz::SubmapsDisplay"
          base_class_type="rviz::Display">
     <description>
-      Displays Google Cartographer's submaps as a unified map in RViz.
+      Displays submaps as a unified map in RViz.
+      https://github.com/googlecartographer/cartographer_ros
     </description>
   </class>
 </library>
