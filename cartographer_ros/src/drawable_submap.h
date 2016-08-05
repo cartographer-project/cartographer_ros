@@ -49,11 +49,13 @@ class DrawableSubmap : public QObject {
   DrawableSubmap(const DrawableSubmap&) = delete;
   DrawableSubmap& operator=(const DrawableSubmap&) = delete;
 
-  // 'submap_entry' contains metadata which is used to find out whether this
-  // 'DrawableSubmap' should update itself. If an update is needed, it will send
-  // an RPC using 'client' to request the new data for the submap.
-  bool Update(const ::cartographer_ros_msgs::SubmapEntry& submap_entry,
-              ros::ServiceClient* client);
+  // Updates the 'metadata' for this submap. If necessary, the next call to
+  // MaybeFetchTexture() will fetch a new submap texture.
+  void Update(const ::cartographer_ros_msgs::SubmapEntry& metadata);
+
+  // If an update is needed, it will send an RPC using 'client' to request the
+  // new data for the submap and returns true.
+  bool MaybeFetchTexture(ros::ServiceClient* client);
 
   // Returns whether an RPC is in progress.
   bool QueryInProgress();
@@ -72,13 +74,10 @@ class DrawableSubmap : public QObject {
 
  private Q_SLOTS:
   // Callback when an rpc request succeeded.
-  void OnRequestSuccess();
+  void UpdateSceneNode();
 
  private:
-  void QuerySubmap(int submap_id, int trajectory_id,
-                   ros::ServiceClient* client);
-  void OnRequestFailure();
-  void UpdateSceneNode();
+  void QuerySubmap(ros::ServiceClient* client);
   float UpdateAlpha(float target_alpha);
 
   const int submap_id_;
@@ -93,19 +92,12 @@ class DrawableSubmap : public QObject {
   Eigen::Affine3d submap_pose_ GUARDED_BY(mutex_);
   geometry_msgs::Pose transformed_pose_ GUARDED_BY(mutex_);
   std::chrono::milliseconds last_query_timestamp_ GUARDED_BY(mutex_);
-  bool query_in_progress_ GUARDED_BY(mutex_);
-  float resolution_ GUARDED_BY(mutex_);
-  int width_ GUARDED_BY(mutex_);
-  int height_ GUARDED_BY(mutex_);
-  int version_ GUARDED_BY(mutex_);
-  double slice_height_ GUARDED_BY(mutex_);
-  double last_query_slice_height_ GUARDED_BY(mutex_);
+  bool query_in_progress_ = false GUARDED_BY(mutex_);
+  int metadata_version_ = -1 GUARDED_BY(mutex_);
+  int texture_version_ = -1 GUARDED_BY(mutex_);
   std::future<void> rpc_request_future_;
-  std::string cells_ GUARDED_BY(mutex_);
-  std::unique_ptr<::cartographer_ros_msgs::SubmapQuery::Response> response_
-      GUARDED_BY(mutex_);
-  int texture_count_;
-  float current_alpha_;
+  ::cartographer_ros_msgs::SubmapQuery::Response response_ GUARDED_BY(mutex_);
+  float current_alpha_ = 0.f;
 };
 
 }  // namespace rviz
