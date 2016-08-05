@@ -57,10 +57,8 @@ std::string GetSubmapIdentifier(const int trajectory_id, const int submap_id) {
 }  // namespace
 
 DrawableSubmap::DrawableSubmap(const int submap_id, const int trajectory_id,
-                               ::rviz::FrameManager* const frame_manager,
                                Ogre::SceneManager* const scene_manager)
-    : frame_manager_(frame_manager),
-      scene_manager_(scene_manager),
+    : scene_manager_(scene_manager),
       scene_node_(scene_manager->getRootSceneNode()->createChildSceneNode()),
       manual_object_(scene_manager->createManualObject(
           kManualObjectPrefix + GetSubmapIdentifier(trajectory_id, submap_id))),
@@ -240,11 +238,11 @@ void DrawableSubmap::UpdateSceneNode() {
   texture_unit->setTextureFiltering(Ogre::TFO_NONE);
 }
 
-void DrawableSubmap::Transform(const ros::Time& ros_time) {
+void DrawableSubmap::Transform(::rviz::FrameManager* const frame_manager) {
   Ogre::Vector3 position;
   Ogre::Quaternion orientation;
-  frame_manager_->transform(kMapFrame, ros_time, transformed_pose_, position,
-                            orientation);
+  frame_manager->transform(kMapFrame, ros::Time(0) /* latest */,
+                           transformed_pose_, position, orientation);
   scene_node_->setPosition(position);
   scene_node_->setOrientation(orientation);
 }
