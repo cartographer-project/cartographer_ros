@@ -48,7 +48,7 @@ constexpr char kDefaultTrackingFrame[] = "base_link";
 }  // namespace
 
 SubmapsDisplay::SubmapsDisplay()
-    : scene_manager_listener_([this]() { UpdateMapTexture(); }),
+    : scene_manager_listener_([this]() { UpdateTransforms(); }),
       tf_listener_(tf_buffer_) {
   submap_query_service_property_ = new ::rviz::StringProperty(
       "Submap query service",
@@ -161,7 +161,7 @@ void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
   }
 }
 
-void SubmapsDisplay::UpdateMapTexture() {
+void SubmapsDisplay::UpdateTransforms() {
   ::cartographer::common::MutexLocker locker(&mutex_);
   for (auto& trajectory : trajectories_) {
     for (auto& submap : trajectory) {

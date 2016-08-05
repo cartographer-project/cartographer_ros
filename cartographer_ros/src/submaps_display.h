@@ -80,7 +80,7 @@ class SubmapsDisplay
       const ::cartographer_ros_msgs::SubmapList::ConstPtr& msg) override;
   void update(float wall_dt, float ros_dt) override;
 
-  void UpdateMapTexture();
+  void UpdateTransforms();
 
   SceneManagerListener scene_manager_listener_;
   ::tf2_ros::Buffer tf_buffer_;
