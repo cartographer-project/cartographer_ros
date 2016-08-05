@@ -38,7 +38,7 @@ namespace rviz {
 
 namespace {
 
-constexpr int kMaxOnGoingRequests = 6;
+constexpr int kMaxOnGoingRequestsPerTrajectory = 6;
 constexpr char kMaterialsDirectory[] = "/ogre_media/materials";
 constexpr char kGlsl120Directory[] = "/glsl120";
 constexpr char kScriptsDirectory[] = "/scripts";
@@ -104,47 +104,22 @@ void SubmapsDisplay::processMessage(
     if (trajectory_id >= trajectories_.size()) {
       trajectories_.emplace_back();
     }
+    auto& trajectory = trajectories_[trajectory_id];
     const std::vector<::cartographer_ros_msgs::SubmapEntry>& submap_entries =
         msg->trajectory[trajectory_id].submap;
-    if (submap_entries.empty()) {
-      return;
-    }
-    for (int submap_id = trajectories_[trajectory_id].size();
-         submap_id < submap_entries.size(); ++submap_id) {
-      trajectories_[trajectory_id].push_back(
-          ::cartographer::common::make_unique<DrawableSubmap>(
-              submap_id, trajectory_id, context_->getSceneManager()));
-    }
-  }
-  int num_ongoing_requests = 0;
-  for (const auto& trajectory : trajectories_) {
-    for (const auto& submap : trajectory) {
-      if (submap->QueryInProgress()) {
-        ++num_ongoing_requests;
-        if (num_ongoing_requests == kMaxOnGoingRequests) {
-          return;
-        }
+    for (int submap_id = 0; submap_id < submap_entries.size(); ++submap_id) {
+      if (submap_id >= trajectory.size()) {
+        trajectory.push_back(
+            ::cartographer::common::make_unique<DrawableSubmap>(
+                submap_id, trajectory_id, context_->getSceneManager()));
       }
-    }
-  }
-  for (int trajectory_id = 0; trajectory_id < msg->trajectory.size();
-       ++trajectory_id) {
-    const std::vector<::cartographer_ros_msgs::SubmapEntry>& submap_entries =
-        msg->trajectory[trajectory_id].submap;
-    for (int submap_id = submap_entries.size() - 1; submap_id >= 0;
-         --submap_id) {
-      if (trajectories_[trajectory_id][submap_id]->Update(
-              submap_entries[submap_id], &client_)) {
-        ++num_ongoing_requests;
-        if (num_ongoing_requests == kMaxOnGoingRequests) {
-          return;
-        }
-      }
+      trajectory[submap_id]->Update(submap_entries[submap_id]);
     }
   }
 }
 
 void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
+  // Update the fading by z distance.
   try {
     const ::geometry_msgs::TransformStamped transform_stamped =
         tf_buffer_.lookupTransform(map_frame_property_->getStdString(),
@@ -158,6 +133,24 @@ void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
     }
   } catch (const tf2::TransformException& ex) {
     ROS_WARN("Could not compute submap fading: %s", ex.what());
+  }
+
+  // Schedule fetching of new submap textures.
+  for (const auto& trajectory : trajectories_) {
+    int num_ongoing_requests = 0;
+    for (const auto& submap : trajectory) {
+      if (submap->QueryInProgress()) {
+        ++num_ongoing_requests;
+      }
+    }
+    for (int submap_id = trajectory.size() - 1;
+         submap_id >= 0 &&
+         num_ongoing_requests < kMaxOnGoingRequestsPerTrajectory;
+         --submap_id) {
+      if (trajectory[submap_id]->MaybeFetchTexture(&client_)) {
+        ++num_ongoing_requests;
+      }
+    }
   }
 }
 
