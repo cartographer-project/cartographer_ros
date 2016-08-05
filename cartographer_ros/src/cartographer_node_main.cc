@@ -349,12 +349,7 @@ void Node::Initialize() {
   laser_missing_echo_ray_length_m_ =
       GetParamOrDie<double>("laser_missing_echo_ray_length_m");
 
-  // Subscribe to the IMU.
-  const string imu_topic = GetParamOrDie<string>("imu_topic");
-  imu_subscriber_ = node_handle_.subscribe(imu_topic, kSubscriberQueueSize,
-                                           &Node::ImuMessageCallback, this);
   std::unordered_set<string> expected_sensor_identifiers;
-  expected_sensor_identifiers.insert(imu_topic);
 
   // Subscribe to exactly one laser.
   const bool has_laser_scan_2d = node_handle_.hasParam("laser_scan_2d_topic");
@@ -390,17 +385,20 @@ void Node::Initialize() {
 
   ::cartographer::common::LuaParameterDictionary lua_parameter_dictionary(
       code, std::move(file_resolver), nullptr);
+  bool expect_imu_data = true;
   if (has_laser_scan_2d || has_multi_echo_laser_scan_2d) {
     auto sparse_pose_graph_2d = ::cartographer::common::make_unique<
         ::cartographer::mapping_2d::SparsePoseGraph>(
         ::cartographer::mapping::CreateSparsePoseGraphOptions(
             lua_parameter_dictionary.GetDictionary("sparse_pose_graph").get()),
         &thread_pool_, &constant_node_data_);
+    auto options =
+        ::cartographer::mapping_2d::CreateLocalTrajectoryBuilderOptions(
+            lua_parameter_dictionary.GetDictionary("trajectory_builder").get());
+    expect_imu_data = options.expect_imu_data();
     trajectory_builder_ = ::cartographer::common::make_unique<
         ::cartographer::mapping_2d::GlobalTrajectoryBuilder>(
-        ::cartographer::mapping_2d::CreateLocalTrajectoryBuilderOptions(
-            lua_parameter_dictionary.GetDictionary("trajectory_builder").get()),
-        sparse_pose_graph_2d.get());
+        options, sparse_pose_graph_2d.get());
     sparse_pose_graph_ = std::move(sparse_pose_graph_2d);
   }
 
@@ -429,6 +427,14 @@ void Node::Initialize() {
     sparse_pose_graph_ = std::move(sparse_pose_graph_3d);
   }
   CHECK(sparse_pose_graph_ != nullptr);
+
+  // Maybe subscribe to the IMU.
+  if (expect_imu_data) {
+    const string imu_topic = GetParamOrDie<string>("imu_topic");
+    imu_subscriber_ = node_handle_.subscribe(imu_topic, kSubscriberQueueSize,
+                                             &Node::ImuMessageCallback, this);
+    expected_sensor_identifiers.insert(imu_topic);
+  }
 
   // TODO(hrapp): Add odometry subscribers here.
 
