@@ -4,7 +4,7 @@ See https://github.com/googlecartographer/cartographer
 
 ## Installation
 
-Installation has been tested on Ubuntu 14.04 (Trusty) with ROS Indigo. There are multiple options for building cartographer_ros as part of a ROS workspace. Two common use cases are described below.
+Installation has been tested on Ubuntu 14.04 (Trusty) with ROS Indigo and on Ubuntu 16.04 (Xenial) with ROS Kinetic. For ROS Kinetic, simply replace the two occurrences of "indigo" with "kinetic" in the instructions below. There are multiple options for building cartographer_ros as part of a ROS workspace. Two common use cases are described below.
 
 These dependencies always have to be installed:
 
@@ -16,11 +16,10 @@ These dependencies always have to be installed:
       libboost-all-dev \
       liblua5.2-dev \
       libprotobuf-dev \
+      libsuitesparse-dev \
       libwebp-dev \
       protobuf-compiler \
       python-sphinx \
-      libblas-dev \
-      liblapack-dev \
       libpcap-dev  # For 3D SLAM with Velodynes
 
 
@@ -35,11 +34,10 @@ These dependencies always have to be installed:
     # Clone the necessary repos into your Catkin workspace
     git clone https://github.com/googlecartographer/cartographer.git
     git clone https://github.com/googlecartographer/cartographer_ros.git
-    git clone https://github.com/ethz-asl/ceres_catkin.git
-    git clone https://github.com/ethz-asl/suitesparse.git
-    git clone https://github.com/ethz-asl/glog_catkin.git
-    git clone https://github.com/ethz-asl/gflags_catkin.git
-    git clone https://github.com/ethz-asl/catkin_simple.git
+    git clone https://github.com/ethz-asl/ceres_catkin.git  # Caution! Make sure you do not have "suitesparse" in you Catkin workspace
+    git clone https://github.com/ethz-asl/glog_catkin.git
+    git clone https://github.com/ethz-asl/gflags_catkin.git
+    git clone https://github.com/ethz-asl/catkin_simple.git
     git clone https://github.com/ros-drivers/velodyne.git  # For 3D SLAM with Velodynes
 
     # Build everything in your Catkin workspace
