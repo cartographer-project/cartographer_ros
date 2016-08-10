@@ -57,6 +57,10 @@
 #include "ros/ros.h"
 #include "ros/serialization.h"
 #include "sensor_msgs/Imu.h"
+
+#include "nav_msgs/Odometry.h"
+#include "cartographer/kalman_filter/pose_tracker.h"
+
 #include "sensor_msgs/LaserScan.h"
 #include "sensor_msgs/MultiEchoLaserScan.h"
 #include "sensor_msgs/PointCloud2.h"
@@ -80,6 +84,7 @@ namespace cartographer_ros {
 namespace {
 
 using ::cartographer::transform::Rigid3d;
+using ::cartographer::kalman_filter::PoseCovariance;
 namespace proto = ::cartographer::sensor::proto;
 
 // TODO(hrapp): Support multi trajectory mapping.
@@ -103,6 +108,20 @@ Rigid3d ToRigid3d(const geometry_msgs::TransformStamped& transform) {
                                     transform.transform.rotation.x,
                                     transform.transform.rotation.y,
                                     transform.transform.rotation.z));
+}
+
+Rigid3d ToRigid3d(const geometry_msgs::Pose& pose) {
+  return Rigid3d(Eigen::Vector3d(pose.position.x,
+                                 pose.position.y,
+                                 pose.position.z),
+                 Eigen::Quaterniond(pose.orientation.w,
+                                    pose.orientation.x,
+                                    pose.orientation.y,
+                                    pose.orientation.z));
+}
+
+PoseCovariance ToPoseCovariance(boost::array<double, 36ul> covariance) {
+  return Eigen::Map<Eigen::Matrix<double,6,6,Eigen::RowMajor> > (covariance.data());
 }
 
 // TODO(hrapp): move to msg_conversion.cc.
@@ -132,7 +151,7 @@ geometry_msgs::Pose ToGeometryMsgPose(const Rigid3d& rigid) {
 
 // This type is a logical union, i.e. only one proto is actually filled in. It
 // is only used for time ordering sensor data before passing it on.
-enum class SensorType { kImu, kLaserScan, kLaserFan3D };
+enum class SensorType { kImu, kLaserScan, kLaserFan3D, kOdom};
 struct SensorData {
   SensorData(const string& init_frame_id, proto::Imu init_imu)
       : type(SensorType::kImu), frame_id(init_frame_id), imu(init_imu) {}
@@ -145,11 +164,16 @@ struct SensorData {
         frame_id(init_frame_id),
         laser_fan_3d(init_laser_fan_3d) {}
 
+  SensorData(const string& init_frame_id, Rigid3d init_odom, PoseCovariance covar_init)
+      : type(SensorType::kOdom), frame_id(init_frame_id), odom(init_odom), odom_covar(covar_init) {}
+
   SensorType type;
   string frame_id;
   proto::Imu imu;
   proto::LaserScan laser_scan;
   proto::LaserFan3D laser_fan_3d;
+  Rigid3d odom;
+  PoseCovariance odom_covar;
 };
 
 // Node that listens to all the sensor data that we are interested in and wires
@@ -166,12 +190,15 @@ class Node {
  private:
   void HandleSensorData(int64 timestamp,
                         std::unique_ptr<SensorData> sensor_data);
+  void OdomMessageCallback(const nav_msgs::Odometry::ConstPtr& msg);
   void ImuMessageCallback(const sensor_msgs::Imu::ConstPtr& msg);
   void LaserScanMessageCallback(const sensor_msgs::LaserScan::ConstPtr& msg);
-  void MultiEchoLaserScanMessageCallback(
+  void MultiEchoLaserScanCallback(
       const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg);
   void PointCloud2MessageCallback(
       const string& topic, const sensor_msgs::PointCloud2::ConstPtr& msg);
+
+  void AddOdom(int64 timestamp, const string& frame_id, const Rigid3d odom, const PoseCovariance covar);
   void AddImu(int64 timestamp, const string& frame_id, const proto::Imu& imu);
   void AddHorizontalLaserFan(int64 timestamp, const string& frame_id,
                              const proto::LaserScan& laser_scan);
@@ -197,6 +224,7 @@ class Node {
   ros::Subscriber imu_subscriber_;
   ros::Subscriber laser_subscriber_2d_;
   std::vector<ros::Subscriber> laser_subscribers_3d_;
+  ros::Subscriber odom_subscriber_;
   string tracking_frame_;
   string odom_frame_;
   string map_frame_;
@@ -237,6 +265,43 @@ Rigid3d Node::LookupToTrackingTransformOrThrow(
                                  ros::Duration(kMaxTransformDelaySeconds)));
 }
 
+
+
+
+void Node::OdomMessageCallback(const nav_msgs::Odometry::ConstPtr& msg) {
+  auto sensor_data = ::cartographer::common::make_unique<SensorData>(
+    msg->header.frame_id, ToRigid3d(msg->pose.pose), ToPoseCovariance(msg->pose.covariance));
+
+  sensor_collator_.AddSensorData(
+    kTrajectoryId,
+    ::cartographer::common::ToUniversal(FromRos(msg->header.stamp)),
+    odom_subscriber_.getTopic(), std::move(sensor_data));
+
+}
+
+
+
+void Node::AddOdom(int64 timestamp, const string& frame_id, const Rigid3d odom, const PoseCovariance covar) {
+  const ::cartographer::common::Time time =
+      ::cartographer::common::FromUniversal(timestamp);
+
+  covar * 0.00000000000001;
+
+  try {
+    const Rigid3d sensor_to_tracking =
+        LookupToTrackingTransformOrThrow(time, frame_id);
+    trajectory_builder_->AddOdometerPose(time,odom,covar);
+        // LOG(WARNING) << "Ooooodooooooooom";
+
+  } catch (const tf2::TransformException& ex) {
+    LOG(WARNING) << "Cannot transform " << frame_id << " -> " << tracking_frame_
+                 << ": " << ex.what();
+  }
+}
+
+
+
+
 void Node::ImuMessageCallback(const sensor_msgs::Imu::ConstPtr& msg) {
   auto sensor_data = ::cartographer::common::make_unique<SensorData>(
       msg->header.frame_id, ToCartographer(*msg));
@@ -270,8 +335,10 @@ void Node::AddImu(const int64 timestamp, const string& frame_id,
 
 void Node::LaserScanMessageCallback(
     const sensor_msgs::LaserScan::ConstPtr& msg) {
+  std::string frame = msg->header.frame_id;
+  frame.erase(frame.begin());
   auto sensor_data = ::cartographer::common::make_unique<SensorData>(
-      msg->header.frame_id, ToCartographer(*msg));
+      frame, ToCartographer(*msg));
   sensor_collator_.AddSensorData(
       kTrajectoryId,
       ::cartographer::common::ToUniversal(FromRos(msg->header.stamp)),
@@ -447,6 +514,10 @@ void Node::Initialize() {
 
   // TODO(hrapp): Add odometry subscribers here.
 
+  odom_subscriber_ = node_handle_.subscribe("/odom", kSubscriberQueueSize,
+                                            &Node::OdomMessageCallback, this);
+  expected_sensor_identifiers.insert("/odom");
+
   sensor_collator_.AddTrajectory(
       kTrajectoryId, expected_sensor_identifiers,
       [this](const int64 timestamp, std::unique_ptr<SensorData> sensor_data) {
@@ -598,6 +669,11 @@ void Node::HandleSensorData(const int64 timestamp,
     case SensorType::kLaserFan3D:
       AddLaserFan3D(timestamp, sensor_data->frame_id,
                     sensor_data->laser_fan_3d);
+      return;
+
+    case SensorType::kOdom:
+      AddOdom(timestamp, sensor_data->frame_id,
+                    sensor_data->odom, sensor_data->odom_covar);
       return;
   }
   LOG(FATAL);

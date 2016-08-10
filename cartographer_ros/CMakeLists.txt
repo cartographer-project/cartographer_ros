@@ -23,6 +23,7 @@ set(PACKAGE_DEPENDENCIES
   roscpp
   rviz
   sensor_msgs
+  nav_msgs
   tf2
   tf2_eigen
 )
@@ -80,6 +81,7 @@ add_definitions(${BOOST_DEFINITIONS})
 include_directories(${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
 
+set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS}" ) #-fsanitize=address 
 add_executable(cartographer_node
   src/cartographer_node_main.cc
   src/node_constants.h
