@@ -17,7 +17,6 @@
 #include "submaps_display.h"
 
 #include <OgreResourceGroupManager.h>
-#include <OgreSceneManager.h>
 #include <cartographer/common/make_unique.h>
 #include <cartographer/common/mutex.h>
 #include <cartographer_ros_msgs/SubmapList.h>
@@ -28,7 +27,6 @@
 #include <ros/ros.h>
 #include <rviz/display_context.h>
 #include <rviz/frame_manager.h>
-#include <rviz/properties/ros_topic_property.h>
 #include <rviz/properties/string_property.h>
 
 #include "node_constants.h"
@@ -47,9 +45,7 @@ constexpr char kDefaultTrackingFrame[] = "base_link";
 
 }  // namespace
 
-SubmapsDisplay::SubmapsDisplay()
-    : scene_manager_listener_([this]() { UpdateTransforms(); }),
-      tf_listener_(tf_buffer_) {
+SubmapsDisplay::SubmapsDisplay() : tf_listener_(tf_buffer_) {
   submap_query_service_property_ = new ::rviz::StringProperty(
       "Submap query service",
       QString("/cartographer/") + kSubmapQueryServiceName,
@@ -84,7 +80,6 @@ void SubmapsDisplay::CreateClient() {
 
 void SubmapsDisplay::onInitialize() {
   MFDClass::onInitialize();
-  scene_manager_->addListener(&scene_manager_listener_);
   CreateClient();
 }
 
@@ -113,7 +108,8 @@ void SubmapsDisplay::processMessage(
             ::cartographer::common::make_unique<DrawableSubmap>(
                 submap_id, trajectory_id, context_->getSceneManager()));
       }
-      trajectory[submap_id]->Update(submap_entries[submap_id]);
+      trajectory[submap_id]->Update(msg->header, submap_entries[submap_id],
+                                    context_->getFrameManager());
     }
   }
 }
@@ -150,15 +146,6 @@ void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
       if (trajectory[submap_id]->MaybeFetchTexture(&client_)) {
         ++num_ongoing_requests;
       }
-    }
-  }
-}
-
-void SubmapsDisplay::UpdateTransforms() {
-  ::cartographer::common::MutexLocker locker(&mutex_);
-  for (auto& trajectory : trajectories_) {
-    for (auto& submap : trajectory) {
-      submap->Transform(context_->getFrameManager());
     }
   }
 }

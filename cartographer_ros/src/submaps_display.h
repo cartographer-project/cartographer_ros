@@ -17,18 +17,11 @@
 #ifndef CARTOGRAPHER_ROS_GOOGLE_CARTOGRAPHER_SRC_SUBMAPS_DISPLAY_H_
 #define CARTOGRAPHER_ROS_GOOGLE_CARTOGRAPHER_SRC_SUBMAPS_DISPLAY_H_
 
-#include <OgreMaterial.h>
-#include <OgreSceneManager.h>
-#include <OgreSharedPtr.h>
-#include <OgreTexture.h>
-#include <OgreVector3.h>
 #include <cartographer/common/mutex.h>
 #include <cartographer/common/port.h>
 #include <cartographer_ros_msgs/SubmapList.h>
-#include <nav_msgs/MapMetaData.h>
-#include <ros/time.h>
 #include <rviz/message_filter_display.h>
-#include <tf/tfMessage.h>
+#include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 
 #include <memory>
@@ -60,18 +53,6 @@ class SubmapsDisplay
   void Reset();
 
  private:
-  class SceneManagerListener : public Ogre::SceneManager::Listener {
-   public:
-    SceneManagerListener(std::function<void()> callback)
-        : callback_(callback) {}
-    void preUpdateSceneGraph(Ogre::SceneManager* source, Ogre::Camera* camera) {
-      callback_();
-    }
-
-   private:
-    std::function<void()> callback_;
-  };
-
   void CreateClient();
 
   void onInitialize() override;
@@ -80,9 +61,6 @@ class SubmapsDisplay
       const ::cartographer_ros_msgs::SubmapList::ConstPtr& msg) override;
   void update(float wall_dt, float ros_dt) override;
 
-  void UpdateTransforms();
-
-  SceneManagerListener scene_manager_listener_;
   ::tf2_ros::Buffer tf_buffer_;
   ::tf2_ros::TransformListener tf_listener_;
   ros::ServiceClient client_;

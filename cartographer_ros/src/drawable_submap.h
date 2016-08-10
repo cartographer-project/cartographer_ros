@@ -19,14 +19,17 @@
 
 #include <OgreManualObject.h>
 #include <OgreMaterial.h>
+#include <OgreQuaternion.h>
 #include <OgreSceneManager.h>
 #include <OgreSceneNode.h>
 #include <OgreTexture.h>
+#include <OgreVector3.h>
 #include <cartographer/common/mutex.h>
 #include <cartographer_ros_msgs/SubmapEntry.h>
 #include <cartographer_ros_msgs/SubmapQuery.h>
 #include <ros/ros.h>
 #include <rviz/display_context.h>
+#include <rviz/frame_manager.h>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
@@ -51,7 +54,9 @@ class DrawableSubmap : public QObject {
 
   // Updates the 'metadata' for this submap. If necessary, the next call to
   // MaybeFetchTexture() will fetch a new submap texture.
-  void Update(const ::cartographer_ros_msgs::SubmapEntry& metadata);
+  void Update(const ::std_msgs::Header& header,
+              const ::cartographer_ros_msgs::SubmapEntry& metadata,
+              ::rviz::FrameManager* frame_manager);
 
   // If an update is needed, it will send an RPC using 'client' to request the
   // new data for the submap and returns true.
@@ -59,10 +64,6 @@ class DrawableSubmap : public QObject {
 
   // Returns whether an RPC is in progress.
   bool QueryInProgress();
-
-  // Transforms the scene node for this submap before being rendered onto a
-  // texture.
-  void Transform(::rviz::FrameManager* frame_manager);
 
   // Sets the alpha of the submap taking into account its slice height and the
   // 'current_tracking_z'.
@@ -77,7 +78,7 @@ class DrawableSubmap : public QObject {
   void UpdateSceneNode();
 
  private:
-  void QuerySubmap(ros::ServiceClient* client);
+  void UpdateTransform();
   float UpdateAlpha(float target_alpha);
 
   const int submap_id_;
@@ -89,8 +90,10 @@ class DrawableSubmap : public QObject {
   Ogre::ManualObject* manual_object_;
   Ogre::TexturePtr texture_;
   Ogre::MaterialPtr material_;
-  Eigen::Affine3d submap_pose_ GUARDED_BY(mutex_);
-  geometry_msgs::Pose transformed_pose_ GUARDED_BY(mutex_);
+  double submap_z_ = 0. GUARDED_BY(mutex_);
+  Ogre::Vector3 position_ GUARDED_BY(mutex_);
+  Ogre::Quaternion orientation_ GUARDED_BY(mutex_);
+  Eigen::Affine3d slice_pose_ GUARDED_BY(mutex_);
   std::chrono::milliseconds last_query_timestamp_ GUARDED_BY(mutex_);
   bool query_in_progress_ = false GUARDED_BY(mutex_);
   int metadata_version_ = -1 GUARDED_BY(mutex_);

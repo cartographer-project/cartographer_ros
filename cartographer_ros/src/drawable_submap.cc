@@ -22,8 +22,6 @@
 #include <cartographer_ros_msgs/SubmapQuery.h>
 #include <eigen_conversions/eigen_msg.h>
 #include <ros/ros.h>
-#include <rviz/display_context.h>
-#include <rviz/frame_manager.h>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
@@ -38,7 +36,6 @@ namespace rviz {
 namespace {
 
 constexpr std::chrono::milliseconds kMinQueryDelayInMs(250);
-constexpr char kMapFrame[] = "/map";
 constexpr char kSubmapTexturePrefix[] = "SubmapTexture";
 constexpr char kManualObjectPrefix[] = "ManualObjectSubmap";
 constexpr char kSubmapMaterialPrefix[] = "SubmapMaterial";
@@ -87,10 +84,25 @@ DrawableSubmap::~DrawableSubmap() {
 }
 
 void DrawableSubmap::Update(
-    const ::cartographer_ros_msgs::SubmapEntry& metadata) {
+    const ::std_msgs::Header& header,
+    const ::cartographer_ros_msgs::SubmapEntry& metadata,
+    ::rviz::FrameManager* const frame_manager) {
+  Ogre::Vector3 position;
+  Ogre::Quaternion orientation;
+  if (!frame_manager->transform(header, metadata.pose, position, orientation)) {
+    // We don't know where we would display the texture, so we stop here.
+    return;
+  }
   ::cartographer::common::MutexLocker locker(&mutex_);
-  tf::poseMsgToEigen(metadata.pose, submap_pose_);
+  position_ = position;
+  orientation_ = orientation;
+  submap_z_ = metadata.pose.position.z;
   metadata_version_ = metadata.submap_version;
+  if (texture_version_ != -1) {
+    // We have to update the transform since we are already displaying a texture
+    // for this submap.
+    UpdateTransform();
+  }
 }
 
 bool DrawableSubmap::MaybeFetchTexture(ros::ServiceClient* const client) {
@@ -106,11 +118,6 @@ bool DrawableSubmap::MaybeFetchTexture(ros::ServiceClient* const client) {
   }
   query_in_progress_ = true;
   last_query_timestamp_ = now;
-  QuerySubmap(client);
-  return true;
-}
-
-void DrawableSubmap::QuerySubmap(ros::ServiceClient* const client) {
   rpc_request_future_ = std::async(std::launch::async, [this, client]() {
     ::cartographer_ros_msgs::SubmapQuery srv;
     srv.request.submap_id = submap_id_;
@@ -126,11 +133,24 @@ void DrawableSubmap::QuerySubmap(ros::ServiceClient* const client) {
       query_in_progress_ = false;
     }
   });
+  return true;
 }
 
 bool DrawableSubmap::QueryInProgress() {
   ::cartographer::common::MutexLocker locker(&mutex_);
   return query_in_progress_;
+}
+
+void DrawableSubmap::SetAlpha(const double current_tracking_z) {
+  const double distance_z = std::abs(submap_z_ - current_tracking_z);
+  const double fade_distance =
+      std::max(distance_z - kFadeOutStartDistanceInMeters, 0.);
+  const float alpha = static_cast<float>(
+      std::max(0., 1. - fade_distance / kFadeOutDistanceInMeters));
+
+  const Ogre::GpuProgramParametersSharedPtr parameters =
+      material_->getTechnique(0)->getPass(0)->getFragmentProgramParameters();
+  parameters->setNamedConstant("u_alpha", UpdateAlpha(alpha));
 }
 
 void DrawableSubmap::UpdateSceneNode() {
@@ -139,9 +159,8 @@ void DrawableSubmap::UpdateSceneNode() {
   std::string compressed_cells(response_.cells.begin(), response_.cells.end());
   std::string cells;
   ::cartographer::common::FastGunzipString(compressed_cells, &cells);
-  Eigen::Affine3d slice_pose;
-  tf::poseMsgToEigen(response_.slice_pose, slice_pose);
-  tf::poseEigenToMsg(submap_pose_ * slice_pose, transformed_pose_);
+  tf::poseMsgToEigen(response_.slice_pose, slice_pose_);
+  UpdateTransform();
   query_in_progress_ = false;
   // The call to Ogre's loadRawData below does not work with an RG texture,
   // therefore we create an RGB one whose blue channel is always 0.
@@ -159,43 +178,20 @@ void DrawableSubmap::UpdateSceneNode() {
   manual_object_->clear();
   const float metric_width = response_.resolution * response_.width;
   const float metric_height = response_.resolution * response_.height;
-
   manual_object_->begin(material_->getName(),
-                        Ogre::RenderOperation::OT_TRIANGLE_LIST);
-  {
-    {
-      // Bottom left
-      manual_object_->position(-metric_height, 0.0f, 0.0f);
-      manual_object_->textureCoord(0.0f, 1.0f);
-      manual_object_->normal(0.0f, 0.0f, 1.0f);
-
-      // Bottom right
-      manual_object_->position(-metric_height, -metric_width, 0.0f);
-      manual_object_->textureCoord(1.0f, 1.0f);
-      manual_object_->normal(0.0f, 0.0f, 1.0f);
-
-      // Top left
-      manual_object_->position(0.0f, 0.0f, 0.0f);
-      manual_object_->textureCoord(0.0f, 0.0f);
-      manual_object_->normal(0.0f, 0.0f, 1.0f);
-
-      // Top left
-      manual_object_->position(0.0f, 0.0f, 0.0f);
-      manual_object_->textureCoord(0.0f, 0.0f);
-      manual_object_->normal(0.0f, 0.0f, 1.0f);
-
-      // Bottom right
-      manual_object_->position(-metric_height, -metric_width, 0.0f);
-      manual_object_->textureCoord(1.0f, 1.0f);
-      manual_object_->normal(0.0f, 0.0f, 1.0f);
-
-      // Top right
-      manual_object_->position(0.0f, -metric_width, 0.0f);
-      manual_object_->textureCoord(1.0f, 0.0f);
-      manual_object_->normal(0.0f, 0.0f, 1.0f);
-    }
-  }
-
+                        Ogre::RenderOperation::OT_TRIANGLE_STRIP);
+  // Bottom left
+  manual_object_->position(-metric_height, 0.0f, 0.0f);
+  manual_object_->textureCoord(0.0f, 1.0f);
+  // Bottom right
+  manual_object_->position(-metric_height, -metric_width, 0.0f);
+  manual_object_->textureCoord(1.0f, 1.0f);
+  // Top left
+  manual_object_->position(0.0f, 0.0f, 0.0f);
+  manual_object_->textureCoord(0.0f, 0.0f);
+  // Top right
+  manual_object_->position(0.0f, -metric_width, 0.0f);
+  manual_object_->textureCoord(1.0f, 0.0f);
   manual_object_->end();
 
   Ogre::DataStreamPtr pixel_stream;
@@ -222,26 +218,15 @@ void DrawableSubmap::UpdateSceneNode() {
   texture_unit->setTextureFiltering(Ogre::TFO_NONE);
 }
 
-void DrawableSubmap::Transform(::rviz::FrameManager* const frame_manager) {
-  Ogre::Vector3 position;
-  Ogre::Quaternion orientation;
-  frame_manager->transform(kMapFrame, ros::Time(0) /* latest */,
-                           transformed_pose_, position, orientation);
-  scene_node_->setPosition(position);
-  scene_node_->setOrientation(orientation);
-}
-
-void DrawableSubmap::SetAlpha(const double current_tracking_z) {
-  const double distance_z =
-      std::abs(submap_pose_.translation().z() - current_tracking_z);
-  const double fade_distance =
-      std::max(distance_z - kFadeOutStartDistanceInMeters, 0.);
-  const float alpha =
-      (float)std::max(0., 1. - fade_distance / kFadeOutDistanceInMeters);
-
-  const Ogre::GpuProgramParametersSharedPtr parameters =
-      material_->getTechnique(0)->getPass(0)->getFragmentProgramParameters();
-  parameters->setNamedConstant("u_alpha", UpdateAlpha(alpha));
+void DrawableSubmap::UpdateTransform() {
+  const Eigen::Quaterniond quaternion(slice_pose_.rotation());
+  const Ogre::Quaternion slice_rotation(quaternion.w(), quaternion.x(),
+                                        quaternion.y(), quaternion.z());
+  const Ogre::Vector3 slice_translation(slice_pose_.translation().x(),
+                                        slice_pose_.translation().y(),
+                                        slice_pose_.translation().z());
+  scene_node_->setPosition(orientation_ * slice_translation + position_);
+  scene_node_->setOrientation(orientation_ * slice_rotation);
 }
 
 float DrawableSubmap::UpdateAlpha(const float target_alpha) {
