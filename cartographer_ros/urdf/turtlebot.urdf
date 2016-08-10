@@ -25,7 +25,7 @@
     <color rgba="0.2 0.4 0.2 1"/>
   </material>
 
-  <link name="/horizontal_laser_link">
+  <link name="horizontal_laser_link">
     <visual>
       <origin xyz="0.0 0.0 0.0"/>
       <geometry>
@@ -35,7 +35,7 @@
     </visual>
   </link>
 
-  <link name="/base_link">
+  <link name="base_link">
     <visual>
       <origin xyz="0. 0. 0."/>
       <geometry>
@@ -46,8 +46,8 @@
   </link>
 
   <joint name="horizontal_laser_link_joint" type="fixed">
-    <parent link="/base_link"/>
-    <child link="/horizontal_laser_link"/>
+    <parent link="base_link"/>
+    <child link="horizontal_laser_link"/>
     <origin xyz="0. 0. 0.6"/>
   </joint>
 </robot>
