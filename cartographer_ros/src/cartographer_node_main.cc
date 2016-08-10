@@ -533,7 +533,7 @@ void Node::PublishPose(const int64 timestamp) {
   const ::cartographer::mapping::Submaps* submaps =
       trajectory_builder_->submaps();
   const Rigid3d local_to_map =
-      sparse_pose_graph_->GetOdometryToMapTransform(*submaps);
+      sparse_pose_graph_->GetLocalToGlobalTransform(*submaps);
   const Rigid3d tracking_to_map = local_to_map * tracking_to_local;
 
   geometry_msgs::TransformStamped stamped_transform;
