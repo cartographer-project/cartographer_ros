@@ -99,7 +99,8 @@ void DrawableSubmap::Update(
   submap_z_ = metadata.pose.position.z;
   metadata_version_ = metadata.submap_version;
   if (texture_version_ != -1) {
-    // We have to update the transform since we already show a texture.
+    // We have to update the transform since we are already displaying a texture
+    // for this submap.
     UpdateTransform();
   }
 }
@@ -144,8 +145,8 @@ void DrawableSubmap::SetAlpha(const double current_tracking_z) {
   const double distance_z = std::abs(submap_z_ - current_tracking_z);
   const double fade_distance =
       std::max(distance_z - kFadeOutStartDistanceInMeters, 0.);
-  const float alpha =
-      (float)std::max(0., 1. - fade_distance / kFadeOutDistanceInMeters);
+  const float alpha = static_cast<float>(
+      std::max(0., 1. - fade_distance / kFadeOutDistanceInMeters));
 
   const Ogre::GpuProgramParametersSharedPtr parameters =
       material_->getTechnique(0)->getPass(0)->getFragmentProgramParameters();
@@ -218,12 +219,12 @@ void DrawableSubmap::UpdateSceneNode() {
 }
 
 void DrawableSubmap::UpdateTransform() {
-  Eigen::Quaterniond quaternion(slice_pose_.rotation());
-  Ogre::Quaternion slice_rotation(quaternion.w(), quaternion.x(),
-                                  quaternion.y(), quaternion.z());
-  Ogre::Vector3 slice_translation(slice_pose_.translation().x(),
-                                  slice_pose_.translation().y(),
-                                  slice_pose_.translation().z());
+  const Eigen::Quaterniond quaternion(slice_pose_.rotation());
+  const Ogre::Quaternion slice_rotation(quaternion.w(), quaternion.x(),
+                                        quaternion.y(), quaternion.z());
+  const Ogre::Vector3 slice_translation(slice_pose_.translation().x(),
+                                        slice_pose_.translation().y(),
+                                        slice_pose_.translation().z());
   scene_node_->setPosition(orientation_ * slice_translation + position_);
   scene_node_->setOrientation(orientation_ * slice_rotation);
 }
