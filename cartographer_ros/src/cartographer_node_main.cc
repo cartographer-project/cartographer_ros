@@ -48,6 +48,7 @@
 #include "cartographer_ros_msgs/TrajectorySubmapList.h"
 #include "geometry_msgs/Transform.h"
 #include "geometry_msgs/TransformStamped.h"
+#include "gflags/gflags.h"
 #include "glog/log_severity.h"
 #include "glog/logging.h"
 #include "pcl/point_cloud.h"
@@ -66,6 +67,14 @@
 #include "msg_conversion.h"
 #include "node_constants.h"
 #include "time_conversion.h"
+
+DEFINE_string(configuration_directory, "",
+              "First directory in which configuration files are searched, "
+              "second is always the Cartographer installation to allow "
+              "including files from there.");
+DEFINE_string(configuration_basename, "",
+              "Basename, i.e. not containing any directory prefix, of the "
+              "configuration file.");
 
 namespace cartographer_ros {
 namespace {
@@ -151,9 +160,12 @@ class Node {
  private:
   void HandleSensorData(int64 timestamp,
                         std::unique_ptr<SensorData> sensor_data);
-  void ImuMessageCallback(const sensor_msgs::Imu::ConstPtr& msg);
-  void LaserScanMessageCallback(const sensor_msgs::LaserScan::ConstPtr& msg);
+  void ImuMessageCallback(const string& topic,
+                          const sensor_msgs::Imu::ConstPtr& msg);
+  void LaserScanMessageCallback(const string& topic,
+                                const sensor_msgs::LaserScan::ConstPtr& msg);
   void MultiEchoLaserScanCallback(
+      const string& topic,
       const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg);
   void PointCloud2MessageCallback(
       const string& topic, const sensor_msgs::PointCloud2::ConstPtr& msg);
@@ -162,9 +174,6 @@ class Node {
                              const proto::LaserScan& laser_scan);
   void AddLaserFan3D(int64 timestamp, const string& frame_id,
                      const proto::LaserFan3D& laser_fan_3d);
-
-  template <typename T>
-  const T GetParamOrDie(const string& name);
 
   // Returns a transform for 'frame_id' to 'tracking_frame_' if it exists at
   // 'time' or throws tf2::TransformException if it does not exist.
@@ -225,13 +234,14 @@ Rigid3d Node::LookupToTrackingTransformOrThrow(
                                  ros::Duration(kMaxTransformDelaySeconds)));
 }
 
-void Node::ImuMessageCallback(const sensor_msgs::Imu::ConstPtr& msg) {
+void Node::ImuMessageCallback(const string& topic,
+                              const sensor_msgs::Imu::ConstPtr& msg) {
   auto sensor_data = ::cartographer::common::make_unique<SensorData>(
       msg->header.frame_id, ToCartographer(*msg));
   sensor_collator_.AddSensorData(
       kTrajectoryId,
-      ::cartographer::common::ToUniversal(FromRos(msg->header.stamp)),
-      imu_subscriber_.getTopic(), std::move(sensor_data));
+      ::cartographer::common::ToUniversal(FromRos(msg->header.stamp)), topic,
+      std::move(sensor_data));
 }
 
 void Node::AddImu(const int64 timestamp, const string& frame_id,
@@ -243,8 +253,7 @@ void Node::AddImu(const int64 timestamp, const string& frame_id,
         LookupToTrackingTransformOrThrow(time, frame_id);
     CHECK(sensor_to_tracking.translation().norm() < 1e-5)
         << "The IMU is not colocated with the tracking frame. This makes it "
-           "hard "
-           "and inprecise to transform its linear accelaration into the "
+           "hard and inprecise to transform its linear accelaration into the "
            "tracking_frame and will decrease the quality of the SLAM.";
     trajectory_builder_->AddImuData(
         time, sensor_to_tracking.rotation() *
@@ -258,13 +267,13 @@ void Node::AddImu(const int64 timestamp, const string& frame_id,
 }
 
 void Node::LaserScanMessageCallback(
-    const sensor_msgs::LaserScan::ConstPtr& msg) {
+    const string& topic, const sensor_msgs::LaserScan::ConstPtr& msg) {
   auto sensor_data = ::cartographer::common::make_unique<SensorData>(
       msg->header.frame_id, ToCartographer(*msg));
   sensor_collator_.AddSensorData(
       kTrajectoryId,
-      ::cartographer::common::ToUniversal(FromRos(msg->header.stamp)),
-      laser_2d_subscriber_.getTopic(), std::move(sensor_data));
+      ::cartographer::common::ToUniversal(FromRos(msg->header.stamp)), topic,
+      std::move(sensor_data));
 }
 
 void Node::AddHorizontalLaserFan(const int64 timestamp, const string& frame_id,
@@ -291,13 +300,13 @@ void Node::AddHorizontalLaserFan(const int64 timestamp, const string& frame_id,
 }
 
 void Node::MultiEchoLaserScanCallback(
-    const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
+    const string& topic, const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
   auto sensor_data = ::cartographer::common::make_unique<SensorData>(
       msg->header.frame_id, ToCartographer(*msg));
   sensor_collator_.AddSensorData(
       kTrajectoryId,
-      ::cartographer::common::ToUniversal(FromRos(msg->header.stamp)),
-      laser_2d_subscriber_.getTopic(), std::move(sensor_data));
+      ::cartographer::common::ToUniversal(FromRos(msg->header.stamp)), topic,
+      std::move(sensor_data));
 }
 
 void Node::PointCloud2MessageCallback(
@@ -330,61 +339,68 @@ void Node::AddLaserFan3D(const int64 timestamp, const string& frame_id,
   }
 }
 
-template <typename T>
-const T Node::GetParamOrDie(const string& name) {
-  CHECK(node_handle_.hasParam(name)) << "Required parameter '" << name
-                                     << "' is unset.";
-  T value;
-  node_handle_.getParam(name, value);
-  return value;
-}
-
 void Node::Initialize() {
-  tracking_frame_ = GetParamOrDie<string>("tracking_frame");
-  odom_frame_ = GetParamOrDie<string>("odom_frame");
-  map_frame_ = GetParamOrDie<string>("map_frame");
-  provide_odom_ = GetParamOrDie<bool>("provide_odom");
-  laser_min_range_m_ = GetParamOrDie<double>("laser_min_range_m");
-  laser_max_range_m_ = GetParamOrDie<double>("laser_max_range_m");
-  laser_missing_echo_ray_length_m_ =
-      GetParamOrDie<double>("laser_missing_echo_ray_length_m");
+  auto file_resolver = ::cartographer::common::make_unique<
+      ::cartographer::common::ConfigurationFileResolver>(
+      std::vector<string>{FLAGS_configuration_directory});
+  const string code =
+      file_resolver->GetFileContentOrDie(FLAGS_configuration_basename);
+  ::cartographer::common::LuaParameterDictionary lua_parameter_dictionary(
+      code, std::move(file_resolver), nullptr);
 
+  tracking_frame_ = lua_parameter_dictionary.GetString("tracking_frame");
+  odom_frame_ = lua_parameter_dictionary.GetString("odom_frame");
+  map_frame_ = lua_parameter_dictionary.GetString("map_frame");
+  provide_odom_ = lua_parameter_dictionary.GetBool("provide_odom");
+  laser_min_range_m_ = lua_parameter_dictionary.GetDouble("laser_min_range_m");
+  laser_max_range_m_ = lua_parameter_dictionary.GetDouble("laser_max_range_m");
+  laser_missing_echo_ray_length_m_ =
+      lua_parameter_dictionary.GetDouble("laser_missing_echo_ray_length_m");
+
+  // Set of all topics we subscribe to. We use the non-remapped default names
+  // which are unique.
   std::unordered_set<string> expected_sensor_identifiers;
 
   // Subscribe to exactly one laser.
-  const bool has_laser_scan_2d = node_handle_.hasParam("laser_scan_2d_topic");
+  const bool has_laser_scan_2d =
+      lua_parameter_dictionary.HasKey("use_2d_laser_scan") &&
+      lua_parameter_dictionary.GetBool("use_2d_laser_scan");
   const bool has_multi_echo_laser_scan_2d =
-      node_handle_.hasParam("multi_echo_laser_scan_2d_topic");
-  const bool has_laser_scan_3d = node_handle_.hasParam("laser_scan_3d_topics");
+      lua_parameter_dictionary.HasKey("use_multi_echo_2d_laser_scan") &&
+      lua_parameter_dictionary.GetBool("use_multi_echo_2d_laser_scan");
+  const int num_3d_lasers =
+      lua_parameter_dictionary.HasKey("num_3d_lasers")
+          ? lua_parameter_dictionary.GetNonNegativeInt("num_3d_lasers")
+          : 0;
 
-  CHECK(has_laser_scan_2d + has_multi_echo_laser_scan_2d + has_laser_scan_3d ==
+  CHECK(has_laser_scan_2d + has_multi_echo_laser_scan_2d +
+            (num_3d_lasers > 0) ==
         1)
-      << "Parameters 'laser_scan_2d_topic', 'multi_echo_laser_scan_2d_topic' "
-         "and 'laser_scan_3d_topics' are mutually exclusive, but one is "
-         "required.";
+      << "Parameters 'use_2d_laser_scan', 'use_multi_echo_2d_laser_scan' and "
+         "'num_3d_lasers' are mutually exclusive, but one is required.";
 
   if (has_laser_scan_2d) {
-    const string topic = GetParamOrDie<string>("laser_scan_2d_topic");
+    const string topic = "/scan";
     laser_2d_subscriber_ = node_handle_.subscribe(
-        topic, kSubscriberQueueSize, &Node::LaserScanMessageCallback, this);
+        topic, kSubscriberQueueSize,
+        boost::function<void(const sensor_msgs::LaserScan::ConstPtr&)>(
+            [this, topic](const sensor_msgs::LaserScan::ConstPtr& msg) {
+              LaserScanMessageCallback(topic, msg);
+            }));
     expected_sensor_identifiers.insert(topic);
   }
   if (has_multi_echo_laser_scan_2d) {
-    const string topic =
-        GetParamOrDie<string>("multi_echo_laser_scan_2d_topic");
+    const string topic = "/echoes";
     laser_2d_subscriber_ = node_handle_.subscribe(
-        topic, kSubscriberQueueSize, &Node::MultiEchoLaserScanCallback, this);
+        topic, kSubscriberQueueSize,
+        boost::function<void(const sensor_msgs::MultiEchoLaserScan::ConstPtr&)>(
+            [this,
+             topic](const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
+              MultiEchoLaserScanCallback(topic, msg);
+            }));
     expected_sensor_identifiers.insert(topic);
   }
 
-  auto file_resolver = ::cartographer::common::make_unique<
-      ::cartographer::common::ConfigurationFileResolver>(
-      GetParamOrDie<std::vector<string>>("configuration_files_directories"));
-  const string code = file_resolver->GetFileContentOrDie(
-      GetParamOrDie<string>("mapping_configuration_basename"));
-
-  ::cartographer::common::LuaParameterDictionary lua_parameter_dictionary(
-      code, std::move(file_resolver), nullptr);
   bool expect_imu_data = true;
   if (has_laser_scan_2d || has_multi_echo_laser_scan_2d) {
     auto sparse_pose_graph_2d = ::cartographer::common::make_unique<
@@ -402,10 +418,10 @@ void Node::Initialize() {
     sparse_pose_graph_ = std::move(sparse_pose_graph_2d);
   }
 
-  if (has_laser_scan_3d) {
-    const auto topics =
-        GetParamOrDie<std::vector<string>>("laser_scan_3d_topics");
-    for (const auto& topic : topics) {
+  if (num_3d_lasers > 0) {
+    for (int i = 0; i < num_3d_lasers; ++i) {
+      string topic = (num_3d_lasers == 1) ? "/points2"
+                                          : "/points2_" + std::to_string(i + 1);
       laser_3d_subscribers_.push_back(node_handle_.subscribe(
           topic, kSubscriberQueueSize,
           boost::function<void(const sensor_msgs::PointCloud2::ConstPtr&)>(
@@ -430,10 +446,14 @@ void Node::Initialize() {
 
   // Maybe subscribe to the IMU.
   if (expect_imu_data) {
-    const string imu_topic = GetParamOrDie<string>("imu_topic");
-    imu_subscriber_ = node_handle_.subscribe(imu_topic, kSubscriberQueueSize,
-                                             &Node::ImuMessageCallback, this);
-    expected_sensor_identifiers.insert(imu_topic);
+    const string topic = "/imu";
+    imu_subscriber_ = node_handle_.subscribe(
+        topic, kSubscriberQueueSize,
+        boost::function<void(const sensor_msgs::Imu::ConstPtr&)>(
+            [this, topic](const sensor_msgs::Imu::ConstPtr& msg) {
+              ImuMessageCallback(topic, msg);
+            }));
+    expected_sensor_identifiers.insert(topic);
   }
 
   // TODO(hrapp): Add odometry subscribers here.
@@ -656,6 +676,12 @@ class ScopedRosLogSink : public google::LogSink {
 
 int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
+  google::ParseCommandLineFlags(&argc, &argv, true);
+
+  CHECK(!FLAGS_configuration_directory.empty())
+      << "-configuration_directory is missing.";
+  CHECK(!FLAGS_configuration_basename.empty())
+      << "-configuration_basename is missing.";
 
   ros::init(argc, argv, "cartographer_node");
   ros::start();
