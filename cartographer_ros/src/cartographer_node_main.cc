@@ -192,15 +192,15 @@ class Node {
   ::cartographer::mapping::SensorCollator<SensorData> sensor_collator_;
   ros::NodeHandle node_handle_;
   ros::Subscriber imu_subscriber_;
-  ros::Subscriber laser_2d_subscriber_;
-  std::vector<ros::Subscriber> laser_3d_subscribers_;
+  ros::Subscriber laser_subscriber_2d_;
+  std::vector<ros::Subscriber> laser_subscribers_3d_;
   string tracking_frame_;
   string odom_frame_;
   string map_frame_;
   bool provide_odom_;
-  double laser_min_range_m_;
-  double laser_max_range_m_;
-  double laser_missing_echo_ray_length_m_;
+  double laser_min_range_;
+  double laser_max_range_;
+  double laser_missing_echo_ray_length_;
 
   tf2_ros::Buffer tf_buffer_;
   tf2_ros::TransformListener tf_;
@@ -252,9 +252,9 @@ void Node::AddImu(const int64 timestamp, const string& frame_id,
     const Rigid3d sensor_to_tracking =
         LookupToTrackingTransformOrThrow(time, frame_id);
     CHECK(sensor_to_tracking.translation().norm() < 1e-5)
-        << "The IMU is not colocated with the tracking frame. This makes it "
-           "hard and inprecise to transform its linear accelaration into the "
-           "tracking_frame and will decrease the quality of the SLAM.";
+        << "The IMU frame must be colocated with the tracking frame. "
+           "Transforming linear accelaration into the tracking frame will "
+           "otherwise be imprecise.";
     trajectory_builder_->AddImuData(
         time, sensor_to_tracking.rotation() *
                   ::cartographer::transform::ToEigen(imu.linear_acceleration()),
@@ -283,11 +283,10 @@ void Node::AddHorizontalLaserFan(const int64 timestamp, const string& frame_id,
   try {
     const Rigid3d sensor_to_tracking =
         LookupToTrackingTransformOrThrow(time, frame_id);
-    // TODO(hrapp): Make things configurable? Through Lua? Through ROS params?
     const ::cartographer::sensor::LaserFan laser_fan =
-        ::cartographer::sensor::ToLaserFan(laser_scan, laser_min_range_m_,
-                                           laser_max_range_m_,
-                                           laser_missing_echo_ray_length_m_);
+        ::cartographer::sensor::ToLaserFan(laser_scan, laser_min_range_,
+                                           laser_max_range_,
+                                           laser_missing_echo_ray_length_);
 
     const auto laser_fan_3d = ::cartographer::sensor::TransformLaserFan3D(
         ::cartographer::sensor::ToLaserFan3D(laser_fan),
@@ -352,10 +351,10 @@ void Node::Initialize() {
   odom_frame_ = lua_parameter_dictionary.GetString("odom_frame");
   map_frame_ = lua_parameter_dictionary.GetString("map_frame");
   provide_odom_ = lua_parameter_dictionary.GetBool("provide_odom");
-  laser_min_range_m_ = lua_parameter_dictionary.GetDouble("laser_min_range_m");
-  laser_max_range_m_ = lua_parameter_dictionary.GetDouble("laser_max_range_m");
-  laser_missing_echo_ray_length_m_ =
-      lua_parameter_dictionary.GetDouble("laser_missing_echo_ray_length_m");
+  laser_min_range_ = lua_parameter_dictionary.GetDouble("laser_min_range");
+  laser_max_range_ = lua_parameter_dictionary.GetDouble("laser_max_range");
+  laser_missing_echo_ray_length_ =
+      lua_parameter_dictionary.GetDouble("laser_missing_echo_ray_length");
 
   // Set of all topics we subscribe to. We use the non-remapped default names
   // which are unique.
@@ -363,25 +362,25 @@ void Node::Initialize() {
 
   // Subscribe to exactly one laser.
   const bool has_laser_scan_2d =
-      lua_parameter_dictionary.HasKey("use_2d_laser_scan") &&
-      lua_parameter_dictionary.GetBool("use_2d_laser_scan");
+      lua_parameter_dictionary.HasKey("use_laser_scan_2d") &&
+      lua_parameter_dictionary.GetBool("use_laser_scan_2d");
   const bool has_multi_echo_laser_scan_2d =
-      lua_parameter_dictionary.HasKey("use_multi_echo_2d_laser_scan") &&
-      lua_parameter_dictionary.GetBool("use_multi_echo_2d_laser_scan");
-  const int num_3d_lasers =
-      lua_parameter_dictionary.HasKey("num_3d_lasers")
-          ? lua_parameter_dictionary.GetNonNegativeInt("num_3d_lasers")
+      lua_parameter_dictionary.HasKey("use_multi_echo_laser_scan_2d") &&
+      lua_parameter_dictionary.GetBool("use_multi_echo_laser_scan_2d");
+  const int num_lasers_3d =
+      lua_parameter_dictionary.HasKey("num_lasers_3d")
+          ? lua_parameter_dictionary.GetNonNegativeInt("num_lasers_3d")
           : 0;
 
   CHECK(has_laser_scan_2d + has_multi_echo_laser_scan_2d +
-            (num_3d_lasers > 0) ==
+            (num_lasers_3d > 0) ==
         1)
-      << "Parameters 'use_2d_laser_scan', 'use_multi_echo_2d_laser_scan' and "
-         "'num_3d_lasers' are mutually exclusive, but one is required.";
+      << "Parameters 'use_laser_scan_2d', 'use_multi_echo_laser_scan_2d' and "
+         "'num_lasers_3d' are mutually exclusive, but one is required.";
 
   if (has_laser_scan_2d) {
     const string topic = "/scan";
-    laser_2d_subscriber_ = node_handle_.subscribe(
+    laser_subscriber_2d_ = node_handle_.subscribe(
         topic, kSubscriberQueueSize,
         boost::function<void(const sensor_msgs::LaserScan::ConstPtr&)>(
             [this, topic](const sensor_msgs::LaserScan::ConstPtr& msg) {
@@ -391,7 +390,7 @@ void Node::Initialize() {
   }
   if (has_multi_echo_laser_scan_2d) {
     const string topic = "/echoes";
-    laser_2d_subscriber_ = node_handle_.subscribe(
+    laser_subscriber_2d_ = node_handle_.subscribe(
         topic, kSubscriberQueueSize,
         boost::function<void(const sensor_msgs::MultiEchoLaserScan::ConstPtr&)>(
             [this,
@@ -418,11 +417,11 @@ void Node::Initialize() {
     sparse_pose_graph_ = std::move(sparse_pose_graph_2d);
   }
 
-  if (num_3d_lasers > 0) {
-    for (int i = 0; i < num_3d_lasers; ++i) {
-      string topic = (num_3d_lasers == 1) ? "/points2"
+  if (num_lasers_3d > 0) {
+    for (int i = 0; i < num_lasers_3d; ++i) {
+      string topic = (num_lasers_3d == 1) ? "/points2"
                                           : "/points2_" + std::to_string(i + 1);
-      laser_3d_subscribers_.push_back(node_handle_.subscribe(
+      laser_subscribers_3d_.push_back(node_handle_.subscribe(
           topic, kSubscriberQueueSize,
           boost::function<void(const sensor_msgs::PointCloud2::ConstPtr&)>(
               [this, topic](const sensor_msgs::PointCloud2::ConstPtr& msg) {

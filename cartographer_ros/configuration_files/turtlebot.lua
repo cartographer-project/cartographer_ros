@@ -22,10 +22,10 @@ options = {
   odom_frame = "odom",
   tracking_frame = "base_link",
   provide_odom = false,
-  laser_min_range_m = 0.,
-  laser_max_range_m = 30.,
-  laser_missing_echo_ray_length_m = 5.,
-  use_2d_laser_scan = true
+  laser_min_range = 0.,
+  laser_max_range = 30.,
+  laser_missing_echo_ray_length = 5.,
+  use_laser_scan_2d = true
 }
 
 options.trajectory_builder.expect_imu_data = false

@@ -22,10 +22,10 @@ options = {
   odom_frame = "odom",
   tracking_frame = "base_link",
   provide_odom = true,
-  laser_min_range_m = 0.,
-  laser_max_range_m = 30.,
-  laser_missing_echo_ray_length_m = 5.,
-  use_multi_echo_2d_laser_scan = true
+  laser_min_range = 0.,
+  laser_max_range = 30.,
+  laser_missing_echo_ray_length = 5.,
+  use_multi_echo_laser_scan_2d = true
 }
 
 return options
