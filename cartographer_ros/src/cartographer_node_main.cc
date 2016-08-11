@@ -116,7 +116,7 @@ Rigid3d ToRigid3d(const geometry_msgs::Pose& pose) {
 }
 
 PoseCovariance ToPoseCovariance(boost::array<double, 36ul> covariance) {
-  return Eigen::Map<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>>(
+  return Eigen::Map<Eigen::Matrix<double, 6, 6>>(
       covariance.data());
 }
 
@@ -189,7 +189,7 @@ class Node {
  private:
   void HandleSensorData(int64 timestamp,
                         std::unique_ptr<SensorData> sensor_data);
-  void OdomMessageCallback(const nav_msgs::Odometry::ConstPtr& msg);
+  void OdometryMessageCallback(const nav_msgs::Odometry::ConstPtr& msg);
   void ImuMessageCallback(const sensor_msgs::Imu::ConstPtr& msg);
   void LaserScanMessageCallback(const sensor_msgs::LaserScan::ConstPtr& msg);
   void MultiEchoLaserScanCallback(
@@ -197,8 +197,8 @@ class Node {
   void PointCloud2MessageCallback(
       const string& topic, const sensor_msgs::PointCloud2::ConstPtr& msg);
 
-  void AddOdom(int64 timestamp, const string& frame_id, const Rigid3d odom,
-               const PoseCovariance covar);
+  void AddOdometry(int64 timestamp, const string& frame_id, const Rigid3d& odom,
+               const PoseCovariance& covar);
   void AddImu(int64 timestamp, const string& frame_id, const proto::Imu& imu);
   void AddHorizontalLaserFan(int64 timestamp, const string& frame_id,
                              const proto::LaserScan& laser_scan);
@@ -224,7 +224,7 @@ class Node {
   ros::Subscriber imu_subscriber_;
   ros::Subscriber laser_subscriber_2d_;
   std::vector<ros::Subscriber> laser_subscribers_3d_;
-  ros::Subscriber odom_subscriber_;
+  ros::Subscriber odometry_subscriber_;
   string tracking_frame_;
   string odom_frame_;
   string map_frame_;
@@ -265,7 +265,7 @@ Rigid3d Node::LookupToTrackingTransformOrThrow(
                                  ros::Duration(kMaxTransformDelaySeconds)));
 }
 
-void Node::OdomMessageCallback(const nav_msgs::Odometry::ConstPtr& msg) {
+void Node::OdometryMessageCallback(const nav_msgs::Odometry::ConstPtr& msg) {
   auto sensor_data = ::cartographer::common::make_unique<SensorData>(
       msg->header.frame_id, ToRigid3d(msg->pose.pose),
       ToPoseCovariance(msg->pose.covariance));
@@ -273,15 +273,13 @@ void Node::OdomMessageCallback(const nav_msgs::Odometry::ConstPtr& msg) {
   sensor_collator_.AddSensorData(
       kTrajectoryId,
       ::cartographer::common::ToUniversal(FromRos(msg->header.stamp)),
-      odom_subscriber_.getTopic(), std::move(sensor_data));
+      odometry_subscriber_.getTopic(), std::move(sensor_data));
 }
 
-void Node::AddOdom(int64 timestamp, const string& frame_id, const Rigid3d odom,
-                   const PoseCovariance covar) {
+void Node::AddOdometry(int64 timestamp, const string& frame_id, const Rigid3d& odom,
+                   const PoseCovariance& covar) {
   const ::cartographer::common::Time time =
       ::cartographer::common::FromUniversal(timestamp);
-
-  covar * 1;
   trajectory_builder_->AddOdometerPose(time, odom, covar);
 }
 
@@ -386,6 +384,15 @@ void Node::AddLaserFan3D(const int64 timestamp, const string& frame_id,
     LOG(WARNING) << "Cannot transform " << frame_id << " -> " << tracking_frame_
                  << ": " << ex.what();
   }
+}
+
+template <typename T>
+const T Node::GetParamOrDie(const string& name) {
+  CHECK(node_handle_.hasParam(name)) << "Required parameter '" << name
+                                     << "' is unset.";
+  T value;
+  node_handle_.getParam(name, value);
+  return value;
 }
 
 void Node::Initialize() {
@@ -493,8 +500,8 @@ void Node::Initialize() {
     expected_sensor_identifiers.insert(kImuTopic);
   }
 
-  odom_subscriber_ = node_handle_.subscribe("/odom", kSubscriberQueueSize,
-                                            &Node::OdomMessageCallback, this);
+  odometry_subscriber_ = node_handle_.subscribe("/odom", kSubscriberQueueSize,
+                                            &Node::OdometryMessageCallback, this);
   expected_sensor_identifiers.insert("/odom");
 
   sensor_collator_.AddTrajectory(
@@ -651,7 +658,7 @@ void Node::HandleSensorData(const int64 timestamp,
       return;
 
     case SensorType::kOdometry:
-      AddOdom(timestamp, sensor_data->frame_id, sensor_data->odom,
+      AddOdometry(timestamp, sensor_data->frame_id, sensor_data->odom,
               sensor_data->odom_covar);
       return;
   }
