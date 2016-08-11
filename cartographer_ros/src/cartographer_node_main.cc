@@ -28,6 +28,7 @@
 #include "cartographer/common/port.h"
 #include "cartographer/common/thread_pool.h"
 #include "cartographer/common/time.h"
+#include "cartographer/kalman_filter/pose_tracker.h"
 #include "cartographer/mapping/global_trajectory_builder_interface.h"
 #include "cartographer/mapping/proto/submaps.pb.h"
 #include "cartographer/mapping/sensor_collator.h"
@@ -57,13 +58,10 @@
 #include "ros/ros.h"
 #include "ros/serialization.h"
 #include "sensor_msgs/Imu.h"
-
-#include "nav_msgs/Odometry.h"
-#include "cartographer/kalman_filter/pose_tracker.h"
-
 #include "sensor_msgs/LaserScan.h"
 #include "sensor_msgs/MultiEchoLaserScan.h"
 #include "sensor_msgs/PointCloud2.h"
+#include "nav_msgs/Odometry.h"
 #include "tf2_eigen/tf2_eigen.h"
 #include "tf2_ros/transform_broadcaster.h"
 #include "tf2_ros/transform_listener.h"
@@ -265,9 +263,6 @@ Rigid3d Node::LookupToTrackingTransformOrThrow(
                                  ros::Duration(kMaxTransformDelaySeconds)));
 }
 
-
-
-
 void Node::OdomMessageCallback(const nav_msgs::Odometry::ConstPtr& msg) {
   auto sensor_data = ::cartographer::common::make_unique<SensorData>(
     msg->header.frame_id, ToRigid3d(msg->pose.pose), ToPoseCovariance(msg->pose.covariance));
@@ -279,28 +274,16 @@ void Node::OdomMessageCallback(const nav_msgs::Odometry::ConstPtr& msg) {
 
 }
 
-
-
-void Node::AddOdom(int64 timestamp, const string& frame_id, const Rigid3d odom, const PoseCovariance covar) {
+void Node::AddOdom(
+    int64 timestamp, const string& frame_id,
+    const Rigid3d odom, const PoseCovariance covar) {
   const ::cartographer::common::Time time =
       ::cartographer::common::FromUniversal(timestamp);
 
-  covar * 0.00000000000001;
+  covar * 1;
+  trajectory_builder_->AddOdometerPose(time,odom,covar);
 
-  try {
-    const Rigid3d sensor_to_tracking =
-        LookupToTrackingTransformOrThrow(time, frame_id);
-    trajectory_builder_->AddOdometerPose(time,odom,covar);
-        // LOG(WARNING) << "Ooooodooooooooom";
-
-  } catch (const tf2::TransformException& ex) {
-    LOG(WARNING) << "Cannot transform " << frame_id << " -> " << tracking_frame_
-                 << ": " << ex.what();
-  }
 }
-
-
-
 
 void Node::ImuMessageCallback(const sensor_msgs::Imu::ConstPtr& msg) {
   auto sensor_data = ::cartographer::common::make_unique<SensorData>(
@@ -335,10 +318,8 @@ void Node::AddImu(const int64 timestamp, const string& frame_id,
 
 void Node::LaserScanMessageCallback(
     const sensor_msgs::LaserScan::ConstPtr& msg) {
-  std::string frame = msg->header.frame_id;
-  frame.erase(frame.begin());
   auto sensor_data = ::cartographer::common::make_unique<SensorData>(
-      frame, ToCartographer(*msg));
+      msg->header.frame_id, ToCartographer(*msg));
   sensor_collator_.AddSensorData(
       kTrajectoryId,
       ::cartographer::common::ToUniversal(FromRos(msg->header.stamp)),
@@ -511,8 +492,6 @@ void Node::Initialize() {
                                              &Node::ImuMessageCallback, this);
     expected_sensor_identifiers.insert(kImuTopic);
   }
-
-  // TODO(hrapp): Add odometry subscribers here.
 
   odom_subscriber_ = node_handle_.subscribe("/odom", kSubscriberQueueSize,
                                             &Node::OdomMessageCallback, this);
