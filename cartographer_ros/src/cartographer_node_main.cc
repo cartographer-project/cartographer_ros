@@ -78,7 +78,7 @@ constexpr int64 kTrajectoryId = 0;
 constexpr int kSubscriberQueueSize = 150;
 constexpr int kSubmapPublishPeriodInUts = 300 * 10000ll;  // 300 milliseconds
 constexpr int kPosePublishPeriodInUts = 5 * 10000ll;      // 5 milliseconds
-constexpr double kMaxTransformDelaySeconds = 1.;
+constexpr double kMaxTransformDelaySeconds = 0.01;
 
 Rigid3d ToRigid3d(const geometry_msgs::TransformStamped& transform) {
   return Rigid3d(Eigen::Vector3d(transform.transform.translation.x,
