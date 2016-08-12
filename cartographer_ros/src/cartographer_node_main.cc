@@ -641,7 +641,7 @@ class ScopedRosLogSink : public google::LogSink {
 
   void WaitTillSent() override {
     if (will_die_) {
-      // Arbirarily give ROS some time to actually publish our message.
+      // Give ROS some time to actually publish our message.
       std::this_thread::sleep_for(
           ::cartographer::common::FromMilliseconds(1000));
     }
