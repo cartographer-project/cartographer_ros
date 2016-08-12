@@ -115,9 +115,8 @@ Rigid3d ToRigid3d(const geometry_msgs::Pose& pose) {
                          pose.orientation.y, pose.orientation.z));
 }
 
-PoseCovariance ToPoseCovariance(boost::array<double, 36ul> covariance) {
-  return Eigen::Map<Eigen::Matrix<double, 6, 6>>(
-      covariance.data());
+PoseCovariance ToPoseCovariance(const boost::array<double, 36ul>& covariance) {
+  return Eigen::Map<const Eigen::Matrix<double, 6, 6>>(covariance.data());
 }
 
 // TODO(hrapp): move to msg_conversion.cc.
@@ -159,20 +158,21 @@ struct SensorData {
       : type(SensorType::kLaserFan3D),
         frame_id(init_frame_id),
         laser_fan_3d(init_laser_fan_3d) {}
-  SensorData(const string& init_frame_id, Rigid3d init_odom,
-             PoseCovariance covar_init)
+  SensorData(const string& init_frame_id, const Rigid3d& init_pose,
+             const PoseCovariance& init_covariance)
       : type(SensorType::kOdometry),
         frame_id(init_frame_id),
-        odom(init_odom),
-        odom_covar(covar_init) {}
+        odometry{init_pose, init_covariance} {}
 
   SensorType type;
   string frame_id;
   proto::Imu imu;
   proto::LaserScan laser_scan;
   proto::LaserFan3D laser_fan_3d;
-  Rigid3d odom;
-  PoseCovariance odom_covar;
+  struct {
+    Rigid3d pose;
+    PoseCovariance covariance;
+  } odometry;
 };
 
 // Node that listens to all the sensor data that we are interested in and wires
@@ -198,7 +198,7 @@ class Node {
       const string& topic, const sensor_msgs::PointCloud2::ConstPtr& msg);
 
   void AddOdometry(int64 timestamp, const string& frame_id, const Rigid3d& odom,
-               const PoseCovariance& covar);
+                   const PoseCovariance& covar);
   void AddImu(int64 timestamp, const string& frame_id, const proto::Imu& imu);
   void AddHorizontalLaserFan(int64 timestamp, const string& frame_id,
                              const proto::LaserScan& laser_scan);
@@ -269,15 +269,14 @@ void Node::OdometryMessageCallback(const nav_msgs::Odometry::ConstPtr& msg) {
   auto sensor_data = ::cartographer::common::make_unique<SensorData>(
       msg->header.frame_id, ToRigid3d(msg->pose.pose),
       ToPoseCovariance(msg->pose.covariance));
-
   sensor_collator_.AddSensorData(
       kTrajectoryId,
       ::cartographer::common::ToUniversal(FromRos(msg->header.stamp)),
       odometry_subscriber_.getTopic(), std::move(sensor_data));
 }
 
-void Node::AddOdometry(int64 timestamp, const string& frame_id, const Rigid3d& odom,
-                   const PoseCovariance& covar) {
+void Node::AddOdometry(int64 timestamp, const string& frame_id,
+                       const Rigid3d& odom, const PoseCovariance& covar) {
   const ::cartographer::common::Time time =
       ::cartographer::common::FromUniversal(timestamp);
   trajectory_builder_->AddOdometerPose(time, odom, covar);
@@ -491,8 +490,8 @@ void Node::Initialize() {
     expected_sensor_identifiers.insert(kImuTopic);
   }
 
-  odometry_subscriber_ = node_handle_.subscribe("/odom", kSubscriberQueueSize,
-                                            &Node::OdometryMessageCallback, this);
+  odometry_subscriber_ = node_handle_.subscribe(
+      "/odom", kSubscriberQueueSize, &Node::OdometryMessageCallback, this);
   expected_sensor_identifiers.insert("/odom");
 
   sensor_collator_.AddTrajectory(
@@ -649,8 +648,8 @@ void Node::HandleSensorData(const int64 timestamp,
       return;
 
     case SensorType::kOdometry:
-      AddOdometry(timestamp, sensor_data->frame_id, sensor_data->odom,
-              sensor_data->odom_covar);
+      AddOdometry(timestamp, sensor_data->frame_id, sensor_data->odometry.pose,
+                  sensor_data->odometry.covariance);
       return;
   }
   LOG(FATAL);
