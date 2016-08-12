@@ -192,7 +192,7 @@ class Node {
   void OdometryMessageCallback(const nav_msgs::Odometry::ConstPtr& msg);
   void ImuMessageCallback(const sensor_msgs::Imu::ConstPtr& msg);
   void LaserScanMessageCallback(const sensor_msgs::LaserScan::ConstPtr& msg);
-  void MultiEchoLaserScanCallback(
+  void MultiEchoLaserScanMessageCallback(
       const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg);
   void PointCloud2MessageCallback(
       const string& topic, const sensor_msgs::PointCloud2::ConstPtr& msg);
@@ -384,15 +384,6 @@ void Node::AddLaserFan3D(const int64 timestamp, const string& frame_id,
     LOG(WARNING) << "Cannot transform " << frame_id << " -> " << tracking_frame_
                  << ": " << ex.what();
   }
-}
-
-template <typename T>
-const T Node::GetParamOrDie(const string& name) {
-  CHECK(node_handle_.hasParam(name)) << "Required parameter '" << name
-                                     << "' is unset.";
-  T value;
-  node_handle_.getParam(name, value);
-  return value;
 }
 
 void Node::Initialize() {
