@@ -34,7 +34,7 @@ These dependencies always have to be installed:
     # Clone the necessary repos into your Catkin workspace
     git clone https://github.com/googlecartographer/cartographer.git
     git clone https://github.com/googlecartographer/cartographer_ros.git
-    git clone https://github.com/ethz-asl/ceres_catkin.git  # Caution! Make sure you do not have "suitesparse" in you Catkin workspace
+    git clone https://github.com/ethz-asl/ceres_catkin.git  # Caution! Make sure you do not have "suitesparse" in your Catkin workspace
     git clone https://github.com/ethz-asl/glog_catkin.git
     git clone https://github.com/ethz-asl/gflags_catkin.git
     git clone https://github.com/ethz-asl/catkin_simple.git
