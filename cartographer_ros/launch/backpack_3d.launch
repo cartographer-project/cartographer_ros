@@ -26,8 +26,8 @@
           -configuration_directory $(find cartographer_ros)/configuration_files
           -configuration_basename backpack_3d.lua"
       output="screen" >
-    <remap from="points2_1" to="horizontal_3d_laser" />
-    <remap from="points2_2" to="vertical_3d_laser" />
+    <remap from="points2_1" to="horizontal_laser_3d" />
+    <remap from="points2_2" to="vertical_laser_3d" />
   </node>
 
 </launch>

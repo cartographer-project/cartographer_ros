@@ -89,6 +89,12 @@ constexpr int kSubmapPublishPeriodInUts = 300 * 10000ll;  // 300 milliseconds
 constexpr int kPosePublishPeriodInUts = 5 * 10000ll;      // 5 milliseconds
 constexpr double kMaxTransformDelaySeconds = 1.;
 
+// Unique default topic names. Expected to be remapped as needed.
+constexpr char kLaserScanTopic[] = "/scan";
+constexpr char kMultiEchoLaserScanTopic[] = "/echoes";
+constexpr char kPointCloud2Topic[] = "/points2";
+constexpr char kImuTopic[] = "/imu";
+
 Rigid3d ToRigid3d(const geometry_msgs::TransformStamped& transform) {
   return Rigid3d(Eigen::Vector3d(transform.transform.translation.x,
                                  transform.transform.translation.y,
@@ -160,12 +166,9 @@ class Node {
  private:
   void HandleSensorData(int64 timestamp,
                         std::unique_ptr<SensorData> sensor_data);
-  void ImuMessageCallback(const string& topic,
-                          const sensor_msgs::Imu::ConstPtr& msg);
-  void LaserScanMessageCallback(const string& topic,
-                                const sensor_msgs::LaserScan::ConstPtr& msg);
-  void MultiEchoLaserScanCallback(
-      const string& topic,
+  void ImuMessageCallback(const sensor_msgs::Imu::ConstPtr& msg);
+  void LaserScanMessageCallback(const sensor_msgs::LaserScan::ConstPtr& msg);
+  void MultiEchoLaserScanMessageCallback(
       const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg);
   void PointCloud2MessageCallback(
       const string& topic, const sensor_msgs::PointCloud2::ConstPtr& msg);
@@ -234,14 +237,13 @@ Rigid3d Node::LookupToTrackingTransformOrThrow(
                                  ros::Duration(kMaxTransformDelaySeconds)));
 }
 
-void Node::ImuMessageCallback(const string& topic,
-                              const sensor_msgs::Imu::ConstPtr& msg) {
+void Node::ImuMessageCallback(const sensor_msgs::Imu::ConstPtr& msg) {
   auto sensor_data = ::cartographer::common::make_unique<SensorData>(
       msg->header.frame_id, ToCartographer(*msg));
   sensor_collator_.AddSensorData(
       kTrajectoryId,
-      ::cartographer::common::ToUniversal(FromRos(msg->header.stamp)), topic,
-      std::move(sensor_data));
+      ::cartographer::common::ToUniversal(FromRos(msg->header.stamp)),
+      kImuTopic, std::move(sensor_data));
 }
 
 void Node::AddImu(const int64 timestamp, const string& frame_id,
@@ -267,13 +269,13 @@ void Node::AddImu(const int64 timestamp, const string& frame_id,
 }
 
 void Node::LaserScanMessageCallback(
-    const string& topic, const sensor_msgs::LaserScan::ConstPtr& msg) {
+    const sensor_msgs::LaserScan::ConstPtr& msg) {
   auto sensor_data = ::cartographer::common::make_unique<SensorData>(
       msg->header.frame_id, ToCartographer(*msg));
   sensor_collator_.AddSensorData(
       kTrajectoryId,
-      ::cartographer::common::ToUniversal(FromRos(msg->header.stamp)), topic,
-      std::move(sensor_data));
+      ::cartographer::common::ToUniversal(FromRos(msg->header.stamp)),
+      kLaserScanTopic, std::move(sensor_data));
 }
 
 void Node::AddHorizontalLaserFan(const int64 timestamp, const string& frame_id,
@@ -298,14 +300,14 @@ void Node::AddHorizontalLaserFan(const int64 timestamp, const string& frame_id,
   }
 }
 
-void Node::MultiEchoLaserScanCallback(
-    const string& topic, const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
+void Node::MultiEchoLaserScanMessageCallback(
+    const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
   auto sensor_data = ::cartographer::common::make_unique<SensorData>(
       msg->header.frame_id, ToCartographer(*msg));
   sensor_collator_.AddSensorData(
       kTrajectoryId,
-      ::cartographer::common::ToUniversal(FromRos(msg->header.stamp)), topic,
-      std::move(sensor_data));
+      ::cartographer::common::ToUniversal(FromRos(msg->header.stamp)),
+      kMultiEchoLaserScanTopic, std::move(sensor_data));
 }
 
 void Node::PointCloud2MessageCallback(
@@ -379,25 +381,16 @@ void Node::Initialize() {
          "'num_lasers_3d' are mutually exclusive, but one is required.";
 
   if (has_laser_scan_2d) {
-    const string topic = "/scan";
-    laser_subscriber_2d_ = node_handle_.subscribe(
-        topic, kSubscriberQueueSize,
-        boost::function<void(const sensor_msgs::LaserScan::ConstPtr&)>(
-            [this, topic](const sensor_msgs::LaserScan::ConstPtr& msg) {
-              LaserScanMessageCallback(topic, msg);
-            }));
-    expected_sensor_identifiers.insert(topic);
+    laser_subscriber_2d_ =
+        node_handle_.subscribe(kLaserScanTopic, kSubscriberQueueSize,
+                               &Node::LaserScanMessageCallback, this);
+    expected_sensor_identifiers.insert(kLaserScanTopic);
   }
   if (has_multi_echo_laser_scan_2d) {
-    const string topic = "/echoes";
-    laser_subscriber_2d_ = node_handle_.subscribe(
-        topic, kSubscriberQueueSize,
-        boost::function<void(const sensor_msgs::MultiEchoLaserScan::ConstPtr&)>(
-            [this,
-             topic](const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
-              MultiEchoLaserScanCallback(topic, msg);
-            }));
-    expected_sensor_identifiers.insert(topic);
+    laser_subscriber_2d_ =
+        node_handle_.subscribe(kMultiEchoLaserScanTopic, kSubscriberQueueSize,
+                               &Node::MultiEchoLaserScanMessageCallback, this);
+    expected_sensor_identifiers.insert(kMultiEchoLaserScanTopic);
   }
 
   bool expect_imu_data = true;
@@ -419,8 +412,10 @@ void Node::Initialize() {
 
   if (num_lasers_3d > 0) {
     for (int i = 0; i < num_lasers_3d; ++i) {
-      string topic = (num_lasers_3d == 1) ? "/points2"
-                                          : "/points2_" + std::to_string(i + 1);
+      string topic = kPointCloud2Topic;
+      if (num_lasers_3d > 1) {
+        topic += "_" + std::to_string(i + 1);
+      }
       laser_subscribers_3d_.push_back(node_handle_.subscribe(
           topic, kSubscriberQueueSize,
           boost::function<void(const sensor_msgs::PointCloud2::ConstPtr&)>(
@@ -445,14 +440,9 @@ void Node::Initialize() {
 
   // Maybe subscribe to the IMU.
   if (expect_imu_data) {
-    const string topic = "/imu";
-    imu_subscriber_ = node_handle_.subscribe(
-        topic, kSubscriberQueueSize,
-        boost::function<void(const sensor_msgs::Imu::ConstPtr&)>(
-            [this, topic](const sensor_msgs::Imu::ConstPtr& msg) {
-              ImuMessageCallback(topic, msg);
-            }));
-    expected_sensor_identifiers.insert(topic);
+    imu_subscriber_ = node_handle_.subscribe(kImuTopic, kSubscriberQueueSize,
+                                             &Node::ImuMessageCallback, this);
+    expected_sensor_identifiers.insert(kImuTopic);
   }
 
   // TODO(hrapp): Add odometry subscribers here.

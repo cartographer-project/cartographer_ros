@@ -26,7 +26,7 @@
           -configuration_directory $(find cartographer_ros)/configuration_files
           -configuration_basename backpack_2d.lua"
       output="screen" >
-    <remap from="echoes" to="horizontal_2d_laser" />
+    <remap from="echoes" to="horizontal_laser_2d" />
   </node>
 
 </launch>
