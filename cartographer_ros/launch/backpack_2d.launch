@@ -22,22 +22,11 @@
     type="robot_state_publisher" />
 
   <node name="cartographer" pkg="cartographer_ros"
-      type="cartographer_node" output="screen" >
-    <rosparam subst_value="true">
-      map_frame: "map"
-      odom_frame: "odom"
-      tracking_frame: "base_link"
-      provide_odom: true
-      configuration_files_directories: [
-        "$(find cartographer_ros)/configuration_files"
-      ]
-      mapping_configuration_basename: "backpack_2d.lua"
-      imu_topic: "/imu"
-      multi_echo_laser_scan_2d_topic: "/horizontal_2d_laser"
-      laser_min_range_m: 0.
-      laser_max_range_m: 30.
-      laser_missing_echo_ray_length_m: 5.
-    </rosparam>
+      type="cartographer_node" args="
+          -configuration_directory $(find cartographer_ros)/configuration_files
+          -configuration_basename backpack_2d.lua"
+      output="screen" >
+    <remap from="echoes" to="horizontal_laser_2d" />
   </node>
 
 </launch>

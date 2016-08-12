@@ -92,6 +92,7 @@ target_link_libraries(cartographer_node
   ${CARTOGRAPHER_LIBRARIES}
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
+  gflags  # TODO(whess): Use or remove gflags_catkin.
 )
 
 add_library(cartographer_rviz_submaps_visualization

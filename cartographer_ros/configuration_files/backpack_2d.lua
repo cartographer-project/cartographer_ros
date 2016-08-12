@@ -18,6 +18,14 @@ include "sparse_pose_graph.lua"
 options = {
   sparse_pose_graph = SPARSE_POSE_GRAPH,
   trajectory_builder = TRAJECTORY_BUILDER,
+  map_frame = "map",
+  odom_frame = "odom",
+  tracking_frame = "base_link",
+  provide_odom = true,
+  laser_min_range = 0.,
+  laser_max_range = 30.,
+  laser_missing_echo_ray_length = 5.,
+  use_multi_echo_laser_scan_2d = true
 }
 
 return options
