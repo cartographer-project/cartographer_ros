@@ -22,6 +22,7 @@ options = {
   odom_frame = "odom",
   tracking_frame = "base_link",
   provide_odom = false,
+  use_odom = false,
   laser_min_range = 0.,
   laser_max_range = 30.,
   laser_missing_echo_ray_length = 5.,

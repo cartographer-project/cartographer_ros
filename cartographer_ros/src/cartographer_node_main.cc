@@ -97,6 +97,7 @@ constexpr char kLaserScanTopic[] = "/scan";
 constexpr char kMultiEchoLaserScanTopic[] = "/echoes";
 constexpr char kPointCloud2Topic[] = "/points2";
 constexpr char kImuTopic[] = "/imu";
+constexpr char kOdometryTopic[] = "/odom";
 
 Rigid3d ToRigid3d(const geometry_msgs::TransformStamped& transform) {
   return Rigid3d(Eigen::Vector3d(transform.transform.translation.x,
@@ -197,8 +198,8 @@ class Node {
   void PointCloud2MessageCallback(
       const string& topic, const sensor_msgs::PointCloud2::ConstPtr& msg);
 
-  void AddOdometry(int64 timestamp, const string& frame_id, const Rigid3d& odom,
-                   const PoseCovariance& covar);
+  void AddOdometry(int64 timestamp, const string& frame_id, const Rigid3d& pose,
+                   const PoseCovariance& covariance);
   void AddImu(int64 timestamp, const string& frame_id, const proto::Imu& imu);
   void AddHorizontalLaserFan(int64 timestamp, const string& frame_id,
                              const proto::LaserScan& laser_scan);
@@ -229,6 +230,7 @@ class Node {
   string odom_frame_;
   string map_frame_;
   bool provide_odom_;
+  bool use_odom_;
   double laser_min_range_;
   double laser_max_range_;
   double laser_missing_echo_ray_length_;
@@ -272,14 +274,14 @@ void Node::OdometryMessageCallback(const nav_msgs::Odometry::ConstPtr& msg) {
   sensor_collator_.AddSensorData(
       kTrajectoryId,
       ::cartographer::common::ToUniversal(FromRos(msg->header.stamp)),
-      odometry_subscriber_.getTopic(), std::move(sensor_data));
+      kOdometryTopic, std::move(sensor_data));
 }
 
 void Node::AddOdometry(int64 timestamp, const string& frame_id,
-                       const Rigid3d& odom, const PoseCovariance& covar) {
+                       const Rigid3d& pose, const PoseCovariance& covariance) {
   const ::cartographer::common::Time time =
       ::cartographer::common::FromUniversal(timestamp);
-  trajectory_builder_->AddOdometerPose(time, odom, covar);
+  trajectory_builder_->AddOdometerPose(time, pose, covariance);
 }
 
 void Node::ImuMessageCallback(const sensor_msgs::Imu::ConstPtr& msg) {
@@ -398,6 +400,7 @@ void Node::Initialize() {
   odom_frame_ = lua_parameter_dictionary.GetString("odom_frame");
   map_frame_ = lua_parameter_dictionary.GetString("map_frame");
   provide_odom_ = lua_parameter_dictionary.GetBool("provide_odom");
+  use_odom_ = lua_parameter_dictionary.GetBool("use_odom");
   laser_min_range_ = lua_parameter_dictionary.GetDouble("laser_min_range");
   laser_max_range_ = lua_parameter_dictionary.GetDouble("laser_max_range");
   laser_missing_echo_ray_length_ =
@@ -490,9 +493,12 @@ void Node::Initialize() {
     expected_sensor_identifiers.insert(kImuTopic);
   }
 
-  odometry_subscriber_ = node_handle_.subscribe(
-      "/odom", kSubscriberQueueSize, &Node::OdometryMessageCallback, this);
-  expected_sensor_identifiers.insert("/odom");
+  if (use_odom_) {
+    CHECK(!provide_odom_) << "Cannot use odom and provide odom at the same time";
+    odometry_subscriber_ = node_handle_.subscribe(
+      kOdometryTopic, kSubscriberQueueSize, &Node::OdometryMessageCallback, this);
+    expected_sensor_identifiers.insert(kOdometryTopic);
+  }
 
   sensor_collator_.AddTrajectory(
       kTrajectoryId, expected_sensor_identifiers,
