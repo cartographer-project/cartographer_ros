@@ -229,8 +229,8 @@ class Node {
   string tracking_frame_;
   string odom_frame_;
   string map_frame_;
-  bool provide_odom_;
-  bool use_odom_;
+  bool provide_odom_frame_;
+  bool expect_odometry_data_;
   double laser_min_range_;
   double laser_max_range_;
   double laser_missing_echo_ray_length_;
@@ -399,8 +399,8 @@ void Node::Initialize() {
   tracking_frame_ = lua_parameter_dictionary.GetString("tracking_frame");
   odom_frame_ = lua_parameter_dictionary.GetString("odom_frame");
   map_frame_ = lua_parameter_dictionary.GetString("map_frame");
-  provide_odom_ = lua_parameter_dictionary.GetBool("provide_odom");
-  use_odom_ = lua_parameter_dictionary.GetBool("use_odom");
+  provide_odom_frame_ = lua_parameter_dictionary.GetBool("provide_odom_frame");
+  expect_odometry_data_ = lua_parameter_dictionary.GetBool("expect_odometry_data");
   laser_min_range_ = lua_parameter_dictionary.GetDouble("laser_min_range");
   laser_max_range_ = lua_parameter_dictionary.GetDouble("laser_max_range");
   laser_missing_echo_ray_length_ =
@@ -493,8 +493,7 @@ void Node::Initialize() {
     expected_sensor_identifiers.insert(kImuTopic);
   }
 
-  if (use_odom_) {
-    CHECK(!provide_odom_) << "Cannot use odom and provide odom at the same time";
+  if (expect_odometry_data_) {
     odometry_subscriber_ = node_handle_.subscribe(
       kOdometryTopic, kSubscriberQueueSize, &Node::OdometryMessageCallback, this);
     expected_sensor_identifiers.insert(kOdometryTopic);
@@ -603,7 +602,7 @@ void Node::PublishPose(const int64 timestamp) {
   stamped_transform.header.frame_id = map_frame_;
   stamped_transform.child_frame_id = odom_frame_;
 
-  if (provide_odom_) {
+  if (provide_odom_frame_) {
     ::cartographer::common::MutexLocker lock(&mutex_);
     stamped_transform.transform = ToGeometryMsgTransform(local_to_map);
     tf_broadcaster_.sendTransform(stamped_transform);
