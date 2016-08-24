@@ -103,7 +103,7 @@ constexpr char kPointCloud2Topic[] = "/points2";
 constexpr char kImuTopic[] = "/imu";
 constexpr char kOdometryTopic[] = "/odom";
 
-string CheckNoLeadingSlash(const string& frame_id) {
+const string& CheckNoLeadingSlash(const string& frame_id) {
   if (frame_id.size() > 0) {
     CHECK_NE(frame_id[0], '/');
   }
