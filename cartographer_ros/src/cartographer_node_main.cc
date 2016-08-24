@@ -95,8 +95,7 @@ constexpr int kSubscriberQueueSize = 150;
 constexpr int kSubmapPublishPeriodInUts = 300 * 10000ll;  // 300 milliseconds
 constexpr int kPosePublishPeriodInUts = 5 * 10000ll;      // 5 milliseconds
 constexpr double kMaxTransformDelaySeconds = 0.01;
-const carto::common::Duration kSensorDataRatesLoggingPeriod =
-    carto::common::FromSeconds(15.);
+constexpr double kSensorDataRatesLoggingPeriodSeconds = 15.;
 
 // Unique default topic names. Expected to be remapped as needed.
 constexpr char kLaserScanTopic[] = "/scan";
@@ -268,7 +267,7 @@ class Node {
 
   // Time at which we last logged the rates of incoming sensor data.
   std::chrono::steady_clock::time_point last_sensor_data_rates_logging_time_;
-  std::map<string, std::unique_ptr<carto::common::RateTimer<>>> rate_timers_;
+  std::map<string, carto::common::RateTimer<>> rate_timers_;
 };
 
 Node::Node()
@@ -649,17 +648,18 @@ void Node::HandleSensorData(const int64 timestamp,
   auto it = rate_timers_.find(sensor_data->frame_id);
   if (it == rate_timers_.end()) {
     it = rate_timers_
-             .emplace(sensor_data->frame_id,
-                      carto::common::make_unique<carto::common::RateTimer<>>(
-                          kSensorDataRatesLoggingPeriod))
+             .emplace(std::piecewise_construct,
+                      std::forward_as_tuple(sensor_data->frame_id),
+                      std::forward_as_tuple(carto::common::FromSeconds(
+                          kSensorDataRatesLoggingPeriodSeconds)))
              .first;
   }
-  it->second->Pulse(carto::common::FromUniversal(timestamp));
+  it->second.Pulse(carto::common::FromUniversal(timestamp));
 
   if (std::chrono::steady_clock::now() - last_sensor_data_rates_logging_time_ >
-      kSensorDataRatesLoggingPeriod) {
+      carto::common::FromSeconds(kSensorDataRatesLoggingPeriodSeconds)) {
     for (const auto& pair : rate_timers_) {
-      LOG(INFO) << pair.first << " rate: " << pair.second->DebugString();
+      LOG(INFO) << pair.first << " rate: " << pair.second.DebugString();
     }
     last_sensor_data_rates_logging_time_ = std::chrono::steady_clock::now();
   }
