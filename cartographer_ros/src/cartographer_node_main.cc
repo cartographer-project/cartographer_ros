@@ -127,7 +127,7 @@ Rigid3d ToRigid3d(const geometry_msgs::Pose& pose) {
                          pose.orientation.y, pose.orientation.z));
 }
 
-PoseCovariance ToPoseCovariance(const boost::array<double, 36ul>& covariance) {
+PoseCovariance ToPoseCovariance(const boost::array<double, 36>& covariance) {
   return Eigen::Map<const Eigen::Matrix<double, 6, 6>>(covariance.data());
 }
 
