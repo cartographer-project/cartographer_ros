@@ -15,6 +15,7 @@
  */
 
 #include <cstring>
+#include <map>
 #include <queue>
 #include <string>
 #include <vector>
@@ -26,6 +27,7 @@
 #include "cartographer/common/make_unique.h"
 #include "cartographer/common/mutex.h"
 #include "cartographer/common/port.h"
+#include "cartographer/common/rate_timer.h"
 #include "cartographer/common/thread_pool.h"
 #include "cartographer/common/time.h"
 #include "cartographer/kalman_filter/pose_tracker.h"
@@ -81,9 +83,11 @@ DEFINE_string(configuration_basename, "",
 namespace cartographer_ros {
 namespace {
 
-using ::cartographer::transform::Rigid3d;
-using ::cartographer::kalman_filter::PoseCovariance;
-namespace proto = ::cartographer::sensor::proto;
+namespace carto = ::cartographer;
+namespace proto = carto::sensor::proto;
+
+using carto::transform::Rigid3d;
+using carto::kalman_filter::PoseCovariance;
 
 // TODO(hrapp): Support multi trajectory mapping.
 constexpr int64 kTrajectoryId = 0;
@@ -91,6 +95,7 @@ constexpr int kSubscriberQueueSize = 150;
 constexpr int kSubmapPublishPeriodInUts = 300 * 10000ll;  // 300 milliseconds
 constexpr int kPosePublishPeriodInUts = 5 * 10000ll;      // 5 milliseconds
 constexpr double kMaxTransformDelaySeconds = 0.01;
+constexpr double kSensorDataRatesLoggingPeriodSeconds = 15.;
 
 // Unique default topic names. Expected to be remapped as needed.
 constexpr char kLaserScanTopic[] = "/scan";
@@ -98,6 +103,13 @@ constexpr char kMultiEchoLaserScanTopic[] = "/echoes";
 constexpr char kPointCloud2Topic[] = "/points2";
 constexpr char kImuTopic[] = "/imu";
 constexpr char kOdometryTopic[] = "/odom";
+
+const string& CheckNoLeadingSlash(const string& frame_id) {
+  if (frame_id.size() > 0) {
+    CHECK_NE(frame_id[0], '/');
+  }
+  return frame_id;
+}
 
 Rigid3d ToRigid3d(const geometry_msgs::TransformStamped& transform) {
   return Rigid3d(Eigen::Vector3d(transform.transform.translation.x,
@@ -116,7 +128,7 @@ Rigid3d ToRigid3d(const geometry_msgs::Pose& pose) {
                          pose.orientation.y, pose.orientation.z));
 }
 
-PoseCovariance ToPoseCovariance(const boost::array<double, 36ul>& covariance) {
+PoseCovariance ToPoseCovariance(const boost::array<double, 36>& covariance) {
   return Eigen::Map<const Eigen::Matrix<double, 6, 6>>(covariance.data());
 }
 
@@ -149,21 +161,23 @@ geometry_msgs::Pose ToGeometryMsgPose(const Rigid3d& rigid) {
 // is only used for time ordering sensor data before passing it on.
 enum class SensorType { kImu, kLaserScan, kLaserFan3D, kOdometry };
 struct SensorData {
-  SensorData(const string& init_frame_id, proto::Imu init_imu)
-      : type(SensorType::kImu), frame_id(init_frame_id), imu(init_imu) {}
-  SensorData(const string& init_frame_id, proto::LaserScan init_laser_scan)
+  SensorData(const string& frame_id, proto::Imu imu)
+      : type(SensorType::kImu),
+        frame_id(CheckNoLeadingSlash(frame_id)),
+        imu(imu) {}
+  SensorData(const string& frame_id, proto::LaserScan laser_scan)
       : type(SensorType::kLaserScan),
-        frame_id(init_frame_id),
-        laser_scan(init_laser_scan) {}
-  SensorData(const string& init_frame_id, proto::LaserFan3D init_laser_fan_3d)
+        frame_id(CheckNoLeadingSlash(frame_id)),
+        laser_scan(laser_scan) {}
+  SensorData(const string& frame_id, proto::LaserFan3D laser_fan_3d)
       : type(SensorType::kLaserFan3D),
-        frame_id(init_frame_id),
-        laser_fan_3d(init_laser_fan_3d) {}
-  SensorData(const string& init_frame_id, const Rigid3d& init_pose,
-             const PoseCovariance& init_covariance)
+        frame_id(CheckNoLeadingSlash(frame_id)),
+        laser_fan_3d(laser_fan_3d) {}
+  SensorData(const string& frame_id, const Rigid3d& pose,
+             const PoseCovariance& covariance)
       : type(SensorType::kOdometry),
-        frame_id(init_frame_id),
-        odometry{init_pose, init_covariance} {}
+        frame_id(frame_id),
+        odometry{pose, covariance} {}
 
   SensorType type;
   string frame_id;
@@ -208,7 +222,7 @@ class Node {
 
   // Returns a transform for 'frame_id' to 'tracking_frame_' if it exists at
   // 'time' or throws tf2::TransformException if it does not exist.
-  Rigid3d LookupToTrackingTransformOrThrow(::cartographer::common::Time time,
+  Rigid3d LookupToTrackingTransformOrThrow(carto::common::Time time,
                                            const string& frame_id);
 
   bool HandleSubmapQuery(
@@ -220,7 +234,7 @@ class Node {
 
   // TODO(hrapp): Pull out the common functionality between this and MapWriter
   // into an open sourcable MapWriter.
-  ::cartographer::mapping::SensorCollator<SensorData> sensor_collator_;
+  carto::mapping::SensorCollator<SensorData> sensor_collator_;
   ros::NodeHandle node_handle_;
   ros::Subscriber imu_subscriber_;
   ros::Subscriber laser_subscriber_2d_;
@@ -238,18 +252,22 @@ class Node {
   tf2_ros::Buffer tf_buffer_;
   tf2_ros::TransformListener tf_;
   tf2_ros::TransformBroadcaster tf_broadcaster_;
-  ::cartographer::common::ThreadPool thread_pool_;
+  carto::common::ThreadPool thread_pool_;
   int64 last_pose_publish_timestamp_;
-  ::cartographer::common::Mutex mutex_;
-  std::unique_ptr<::cartographer::mapping::GlobalTrajectoryBuilderInterface>
+  carto::common::Mutex mutex_;
+  std::unique_ptr<carto::mapping::GlobalTrajectoryBuilderInterface>
       trajectory_builder_ GUARDED_BY(mutex_);
-  std::deque<::cartographer::mapping::TrajectoryNode::ConstantData>
-      constant_node_data_ GUARDED_BY(mutex_);
-  std::unique_ptr<::cartographer::mapping::SparsePoseGraph> sparse_pose_graph_;
+  std::deque<carto::mapping::TrajectoryNode::ConstantData> constant_node_data_
+      GUARDED_BY(mutex_);
+  std::unique_ptr<carto::mapping::SparsePoseGraph> sparse_pose_graph_;
 
   ::ros::Publisher submap_list_publisher_;
   int64 last_submap_list_publish_timestamp_;
   ::ros::ServiceServer submap_query_server_;
+
+  // Time at which we last logged the rates of incoming sensor data.
+  std::chrono::steady_clock::time_point last_sensor_data_rates_logging_time_;
+  std::map<string, carto::common::RateTimer<>> rate_timers_;
 };
 
 Node::Node()
@@ -260,8 +278,8 @@ Node::Node()
       last_submap_list_publish_timestamp_(0),
       last_pose_publish_timestamp_(0) {}
 
-Rigid3d Node::LookupToTrackingTransformOrThrow(
-    const ::cartographer::common::Time time, const string& frame_id) {
+Rigid3d Node::LookupToTrackingTransformOrThrow(const carto::common::Time time,
+                                               const string& frame_id) {
   return ToRigid3d(
       tf_buffer_.lookupTransform(tracking_frame_, frame_id, ToRos(time),
                                  ros::Duration(kMaxTransformDelaySeconds)));
@@ -285,18 +303,16 @@ void Node::AddOdometry(int64 timestamp, const string& frame_id,
 }
 
 void Node::ImuMessageCallback(const sensor_msgs::Imu::ConstPtr& msg) {
-  auto sensor_data = ::cartographer::common::make_unique<SensorData>(
+  auto sensor_data = carto::common::make_unique<SensorData>(
       msg->header.frame_id, ToCartographer(*msg));
   sensor_collator_.AddSensorData(
-      kTrajectoryId,
-      ::cartographer::common::ToUniversal(FromRos(msg->header.stamp)),
+      kTrajectoryId, carto::common::ToUniversal(FromRos(msg->header.stamp)),
       kImuTopic, std::move(sensor_data));
 }
 
 void Node::AddImu(const int64 timestamp, const string& frame_id,
                   const proto::Imu& imu) {
-  const ::cartographer::common::Time time =
-      ::cartographer::common::FromUniversal(timestamp);
+  const carto::common::Time time = carto::common::FromUniversal(timestamp);
   try {
     const Rigid3d sensor_to_tracking =
         LookupToTrackingTransformOrThrow(time, frame_id);
@@ -306,9 +322,9 @@ void Node::AddImu(const int64 timestamp, const string& frame_id,
            "otherwise be imprecise.";
     trajectory_builder_->AddImuData(
         time, sensor_to_tracking.rotation() *
-                  ::cartographer::transform::ToEigen(imu.linear_acceleration()),
+                  carto::transform::ToEigen(imu.linear_acceleration()),
         sensor_to_tracking.rotation() *
-            ::cartographer::transform::ToEigen(imu.angular_velocity()));
+            carto::transform::ToEigen(imu.angular_velocity()));
   } catch (const tf2::TransformException& ex) {
     LOG(WARNING) << "Cannot transform " << frame_id << " -> " << tracking_frame_
                  << ": " << ex.what();
@@ -317,28 +333,25 @@ void Node::AddImu(const int64 timestamp, const string& frame_id,
 
 void Node::LaserScanMessageCallback(
     const sensor_msgs::LaserScan::ConstPtr& msg) {
-  auto sensor_data = ::cartographer::common::make_unique<SensorData>(
+  auto sensor_data = carto::common::make_unique<SensorData>(
       msg->header.frame_id, ToCartographer(*msg));
   sensor_collator_.AddSensorData(
-      kTrajectoryId,
-      ::cartographer::common::ToUniversal(FromRos(msg->header.stamp)),
+      kTrajectoryId, carto::common::ToUniversal(FromRos(msg->header.stamp)),
       kLaserScanTopic, std::move(sensor_data));
 }
 
 void Node::AddHorizontalLaserFan(const int64 timestamp, const string& frame_id,
                                  const proto::LaserScan& laser_scan) {
-  const ::cartographer::common::Time time =
-      ::cartographer::common::FromUniversal(timestamp);
+  const carto::common::Time time = carto::common::FromUniversal(timestamp);
   try {
     const Rigid3d sensor_to_tracking =
         LookupToTrackingTransformOrThrow(time, frame_id);
-    const ::cartographer::sensor::LaserFan laser_fan =
-        ::cartographer::sensor::ToLaserFan(laser_scan, laser_min_range_,
-                                           laser_max_range_,
-                                           laser_missing_echo_ray_length_);
+    const carto::sensor::LaserFan laser_fan = carto::sensor::ToLaserFan(
+        laser_scan, laser_min_range_, laser_max_range_,
+        laser_missing_echo_ray_length_);
 
-    const auto laser_fan_3d = ::cartographer::sensor::TransformLaserFan3D(
-        ::cartographer::sensor::ToLaserFan3D(laser_fan),
+    const auto laser_fan_3d = carto::sensor::TransformLaserFan3D(
+        carto::sensor::ToLaserFan3D(laser_fan),
         sensor_to_tracking.cast<float>());
     trajectory_builder_->AddHorizontalLaserFan(time, laser_fan_3d);
   } catch (const tf2::TransformException& ex) {
@@ -349,11 +362,10 @@ void Node::AddHorizontalLaserFan(const int64 timestamp, const string& frame_id,
 
 void Node::MultiEchoLaserScanMessageCallback(
     const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
-  auto sensor_data = ::cartographer::common::make_unique<SensorData>(
+  auto sensor_data = carto::common::make_unique<SensorData>(
       msg->header.frame_id, ToCartographer(*msg));
   sensor_collator_.AddSensorData(
-      kTrajectoryId,
-      ::cartographer::common::ToUniversal(FromRos(msg->header.stamp)),
+      kTrajectoryId, carto::common::ToUniversal(FromRos(msg->header.stamp)),
       kMultiEchoLaserScanTopic, std::move(sensor_data));
 }
 
@@ -362,24 +374,22 @@ void Node::PointCloud2MessageCallback(
   pcl::PointCloud<pcl::PointXYZ> pcl_points;
   pcl::fromROSMsg(*msg, pcl_points);
 
-  auto sensor_data = ::cartographer::common::make_unique<SensorData>(
+  auto sensor_data = carto::common::make_unique<SensorData>(
       msg->header.frame_id, ToCartographer(pcl_points));
   sensor_collator_.AddSensorData(
-      kTrajectoryId,
-      ::cartographer::common::ToUniversal(FromRos(msg->header.stamp)), topic,
-      std::move(sensor_data));
+      kTrajectoryId, carto::common::ToUniversal(FromRos(msg->header.stamp)),
+      topic, std::move(sensor_data));
 }
 
 void Node::AddLaserFan3D(const int64 timestamp, const string& frame_id,
                          const proto::LaserFan3D& laser_fan_3d) {
-  const ::cartographer::common::Time time =
-      ::cartographer::common::FromUniversal(timestamp);
+  const carto::common::Time time = carto::common::FromUniversal(timestamp);
   try {
     const Rigid3d sensor_to_tracking =
         LookupToTrackingTransformOrThrow(time, frame_id);
     trajectory_builder_->AddLaserFan3D(
-        time, ::cartographer::sensor::TransformLaserFan3D(
-                  ::cartographer::sensor::FromProto(laser_fan_3d),
+        time, carto::sensor::TransformLaserFan3D(
+                  carto::sensor::FromProto(laser_fan_3d),
                   sensor_to_tracking.cast<float>()));
   } catch (const tf2::TransformException& ex) {
     LOG(WARNING) << "Cannot transform " << frame_id << " -> " << tracking_frame_
@@ -388,19 +398,20 @@ void Node::AddLaserFan3D(const int64 timestamp, const string& frame_id,
 }
 
 void Node::Initialize() {
-  auto file_resolver = ::cartographer::common::make_unique<
-      ::cartographer::common::ConfigurationFileResolver>(
-      std::vector<string>{FLAGS_configuration_directory});
+  auto file_resolver =
+      carto::common::make_unique<carto::common::ConfigurationFileResolver>(
+          std::vector<string>{FLAGS_configuration_directory});
   const string code =
       file_resolver->GetFileContentOrDie(FLAGS_configuration_basename);
-  ::cartographer::common::LuaParameterDictionary lua_parameter_dictionary(
+  carto::common::LuaParameterDictionary lua_parameter_dictionary(
       code, std::move(file_resolver), nullptr);
 
   tracking_frame_ = lua_parameter_dictionary.GetString("tracking_frame");
   odom_frame_ = lua_parameter_dictionary.GetString("odom_frame");
   map_frame_ = lua_parameter_dictionary.GetString("map_frame");
   provide_odom_frame_ = lua_parameter_dictionary.GetBool("provide_odom_frame");
-  expect_odometry_data_ = lua_parameter_dictionary.GetBool("expect_odometry_data");
+  expect_odometry_data_ =
+      lua_parameter_dictionary.GetBool("expect_odometry_data");
   laser_min_range_ = lua_parameter_dictionary.GetDouble("laser_min_range");
   laser_max_range_ = lua_parameter_dictionary.GetDouble("laser_max_range");
   laser_missing_echo_ray_length_ =
@@ -443,18 +454,18 @@ void Node::Initialize() {
 
   bool expect_imu_data = true;
   if (has_laser_scan_2d || has_multi_echo_laser_scan_2d) {
-    auto sparse_pose_graph_2d = ::cartographer::common::make_unique<
-        ::cartographer::mapping_2d::SparsePoseGraph>(
-        ::cartographer::mapping::CreateSparsePoseGraphOptions(
-            lua_parameter_dictionary.GetDictionary("sparse_pose_graph").get()),
-        &thread_pool_, &constant_node_data_);
-    auto options =
-        ::cartographer::mapping_2d::CreateLocalTrajectoryBuilderOptions(
-            lua_parameter_dictionary.GetDictionary("trajectory_builder").get());
+    auto sparse_pose_graph_2d =
+        carto::common::make_unique<carto::mapping_2d::SparsePoseGraph>(
+            carto::mapping::CreateSparsePoseGraphOptions(
+                lua_parameter_dictionary.GetDictionary("sparse_pose_graph")
+                    .get()),
+            &thread_pool_, &constant_node_data_);
+    auto options = carto::mapping_2d::CreateLocalTrajectoryBuilderOptions(
+        lua_parameter_dictionary.GetDictionary("trajectory_builder").get());
     expect_imu_data = options.expect_imu_data();
-    trajectory_builder_ = ::cartographer::common::make_unique<
-        ::cartographer::mapping_2d::GlobalTrajectoryBuilder>(
-        options, sparse_pose_graph_2d.get());
+    trajectory_builder_ =
+        carto::common::make_unique<carto::mapping_2d::GlobalTrajectoryBuilder>(
+            options, sparse_pose_graph_2d.get());
     sparse_pose_graph_ = std::move(sparse_pose_graph_2d);
   }
 
@@ -494,8 +505,9 @@ void Node::Initialize() {
   }
 
   if (expect_odometry_data_) {
-    odometry_subscriber_ = node_handle_.subscribe(
-      kOdometryTopic, kSubscriberQueueSize, &Node::OdometryMessageCallback, this);
+    odometry_subscriber_ =
+        node_handle_.subscribe(kOdometryTopic, kSubscriberQueueSize,
+                               &Node::OdometryMessageCallback, this);
     expected_sensor_identifiers.insert(kOdometryTopic);
   }
 
@@ -519,18 +531,18 @@ bool Node::HandleSubmapQuery(
     return false;
   }
 
-  ::cartographer::common::MutexLocker lock(&mutex_);
+  carto::common::MutexLocker lock(&mutex_);
   // TODO(hrapp): return error messages and extract common code from MapBuilder.
-  ::cartographer::mapping::Submaps* submaps = trajectory_builder_->submaps();
+  carto::mapping::Submaps* submaps = trajectory_builder_->submaps();
   if (request.submap_id < 0 || request.submap_id >= submaps->size()) {
     return false;
   }
 
-  ::cartographer::mapping::proto::SubmapQuery::Response response_proto;
+  carto::mapping::proto::SubmapQuery::Response response_proto;
   response_proto.set_submap_id(request.submap_id);
   response_proto.set_submap_version(
       submaps->Get(request.submap_id)->end_laser_fan_index);
-  const std::vector<::cartographer::transform::Rigid3d> submap_transforms =
+  const std::vector<carto::transform::Rigid3d> submap_transforms =
       sparse_pose_graph_->GetSubmapTransforms(*submaps);
 
   submaps->SubmapToProto(request.submap_id,
@@ -544,7 +556,7 @@ bool Node::HandleSubmapQuery(
   response.height = response_proto.height();
   response.resolution = response_proto.resolution();
 
-  auto pose = ::cartographer::transform::ToRigid3(response_proto.slice_pose());
+  auto pose = carto::transform::ToRigid3(response_proto.slice_pose());
   response.slice_pose.position.x =
       response_proto.slice_pose().translation().x();
   response.slice_pose.position.y =
@@ -563,10 +575,9 @@ bool Node::HandleSubmapQuery(
 }
 
 void Node::PublishSubmapList(const int64 timestamp) {
-  ::cartographer::common::MutexLocker lock(&mutex_);
-  const ::cartographer::mapping::Submaps* submaps =
-      trajectory_builder_->submaps();
-  const std::vector<::cartographer::transform::Rigid3d> submap_transforms =
+  carto::common::MutexLocker lock(&mutex_);
+  const carto::mapping::Submaps* submaps = trajectory_builder_->submaps();
+  const std::vector<carto::transform::Rigid3d> submap_transforms =
       sparse_pose_graph_->GetSubmapTransforms(*submaps);
   CHECK_EQ(submap_transforms.size(), submaps->size());
 
@@ -579,8 +590,7 @@ void Node::PublishSubmapList(const int64 timestamp) {
   }
 
   ::cartographer_ros_msgs::SubmapList ros_submap_list;
-  ros_submap_list.header.stamp =
-      ToRos(::cartographer::common::FromUniversal(timestamp));
+  ros_submap_list.header.stamp = ToRos(carto::common::FromUniversal(timestamp));
   ros_submap_list.header.frame_id = map_frame_;
   ros_submap_list.trajectory.push_back(ros_trajectory);
   submap_list_publisher_.publish(ros_submap_list);
@@ -588,11 +598,9 @@ void Node::PublishSubmapList(const int64 timestamp) {
 }
 
 void Node::PublishPose(const int64 timestamp) {
-  const ::cartographer::common::Time time =
-      ::cartographer::common::FromUniversal(timestamp);
+  const carto::common::Time time = carto::common::FromUniversal(timestamp);
   const Rigid3d tracking_to_local = trajectory_builder_->pose_estimate().pose;
-  const ::cartographer::mapping::Submaps* submaps =
-      trajectory_builder_->submaps();
+  const carto::mapping::Submaps* submaps = trajectory_builder_->submaps();
   const Rigid3d local_to_map =
       sparse_pose_graph_->GetLocalToGlobalTransform(*submaps);
   const Rigid3d tracking_to_map = local_to_map * tracking_to_local;
@@ -603,7 +611,7 @@ void Node::PublishPose(const int64 timestamp) {
   stamped_transform.child_frame_id = odom_frame_;
 
   if (provide_odom_frame_) {
-    ::cartographer::common::MutexLocker lock(&mutex_);
+    carto::common::MutexLocker lock(&mutex_);
     stamped_transform.transform = ToGeometryMsgTransform(local_to_map);
     tf_broadcaster_.sendTransform(stamped_transform);
 
@@ -635,6 +643,25 @@ void Node::HandleSensorData(const int64 timestamp,
 
   if (last_pose_publish_timestamp_ + kPosePublishPeriodInUts < timestamp) {
     PublishPose(timestamp);
+  }
+
+  auto it = rate_timers_.find(sensor_data->frame_id);
+  if (it == rate_timers_.end()) {
+    it = rate_timers_
+             .emplace(std::piecewise_construct,
+                      std::forward_as_tuple(sensor_data->frame_id),
+                      std::forward_as_tuple(carto::common::FromSeconds(
+                          kSensorDataRatesLoggingPeriodSeconds)))
+             .first;
+  }
+  it->second.Pulse(carto::common::FromUniversal(timestamp));
+
+  if (std::chrono::steady_clock::now() - last_sensor_data_rates_logging_time_ >
+      carto::common::FromSeconds(kSensorDataRatesLoggingPeriodSeconds)) {
+    for (const auto& pair : rate_timers_) {
+      LOG(INFO) << pair.first << " rate: " << pair.second.DebugString();
+    }
+    last_sensor_data_rates_logging_time_ = std::chrono::steady_clock::now();
   }
 
   switch (sensor_data->type) {
@@ -708,8 +735,7 @@ class ScopedRosLogSink : public google::LogSink {
   void WaitTillSent() override {
     if (will_die_) {
       // Give ROS some time to actually publish our message.
-      std::this_thread::sleep_for(
-          ::cartographer::common::FromMilliseconds(1000));
+      std::this_thread::sleep_for(carto::common::FromMilliseconds(1000));
     }
   }
 

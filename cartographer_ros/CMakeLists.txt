@@ -96,6 +96,10 @@ target_link_libraries(cartographer_node
   gflags  # TODO(whess): Use or remove gflags_catkin.
 )
 
+add_dependencies(cartographer_node
+  ${catkin_EXPORTED_TARGETS}
+)
+
 add_library(cartographer_rviz_submaps_visualization
   src/drawable_submap.cc
   src/drawable_submap.h
@@ -111,6 +115,10 @@ target_link_libraries(cartographer_rviz_submaps_visualization
   ${ZLIB_LIBRARIES}
 )
 
+add_dependencies(cartographer_rviz_submaps_visualization
+  ${catkin_EXPORTED_TARGETS}
+)
+
 add_executable(time_conversion_test
   src/time_conversion_test.cc
   src/time_conversion.h
@@ -121,6 +129,10 @@ target_link_libraries(time_conversion_test
   ${GTEST_BOTH_LIBRARIES}
   ${CARTOGRAPHER_LIBRARIES}
   ${catkin_LIBRARIES}
+)
+
+add_dependencies(time_conversion_test
+  ${catkin_EXPORTED_TARGETS}
 )
 
 add_test(time_conversion_test time_conversion_test)
@@ -138,17 +150,17 @@ install(DIRECTORY configuration_files/
 )
 
 install(TARGETS
-  cartographer_rviz_submaps_visualization
+  cartographer_rviz_submaps_visualization cartographer_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 install(FILES
-  plugin_description.xml
+  rviz_plugin_description.xml
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
 install(DIRECTORY ogre_media/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/ogre_media}
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/ogre_media
 )
