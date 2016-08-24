@@ -409,7 +409,8 @@ void Node::Initialize() {
   odom_frame_ = lua_parameter_dictionary.GetString("odom_frame");
   map_frame_ = lua_parameter_dictionary.GetString("map_frame");
   provide_odom_frame_ = lua_parameter_dictionary.GetBool("provide_odom_frame");
-  expect_odometry_data_ = lua_parameter_dictionary.GetBool("expect_odometry_data");
+  expect_odometry_data_ =
+      lua_parameter_dictionary.GetBool("expect_odometry_data");
   laser_min_range_ = lua_parameter_dictionary.GetDouble("laser_min_range");
   laser_max_range_ = lua_parameter_dictionary.GetDouble("laser_max_range");
   laser_missing_echo_ray_length_ =
@@ -503,8 +504,9 @@ void Node::Initialize() {
   }
 
   if (expect_odometry_data_) {
-    odometry_subscriber_ = node_handle_.subscribe(
-      kOdometryTopic, kSubscriberQueueSize, &Node::OdometryMessageCallback, this);
+    odometry_subscriber_ =
+        node_handle_.subscribe(kOdometryTopic, kSubscriberQueueSize,
+                               &Node::OdometryMessageCallback, this);
     expected_sensor_identifiers.insert(kOdometryTopic);
   }
 
