@@ -23,6 +23,7 @@ set(PACKAGE_DEPENDENCIES
   roscpp
   rviz
   sensor_msgs
+  nav_msgs
   tf2
   tf2_eigen
 )
