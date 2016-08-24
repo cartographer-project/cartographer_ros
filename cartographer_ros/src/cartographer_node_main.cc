@@ -95,6 +95,8 @@ constexpr int kSubscriberQueueSize = 150;
 constexpr int kSubmapPublishPeriodInUts = 300 * 10000ll;  // 300 milliseconds
 constexpr int kPosePublishPeriodInUts = 5 * 10000ll;      // 5 milliseconds
 constexpr double kMaxTransformDelaySeconds = 0.01;
+const carto::common::Duration kSensorDataRatesLoggingPeriod =
+    carto::common::FromSeconds(15.);
 
 // Unique default topic names. Expected to be remapped as needed.
 constexpr char kLaserScanTopic[] = "/scan";
@@ -265,7 +267,7 @@ class Node {
   ::ros::ServiceServer submap_query_server_;
 
   // Time at which we last logged the rates of incoming sensor data.
-  std::chrono::steady_clock::time_point last_rates_logging_time_;
+  std::chrono::steady_clock::time_point last_sensor_data_rates_logging_time_;
   std::map<string, std::unique_ptr<carto::common::RateTimer<>>> rate_timers_;
 };
 
@@ -644,25 +646,22 @@ void Node::HandleSensorData(const int64 timestamp,
     PublishPose(timestamp);
   }
 
-  const carto::common::Duration kRatesLoggingPeriod =
-      carto::common::FromSeconds(15.);
-
   auto it = rate_timers_.find(sensor_data->frame_id);
   if (it == rate_timers_.end()) {
     it = rate_timers_
              .emplace(sensor_data->frame_id,
                       carto::common::make_unique<carto::common::RateTimer<>>(
-                          kRatesLoggingPeriod))
+                          kSensorDataRatesLoggingPeriod))
              .first;
   }
   it->second->Pulse(carto::common::FromUniversal(timestamp));
 
-  if (std::chrono::steady_clock::now() - last_rates_logging_time_ >
-      kRatesLoggingPeriod) {
+  if (std::chrono::steady_clock::now() - last_sensor_data_rates_logging_time_ >
+      kSensorDataRatesLoggingPeriod) {
     for (const auto& pair : rate_timers_) {
       LOG(INFO) << pair.first << " rate: " << pair.second->DebugString();
     }
-    last_rates_logging_time_ = std::chrono::steady_clock::now();
+    last_sensor_data_rates_logging_time_ = std::chrono::steady_clock::now();
   }
 
   switch (sensor_data->type) {
