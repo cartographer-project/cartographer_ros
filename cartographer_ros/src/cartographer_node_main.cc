@@ -103,19 +103,11 @@ constexpr char kPointCloud2Topic[] = "/points2";
 constexpr char kImuTopic[] = "/imu";
 constexpr char kOdometryTopic[] = "/odom";
 
-bool StartsWithSlash(const string& frame_id) {
+string CheckNoLeadingSlash(const string& frame_id) {
   if (frame_id.size() > 0) {
-    return frame_id[0] == '/';
+    CHECK_NE(frame_id[0], '/');
   }
-  return false;
-}
-
-std::string StripSlash(const string& in) {
-  string out = in;
-  if (StartsWithSlash(in)) {
-    out.erase(0, 1);
-  }
-  return out;
+  return frame_id;
 }
 
 Rigid3d ToRigid3d(const geometry_msgs::TransformStamped& transform) {
@@ -169,14 +161,16 @@ geometry_msgs::Pose ToGeometryMsgPose(const Rigid3d& rigid) {
 enum class SensorType { kImu, kLaserScan, kLaserFan3D, kOdometry };
 struct SensorData {
   SensorData(const string& frame_id, proto::Imu imu)
-      : type(SensorType::kImu), frame_id(StripSlash(frame_id)), imu(imu) {}
+      : type(SensorType::kImu),
+        frame_id(CheckNoLeadingSlash(frame_id)),
+        imu(imu) {}
   SensorData(const string& frame_id, proto::LaserScan laser_scan)
       : type(SensorType::kLaserScan),
-        frame_id(StripSlash(frame_id)),
+        frame_id(CheckNoLeadingSlash(frame_id)),
         laser_scan(laser_scan) {}
   SensorData(const string& frame_id, proto::LaserFan3D laser_fan_3d)
       : type(SensorType::kLaserFan3D),
-        frame_id(StripSlash(frame_id)),
+        frame_id(CheckNoLeadingSlash(frame_id)),
         laser_fan_3d(laser_fan_3d) {}
   SensorData(const string& frame_id, const Rigid3d& pose,
              const PoseCovariance& covariance)
