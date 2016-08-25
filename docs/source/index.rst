@@ -84,11 +84,11 @@ Standalone Workspace
     catkin_make_isolated
     source devel_isolated/setup.bash
 
-Using ``wstool``
-----------------
+Using wstool
+------------
 
 If ``cartographer_ros`` is to be used as part of a pre-existing
-workspace/existing project, using `wstool <http://wiki.ros.org/wstool>` is
+workspace/existing project, using `wstool <http://wiki.ros.org/wstool>`_ is
 recommended.
 
   .. code-block:: bash
