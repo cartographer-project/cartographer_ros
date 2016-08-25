@@ -164,3 +164,7 @@ install(FILES
 install(DIRECTORY ogre_media/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/ogre_media
 )
+
+install(PROGRAMS
+         scripts/imu_pub.py
+        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
