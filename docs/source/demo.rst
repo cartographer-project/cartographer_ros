@@ -12,26 +12,20 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-.. Cartographer documentation master file, created by
-   sphinx-quickstart on Fri Jul  8 10:41:33 2016.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 =====================
 Cartographer ROS Demo
 =====================
 
 First, follow the installation instructions in the :ref:`getting-started` section.
 
-Now that Cartographer and Cartographer's ROS integration are installed, download the example bag:
-
-* `2D backpack collection of the Deutches Museum
-  <https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/cartographer_paper_deutsches_museum.bag>`_
-
-Finally, use ``roslaunch`` to bring up the demo:
+Now that Cartographer and Cartographer's ROS integration are installed,
+download the example bag, a 2D backpack collection of the `Deutsches Museum
+<https://en.wikipedia.org/wiki/Deutsches_Museum>`_, to a known location, in
+this case ``~/Downloads``, and use ``roslaunch`` to bring up the demo:
 
   .. code-block:: bash
 
-    roslaunch cartographer_ros demo_2d.launch bag_filename:=<PATH_TO_BAG>
+    wget -P ~/Downloads https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/cartographer_paper_deutsches_museum.bag
+    roslaunch cartographer_ros demo_2d.launch bag_filename:=${HOME}/Downloads/cartographer_paper_deutsches_museum.bag
 
 The launch file will bring up ``roscore`` and ``rviz`` automatically.
