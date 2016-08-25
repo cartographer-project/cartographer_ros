@@ -286,19 +286,19 @@ Rigid3d Node::LookupToTrackingTransformOrThrow(const carto::common::Time time,
 }
 
 void Node::OdometryMessageCallback(const nav_msgs::Odometry::ConstPtr& msg) {
-  auto sensor_data = ::cartographer::common::make_unique<SensorData>(
+  auto sensor_data = carto::common::make_unique<SensorData>(
       msg->header.frame_id, ToRigid3d(msg->pose.pose),
       ToPoseCovariance(msg->pose.covariance));
   sensor_collator_.AddSensorData(
       kTrajectoryId,
-      ::cartographer::common::ToUniversal(FromRos(msg->header.stamp)),
+      carto::common::ToUniversal(FromRos(msg->header.stamp)),
       kOdometryTopic, std::move(sensor_data));
 }
 
 void Node::AddOdometry(int64 timestamp, const string& frame_id,
                        const Rigid3d& pose, const PoseCovariance& covariance) {
-  const ::cartographer::common::Time time =
-      ::cartographer::common::FromUniversal(timestamp);
+  const carto::common::Time time =
+      carto::common::FromUniversal(timestamp);
   trajectory_builder_->AddOdometerPose(time, pose, covariance);
 }
 
@@ -483,14 +483,14 @@ void Node::Initialize() {
               })));
       expected_sensor_identifiers.insert(topic);
     }
-    auto sparse_pose_graph_3d = ::cartographer::common::make_unique<
-        ::cartographer::mapping_3d::SparsePoseGraph>(
-        ::cartographer::mapping::CreateSparsePoseGraphOptions(
+    auto sparse_pose_graph_3d = carto::common::make_unique<
+        carto::mapping_3d::SparsePoseGraph>(
+        carto::mapping::CreateSparsePoseGraphOptions(
             lua_parameter_dictionary.GetDictionary("sparse_pose_graph").get()),
         &thread_pool_, &constant_node_data_);
-    trajectory_builder_ = ::cartographer::common::make_unique<
-        ::cartographer::mapping_3d::GlobalTrajectoryBuilder>(
-        ::cartographer::mapping_3d::CreateLocalTrajectoryBuilderOptions(
+    trajectory_builder_ = carto::common::make_unique<
+        carto::mapping_3d::GlobalTrajectoryBuilder>(
+        carto::mapping_3d::CreateLocalTrajectoryBuilderOptions(
             lua_parameter_dictionary.GetDictionary("trajectory_builder").get()),
         sparse_pose_graph_3d.get());
     sparse_pose_graph_ = std::move(sparse_pose_graph_3d);
