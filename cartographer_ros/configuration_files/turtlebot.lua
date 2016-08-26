@@ -23,6 +23,7 @@ options = {
   tracking_frame = "base_link",
   provide_odom_frame = false,
   expect_odometry_data = false,
+  publish_occupancy_grid = false,
   laser_min_range = 0.,
   laser_max_range = 30.,
   laser_missing_echo_ray_length = 5.,

@@ -28,7 +28,7 @@ set(PACKAGE_DEPENDENCIES
   tf2_eigen
 )
 
-set(CMAKE_CXX_FLAGS "-std=c++11")
+set(CMAKE_CXX_FLAGS "-std=c++11 -Wreorder")
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
 include_directories(${catkin_INCLUDE_DIRS})
