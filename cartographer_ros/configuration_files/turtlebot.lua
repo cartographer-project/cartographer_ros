@@ -26,6 +26,7 @@ options = {
   laser_min_range = 0.,
   laser_max_range = 30.,
   laser_missing_echo_ray_length = 5.,
+  transform_wait_time = 0.01,
   use_laser_scan_2d = true
 }
 
