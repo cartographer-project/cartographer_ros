@@ -247,7 +247,7 @@ class Node {
   double laser_min_range_;
   double laser_max_range_;
   double laser_missing_echo_ray_length_;
-  double transform_wait_time_;
+  double lookup_transform_timeout_;
 
   tf2_ros::Buffer tf_buffer_;
   tf2_ros::TransformListener tf_;
@@ -282,7 +282,7 @@ Rigid3d Node::LookupToTrackingTransformOrThrow(const carto::common::Time time,
                                                const string& frame_id) {
   return ToRigid3d(
       tf_buffer_.lookupTransform(tracking_frame_, frame_id, ToRos(time),
-                                 ros::Duration(transform_wait_time_)));
+                                 ros::Duration(lookup_transform_timeout_)));
 }
 
 void Node::OdometryMessageCallback(const nav_msgs::Odometry::ConstPtr& msg) {
@@ -416,8 +416,8 @@ void Node::Initialize() {
   laser_max_range_ = lua_parameter_dictionary.GetDouble("laser_max_range");
   laser_missing_echo_ray_length_ =
       lua_parameter_dictionary.GetDouble("laser_missing_echo_ray_length");
-  transform_wait_time_ =
-      lua_parameter_dictionary.GetDouble("transform_wait_time");
+  lookup_transform_timeout_ =
+      lua_parameter_dictionary.GetDouble("lookup_transform_timeout");
 
   // Set of all topics we subscribe to. We use the non-remapped default names
   // which are unique.
