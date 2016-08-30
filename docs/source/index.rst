@@ -20,84 +20,59 @@ Cartographer ROS Integration
    :maxdepth: 2
    :hidden:
 
-   demo
-
 `Cartographer`_ is a system that provides real-time simultaneous localization
 and mapping `SLAM`_ across multiple platforms and sensor configurations. This
 project provides Cartographer's ROS integration.
 
 .. _Cartographer: https://github.com/googlecartographer/cartographer
-.. _SLAM: http://en.wikipedia.org/wiki/Simultaneous_localization_and_mapping
+.. _SLAM: https://en.wikipedia.org/wiki/Simultaneous_localization_and_mapping
 
 .. _getting-started:
 
-Getting Started
-===============
+Building & Installation
+=======================
 
-Installation has been tested on Ubuntu 14.04 (Trusty) with ROS Indigo and on
-Ubuntu 16.04 (Xenial) with ROS Kinetic. For ROS Kinetic, simply replace the two
-occurrences of "indigo" with "kinetic" in the instructions below. There are
-multiple options for building cartographer_ros as part of a ROS workspace. Two
-common use cases are described below.
-
-These dependencies always have to be installed:
+Installation has been tested on Ubuntu 14.04 (Trusty) with ROS Indigo, but may
+also work on Ubuntu 16.04 (Xenial) with ROS Kinetic. We recommend using
+`wstool <http://wiki.ros.org/wstool>`_ and
+`rosdep <http://wiki.ros.org/rosdep>`_. For faster builds, we also recommend
+using `Ninja <https://ninja-build.org>`_.
 
   .. code-block:: bash
 
-    # Install the required libraries that are available as debs
-    sudo apt-get install \
-      ros-indigo-tf2-eigen \
-      g++ \
-      google-mock \
-      libboost-all-dev \
-      liblua5.2-dev \
-      libprotobuf-dev \
-      libsuitesparse-dev \
-      libwebp-dev \
-      protobuf-compiler \
-      python-sphinx \
-      libpcap-dev  # For 3D SLAM with Velodynes
+    # Install wstool and rosdep.
+    sudo apt-get update
+    sudo apt-get install -y python-wstool python-rosdep ninja-build
 
-Standalone Workspace
---------------------
+    # Create a new workspace in 'catkin_ws'.
+    mkdir catkin_ws
+    cd catkin_ws
+    wstool init
 
-  .. code-block:: bash
-
-    # Set up your Catkin workspace
-    mkdir -p ~/catkin_ws/src
-    cd ~/catkin_ws/src
-    source /opt/ros/indigo/setup.bash
-    catkin_init_workspace
-
-    # Clone the necessary repos into your Catkin workspace
-    git clone https://github.com/googlecartographer/cartographer.git
-    git clone https://github.com/googlecartographer/cartographer_ros.git
-    git clone https://github.com/ethz-asl/ceres_catkin.git  # Caution! Make sure you do not have "suitesparse" in your Catkin workspace
-    git clone https://github.com/ethz-asl/glog_catkin.git
-    git clone https://github.com/ethz-asl/gflags_catkin.git
-    git clone https://github.com/ethz-asl/catkin_simple.git
-    git clone https://github.com/ros-drivers/velodyne.git  # For 3D SLAM with Velodynes
-
-    # Build everything in your Catkin workspace
-    cd ~/catkin_ws
-    catkin_make_isolated
-    source devel_isolated/setup.bash
-
-Using wstool
-------------
-
-If ``cartographer_ros`` is to be used as part of a pre-existing
-workspace/existing project, using `wstool <http://wiki.ros.org/wstool>`_ is
-recommended.
-
-  .. code-block:: bash
-
-    # Enter workspace root (i.e. the folder that has "src" as a subfolder)
-    # Merge the cartographer_ros rosinstall file
+    # Merge the cartographer_ros rosinstall file and fetch code for dependencies.
     wstool merge https://raw.githubusercontent.com/googlecartographer/cartographer_ros/master/cartographer_ros.rosinstall
-
-    # Update workspace
     wstool update
 
-    # Build workspace contents. It is recommended to use catkin tools:
-    catkin build
+    # Install deb dependencies.
+    sudo apt-get install -y libwebp-dev  # TODO(whess): Move to rosdep.
+    rosdep update
+    rosdep install --from-paths src --ignore-src --rosdistro=${ROS_DISTRO} -y
+
+    # Build and install.
+    catkin_make_isolated --install --use-ninja
+    source install_isolated/setup.bash
+
+Running the demo
+================
+
+Now that Cartographer and Cartographer's ROS integration are installed,
+download the example bag, a 2D backpack collection of the `Deutsches Museum
+<https://en.wikipedia.org/wiki/Deutsches_Museum>`_, to a known location, in
+this case ``~/Downloads``, and use ``roslaunch`` to bring up the demo:
+
+  .. code-block:: bash
+
+    wget -P ~/Downloads https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/cartographer_paper_deutsches_museum.bag
+    roslaunch cartographer_ros demo_2d.launch bag_filename:=${HOME}/Downloads/cartographer_paper_deutsches_museum.bag
+
+The launch file will bring up ``roscore`` and ``rviz`` automatically.

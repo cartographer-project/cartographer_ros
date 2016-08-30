@@ -25,8 +25,8 @@ Purpose
 and mapping `SLAM`_ across multiple platforms and sensor configurations. This
 project provides Cartographer's ROS integration.
 
-.. _Cartographer: http://www.github.com/googlecartographer/cartographer
-.. _SLAM: http://en.wikipedia.org/wiki/Simultaneous_localization_and_mapping
+.. _Cartographer: https://github.com/googlecartographer/cartographer
+.. _SLAM: https://en.wikipedia.org/wiki/Simultaneous_localization_and_mapping
 
 Documentation
 =============
