@@ -234,7 +234,7 @@ class Node {
 
   void PublishSubmapList(int64 timestamp);
   void PublishPose(int64 timestamp);
-  void PublishOccupancyGrids();
+  void SpinOccupancyGridThreadForever();
 
   // TODO(hrapp): Pull out the common functionality between this and MapWriter
   // into an open sourcable MapWriter.
