@@ -54,12 +54,6 @@ link_directories(${CARTOGRAPHER_LIBRARY_DIRS})
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 
-# TODO(pedrofernandez): CMake test rules are written differently in the core
-# library. Change the way it's done here and reenable testing.
-# enable_testing()
-# find_package(GTest REQUIRED)
-# include_directories(${GTEST_INCLUDE_DIRS})
-
 set(CMAKE_AUTOMOC ON)
 if(rviz_QT_VERSION VERSION_LESS "5")
   message(STATUS "Using Qt4 based on the rviz_QT_VERSION: ${rviz_QT_VERSION}")
@@ -119,7 +113,7 @@ add_dependencies(cartographer_rviz_submaps_visualization
   ${catkin_EXPORTED_TARGETS}
 )
 
-add_executable(time_conversion_test
+catkin_add_gtest(time_conversion_test
   src/time_conversion_test.cc
   src/time_conversion.h
   src/time_conversion.cc
@@ -134,8 +128,6 @@ target_link_libraries(time_conversion_test
 add_dependencies(time_conversion_test
   ${catkin_EXPORTED_TARGETS}
 )
-
-add_test(time_conversion_test time_conversion_test)
 
 install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch/

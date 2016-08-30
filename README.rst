@@ -12,16 +12,11 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-.. Cartographer documentation master file, created by
-   sphinx-quickstart on Fri Jul  8 10:41:33 2016.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 ============================
 Cartographer ROS Integration
 ============================
 
-|docs|
+|build| |docs|
 
 Purpose
 =======
@@ -48,6 +43,11 @@ You can find information about contributing to Cartographer's ROS integration
 at our `Contribution page`_.
 
 .. _Contribution page: https://github.com/googlecartographer/cartographer_ros/blob/master/CONTRIBUTING.md
+
+.. |build| image:: https://travis-ci.org/googlecartographer/cartographer_ros.svg?branch=master
+    :alt: Build Status
+    :scale: 100%
+    :target: https://travis-ci.org/googlecartographer/cartographer_ros
 
 .. |docs| image:: https://readthedocs.org/projects/google-cartographer-ros/badge/?version=latest
     :alt: Documentation Status
