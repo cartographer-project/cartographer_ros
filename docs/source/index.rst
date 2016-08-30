@@ -35,7 +35,7 @@ Building & Installation
 Installation has been tested on Ubuntu 14.04 (Trusty) with ROS Indigo, but may
 also work on Ubuntu 16.04 (Xenial) with ROS Kinetic. We recommend using
 `wstool <http://wiki.ros.org/wstool>`_ and
-`rosdep <http://wiki.ros.org/rosdep>`_. For faster builds we also recommend
+`rosdep <http://wiki.ros.org/rosdep>`_. For faster builds, we also recommend
 using `Ninja <https://ninja-build.org>`_.
 
   .. code-block:: bash
