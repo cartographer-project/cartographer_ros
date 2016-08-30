@@ -548,7 +548,8 @@ void Node::Initialize() {
     occupancy_grid_publisher_ =
         node_handle_.advertise<::nav_msgs::OccupancyGrid>(kOccupancyGridTopic,
                                                           1, true);
-    occupancy_grid_thread_ = std::thread(&Node::PublishOccupancyGrids, this);
+    occupancy_grid_thread_ =
+        std::thread(&Node::SpinOccupancyGridThreadForever, this);
   }
 }
 
@@ -662,7 +663,7 @@ void Node::PublishPose(const int64 timestamp) {
   last_pose_publish_timestamp_ = timestamp;
 }
 
-void Node::PublishOccupancyGrids() {
+void Node::SpinOccupancyGridThreadForever() {
   for (;;) {
     {
       carto::common::MutexLocker lock(&mutex_);
