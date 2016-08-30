@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <!--
   Copyright 2016 The Cartographer Authors
 
@@ -14,26 +15,25 @@
   limitations under the License.
 -->
 
-<package>
+<package format="2">
   <name>ceres_solver</name>
   <version>1.11.0</version>
   <description>ceres_solver</description>
-  <maintainer email="google-cartographer@googlegroups.com">Google Inc.</maintainer>
+  <maintainer email="google-cartographer@googlegroups.com">
+    The Cartographer Authors
+  </maintainer>
   <license>New BSD</license>
   <url type="website">http://ceres-solver.org/</url>
-  <author>Google Inc.</author>
 
-  <run_depend>catkin</run_depend>
+  <buildtool_depend>catkin</buildtool_depend>
 
-  <buildtool_depend>cmake</buildtool_depend>
-
-  <build_depend>atlas</build_depend>
-  <build_depend>libblas-dev</build_depend>
-  <build_depend>eigen</build_depend>
-  <build_depend>gfortran</build_depend>
-  <build_depend>libgflags-dev</build_depend>
-  <build_depend>libgoogle-glog-dev</build_depend>
-  <build_depend>suitesparse</build_depend>
+  <depend>atlas</build_depend>
+  <depend>libblas-dev</build_depend>
+  <depend>eigen</build_depend>
+  <depend>gfortran</build_depend>
+  <depend>libgflags-dev</build_depend>
+  <depend>libgoogle-glog-dev</build_depend>
+  <depend>suitesparse</build_depend>
 
   <export>
     <build_type>cmake</build_type>
