@@ -24,14 +24,19 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
+  <build_depend>g++-static</build_depend>
+  <build_depend>wget</build_depend>  <!-- for glog -->
   <build_depend>cartographer</build_depend>
   <build_depend>eigen_conversions</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>cartographer_ros_msgs</build_depend>
+  <build_depend>libgflags-dev</build_depend>
   <build_depend>libpcl-all-dev</build_depend>
   <build_depend>message_generation</build_depend>
   <build_depend>nav_msgs</build_depend>
   <build_depend>pcl_conversions</build_depend>
+  <build_depend>protobuf-dev</build_depend>
+  <build_depend>python-sphinx</build_depend>
   <build_depend>qtbase5-dev</build_depend>
   <build_depend>rosbag</build_depend>
   <build_depend>roscpp</build_depend>
@@ -39,6 +44,7 @@
   <build_depend>rviz</build_depend>
   <build_depend>sensor_msgs</build_depend>
   <build_depend>std_msgs</build_depend>
+  <build_depend>suitesparse</build_depend>
   <build_depend>tf2</build_depend>
   <build_depend>tf2_eigen</build_depend>
   <build_depend>visualization_msgs</build_depend>
@@ -46,6 +52,7 @@
   <run_depend>eigen_conversions</run_depend>
   <run_depend>geometry_msgs</run_depend>
   <run_depend>cartographer_ros_msgs</run_depend>
+  <run_depend>libgflags-dev</run_depend>
   <run_depend>libpcl-all</run_depend>
   <run_depend>libqt5-core</run_depend>
   <run_depend>libqt5-gui</run_depend>
@@ -59,9 +66,12 @@
   <run_depend>rviz</run_depend>
   <run_depend>sensor_msgs</run_depend>
   <run_depend>std_msgs</run_depend>
+  <run_depend>suitesparse</run_depend>
   <run_depend>tf2_eigen</run_depend>
   <run_depend>tf2</run_depend>
   <run_depend>visualization_msgs</run_depend>
+
+  <test_depend>rosunit</test_depend>
 
   <export>
       <rviz plugin="${prefix}/rviz_plugin_description.xml"/>
