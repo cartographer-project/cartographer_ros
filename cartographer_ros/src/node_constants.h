@@ -19,7 +19,7 @@
 
 namespace cartographer_ros {
 
-// The topic that the node will subscrbe under.
+// The topic that the node will subscribe to.
 constexpr char kSubmapListTopic[] = "submap_list";
 
 // The service we serve in the Node and query in the RViz plugin for submap

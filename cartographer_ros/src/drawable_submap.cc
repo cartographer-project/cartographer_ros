@@ -55,12 +55,12 @@ std::string GetSubmapIdentifier(const int trajectory_id, const int submap_id) {
 
 DrawableSubmap::DrawableSubmap(const int submap_id, const int trajectory_id,
                                Ogre::SceneManager* const scene_manager)
-    : scene_manager_(scene_manager),
+    : submap_id_(submap_id),
+      trajectory_id_(trajectory_id),
+      scene_manager_(scene_manager),
       scene_node_(scene_manager->getRootSceneNode()->createChildSceneNode()),
       manual_object_(scene_manager->createManualObject(
           kManualObjectPrefix + GetSubmapIdentifier(trajectory_id, submap_id))),
-      submap_id_(submap_id),
-      trajectory_id_(trajectory_id),
       last_query_timestamp_(0) {
   material_ = Ogre::MaterialManager::getSingleton().getByName(
       kSubmapSourceMaterialName);

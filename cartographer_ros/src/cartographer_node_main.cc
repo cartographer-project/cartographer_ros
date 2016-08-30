@@ -54,6 +54,7 @@
 #include "gflags/gflags.h"
 #include "glog/log_severity.h"
 #include "glog/logging.h"
+#include "nav_msgs/OccupancyGrid.h"
 #include "nav_msgs/Odometry.h"
 #include "pcl/point_cloud.h"
 #include "pcl/point_types.h"
@@ -102,6 +103,7 @@ constexpr char kMultiEchoLaserScanTopic[] = "/echoes";
 constexpr char kPointCloud2Topic[] = "/points2";
 constexpr char kImuTopic[] = "/imu";
 constexpr char kOdometryTopic[] = "/odom";
+constexpr char kOccupancyGridTopic[] = "/map";
 
 const string& CheckNoLeadingSlash(const string& frame_id) {
   if (frame_id.size() > 0) {
@@ -194,6 +196,7 @@ struct SensorData {
 class Node {
  public:
   Node();
+  ~Node();
   Node(const Node&) = delete;
   Node& operator=(const Node&) = delete;
 
@@ -230,6 +233,7 @@ class Node {
 
   void PublishSubmapList(int64 timestamp);
   void PublishPose(int64 timestamp);
+  void SpinOccupancyGridThreadForever();
 
   // TODO(hrapp): Pull out the common functionality between this and MapWriter
   // into an open sourcable MapWriter.
@@ -251,9 +255,7 @@ class Node {
 
   tf2_ros::Buffer tf_buffer_;
   tf2_ros::TransformListener tf_;
-  tf2_ros::TransformBroadcaster tf_broadcaster_;
   carto::common::ThreadPool thread_pool_;
-  int64 last_pose_publish_timestamp_;
   carto::common::Mutex mutex_;
   std::unique_ptr<carto::mapping::GlobalTrajectoryBuilderInterface>
       trajectory_builder_ GUARDED_BY(mutex_);
@@ -262,8 +264,16 @@ class Node {
   std::unique_ptr<carto::mapping::SparsePoseGraph> sparse_pose_graph_;
 
   ::ros::Publisher submap_list_publisher_;
-  int64 last_submap_list_publish_timestamp_;
+  int64 last_submap_list_publish_timestamp_ = 0;
   ::ros::ServiceServer submap_query_server_;
+
+  tf2_ros::TransformBroadcaster tf_broadcaster_;
+  int64 last_pose_publish_timestamp_ = 0;
+
+  ::ros::Publisher occupancy_grid_publisher_;
+  carto::mapping_2d::proto::SubmapsOptions submaps_options_;
+  std::thread occupancy_grid_thread_;
+  bool terminating_ = false GUARDED_BY(mutex_);
 
   // Time at which we last logged the rates of incoming sensor data.
   std::chrono::steady_clock::time_point last_sensor_data_rates_logging_time_;
@@ -274,9 +284,17 @@ Node::Node()
     : node_handle_("~"),
       tf_buffer_(ros::Duration(1000)),
       tf_(tf_buffer_),
-      thread_pool_(10),
-      last_submap_list_publish_timestamp_(0),
-      last_pose_publish_timestamp_(0) {}
+      thread_pool_(10) {}
+
+Node::~Node() {
+  {
+    carto::common::MutexLocker lock(&mutex_);
+    terminating_ = true;
+  }
+  if (occupancy_grid_thread_.joinable()) {
+    occupancy_grid_thread_.join();
+  }
+}
 
 Rigid3d Node::LookupToTrackingTransformOrThrow(const carto::common::Time time,
                                                const string& frame_id) {
@@ -290,15 +308,13 @@ void Node::OdometryMessageCallback(const nav_msgs::Odometry::ConstPtr& msg) {
       msg->header.frame_id, ToRigid3d(msg->pose.pose),
       ToPoseCovariance(msg->pose.covariance));
   sensor_collator_.AddSensorData(
-      kTrajectoryId,
-      carto::common::ToUniversal(FromRos(msg->header.stamp)),
+      kTrajectoryId, carto::common::ToUniversal(FromRos(msg->header.stamp)),
       kOdometryTopic, std::move(sensor_data));
 }
 
 void Node::AddOdometry(int64 timestamp, const string& frame_id,
                        const Rigid3d& pose, const PoseCovariance& covariance) {
-  const carto::common::Time time =
-      carto::common::FromUniversal(timestamp);
+  const carto::common::Time time = carto::common::FromUniversal(timestamp);
   trajectory_builder_->AddOdometerPose(time, pose, covariance);
 }
 
@@ -464,6 +480,7 @@ void Node::Initialize() {
             &thread_pool_, &constant_node_data_);
     auto options = carto::mapping_2d::CreateLocalTrajectoryBuilderOptions(
         lua_parameter_dictionary.GetDictionary("trajectory_builder").get());
+    submaps_options_ = options.submaps_options();
     expect_imu_data = options.expect_imu_data();
     trajectory_builder_ =
         carto::common::make_unique<carto::mapping_2d::GlobalTrajectoryBuilder>(
@@ -485,16 +502,18 @@ void Node::Initialize() {
               })));
       expected_sensor_identifiers.insert(topic);
     }
-    auto sparse_pose_graph_3d = carto::common::make_unique<
-        carto::mapping_3d::SparsePoseGraph>(
-        carto::mapping::CreateSparsePoseGraphOptions(
-            lua_parameter_dictionary.GetDictionary("sparse_pose_graph").get()),
-        &thread_pool_, &constant_node_data_);
-    trajectory_builder_ = carto::common::make_unique<
-        carto::mapping_3d::GlobalTrajectoryBuilder>(
-        carto::mapping_3d::CreateLocalTrajectoryBuilderOptions(
-            lua_parameter_dictionary.GetDictionary("trajectory_builder").get()),
-        sparse_pose_graph_3d.get());
+    auto sparse_pose_graph_3d =
+        carto::common::make_unique<carto::mapping_3d::SparsePoseGraph>(
+            carto::mapping::CreateSparsePoseGraphOptions(
+                lua_parameter_dictionary.GetDictionary("sparse_pose_graph")
+                    .get()),
+            &thread_pool_, &constant_node_data_);
+    trajectory_builder_ =
+        carto::common::make_unique<carto::mapping_3d::GlobalTrajectoryBuilder>(
+            carto::mapping_3d::CreateLocalTrajectoryBuilderOptions(
+                lua_parameter_dictionary.GetDictionary("trajectory_builder")
+                    .get()),
+            sparse_pose_graph_3d.get());
     sparse_pose_graph_ = std::move(sparse_pose_graph_3d);
   }
   CHECK(sparse_pose_graph_ != nullptr);
@@ -524,6 +543,16 @@ void Node::Initialize() {
           kSubmapListTopic, 10);
   submap_query_server_ = node_handle_.advertiseService(
       kSubmapQueryServiceName, &Node::HandleSubmapQuery, this);
+
+  if (lua_parameter_dictionary.GetBool("publish_occupancy_grid")) {
+    CHECK_EQ(num_lasers_3d, 0)
+        << "Publishing OccupancyGrids for 3D data is not yet supported";
+    occupancy_grid_publisher_ =
+        node_handle_.advertise<::nav_msgs::OccupancyGrid>(kOccupancyGridTopic,
+                                                          1, true);
+    occupancy_grid_thread_ =
+        std::thread(&Node::SpinOccupancyGridThreadForever, this);
+  }
 }
 
 bool Node::HandleSubmapQuery(
@@ -601,6 +630,7 @@ void Node::PublishSubmapList(const int64 timestamp) {
 
 void Node::PublishPose(const int64 timestamp) {
   const carto::common::Time time = carto::common::FromUniversal(timestamp);
+  carto::common::MutexLocker lock(&mutex_);
   const Rigid3d tracking_to_local = trajectory_builder_->pose_estimate().pose;
   const carto::mapping::Submaps* submaps = trajectory_builder_->submaps();
   const Rigid3d local_to_map =
@@ -613,7 +643,6 @@ void Node::PublishPose(const int64 timestamp) {
   stamped_transform.child_frame_id = odom_frame_;
 
   if (provide_odom_frame_) {
-    carto::common::MutexLocker lock(&mutex_);
     stamped_transform.transform = ToGeometryMsgTransform(local_to_map);
     tf_broadcaster_.sendTransform(stamped_transform);
 
@@ -634,6 +663,82 @@ void Node::PublishPose(const int64 timestamp) {
     }
   }
   last_pose_publish_timestamp_ = timestamp;
+}
+
+void Node::SpinOccupancyGridThreadForever() {
+  for (;;) {
+    {
+      carto::common::MutexLocker lock(&mutex_);
+      if (terminating_) {
+        return;
+      }
+    }
+    const auto trajectory_nodes = sparse_pose_graph_->GetTrajectoryNodes();
+    if (trajectory_nodes.empty()) {
+      std::this_thread::sleep_for(carto::common::FromMilliseconds(1000));
+      continue;
+    }
+    const carto::mapping_2d::MapLimits map_limits =
+        carto::mapping_2d::MapLimits::ComputeMapLimits(
+            submaps_options_.resolution(), trajectory_nodes);
+    carto::mapping_2d::ProbabilityGrid probability_grid(map_limits);
+    carto::mapping_2d::LaserFanInserter laser_fan_inserter(
+        submaps_options_.laser_fan_inserter_options());
+    for (const auto& node : trajectory_nodes) {
+      CHECK(node.constant_data->laser_fan_3d.returns.empty());  // No 3D yet.
+      laser_fan_inserter.Insert(
+          carto::sensor::TransformLaserFan(
+              node.constant_data->laser_fan,
+              carto::transform::Project2D(node.pose).cast<float>()),
+          &probability_grid);
+    }
+
+    ::nav_msgs::OccupancyGrid occupancy_grid;
+    occupancy_grid.header.stamp = ToRos(trajectory_nodes.back().time());
+    occupancy_grid.header.frame_id = map_frame_;
+    occupancy_grid.info.map_load_time = occupancy_grid.header.stamp;
+
+    Eigen::Array2i offset;
+    carto::mapping_2d::CellLimits cell_limits;
+    probability_grid.ComputeCroppedLimits(&offset, &cell_limits);
+    const double resolution = probability_grid.limits().resolution();
+
+    occupancy_grid.info.resolution = resolution;
+    occupancy_grid.info.width = cell_limits.num_y_cells;
+    occupancy_grid.info.height = cell_limits.num_x_cells;
+
+    occupancy_grid.info.origin.position.x =
+        probability_grid.limits().max().x() -
+        (offset.y() + cell_limits.num_y_cells) * resolution;
+    occupancy_grid.info.origin.position.y =
+        probability_grid.limits().max().y() -
+        (offset.x() + cell_limits.num_x_cells) * resolution;
+    occupancy_grid.info.origin.position.z = 0.;
+    occupancy_grid.info.origin.orientation.w = 1.;
+    occupancy_grid.info.origin.orientation.x = 0.;
+    occupancy_grid.info.origin.orientation.y = 0.;
+    occupancy_grid.info.origin.orientation.z = 0.;
+
+    occupancy_grid.data.resize(
+        cell_limits.num_x_cells * cell_limits.num_y_cells, -1);
+    for (const Eigen::Array2i& xy_index :
+         carto::mapping_2d::XYIndexRangeIterator(cell_limits)) {
+      if (probability_grid.IsKnown(xy_index + offset)) {
+        const int value = carto::common::RoundToInt(
+            (probability_grid.GetProbability(xy_index + offset) -
+             carto::mapping::kMinProbability) *
+            100. / (carto::mapping::kMaxProbability -
+                    carto::mapping::kMinProbability));
+        CHECK_LE(0, value);
+        CHECK_GE(100, value);
+        occupancy_grid.data[(cell_limits.num_x_cells - xy_index.x()) *
+                                cell_limits.num_y_cells -
+                            xy_index.y() - 1] = value;
+      }
+    }
+
+    occupancy_grid_publisher_.publish(occupancy_grid);
+  }
 }
 
 void Node::HandleSensorData(const int64 timestamp,
