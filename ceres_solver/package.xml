@@ -27,13 +27,13 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <depend>atlas</build_depend>
-  <depend>libblas-dev</build_depend>
-  <depend>eigen</build_depend>
-  <depend>gfortran</build_depend>
-  <depend>libgflags-dev</build_depend>
-  <depend>libgoogle-glog-dev</build_depend>
-  <depend>suitesparse</build_depend>
+  <depend>atlas</depend>
+  <depend>libblas-dev</depend>
+  <depend>eigen</depend>
+  <depend>gfortran</depend>
+  <depend>libgflags-dev</depend>
+  <depend>libgoogle-glog-dev</depend>
+  <depend>suitesparse</depend>
 
   <export>
     <build_type>cmake</build_type>
