@@ -93,8 +93,6 @@ using carto::kalman_filter::PoseCovariance;
 // TODO(hrapp): Support multi trajectory mapping.
 constexpr int64 kTrajectoryId = 0;
 constexpr int kSubscriberQueueSize = 150;
-constexpr int kSubmapPublishPeriodInUts = 300 * 10000ll;  // 300 milliseconds
-constexpr int kPosePublishPeriodInUts = 5 * 10000ll;      // 5 milliseconds
 constexpr double kSensorDataRatesLoggingPeriodSeconds = 15.;
 
 // Unique default topic names. Expected to be remapped as needed.
@@ -231,8 +229,8 @@ class Node {
       ::cartographer_ros_msgs::SubmapQuery::Request& request,
       ::cartographer_ros_msgs::SubmapQuery::Response& response);
 
-  void PublishSubmapList(int64 timestamp);
-  void PublishPose(int64 timestamp);
+  void PublishSubmapList(const ros::WallTimerEvent& timer_event);
+  void PublishPose(const ros::WallTimerEvent& timer_event);
   void SpinOccupancyGridThreadForever();
 
   // TODO(hrapp): Pull out the common functionality between this and MapWriter
@@ -264,11 +262,9 @@ class Node {
   std::unique_ptr<carto::mapping::SparsePoseGraph> sparse_pose_graph_;
 
   ::ros::Publisher submap_list_publisher_;
-  int64 last_submap_list_publish_timestamp_ = 0;
   ::ros::ServiceServer submap_query_server_;
 
   tf2_ros::TransformBroadcaster tf_broadcaster_;
-  int64 last_pose_publish_timestamp_ = 0;
 
   ::ros::Publisher occupancy_grid_publisher_;
   carto::mapping_2d::proto::SubmapsOptions submaps_options_;
@@ -278,6 +274,10 @@ class Node {
   // Time at which we last logged the rates of incoming sensor data.
   std::chrono::steady_clock::time_point last_sensor_data_rates_logging_time_;
   std::map<string, carto::common::RateTimer<>> rate_timers_;
+
+  // We have to keep the timer handles of ros::WallTimers around, otherwise they
+  // do not fire.
+  std::vector<ros::WallTimer> wall_timers_;
 };
 
 Node::Node()
@@ -553,6 +553,15 @@ void Node::Initialize() {
     occupancy_grid_thread_ =
         std::thread(&Node::SpinOccupancyGridThreadForever, this);
   }
+
+  wall_timers_.push_back(node_handle_.createWallTimer(
+      ros::WallDuration(
+          lua_parameter_dictionary.GetDouble("submap_publish_period_sec")),
+      &Node::PublishSubmapList, this));
+  wall_timers_.push_back(node_handle_.createWallTimer(
+      ros::WallDuration(
+          lua_parameter_dictionary.GetDouble("pose_publish_period_sec")),
+      &Node::PublishPose, this));
 }
 
 bool Node::HandleSubmapQuery(
@@ -605,7 +614,7 @@ bool Node::HandleSubmapQuery(
   return true;
 }
 
-void Node::PublishSubmapList(const int64 timestamp) {
+void Node::PublishSubmapList(const ros::WallTimerEvent& timer_event) {
   carto::common::MutexLocker lock(&mutex_);
   const carto::mapping::Submaps* submaps = trajectory_builder_->submaps();
   const std::vector<carto::transform::Rigid3d> submap_transforms =
@@ -621,15 +630,13 @@ void Node::PublishSubmapList(const int64 timestamp) {
   }
 
   ::cartographer_ros_msgs::SubmapList ros_submap_list;
-  ros_submap_list.header.stamp = ToRos(carto::common::FromUniversal(timestamp));
+  ros_submap_list.header.stamp = ros::Time::now();
   ros_submap_list.header.frame_id = map_frame_;
   ros_submap_list.trajectory.push_back(ros_trajectory);
   submap_list_publisher_.publish(ros_submap_list);
-  last_submap_list_publish_timestamp_ = timestamp;
 }
 
-void Node::PublishPose(const int64 timestamp) {
-  const carto::common::Time time = carto::common::FromUniversal(timestamp);
+void Node::PublishPose(const ros::WallTimerEvent& timer_event) {
   carto::common::MutexLocker lock(&mutex_);
   const Rigid3d tracking_to_local = trajectory_builder_->pose_estimate().pose;
   const carto::mapping::Submaps* submaps = trajectory_builder_->submaps();
@@ -637,8 +644,9 @@ void Node::PublishPose(const int64 timestamp) {
       sparse_pose_graph_->GetLocalToGlobalTransform(*submaps);
   const Rigid3d tracking_to_map = local_to_map * tracking_to_local;
 
+  const ros::Time now = ros::Time::now();
   geometry_msgs::TransformStamped stamped_transform;
-  stamped_transform.header.stamp = ToRos(time);
+  stamped_transform.header.stamp = now;
   stamped_transform.header.frame_id = map_frame_;
   stamped_transform.child_frame_id = odom_frame_;
 
@@ -653,7 +661,7 @@ void Node::PublishPose(const int64 timestamp) {
   } else {
     try {
       const Rigid3d tracking_to_odom =
-          LookupToTrackingTransformOrThrow(time, odom_frame_).inverse();
+          LookupToTrackingTransformOrThrow(FromRos(now), odom_frame_).inverse();
       const Rigid3d odom_to_map = tracking_to_map * tracking_to_odom.inverse();
       stamped_transform.transform = ToGeometryMsgTransform(odom_to_map);
       tf_broadcaster_.sendTransform(stamped_transform);
@@ -662,7 +670,6 @@ void Node::PublishPose(const int64 timestamp) {
                    << odom_frame_ << ": " << ex.what();
     }
   }
-  last_pose_publish_timestamp_ = timestamp;
 }
 
 void Node::SpinOccupancyGridThreadForever() {
@@ -743,15 +750,6 @@ void Node::SpinOccupancyGridThreadForever() {
 
 void Node::HandleSensorData(const int64 timestamp,
                             std::unique_ptr<SensorData> sensor_data) {
-  if (last_submap_list_publish_timestamp_ + kSubmapPublishPeriodInUts <
-      timestamp) {
-    PublishSubmapList(timestamp);
-  }
-
-  if (last_pose_publish_timestamp_ + kPosePublishPeriodInUts < timestamp) {
-    PublishPose(timestamp);
-  }
-
   auto it = rate_timers_.find(sensor_data->frame_id);
   if (it == rate_timers_.end()) {
     it = rate_timers_
