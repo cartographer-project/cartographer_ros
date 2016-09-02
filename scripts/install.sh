@@ -17,10 +17,9 @@
 set -o errexit
 set -o verbose
 
-# Install deb dependencies.
+# Install Ninja.
 sudo apt-get update
-# TODO(whess): Move libwebp-dev to rosdep.
-sudo apt-get install -y ninja-build libwebp-dev
+sudo apt-get install -y ninja-build
 
 . /opt/ros/${ROS_DISTRO}/setup.sh
 
