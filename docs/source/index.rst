@@ -54,7 +54,6 @@ using `Ninja <https://ninja-build.org>`_.
     wstool update
 
     # Install deb dependencies.
-    sudo apt-get install -y libwebp-dev  # TODO(whess): Move to rosdep.
     rosdep update
     rosdep install --from-paths src --ignore-src --rosdistro=${ROS_DISTRO} -y
 
