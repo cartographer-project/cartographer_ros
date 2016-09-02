@@ -1,6 +1,2 @@
 - git: {local-name: src/cartographer, uri: 'https://github.com/googlecartographer/cartographer.git'}
 - git: {local-name: src/cartographer_ros, uri: 'https://github.com/googlecartographer/cartographer_ros.git'}
-- git: {local-name: src/ceres_catkin, uri: 'https://github.com/ethz-asl/ceres_catkin.git'}
-- git: {local-name: src/glog_catkin, uri: 'https://github.com/ethz-asl/glog_catkin.git'}
-- git: {local-name: src/gflags_catkin, uri: 'https://github.com/ethz-asl/gflags_catkin.git'}
-- git: {local-name: src/catkin_simple, uri: 'https://github.com/ethz-asl/catkin_simple.git'}
