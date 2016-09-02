@@ -17,6 +17,11 @@
 set -o errexit
 set -o verbose
 
+# Install deb dependencies.
+sudo apt-get update
+# TODO(whess): Move libwebp-dev to rosdep.
+sudo apt-get install -y ninja-build libwebp-dev
+
 . /opt/ros/${ROS_DISTRO}/setup.sh
 
 # Create a new workspace in 'catkin_ws'.
@@ -32,27 +37,21 @@ wstool update
 rm -rf src/cartographer_ros
 mv ../cartographer_ros src
 
-# Install deb dependencies.
-sudo apt-get update
-sudo apt-get install -y libwebp-dev  # TODO(whess): Move to rosdep.
+# Install rosdep dependencies.
 rosdep update
 rosdep install --from-paths src --ignore-src --rosdistro=${ROS_DISTRO} -y
-rm -rf /var/lib/apt/lists/*
 
-# Build and run tests.
-catkin_make_isolated
-catkin_make_isolated --catkin-make-args tests
-catkin_make_isolated --catkin-make-args test
-
-# TODO(whess): Fix installing cartographer_ros. For now we use a workaround:
-echo Working around install issues...
-mkdir /opt/cartographer_ros
-ln -Tsf ${PWD}/devel_isolated/setup.bash /opt/cartographer_ros/setup.bash
-exit
-
-# Install under /opt/cartographer_ros.
-catkin_make_isolated --install-space /opt/cartographer_ros --install
+# Build, install, and test.
+#
+# It's necessary to use the '--install' flag for every call to
+# 'catkin_make_isolated' in order to avoid the use of 'devel_isolated' as the
+# 'CMAKE_INSTALL_PREFIX' for non-test targets. This in itself is important to
+# avoid any issues caused by using 'CMAKE_INSTALL_PREFIX' during the
+# configuration phase of the build (e.g. cartographer/common/config.h.cmake).
+export BUILD_FLAGS="--use-ninja --install-space /opt/cartographer_ros --install"
+catkin_make_isolated ${BUILD_FLAGS} --catkin-make-args run_tests
+catkin_make_isolated ${BUILD_FLAGS} --pkg cartographer --make-args test
 
 # Clean up.
 cd ..
-rm -rf catkin_ws
+rm -rf catkin_ws /var/lib/apt/lists/*
