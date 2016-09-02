@@ -28,6 +28,8 @@ options = {
   laser_max_range = 30.,
   laser_missing_echo_ray_length = 5.,
   lookup_transform_timeout = 0.01,
+  submap_publish_period_sec = 0.3,
+  pose_publish_period_sec = 5e-3,
   use_laser_scan_2d = true
 }
 

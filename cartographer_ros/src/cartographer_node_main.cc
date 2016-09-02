@@ -93,8 +93,6 @@ using carto::kalman_filter::PoseCovariance;
 // TODO(hrapp): Support multi trajectory mapping.
 constexpr int64 kTrajectoryId = 0;
 constexpr int kSubscriberQueueSize = 150;
-constexpr int kSubmapPublishPeriodMs = 300;
-constexpr int kPosePublishPeriodInMs = 5;
 constexpr double kSensorDataRatesLoggingPeriodSeconds = 15.;
 
 // Unique default topic names. Expected to be remapped as needed.
@@ -557,11 +555,13 @@ void Node::Initialize() {
   }
 
   wall_timers_.push_back(node_handle_.createWallTimer(
-      ros::WallDuration(kSubmapPublishPeriodMs / 1000.),
+      ros::WallDuration(
+          lua_parameter_dictionary.GetDouble("submap_publish_period_sec")),
       &Node::PublishSubmapList, this));
   wall_timers_.push_back(node_handle_.createWallTimer(
-      ros::WallDuration(kPosePublishPeriodInMs / 1000.), &Node::PublishPose,
-      this));
+      ros::WallDuration(
+          lua_parameter_dictionary.GetDouble("pose_publish_period_sec")),
+      &Node::PublishPose, this));
 }
 
 bool Node::HandleSubmapQuery(
