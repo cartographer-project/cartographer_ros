@@ -18,9 +18,15 @@
 #define CARTOGRAPHER_ROS_GOOGLE_CARTOGRAPHER_SRC_MSG_CONVERSION_H_
 
 #include "cartographer/common/port.h"
+#include "cartographer/kalman_filter/pose_tracker.h"
 #include "cartographer/sensor/proto/sensor.pb.h"
+#include "cartographer/transform/rigid_transform.h"
+#include "geometry_msgs/Pose.h"
+#include "geometry_msgs/Transform.h"
+#include "geometry_msgs/TransformStamped.h"
 #include "pcl/point_cloud.h"
 #include "pcl/point_types.h"
+#include "pcl_conversions/pcl_conversions.h"
 #include "sensor_msgs/Imu.h"
 #include "sensor_msgs/LaserScan.h"
 #include "sensor_msgs/MultiEchoLaserScan.h"
@@ -44,6 +50,12 @@ sensor_msgs::PointCloud2 ToPointCloud2Message(
     int64 timestamp, const string& frame_id,
     const ::cartographer::sensor::proto::LaserFan3D& laser_scan_3d);
 
+geometry_msgs::Transform ToGeometryMsgTransform(
+    const ::cartographer::transform::Rigid3d& rigid);
+
+geometry_msgs::Pose ToGeometryMsgPose(
+    const ::cartographer::transform::Rigid3d& rigid);
+
 ::cartographer::sensor::proto::Imu ToCartographer(const sensor_msgs::Imu& msg);
 
 ::cartographer::sensor::proto::LaserScan ToCartographer(
@@ -54,6 +66,14 @@ sensor_msgs::PointCloud2 ToPointCloud2Message(
 
 ::cartographer::sensor::proto::LaserFan3D ToCartographer(
     const pcl::PointCloud<pcl::PointXYZ>& pcl_points);
+
+::cartographer::transform::Rigid3d ToRigid3d(
+    const geometry_msgs::TransformStamped& transform);
+
+::cartographer::transform::Rigid3d ToRigid3d(const geometry_msgs::Pose& pose);
+
+::cartographer::kalman_filter::PoseCovariance ToPoseCovariance(
+    const boost::array<double, 36>& covariance);
 
 }  // namespace cartographer_ros
 

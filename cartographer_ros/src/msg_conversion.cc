@@ -44,6 +44,9 @@ namespace {
 // properly.
 constexpr float kPointCloudComponentFourMagic = 1.;
 
+using ::cartographer::transform::Rigid3d;
+using ::cartographer::kalman_filter::PoseCovariance;
+
 void ToMessage(const ::cartographer::transform::proto::Vector3d& proto,
                geometry_msgs::Vector3* vector) {
   vector->x = proto.x();
@@ -282,6 +285,51 @@ sensor_msgs::PointCloud2 ToPointCloud2Message(
     point_cloud->add_z(point.z);
   }
   return proto;
+}
+
+Rigid3d ToRigid3d(const geometry_msgs::TransformStamped& transform) {
+  return Rigid3d(Eigen::Vector3d(transform.transform.translation.x,
+                                 transform.transform.translation.y,
+                                 transform.transform.translation.z),
+                 Eigen::Quaterniond(transform.transform.rotation.w,
+                                    transform.transform.rotation.x,
+                                    transform.transform.rotation.y,
+                                    transform.transform.rotation.z));
+}
+
+Rigid3d ToRigid3d(const geometry_msgs::Pose& pose) {
+  return Rigid3d(
+      Eigen::Vector3d(pose.position.x, pose.position.y, pose.position.z),
+      Eigen::Quaterniond(pose.orientation.w, pose.orientation.x,
+                         pose.orientation.y, pose.orientation.z));
+}
+
+PoseCovariance ToPoseCovariance(const boost::array<double, 36>& covariance) {
+  return Eigen::Map<const Eigen::Matrix<double, 6, 6>>(covariance.data());
+}
+
+geometry_msgs::Transform ToGeometryMsgTransform(const Rigid3d& rigid) {
+  geometry_msgs::Transform transform;
+  transform.translation.x = rigid.translation().x();
+  transform.translation.y = rigid.translation().y();
+  transform.translation.z = rigid.translation().z();
+  transform.rotation.w = rigid.rotation().w();
+  transform.rotation.x = rigid.rotation().x();
+  transform.rotation.y = rigid.rotation().y();
+  transform.rotation.z = rigid.rotation().z();
+  return transform;
+}
+
+geometry_msgs::Pose ToGeometryMsgPose(const Rigid3d& rigid) {
+  geometry_msgs::Pose pose;
+  pose.position.x = rigid.translation().x();
+  pose.position.y = rigid.translation().y();
+  pose.position.z = rigid.translation().z();
+  pose.orientation.w = rigid.rotation().w();
+  pose.orientation.x = rigid.rotation().x();
+  pose.orientation.y = rigid.rotation().y();
+  pose.orientation.z = rigid.rotation().z();
+  return pose;
 }
 
 }  // namespace cartographer_ros
