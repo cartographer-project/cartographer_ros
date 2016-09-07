@@ -81,6 +81,10 @@ add_executable(cartographer_node
   src/msg_conversion.h
   src/msg_conversion.cc
   src/time_conversion.h
+  src/sensor_data.cc
+  src/sensor_data.h
+  src/sensor_data_producer.cc
+  src/sensor_data_producer.h
   src/time_conversion.cc
 )
 target_link_libraries(cartographer_node
@@ -89,7 +93,6 @@ target_link_libraries(cartographer_node
   ${PCL_LIBRARIES}
   gflags  # TODO(whess): Use or remove gflags_catkin.
 )
-
 add_dependencies(cartographer_node
   ${catkin_EXPORTED_TARGETS}
 )
