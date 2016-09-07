@@ -30,12 +30,12 @@
 
 namespace cartographer_ros {
 
-// A wraper around SensorCollator that converts ROS messages into our internal
-// representation and passes it on to the 'sensor_collator'.
+// A wrapper around SensorCollator that converts ROS messages into our internal
+// representation and passes them on to the 'sensor_collator'.
 class SensorDataProducer {
  public:
   explicit SensorDataProducer(
-      const int trajectory_id,
+      int trajectory_id,
       ::cartographer::mapping::SensorCollator<SensorData>* sensor_collator);
 
   SensorDataProducer(const SensorDataProducer&) = delete;

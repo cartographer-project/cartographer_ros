@@ -21,6 +21,7 @@
 #include "glog/logging.h"
 
 namespace cartographer_ros {
+
 namespace {
 
 namespace proto = ::cartographer::sensor::proto;
