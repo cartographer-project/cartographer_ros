@@ -100,23 +100,18 @@ constexpr char kOccupancyGridTopic[] = "/map";
 
 struct NodeOptions {
   carto::mapping::proto::MapBuilderOptions map_builder_options;
+  string map_frame;
   string tracking_frame;
   string odom_frame;
-  string map_frame;
-
   bool publish_occupancy_grid;
   bool provide_odom_frame;
-
   bool use_odometry_data;
-
   bool use_horizontal_laser;
   bool use_horizontal_multi_echo_laser;
   double horizontal_laser_min_range;
   double horizontal_laser_max_range;
   double horizontal_laser_missing_echo_ray_length;
-
   int num_lasers_3d;
-
   double lookup_transform_timeout_sec;
   double submap_publish_period_sec;
   double pose_publish_period_sec;
@@ -170,7 +165,7 @@ NodeOptions CreateNodeOptions(
   CHECK_EQ(options.map_builder_options.use_trajectory_builder_3d(),
            options.num_lasers_3d > 0);
   if (options.publish_occupancy_grid) {
-    CHECK(options.map_builder_options.use_trajectory_builder_3d())
+    CHECK(options.map_builder_options.use_trajectory_builder_2d())
         << "Publishing OccupancyGrids for 3D data is not yet supported";
   }
   return options;
