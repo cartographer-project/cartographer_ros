@@ -107,10 +107,10 @@ struct NodeOptions {
   bool publish_occupancy_grid;
   bool provide_odom_frame;
 
-  bool expect_odometry_data;
+  bool use_odometry_data;
 
-  bool expect_horizontal_laser;
-  bool expect_horizontal_multi_echo_laser;
+  bool use_horizontal_laser;
+  bool use_horizontal_multi_echo_laser;
   double horizontal_laser_min_range;
   double horizontal_laser_max_range;
   double horizontal_laser_missing_echo_ray_length;
@@ -134,12 +134,12 @@ NodeOptions CreateNodeOptions(
       lua_parameter_dictionary->GetBool("publish_occupancy_grid");
   options.provide_odom_frame =
       lua_parameter_dictionary->GetBool("provide_odom_frame");
-  options.expect_odometry_data =
-      lua_parameter_dictionary->GetBool("expect_odometry_data");
-  options.expect_horizontal_laser =
-      lua_parameter_dictionary->GetBool("expect_horizontal_laser");
-  options.expect_horizontal_multi_echo_laser =
-      lua_parameter_dictionary->GetBool("expect_horizontal_multi_echo_laser");
+  options.use_odometry_data =
+      lua_parameter_dictionary->GetBool("use_odometry_data");
+  options.use_horizontal_laser =
+      lua_parameter_dictionary->GetBool("use_horizontal_laser");
+  options.use_horizontal_multi_echo_laser =
+      lua_parameter_dictionary->GetBool("use_horizontal_multi_echo_laser");
   options.horizontal_laser_min_range = lua_parameter_dictionary->GetDouble("horizontal_laser_min_range");
   options.horizontal_laser_max_range = lua_parameter_dictionary->GetDouble("horizontal_laser_max_range");
   options.horizontal_laser_missing_echo_ray_length =
@@ -153,16 +153,16 @@ NodeOptions CreateNodeOptions(
   options.pose_publish_period_sec =
       lua_parameter_dictionary->GetDouble("pose_publish_period_sec");
 
-  CHECK_EQ(options.expect_horizontal_laser +
-               options.expect_horizontal_multi_echo_laser +
+  CHECK_EQ(options.use_horizontal_laser +
+               options.use_horizontal_multi_echo_laser +
                (options.num_lasers_3d > 0),
            1)
-      << "Configuration error: 'expect_horizontal_laser', "
-         "'expect_horizontal_multi_echo_laser' and 'num_lasers_3d' are "
+      << "Configuration error: 'use_horizontal_laser', "
+         "'use_horizontal_multi_echo_laser' and 'num_lasers_3d' are "
          "mutually exclusive, but one is required.";
   CHECK_EQ(options.map_builder_options.use_trajectory_builder_2d(),
-           options.expect_horizontal_laser ||
-               options.expect_horizontal_multi_echo_laser);
+           options.use_horizontal_laser ||
+               options.use_horizontal_multi_echo_laser);
   CHECK_EQ(options.map_builder_options.use_trajectory_builder_3d(),
            options.num_lasers_3d > 0);
   if (options.publish_occupancy_grid) {
@@ -341,7 +341,7 @@ void Node::Initialize() {
   std::unordered_set<string> expected_sensor_identifiers;
 
   // For 2D SLAM, subscribe to exactly one horizontal laser.
-  if (options_.expect_horizontal_laser) {
+  if (options_.use_horizontal_laser) {
     horizontal_laser_scan_subscriber_ = node_handle_.subscribe(
         kLaserScanTopic, kSubscriberQueueSize,
         boost::function<void(const sensor_msgs::LaserScan::ConstPtr&)>(
@@ -350,7 +350,7 @@ void Node::Initialize() {
             }));
     expected_sensor_identifiers.insert(kLaserScanTopic);
   }
-  if (options_.expect_horizontal_multi_echo_laser) {
+  if (options_.use_horizontal_multi_echo_laser) {
     horizontal_laser_scan_subscriber_ = node_handle_.subscribe(
         kMultiEchoLaserScanTopic, kSubscriberQueueSize,
         boost::function<void(const sensor_msgs::MultiEchoLaserScan::ConstPtr&)>(
@@ -393,7 +393,7 @@ void Node::Initialize() {
     expected_sensor_identifiers.insert(kImuTopic);
   }
 
-  if (options_.expect_odometry_data) {
+  if (options_.use_odometry_data) {
     odometry_subscriber_ = node_handle_.subscribe(
         kOdometryTopic, kSubscriberQueueSize,
         boost::function<void(const nav_msgs::Odometry::ConstPtr&)>(

@@ -20,10 +20,10 @@ options = {
   tracking_frame = "base_link",
   odom_frame = "odom",
   provide_odom_frame = false,
-  expect_odometry_data = false,
+  use_odometry_data = false,
   publish_occupancy_grid = false,
-  expect_horizontal_laser = false,
-  expect_horizontal_multi_echo_laser = true,
+  use_horizontal_laser = false,
+  use_horizontal_multi_echo_laser = true,
   horizontal_laser_min_range = 0.,
   horizontal_laser_max_range = 30.,
   horizontal_laser_missing_echo_ray_length = 5.,
@@ -33,8 +33,8 @@ options = {
   pose_publish_period_sec = 5e-3,
 }
 
-options.trajectory_builder.expect_imu_data = false
 options.map_builder.use_trajectory_builder_2d = true
+options.trajectory_builder.expect_imu_data = false
 options.trajectory_builder.use_online_correlative_scan_matching = true
 
 return options
