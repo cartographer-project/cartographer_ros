@@ -197,8 +197,7 @@ class Node {
                      const proto::LaserFan3D& laser_fan_3d);
 
   // Returns a transform for 'frame_id' to 'options_.tracking_frame' if it
-  // exists at
-  // 'time' or throws tf2::TransformException if it does not exist.
+  // exists at 'time' or throws tf2::TransformException if it does not exist.
   Rigid3d LookupToTrackingTransformOrThrow(carto::common::Time time,
                                            const string& frame_id);
 
