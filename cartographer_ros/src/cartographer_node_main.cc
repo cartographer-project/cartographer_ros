@@ -274,7 +274,8 @@ Rigid3d Node::LookupToTrackingTransformOrThrow(const carto::common::Time time,
 void Node::AddOdometry(int64 timestamp, const string& frame_id,
                        const Rigid3d& pose, const PoseCovariance& covariance) {
   const carto::common::Time time = carto::common::FromUniversal(timestamp);
-  map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)->AddOdometerPose(time, pose, covariance);
+  map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
+      ->AddOdometerPose(time, pose, covariance);
 }
 
 void Node::AddImu(const int64 timestamp, const string& frame_id,
@@ -287,11 +288,12 @@ void Node::AddImu(const int64 timestamp, const string& frame_id,
         << "The IMU frame must be colocated with the tracking frame. "
            "Transforming linear accelaration into the tracking frame will "
            "otherwise be imprecise.";
-    map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)->AddImuData(
-        time, sensor_to_tracking.rotation() *
-                  carto::transform::ToEigen(imu.linear_acceleration()),
-        sensor_to_tracking.rotation() *
-            carto::transform::ToEigen(imu.angular_velocity()));
+    map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
+        ->AddImuData(time,
+                     sensor_to_tracking.rotation() *
+                         carto::transform::ToEigen(imu.linear_acceleration()),
+                     sensor_to_tracking.rotation() *
+                         carto::transform::ToEigen(imu.angular_velocity()));
   } catch (const tf2::TransformException& ex) {
     LOG(WARNING) << "Cannot transform " << frame_id << " -> "
                  << options_.tracking_frame << ": " << ex.what();
@@ -311,7 +313,8 @@ void Node::AddHorizontalLaserFan(const int64 timestamp, const string& frame_id,
     const auto laser_fan_3d = carto::sensor::TransformLaserFan3D(
         carto::sensor::ToLaserFan3D(laser_fan),
         sensor_to_tracking.cast<float>());
-    map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)->AddHorizontalLaserFan(time, laser_fan_3d);
+    map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
+        ->AddHorizontalLaserFan(time, laser_fan_3d);
   } catch (const tf2::TransformException& ex) {
     LOG(WARNING) << "Cannot transform " << frame_id << " -> "
                  << options_.tracking_frame << ": " << ex.what();
@@ -324,10 +327,10 @@ void Node::AddLaserFan3D(const int64 timestamp, const string& frame_id,
   try {
     const Rigid3d sensor_to_tracking =
         LookupToTrackingTransformOrThrow(time, frame_id);
-    map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)->AddLaserFan3D(
-        time, carto::sensor::TransformLaserFan3D(
-                  carto::sensor::FromProto(laser_fan_3d),
-                  sensor_to_tracking.cast<float>()));
+    map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
+        ->AddLaserFan3D(time, carto::sensor::TransformLaserFan3D(
+                                  carto::sensor::FromProto(laser_fan_3d),
+                                  sensor_to_tracking.cast<float>()));
   } catch (const tf2::TransformException& ex) {
     LOG(WARNING) << "Cannot transform " << frame_id << " -> "
                  << options_.tracking_frame << ": " << ex.what();
@@ -441,7 +444,8 @@ bool Node::HandleSubmapQuery(
 
   carto::common::MutexLocker lock(&mutex_);
   // TODO(hrapp): return error messages and extract common code from MapBuilder.
-  carto::mapping::Submaps* submaps = map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)->submaps();
+  carto::mapping::Submaps* submaps =
+      map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)->submaps();
   if (request.submap_id < 0 || request.submap_id >= submaps->size()) {
     return false;
   }
@@ -484,7 +488,8 @@ bool Node::HandleSubmapQuery(
 
 void Node::PublishSubmapList(const ::ros::WallTimerEvent& timer_event) {
   carto::common::MutexLocker lock(&mutex_);
-  const carto::mapping::Submaps* submaps = map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)->submaps();
+  const carto::mapping::Submaps* submaps =
+      map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)->submaps();
   const std::vector<carto::transform::Rigid3d> submap_transforms =
       map_builder_.sparse_pose_graph()->GetSubmapTransforms(*submaps);
   CHECK_EQ(submap_transforms.size(), submaps->size());
@@ -506,8 +511,12 @@ void Node::PublishSubmapList(const ::ros::WallTimerEvent& timer_event) {
 
 void Node::PublishPose(const ::ros::WallTimerEvent& timer_event) {
   carto::common::MutexLocker lock(&mutex_);
-  const Rigid3d tracking_to_local = map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)->pose_estimate().pose;
-  const carto::mapping::Submaps* submaps = map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)->submaps();
+  const Rigid3d tracking_to_local =
+      map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
+          ->pose_estimate()
+          .pose;
+  const carto::mapping::Submaps* submaps =
+      map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)->submaps();
   const Rigid3d local_to_map =
       map_builder_.sparse_pose_graph()->GetLocalToGlobalTransform(*submaps);
   const Rigid3d tracking_to_map = local_to_map * tracking_to_local;
