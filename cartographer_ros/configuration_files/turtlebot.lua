@@ -34,7 +34,7 @@ options = {
 }
 
 options.map_builder.use_trajectory_builder_2d = true
-options.trajectory_builder.expect_imu_data = false
-options.trajectory_builder.use_online_correlative_scan_matching = true
+options.map_builder.trajectory_builder_2d.use_imu_data = false
+options.map_builder.trajectory_builder_2d.use_online_correlative_scan_matching = true
 
 return options

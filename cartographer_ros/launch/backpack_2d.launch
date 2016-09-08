@@ -28,5 +28,4 @@
       output="screen">
     <remap from="echoes" to="horizontal_laser_2d" />
   </node>
-
 </launch>
