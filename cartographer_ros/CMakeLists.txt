@@ -28,7 +28,23 @@ set(PACKAGE_DEPENDENCIES
   tf2_eigen
 )
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wreorder")
+set(CMAKE_CXX_FLAGS "-pthread -std=c++11 -Wreorder")
+
+if(NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG")
+elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -DNDEBUG")
+elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  message(FATAL_ERROR "Cartographer is too slow to be useful in debug mode.")
+else()
+  message(FATAL_ERROR "Unknown CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
+endif()
+
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
 include_directories(${catkin_INCLUDE_DIRS})
@@ -77,15 +93,15 @@ link_directories(${Boost_LIBRARY_DIRS})
 
 add_executable(cartographer_node
   src/cartographer_node_main.cc
-  src/node_constants.h
-  src/msg_conversion.h
   src/msg_conversion.cc
-  src/time_conversion.h
+  src/msg_conversion.h
+  src/node_constants.h
   src/sensor_data.cc
   src/sensor_data.h
   src/sensor_data_producer.cc
   src/sensor_data_producer.h
   src/time_conversion.cc
+  src/time_conversion.h
 )
 target_link_libraries(cartographer_node
   ${CARTOGRAPHER_LIBRARIES}
