@@ -128,7 +128,8 @@ NodeOptions CreateNodeOptions(
   options.map_builder_options = carto::mapping::CreateMapBuilderOptions(
       lua_parameter_dictionary->GetDictionary("map_builder").get());
   options.map_frame = lua_parameter_dictionary->GetString("map_frame");
-  options.tracking_frame = lua_parameter_dictionary->GetString("tracking_frame");
+  options.tracking_frame =
+      lua_parameter_dictionary->GetString("tracking_frame");
   options.odom_frame = lua_parameter_dictionary->GetString("odom_frame");
   options.publish_occupancy_grid =
       lua_parameter_dictionary->GetBool("publish_occupancy_grid");
@@ -140,10 +141,13 @@ NodeOptions CreateNodeOptions(
       lua_parameter_dictionary->GetBool("use_horizontal_laser");
   options.use_horizontal_multi_echo_laser =
       lua_parameter_dictionary->GetBool("use_horizontal_multi_echo_laser");
-  options.horizontal_laser_min_range = lua_parameter_dictionary->GetDouble("horizontal_laser_min_range");
-  options.horizontal_laser_max_range = lua_parameter_dictionary->GetDouble("horizontal_laser_max_range");
+  options.horizontal_laser_min_range =
+      lua_parameter_dictionary->GetDouble("horizontal_laser_min_range");
+  options.horizontal_laser_max_range =
+      lua_parameter_dictionary->GetDouble("horizontal_laser_max_range");
   options.horizontal_laser_missing_echo_ray_length =
-      lua_parameter_dictionary->GetDouble("horizontal_laser_missing_echo_ray_length");
+      lua_parameter_dictionary->GetDouble(
+          "horizontal_laser_missing_echo_ray_length");
   options.num_lasers_3d =
       lua_parameter_dictionary->GetNonNegativeInt("num_lasers_3d");
   options.lookup_transform_timeout_sec =
@@ -160,9 +164,9 @@ NodeOptions CreateNodeOptions(
       << "Configuration error: 'use_horizontal_laser', "
          "'use_horizontal_multi_echo_laser' and 'num_lasers_3d' are "
          "mutually exclusive, but one is required.";
-  CHECK_EQ(options.map_builder_options.use_trajectory_builder_2d(),
-           options.use_horizontal_laser ||
-               options.use_horizontal_multi_echo_laser);
+  CHECK_EQ(
+      options.map_builder_options.use_trajectory_builder_2d(),
+      options.use_horizontal_laser || options.use_horizontal_multi_echo_laser);
   CHECK_EQ(options.map_builder_options.use_trajectory_builder_3d(),
            options.num_lasers_3d > 0);
   if (options.publish_occupancy_grid) {
@@ -197,7 +201,8 @@ class Node {
   void AddLaserFan3D(int64 timestamp, const string& frame_id,
                      const proto::LaserFan3D& laser_fan_3d);
 
-  // Returns a transform for 'frame_id' to 'options_.tracking_frame' if it exists at
+  // Returns a transform for 'frame_id' to 'options_.tracking_frame' if it
+  // exists at
   // 'time' or throws tf2::TransformException if it does not exist.
   Rigid3d LookupToTrackingTransformOrThrow(carto::common::Time time,
                                            const string& frame_id);
@@ -216,9 +221,11 @@ class Node {
   std::deque<carto::mapping::TrajectoryNode::ConstantData> constant_data_
       GUARDED_BY(mutex_);
   carto::mapping::MapBuilder map_builder_ GUARDED_BY(mutex_);
-  carto::mapping::SensorCollator<SensorData> sensor_collator_ GUARDED_BY(mutex_);
+  carto::mapping::SensorCollator<SensorData> sensor_collator_
+      GUARDED_BY(mutex_);
   SensorDataProducer sensor_data_producer_ GUARDED_BY(mutex_);
-  carto::mapping::GlobalTrajectoryBuilderInterface* trajectory_builder_ GUARDED_BY(mutex_);
+  carto::mapping::GlobalTrajectoryBuilderInterface* trajectory_builder_
+      GUARDED_BY(mutex_);
 
   ::ros::NodeHandle node_handle_;
   ::ros::Subscriber imu_subscriber_;
@@ -241,11 +248,11 @@ class Node {
   std::chrono::steady_clock::time_point last_sensor_data_rates_logging_time_;
   std::map<string, carto::common::RateTimer<>> rate_timers_;
 
-  // We have to keep the timer handles of ::ros::WallTimers around, otherwise they
+  // We have to keep the timer handles of ::ros::WallTimers around, otherwise
+  // they
   // do not fire.
   std::vector<::ros::WallTimer> wall_timers_;
 };
-
 
 Node::Node(const NodeOptions& options)
     : options_(options),
@@ -267,9 +274,9 @@ Node::~Node() {
 
 Rigid3d Node::LookupToTrackingTransformOrThrow(const carto::common::Time time,
                                                const string& frame_id) {
-  return ToRigid3d(
-      tf_buffer_.lookupTransform(options_.tracking_frame, frame_id, ToRos(time),
-                                 ::ros::Duration(options_.lookup_transform_timeout_sec)));
+  return ToRigid3d(tf_buffer_.lookupTransform(
+      options_.tracking_frame, frame_id, ToRos(time),
+      ::ros::Duration(options_.lookup_transform_timeout_sec)));
 }
 
 void Node::AddOdometry(int64 timestamp, const string& frame_id,
@@ -294,8 +301,8 @@ void Node::AddImu(const int64 timestamp, const string& frame_id,
         sensor_to_tracking.rotation() *
             carto::transform::ToEigen(imu.angular_velocity()));
   } catch (const tf2::TransformException& ex) {
-    LOG(WARNING) << "Cannot transform " << frame_id << " -> " << options_.tracking_frame
-                 << ": " << ex.what();
+    LOG(WARNING) << "Cannot transform " << frame_id << " -> "
+                 << options_.tracking_frame << ": " << ex.what();
   }
 }
 void Node::AddHorizontalLaserFan(const int64 timestamp, const string& frame_id,
@@ -314,8 +321,8 @@ void Node::AddHorizontalLaserFan(const int64 timestamp, const string& frame_id,
         sensor_to_tracking.cast<float>());
     trajectory_builder_->AddHorizontalLaserFan(time, laser_fan_3d);
   } catch (const tf2::TransformException& ex) {
-    LOG(WARNING) << "Cannot transform " << frame_id << " -> " << options_.tracking_frame
-                 << ": " << ex.what();
+    LOG(WARNING) << "Cannot transform " << frame_id << " -> "
+                 << options_.tracking_frame << ": " << ex.what();
   }
 }
 
@@ -330,8 +337,8 @@ void Node::AddLaserFan3D(const int64 timestamp, const string& frame_id,
                   carto::sensor::FromProto(laser_fan_3d),
                   sensor_to_tracking.cast<float>()));
   } catch (const tf2::TransformException& ex) {
-    LOG(WARNING) << "Cannot transform " << frame_id << " -> " << options_.tracking_frame
-                 << ": " << ex.what();
+    LOG(WARNING) << "Cannot transform " << frame_id << " -> "
+                 << options_.tracking_frame << ": " << ex.what();
   }
 }
 
@@ -531,7 +538,8 @@ void Node::PublishPose(const ::ros::WallTimerEvent& timer_event) {
   } else {
     try {
       const Rigid3d tracking_to_odom =
-          LookupToTrackingTransformOrThrow(FromRos(now), options_.odom_frame).inverse();
+          LookupToTrackingTransformOrThrow(FromRos(now), options_.odom_frame)
+              .inverse();
       const Rigid3d odom_to_map = tracking_to_map * tracking_to_odom.inverse();
       stamped_transform.transform = ToGeometryMsgTransform(odom_to_map);
       tf_broadcaster_.sendTransform(stamped_transform);
@@ -550,7 +558,8 @@ void Node::SpinOccupancyGridThreadForever() {
         return;
       }
     }
-    const auto trajectory_nodes = map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
+    const auto trajectory_nodes =
+        map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
     if (trajectory_nodes.empty()) {
       std::this_thread::sleep_for(carto::common::FromMilliseconds(1000));
       continue;
