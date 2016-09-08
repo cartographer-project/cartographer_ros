@@ -218,8 +218,6 @@ class Node {
   carto::mapping::SensorCollator<SensorData> sensor_collator_
       GUARDED_BY(mutex_);
   SensorDataProducer sensor_data_producer_ GUARDED_BY(mutex_);
-  carto::mapping::GlobalTrajectoryBuilderInterface* trajectory_builder_
-      GUARDED_BY(mutex_);
 
   ::ros::NodeHandle node_handle_;
   ::ros::Subscriber imu_subscriber_;
@@ -276,7 +274,7 @@ Rigid3d Node::LookupToTrackingTransformOrThrow(const carto::common::Time time,
 void Node::AddOdometry(int64 timestamp, const string& frame_id,
                        const Rigid3d& pose, const PoseCovariance& covariance) {
   const carto::common::Time time = carto::common::FromUniversal(timestamp);
-  trajectory_builder_->AddOdometerPose(time, pose, covariance);
+  map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)->AddOdometerPose(time, pose, covariance);
 }
 
 void Node::AddImu(const int64 timestamp, const string& frame_id,
@@ -289,7 +287,7 @@ void Node::AddImu(const int64 timestamp, const string& frame_id,
         << "The IMU frame must be colocated with the tracking frame. "
            "Transforming linear accelaration into the tracking frame will "
            "otherwise be imprecise.";
-    trajectory_builder_->AddImuData(
+    map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)->AddImuData(
         time, sensor_to_tracking.rotation() *
                   carto::transform::ToEigen(imu.linear_acceleration()),
         sensor_to_tracking.rotation() *
@@ -313,7 +311,7 @@ void Node::AddHorizontalLaserFan(const int64 timestamp, const string& frame_id,
     const auto laser_fan_3d = carto::sensor::TransformLaserFan3D(
         carto::sensor::ToLaserFan3D(laser_fan),
         sensor_to_tracking.cast<float>());
-    trajectory_builder_->AddHorizontalLaserFan(time, laser_fan_3d);
+    map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)->AddHorizontalLaserFan(time, laser_fan_3d);
   } catch (const tf2::TransformException& ex) {
     LOG(WARNING) << "Cannot transform " << frame_id << " -> "
                  << options_.tracking_frame << ": " << ex.what();
@@ -326,7 +324,7 @@ void Node::AddLaserFan3D(const int64 timestamp, const string& frame_id,
   try {
     const Rigid3d sensor_to_tracking =
         LookupToTrackingTransformOrThrow(time, frame_id);
-    trajectory_builder_->AddLaserFan3D(
+    map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)->AddLaserFan3D(
         time, carto::sensor::TransformLaserFan3D(
                   carto::sensor::FromProto(laser_fan_3d),
                   sensor_to_tracking.cast<float>()));
@@ -406,7 +404,6 @@ void Node::Initialize() {
 
   // TODO(damonkohler): Add multi-trajectory support.
   CHECK_EQ(kTrajectoryBuilderId, map_builder_.AddTrajectoryBuilder());
-  trajectory_builder_ = map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId);
   sensor_collator_.AddTrajectory(
       kTrajectoryBuilderId, expected_sensor_identifiers,
       [this](const int64 timestamp, std::unique_ptr<SensorData> sensor_data) {
@@ -444,7 +441,7 @@ bool Node::HandleSubmapQuery(
 
   carto::common::MutexLocker lock(&mutex_);
   // TODO(hrapp): return error messages and extract common code from MapBuilder.
-  carto::mapping::Submaps* submaps = trajectory_builder_->submaps();
+  carto::mapping::Submaps* submaps = map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)->submaps();
   if (request.submap_id < 0 || request.submap_id >= submaps->size()) {
     return false;
   }
@@ -487,7 +484,7 @@ bool Node::HandleSubmapQuery(
 
 void Node::PublishSubmapList(const ::ros::WallTimerEvent& timer_event) {
   carto::common::MutexLocker lock(&mutex_);
-  const carto::mapping::Submaps* submaps = trajectory_builder_->submaps();
+  const carto::mapping::Submaps* submaps = map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)->submaps();
   const std::vector<carto::transform::Rigid3d> submap_transforms =
       map_builder_.sparse_pose_graph()->GetSubmapTransforms(*submaps);
   CHECK_EQ(submap_transforms.size(), submaps->size());
@@ -509,8 +506,8 @@ void Node::PublishSubmapList(const ::ros::WallTimerEvent& timer_event) {
 
 void Node::PublishPose(const ::ros::WallTimerEvent& timer_event) {
   carto::common::MutexLocker lock(&mutex_);
-  const Rigid3d tracking_to_local = trajectory_builder_->pose_estimate().pose;
-  const carto::mapping::Submaps* submaps = trajectory_builder_->submaps();
+  const Rigid3d tracking_to_local = map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)->pose_estimate().pose;
+  const carto::mapping::Submaps* submaps = map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)->submaps();
   const Rigid3d local_to_map =
       map_builder_.sparse_pose_graph()->GetLocalToGlobalTransform(*submaps);
   const Rigid3d tracking_to_map = local_to_map * tracking_to_local;
