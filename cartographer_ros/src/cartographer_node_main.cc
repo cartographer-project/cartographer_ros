@@ -241,8 +241,7 @@ class Node {
   std::map<string, carto::common::RateTimer<>> rate_timers_;
 
   // We have to keep the timer handles of ::ros::WallTimers around, otherwise
-  // they
-  // do not fire.
+  // they do not fire.
   std::vector<::ros::WallTimer> wall_timers_;
 };
 
@@ -385,7 +384,7 @@ void Node::Initialize() {
   if (options_.map_builder_options.use_trajectory_builder_3d() ||
       (options_.map_builder_options.use_trajectory_builder_2d() &&
        options_.map_builder_options.trajectory_builder_2d_options()
-           .expect_imu_data())) {
+           .use_imu_data())) {
     imu_subscriber_ = node_handle_.subscribe(
         kImuTopic, kSubscriberQueueSize,
         boost::function<void(const sensor_msgs::Imu::ConstPtr& msg)>(
