@@ -25,8 +25,5 @@
       type="cartographer_node" args="
           -configuration_directory $(find cartographer_ros)/configuration_files
           -configuration_basename turtlebot.lua"
-      output="screen">
-    <remap from="scan" to="horizontal_laser_2d" />
-  </node>
-
+      output="screen" />
 </launch>

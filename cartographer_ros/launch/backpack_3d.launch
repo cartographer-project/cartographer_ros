@@ -29,5 +29,4 @@
     <remap from="points2_1" to="horizontal_laser_3d" />
     <remap from="points2_2" to="vertical_laser_3d" />
   </node>
-
 </launch>
