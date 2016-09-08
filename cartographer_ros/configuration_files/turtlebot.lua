@@ -12,27 +12,28 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-include "trajectory_builder.lua"
-include "sparse_pose_graph.lua"
+include "map_builder.lua"
 
 options = {
-  sparse_pose_graph = SPARSE_POSE_GRAPH,
-  trajectory_builder = TRAJECTORY_BUILDER,
+  map_builder = MAP_BUILDER,
   map_frame = "map",
-  odom_frame = "odom",
   tracking_frame = "base_link",
+  odom_frame = "odom",
   provide_odom_frame = false,
-  expect_odometry_data = false,
+  use_odometry_data = false,
   publish_occupancy_grid = false,
-  laser_min_range = 0.,
-  laser_max_range = 30.,
-  laser_missing_echo_ray_length = 5.,
-  lookup_transform_timeout = 0.01,
+  use_horizontal_laser = true,
+  use_horizontal_multi_echo_laser = false,
+  horizontal_laser_min_range = 0.,
+  horizontal_laser_max_range = 30.,
+  horizontal_laser_missing_echo_ray_length = 5.,
+  num_lasers_3d = 0,
+  lookup_transform_timeout_sec = 0.01,
   submap_publish_period_sec = 0.3,
   pose_publish_period_sec = 5e-3,
-  use_laser_scan_2d = true
 }
 
+options.map_builder.use_trajectory_builder_2d = true
 options.trajectory_builder.expect_imu_data = false
 options.trajectory_builder.use_online_correlative_scan_matching = true
 
