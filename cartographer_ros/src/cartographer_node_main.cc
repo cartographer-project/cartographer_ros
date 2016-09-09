@@ -97,6 +97,7 @@ constexpr char kPointCloud2Topic[] = "/points2";
 constexpr char kImuTopic[] = "/imu";
 constexpr char kOdometryTopic[] = "/odom";
 constexpr char kOccupancyGridTopic[] = "/map";
+constexpr char kScanMatchedPointCloudTopic[] = "/scan_matched_points2";
 
 struct NodeOptions {
   carto::mapping::proto::MapBuilderOptions map_builder_options;
@@ -206,7 +207,7 @@ class Node {
       ::cartographer_ros_msgs::SubmapQuery::Response& response);
 
   void PublishSubmapList(const ::ros::WallTimerEvent& timer_event);
-  void PublishPose(const ::ros::WallTimerEvent& timer_event);
+  void PublishPoseAndScanMatchedPointCloud(const ::ros::WallTimerEvent& timer_event);
   void SpinOccupancyGridThreadForever();
 
   const NodeOptions options_;
@@ -226,6 +227,7 @@ class Node {
   ::ros::Subscriber odometry_subscriber_;
   ::ros::Publisher submap_list_publisher_;
   ::ros::ServiceServer submap_query_server_;
+  ::ros::Publisher scan_matched_point_cloud_publisher_;
 
   tf2_ros::Buffer tf_buffer_;
   tf2_ros::TransformListener tf_;
@@ -426,11 +428,15 @@ void Node::Initialize() {
         std::thread(&Node::SpinOccupancyGridThreadForever, this);
   }
 
+  scan_matched_point_cloud_publisher_ =
+      node_handle_.advertise<sensor_msgs::PointCloud2>(
+          kScanMatchedPointCloudTopic, 10);
+
   wall_timers_.push_back(node_handle_.createWallTimer(
       ::ros::WallDuration(options_.submap_publish_period_sec),
       &Node::PublishSubmapList, this));
   wall_timers_.push_back(node_handle_.createWallTimer(
-      ::ros::WallDuration(options_.pose_publish_period_sec), &Node::PublishPose,
+      ::ros::WallDuration(options_.pose_publish_period_sec), &Node::PublishPoseAndScanMatchedPointCloud,
       this));
 }
 
@@ -508,12 +514,15 @@ void Node::PublishSubmapList(const ::ros::WallTimerEvent& timer_event) {
   submap_list_publisher_.publish(ros_submap_list);
 }
 
-void Node::PublishPose(const ::ros::WallTimerEvent& timer_event) {
+void Node::PublishPoseAndScanMatchedPointCloud(
+    const ::ros::WallTimerEvent& timer_event) {
   carto::common::MutexLocker lock(&mutex_);
-  const Rigid3d tracking_to_local =
-      map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
-          ->pose_estimate()
-          .pose;
+  const carto::mapping::GlobalTrajectoryBuilderInterface::PoseEstimate
+      last_pose_estimate =
+          map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
+              ->pose_estimate();
+
+  const Rigid3d tracking_to_local = last_pose_estimate.pose;
   const carto::mapping::Submaps* submaps =
       map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)->submaps();
   const Rigid3d local_to_map =
@@ -547,6 +556,10 @@ void Node::PublishPose(const ::ros::WallTimerEvent& timer_event) {
                    << options_.odom_frame << ": " << ex.what();
     }
   }
+
+  scan_matched_point_cloud_publisher_.publish(ToPointCloud2Message(
+      carto::common::ToUniversal(FromRos(now)), options_.odom_frame,
+      last_pose_estimate.point_cloud));
 }
 
 void Node::SpinOccupancyGridThreadForever() {
