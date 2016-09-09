@@ -37,6 +37,7 @@
 #include "time_conversion.h"
 
 namespace cartographer_ros {
+
 namespace {
 
 // The ros::sensor_msgs::PointCloud2 binary data contains 4 floats for each
@@ -60,6 +61,35 @@ void ToMessage(const ::cartographer::transform::proto::Quaterniond& proto,
   quaternion->x = proto.x();
   quaternion->y = proto.y();
   quaternion->z = proto.z();
+}
+
+sensor_msgs::PointCloud2 PreparePointCloud2Message(const int64 timestamp,
+                                                   const string& frame_id,
+                                                   const int num_points) {
+  sensor_msgs::PointCloud2 msg;
+  msg.header.stamp = ToRos(::cartographer::common::FromUniversal(timestamp));
+  msg.header.frame_id = frame_id;
+  msg.height = 1;
+  msg.width = num_points;
+  msg.fields.resize(3);
+  msg.fields[0].name = "x";
+  msg.fields[0].offset = 0;
+  msg.fields[0].datatype = 7;
+  msg.fields[0].count = 1;
+  msg.fields[1].name = "y";
+  msg.fields[1].offset = 4;
+  msg.fields[1].datatype = 7;
+  msg.fields[1].count = 1;
+  msg.fields[2].name = "z";
+  msg.fields[2].offset = 8;
+  msg.fields[2].datatype = 7;
+  msg.fields[2].count = 1;
+  msg.is_bigendian = false;
+  msg.point_step = 16;
+  msg.row_step = 16 * msg.width;
+  msg.is_dense = true;
+  msg.data.resize(16 * num_points);
+  return msg;
 }
 
 }  // namespace
@@ -151,40 +181,30 @@ sensor_msgs::LaserScan ToLaserScan(
 
 sensor_msgs::PointCloud2 ToPointCloud2Message(
     const int64 timestamp, const string& frame_id,
+    const ::cartographer::sensor::PointCloud& point_cloud) {
+  auto msg = PreparePointCloud2Message(timestamp, frame_id, point_cloud.size());
+  ::ros::serialization::OStream stream(msg.data.data(), msg.data.size());
+  for (const auto& point : point_cloud) {
+    stream.next(point.x());
+    stream.next(point.y());
+    stream.next(point.z());
+    stream.next(kPointCloudComponentFourMagic);
+  }
+  return msg;
+}
+
+sensor_msgs::PointCloud2 ToPointCloud2Message(
+    const int64 timestamp, const string& frame_id,
     const ::cartographer::sensor::proto::LaserFan3D& laser_scan_3d) {
   CHECK(::cartographer::transform::ToEigen(laser_scan_3d.origin()).norm() == 0)
       << "Trying to convert a laser_scan_3d that is not at the origin.";
-
-  sensor_msgs::PointCloud2 msg;
-  msg.header.stamp = ToRos(::cartographer::common::FromUniversal(timestamp));
-  msg.header.frame_id = frame_id;
 
   const auto& point_cloud = laser_scan_3d.point_cloud();
   CHECK_EQ(point_cloud.x_size(), point_cloud.y_size());
   CHECK_EQ(point_cloud.x_size(), point_cloud.z_size());
   const auto num_points = point_cloud.x_size();
 
-  msg.height = 1;
-  msg.width = num_points;
-  msg.fields.resize(3);
-  msg.fields[0].name = "x";
-  msg.fields[0].offset = 0;
-  msg.fields[0].datatype = 7;
-  msg.fields[0].count = 1;
-  msg.fields[1].name = "y";
-  msg.fields[1].offset = 4;
-  msg.fields[1].datatype = 7;
-  msg.fields[1].count = 1;
-  msg.fields[2].name = "z";
-  msg.fields[2].offset = 8;
-  msg.fields[2].datatype = 7;
-  msg.fields[2].count = 1;
-  msg.is_bigendian = false;
-  msg.point_step = 16;
-  msg.row_step = 16 * msg.width;
-  msg.is_dense = true;
-  msg.data.resize(16 * num_points);
-
+  auto msg = PreparePointCloud2Message(timestamp, frame_id, num_points);
   ::ros::serialization::OStream stream(msg.data.data(), msg.data.size());
   for (int i = 0; i < num_points; ++i) {
     stream.next(point_cloud.x(i));

@@ -19,6 +19,7 @@
 
 #include "cartographer/common/port.h"
 #include "cartographer/kalman_filter/pose_tracker.h"
+#include "cartographer/sensor/point_cloud.h"
 #include "cartographer/sensor/proto/sensor.pb.h"
 #include "cartographer/transform/rigid_transform.h"
 #include "geometry_msgs/Pose.h"
@@ -34,7 +35,7 @@
 
 namespace cartographer_ros {
 
-// Only uses first echo of each beam.
+// Returns a laser scan consisting of the first echo of each beam.
 sensor_msgs::LaserScan ToLaserScan(
     int64 timestamp, const string& frame_id,
     const ::cartographer::sensor::proto::LaserScan& laser_scan);
@@ -45,6 +46,10 @@ sensor_msgs::MultiEchoLaserScan ToMultiEchoLaserScanMessage(
 
 sensor_msgs::Imu ToImuMessage(int64 timestamp, const string& frame_id,
                               const ::cartographer::sensor::proto::Imu& imu);
+
+sensor_msgs::PointCloud2 ToPointCloud2Message(
+    int64 timestamp, const string& frame_id,
+    const ::cartographer::sensor::PointCloud& point_cloud);
 
 sensor_msgs::PointCloud2 ToPointCloud2Message(
     int64 timestamp, const string& frame_id,
