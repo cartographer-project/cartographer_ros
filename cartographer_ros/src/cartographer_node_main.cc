@@ -43,6 +43,7 @@
 #include "cartographer/mapping_3d/local_trajectory_builder_options.h"
 #include "cartographer/mapping_3d/sparse_pose_graph.h"
 #include "cartographer/sensor/laser.h"
+#include "cartographer/sensor/point_cloud.h"
 #include "cartographer/sensor/proto/sensor.pb.h"
 #include "cartographer/transform/rigid_transform.h"
 #include "cartographer/transform/transform.h"
@@ -522,6 +523,9 @@ void Node::PublishPoseAndScanMatchedPointCloud(
       last_pose_estimate =
           map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
               ->pose_estimate();
+  if (carto::common::ToUniversal(last_pose_estimate.time) < 0) {
+    return;
+  }
 
   const Rigid3d tracking_to_local = last_pose_estimate.pose;
   const carto::mapping::Submaps* submaps =
@@ -530,9 +534,8 @@ void Node::PublishPoseAndScanMatchedPointCloud(
       map_builder_.sparse_pose_graph()->GetLocalToGlobalTransform(*submaps);
   const Rigid3d tracking_to_map = local_to_map * tracking_to_local;
 
-  const ::ros::Time now = ::ros::Time::now();
   geometry_msgs::TransformStamped stamped_transform;
-  stamped_transform.header.stamp = now;
+  stamped_transform.header.stamp = ToRos(last_pose_estimate.time);
   stamped_transform.header.frame_id = options_.map_frame;
   stamped_transform.child_frame_id = options_.odom_frame;
 
@@ -547,7 +550,8 @@ void Node::PublishPoseAndScanMatchedPointCloud(
   } else {
     try {
       const Rigid3d tracking_to_odom =
-          LookupToTrackingTransformOrThrow(FromRos(now), options_.odom_frame)
+          LookupToTrackingTransformOrThrow(last_pose_estimate.time,
+                                           options_.odom_frame)
               .inverse();
       const Rigid3d odom_to_map = tracking_to_map * tracking_to_odom.inverse();
       stamped_transform.transform = ToGeometryMsgTransform(odom_to_map);
@@ -559,8 +563,10 @@ void Node::PublishPoseAndScanMatchedPointCloud(
   }
 
   scan_matched_point_cloud_publisher_.publish(ToPointCloud2Message(
-      carto::common::ToUniversal(FromRos(now)), options_.odom_frame,
-      last_pose_estimate.point_cloud));
+      carto::common::ToUniversal(last_pose_estimate.time), options_.tracking_frame,
+      carto::sensor::TransformPointCloud(
+          last_pose_estimate.point_cloud,
+          tracking_to_local.inverse().cast<float>())));
 }
 
 void Node::SpinOccupancyGridThreadForever() {
