@@ -207,7 +207,8 @@ class Node {
       ::cartographer_ros_msgs::SubmapQuery::Response& response);
 
   void PublishSubmapList(const ::ros::WallTimerEvent& timer_event);
-  void PublishPoseAndScanMatchedPointCloud(const ::ros::WallTimerEvent& timer_event);
+  void PublishPoseAndScanMatchedPointCloud(
+      const ::ros::WallTimerEvent& timer_event);
   void SpinOccupancyGridThreadForever();
 
   const NodeOptions options_;
@@ -436,8 +437,8 @@ void Node::Initialize() {
       ::ros::WallDuration(options_.submap_publish_period_sec),
       &Node::PublishSubmapList, this));
   wall_timers_.push_back(node_handle_.createWallTimer(
-      ::ros::WallDuration(options_.pose_publish_period_sec), &Node::PublishPoseAndScanMatchedPointCloud,
-      this));
+      ::ros::WallDuration(options_.pose_publish_period_sec),
+      &Node::PublishPoseAndScanMatchedPointCloud, this));
 }
 
 bool Node::HandleSubmapQuery(

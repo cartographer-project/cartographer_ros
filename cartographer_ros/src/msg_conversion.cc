@@ -63,8 +63,9 @@ void ToMessage(const ::cartographer::transform::proto::Quaterniond& proto,
   quaternion->z = proto.z();
 }
 
-sensor_msgs::PointCloud2 PreparePointCloud2Message(
-    const int64 timestamp, const string& frame_id, const int num_points) {
+sensor_msgs::PointCloud2 PreparePointCloud2Message(const int64 timestamp,
+                                                   const string& frame_id,
+                                                   const int num_points) {
   sensor_msgs::PointCloud2 msg;
   msg.header.stamp = ToRos(::cartographer::common::FromUniversal(timestamp));
   msg.header.frame_id = frame_id;
