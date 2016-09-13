@@ -16,62 +16,62 @@
 
 <robot name="cartographer_ros">
   <material name="orange">
-    <color rgba="1.0 0.5 0.2 1"/>
+    <color rgba="1.0 0.5 0.2 1" />
   </material>
   <material name="gray">
-    <color rgba="0.2 0.2 0.2 1"/>
+    <color rgba="0.2 0.2 0.2 1" />
   </material>
   <material name="green">
-    <color rgba="0.2 0.4 0.2 1"/>
+    <color rgba="0.2 0.4 0.2 1" />
   </material>
 
   <link name="imu_link">
     <visual>
-      <origin xyz="0.0 0.0 0.0"/>
+      <origin xyz="0.0 0.0 0.0" />
       <geometry>
-        <box size="0.06 0.04 0.02"/>
+        <box size="0.06 0.04 0.02" />
       </geometry>
-      <material name="orange"/>
+      <material name="orange" />
     </visual>
   </link>
 
   <link name="horizontal_vlp16_link">
     <visual>
-      <origin xyz="0.0 0.0 0.0"/>
+      <origin xyz="0.0 0.0 0.0" />
       <geometry>
-        <cylinder length="0.07" radius="0.05"/>
+        <cylinder length="0.07" radius="0.05" />
       </geometry>
-      <material name="gray"/>
+      <material name="gray" />
     </visual>
   </link>
 
   <link name="vertical_vlp16_link">
     <visual>
-      <origin xyz="0.0 0.0 0.0"/>
+      <origin xyz="0.0 0.0 0.0" />
       <geometry>
-        <cylinder length="0.07" radius="0.05"/>
+        <cylinder length="0.07" radius="0.05" />
       </geometry>
-      <material name="gray"/>
+      <material name="gray" />
     </visual>
   </link>
 
   <link name="base_link" />
 
   <joint name="imu_link_joint" type="fixed">
-    <parent link="base_link"/>
-    <child link="imu_link"/>
-    <origin xyz="0 0 0" rpy="3.1416 0 0"/>
+    <parent link="base_link" />
+    <child link="imu_link" />
+    <origin xyz="0 0 0" rpy="3.1416 0 0" />
   </joint>
 
   <joint name="horizontal_vlp16_link_joint" type="fixed">
-    <parent link="base_link"/>
-    <child link="horizontal_vlp16_link"/>
+    <parent link="base_link" />
+    <child link="horizontal_vlp16_link" />
     <origin xyz="0.01 0. 0.19" rpy="0. -0.1745 3.1416" />
   </joint>
 
   <joint name="vertical_vlp16_link_joint" type="fixed">
-    <parent link="base_link"/>
-    <child link="vertical_vlp16_link"/>
-    <origin xyz="0.19 0. 0.04" rpy="0. 1.3963 0."/>
+    <parent link="base_link" />
+    <child link="vertical_vlp16_link" />
+    <origin xyz="0.19 0. 0.04" rpy="0. 1.3963 0." />
   </joint>
 </robot>
