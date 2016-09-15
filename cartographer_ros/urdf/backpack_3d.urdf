@@ -14,7 +14,7 @@
   limitations under the License.
 -->
 
-<robot name="cartographer_ros">
+<robot name="cartographer_backpack_3d">
   <material name="orange">
     <color rgba="1.0 0.5 0.2 1" />
   </material>
