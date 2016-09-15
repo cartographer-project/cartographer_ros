@@ -109,7 +109,8 @@ struct NodeOptions {
   bool provide_odom_frame;
   bool use_odometry_data;
   bool use_constant_odometry_variance;
-  double constant_odometry_variance;
+  double constant_odometry_translational_variance;
+  double constant_odometry_rotational_variance;
   bool use_horizontal_laser;
   bool use_horizontal_multi_echo_laser;
   double horizontal_laser_min_range;
@@ -138,8 +139,10 @@ NodeOptions CreateNodeOptions(
       lua_parameter_dictionary->GetBool("use_odometry_data");
   options.use_constant_odometry_variance =
       lua_parameter_dictionary->GetBool("use_constant_odometry_variance");
-  options.constant_odometry_variance =
-      lua_parameter_dictionary->GetDouble("constant_odometry_variance");
+  options.constant_odometry_translational_variance =
+      lua_parameter_dictionary->GetDouble("constant_odometry_translational_variance");
+  options.constant_odometry_rotational_variance =
+      lua_parameter_dictionary->GetDouble("constant_odometry_rotational_variance");
   options.use_horizontal_laser =
       lua_parameter_dictionary->GetBool("use_horizontal_laser");
   options.use_horizontal_multi_echo_laser =
@@ -283,13 +286,20 @@ Rigid3d Node::LookupToTrackingTransformOrThrow(const carto::common::Time time,
 void Node::AddOdometry(int64 timestamp, const string& frame_id,
                        const Rigid3d& pose, const PoseCovariance& covariance) {
   const carto::common::Time time = carto::common::FromUniversal(timestamp);
-  PoseCovariance maybe_constant_variance = covariance;
+  PoseCovariance applied_covariance = covariance;
   if (options_.use_constant_odometry_variance) {
-    maybe_constant_variance =
-        PoseCovariance::Identity() * options_.constant_odometry_variance;
+    const Eigen::Matrix3d translational =
+        Eigen::Matrix3d::Identity() *
+        options_.constant_odometry_translational_variance;
+    const Eigen::Matrix3d rotational =
+        Eigen::Matrix3d::Identity() *
+        options_.constant_odometry_rotational_variance;
+    applied_covariance <<  //
+        translational, Eigen::Matrix3d::Zero(),  //
+        Eigen::Matrix3d::Zero(), rotational;
   }
   map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
-      ->AddOdometerPose(time, pose, maybe_constant_variance);
+      ->AddOdometerPose(time, pose, applied_covariance);
 }
 
 void Node::AddImu(const int64 timestamp, const string& frame_id,
