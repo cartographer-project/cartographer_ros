@@ -108,6 +108,8 @@ struct NodeOptions {
   bool publish_occupancy_grid;
   bool provide_odom_frame;
   bool use_odometry_data;
+  bool use_constant_odometry_variance;
+  double constant_odometry_variance;
   bool use_horizontal_laser;
   bool use_horizontal_multi_echo_laser;
   double horizontal_laser_min_range;
@@ -134,6 +136,10 @@ NodeOptions CreateNodeOptions(
       lua_parameter_dictionary->GetBool("provide_odom_frame");
   options.use_odometry_data =
       lua_parameter_dictionary->GetBool("use_odometry_data");
+  options.use_constant_odometry_variance =
+      lua_parameter_dictionary->GetBool("use_constant_odometry_variance");
+  options.constant_odometry_variance =
+      lua_parameter_dictionary->GetDouble("constant_odometry_variance");
   options.use_horizontal_laser =
       lua_parameter_dictionary->GetBool("use_horizontal_laser");
   options.use_horizontal_multi_echo_laser =
@@ -277,8 +283,13 @@ Rigid3d Node::LookupToTrackingTransformOrThrow(const carto::common::Time time,
 void Node::AddOdometry(int64 timestamp, const string& frame_id,
                        const Rigid3d& pose, const PoseCovariance& covariance) {
   const carto::common::Time time = carto::common::FromUniversal(timestamp);
+  PoseCovariance maybe_constant_variance = covariance;
+  if (options_.use_constant_odometry_variance) {
+    maybe_constant_variance =
+        PoseCovariance::Identity() * options_.constant_odometry_variance;
+  }
   map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
-      ->AddOdometerPose(time, pose, covariance);
+      ->AddOdometerPose(time, pose, maybe_constant_variance);
 }
 
 void Node::AddImu(const int64 timestamp, const string& frame_id,
