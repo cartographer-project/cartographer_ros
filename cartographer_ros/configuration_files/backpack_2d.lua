@@ -18,6 +18,7 @@ options = {
   map_builder = MAP_BUILDER,
   map_frame = "map",
   tracking_frame = "base_link",
+  published_frame = "base_link",
   odom_frame = "odom",
   provide_odom_frame = true,
   use_odometry_data = false,

@@ -104,6 +104,7 @@ struct NodeOptions {
   carto::mapping::proto::MapBuilderOptions map_builder_options;
   string map_frame;
   string tracking_frame;
+  string published_frame;
   string odom_frame;
   bool publish_occupancy_grid;
   bool provide_odom_frame;
@@ -130,6 +131,8 @@ NodeOptions CreateNodeOptions(
   options.map_frame = lua_parameter_dictionary->GetString("map_frame");
   options.tracking_frame =
       lua_parameter_dictionary->GetString("tracking_frame");
+  options.published_frame =
+      lua_parameter_dictionary->GetString("published_frame");
   options.odom_frame = lua_parameter_dictionary->GetString("odom_frame");
   options.publish_occupancy_grid =
       lua_parameter_dictionary->GetBool("publish_occupancy_grid");
@@ -140,9 +143,11 @@ NodeOptions CreateNodeOptions(
   options.use_constant_odometry_variance =
       lua_parameter_dictionary->GetBool("use_constant_odometry_variance");
   options.constant_odometry_translational_variance =
-      lua_parameter_dictionary->GetDouble("constant_odometry_translational_variance");
+      lua_parameter_dictionary->GetDouble(
+          "constant_odometry_translational_variance");
   options.constant_odometry_rotational_variance =
-      lua_parameter_dictionary->GetDouble("constant_odometry_rotational_variance");
+      lua_parameter_dictionary->GetDouble(
+          "constant_odometry_rotational_variance");
   options.use_horizontal_laser =
       lua_parameter_dictionary->GetBool("use_horizontal_laser");
   options.use_horizontal_multi_echo_laser =
@@ -293,9 +298,11 @@ void Node::AddOdometry(int64 timestamp, const string& frame_id,
     const Eigen::Matrix3d rotational =
         Eigen::Matrix3d::Identity() *
         options_.constant_odometry_rotational_variance;
-    applied_covariance <<  //
-        translational, Eigen::Matrix3d::Zero(),  //
+    // clang-format off
+    applied_covariance <<
+        translational, Eigen::Matrix3d::Zero(),
         Eigen::Matrix3d::Zero(), rotational;
+    // clang-format on
   }
   map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
       ->AddOdometerPose(time, pose, applied_covariance);
@@ -556,37 +563,38 @@ void Node::PublishPoseAndScanMatchedPointCloud(
 
   geometry_msgs::TransformStamped stamped_transform;
   stamped_transform.header.stamp = ToRos(last_pose_estimate.time);
-  stamped_transform.header.frame_id = options_.map_frame;
-  stamped_transform.child_frame_id = options_.odom_frame;
 
-  if (options_.provide_odom_frame) {
-    stamped_transform.transform = ToGeometryMsgTransform(local_to_map);
-    tf_broadcaster_.sendTransform(stamped_transform);
-
-    stamped_transform.header.frame_id = options_.odom_frame;
-    stamped_transform.child_frame_id = options_.tracking_frame;
-    stamped_transform.transform = ToGeometryMsgTransform(tracking_to_local);
-    tf_broadcaster_.sendTransform(stamped_transform);
-  } else {
-    try {
-      const Rigid3d tracking_to_odom =
-          LookupToTrackingTransformOrThrow(last_pose_estimate.time,
-                                           options_.odom_frame)
-              .inverse();
-      const Rigid3d odom_to_map = tracking_to_map * tracking_to_odom.inverse();
-      stamped_transform.transform = ToGeometryMsgTransform(odom_to_map);
+  try {
+    const Rigid3d published_to_tracking = LookupToTrackingTransformOrThrow(
+        last_pose_estimate.time, options_.published_frame);
+    if (options_.provide_odom_frame) {
+      stamped_transform.header.frame_id = options_.map_frame;
+      stamped_transform.child_frame_id = options_.odom_frame;
+      stamped_transform.transform = ToGeometryMsgTransform(local_to_map);
       tf_broadcaster_.sendTransform(stamped_transform);
-    } catch (const tf2::TransformException& ex) {
-      LOG(WARNING) << "Cannot transform " << options_.tracking_frame << " -> "
-                   << options_.odom_frame << ": " << ex.what();
+
+      stamped_transform.header.frame_id = options_.odom_frame;
+      stamped_transform.child_frame_id = options_.published_frame;
+      stamped_transform.transform =
+          ToGeometryMsgTransform(tracking_to_local * published_to_tracking);
+      tf_broadcaster_.sendTransform(stamped_transform);
+    } else {
+      stamped_transform.header.frame_id = options_.map_frame;
+      stamped_transform.child_frame_id = options_.published_frame;
+      stamped_transform.transform =
+          ToGeometryMsgTransform(tracking_to_map * published_to_tracking);
+      tf_broadcaster_.sendTransform(stamped_transform);
     }
+  } catch (const tf2::TransformException& ex) {
+    LOG(WARNING) << "Cannot transform " << options_.published_frame << " -> "
+                 << options_.tracking_frame << ": " << ex.what();
   }
 
   scan_matched_point_cloud_publisher_.publish(ToPointCloud2Message(
-      carto::common::ToUniversal(last_pose_estimate.time), options_.tracking_frame,
-      carto::sensor::TransformPointCloud(
-          last_pose_estimate.point_cloud,
-          tracking_to_local.inverse().cast<float>())));
+      carto::common::ToUniversal(last_pose_estimate.time),
+      options_.tracking_frame, carto::sensor::TransformPointCloud(
+                                   last_pose_estimate.point_cloud,
+                                   tracking_to_local.inverse().cast<float>())));
 }
 
 void Node::SpinOccupancyGridThreadForever() {
@@ -792,5 +800,4 @@ int main(int argc, char** argv) {
   ::cartographer_ros::ScopedRosLogSink ros_log_sink;
   ::cartographer_ros::Run();
   ::ros::shutdown();
-  return 0;
 }
