@@ -48,7 +48,7 @@ constexpr char kDefaultTrackingFrame[] = "base_link";
 SubmapsDisplay::SubmapsDisplay() : tf_listener_(tf_buffer_) {
   submap_query_service_property_ = new ::rviz::StringProperty(
       "Submap query service",
-      QString("/cartographer/") + kSubmapQueryServiceName,
+      QString("/") + kSubmapQueryServiceName,
       "Submap query service to connect to.", this, SLOT(Reset()));
   map_frame_property_ = new ::rviz::StringProperty(
       "Map frame", kDefaultMapFrame, "Map frame, used for fading out submaps.",
