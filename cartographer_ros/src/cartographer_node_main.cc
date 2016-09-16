@@ -92,13 +92,13 @@ constexpr int kSubscriberQueueSize = 150;
 constexpr double kSensorDataRatesLoggingPeriodSeconds = 15.;
 
 // Unique default topic names. Expected to be remapped as needed.
-constexpr char kLaserScanTopic[] = "/scan";
-constexpr char kMultiEchoLaserScanTopic[] = "/echoes";
-constexpr char kPointCloud2Topic[] = "/points2";
-constexpr char kImuTopic[] = "/imu";
-constexpr char kOdometryTopic[] = "/odom";
-constexpr char kOccupancyGridTopic[] = "/map";
-constexpr char kScanMatchedPointCloudTopic[] = "/scan_matched_points2";
+constexpr char kLaserScanTopic[] = "scan";
+constexpr char kMultiEchoLaserScanTopic[] = "echoes";
+constexpr char kPointCloud2Topic[] = "points2";
+constexpr char kImuTopic[] = "imu";
+constexpr char kOdometryTopic[] = "odom";
+constexpr char kOccupancyGridTopic[] = "map";
+constexpr char kScanMatchedPointCloudTopic[] = "scan_matched_points2";
 
 struct NodeOptions {
   carto::mapping::proto::MapBuilderOptions map_builder_options;
@@ -262,7 +262,6 @@ Node::Node(const NodeOptions& options)
     : options_(options),
       map_builder_(options.map_builder_options, &constant_data_),
       sensor_data_producer_(kTrajectoryBuilderId, &sensor_collator_),
-      node_handle_("~"),
       tf_buffer_(::ros::Duration(1000)),
       tf_(tf_buffer_) {}
 
