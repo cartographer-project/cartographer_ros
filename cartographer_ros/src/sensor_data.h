@@ -30,7 +30,6 @@ namespace cartographer_ros {
 enum class SensorType { kImu, kLaserScan, kLaserFan3D, kOdometry };
 struct SensorData {
   struct Odometry {
-    string child_frame_id;
     ::cartographer::transform::Rigid3d pose;
     ::cartographer::kalman_filter::PoseCovariance covariance;
   };

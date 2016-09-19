@@ -306,9 +306,9 @@ void Node::AddOdometry(const int64 timestamp, const string& frame_id,
   }
   try {
     const Rigid3d sensor_to_tracking =
-        LookupToTrackingTransformOrThrow(time, odometry.child_frame_id);
+        LookupToTrackingTransformOrThrow(time, frame_id);
     map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
-        ->AddOdometerPose(time, sensor_to_tracking * odometry.pose,
+        ->AddOdometerPose(time, odometry.pose * sensor_to_tracking.inverse(),
                           applied_covariance);
   } catch (const tf2::TransformException& ex) {
     LOG(WARNING) << "Cannot transform " << frame_id << " -> "
@@ -324,7 +324,7 @@ void Node::AddImu(const int64 timestamp, const string& frame_id,
         LookupToTrackingTransformOrThrow(time, frame_id);
     CHECK(sensor_to_tracking.translation().norm() < 1e-5)
         << "The IMU frame must be colocated with the tracking frame. "
-           "Transforming linear accelaration into the tracking frame will "
+           "Transforming linear acceleration into the tracking frame will "
            "otherwise be imprecise.";
     map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
         ->AddImuData(time,

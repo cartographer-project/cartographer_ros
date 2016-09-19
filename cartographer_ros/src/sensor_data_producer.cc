@@ -29,8 +29,8 @@ SensorDataProducer::SensorDataProducer(
 void SensorDataProducer::AddOdometryMessage(
     const string& topic, const nav_msgs::Odometry::ConstPtr& msg) {
   auto sensor_data = ::cartographer::common::make_unique<SensorData>(
-      msg->header.frame_id,
-      SensorData::Odometry{msg->child_frame_id, ToRigid3d(msg->pose.pose),
+      msg->child_frame_id,
+      SensorData::Odometry{ToRigid3d(msg->pose.pose),
                            ToPoseCovariance(msg->pose.covariance)});
   sensor_collator_->AddSensorData(
       trajectory_id_,
