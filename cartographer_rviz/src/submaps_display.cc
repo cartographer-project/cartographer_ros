@@ -29,8 +29,7 @@
 #include <rviz/frame_manager.h>
 #include <rviz/properties/string_property.h>
 
-namespace cartographer_ros {
-namespace rviz {
+namespace cartographer_rviz {
 
 namespace {
 
@@ -148,7 +147,6 @@ void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
   }
 }
 
-}  // namespace rviz
-}  // namespace cartographer_ros
+}  // namespace cartographer_rviz
 
-PLUGINLIB_EXPORT_CLASS(cartographer_ros::rviz::SubmapsDisplay, ::rviz::Display)
+PLUGINLIB_EXPORT_CLASS(cartographer_rviz::SubmapsDisplay, ::rviz::Display)

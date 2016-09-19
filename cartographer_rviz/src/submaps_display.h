@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_ROS_GOOGLE_CARTOGRAPHER_SRC_SUBMAPS_DISPLAY_H_
-#define CARTOGRAPHER_ROS_GOOGLE_CARTOGRAPHER_SRC_SUBMAPS_DISPLAY_H_
+#ifndef CARTOGRAPHER_RVIZ_SRC_SUBMAPS_DISPLAY_H_
+#define CARTOGRAPHER_RVIZ_SRC_SUBMAPS_DISPLAY_H_
 
 #include <cartographer/common/mutex.h>
 #include <cartographer/common/port.h>
@@ -29,8 +29,7 @@
 
 #include "drawable_submap.h"
 
-namespace cartographer_ros {
-namespace rviz {
+namespace cartographer_rviz {
 
 // RViz plugin used for displaying maps which are represented by a collection of
 // submaps.
@@ -72,7 +71,6 @@ class SubmapsDisplay
   ::cartographer::common::Mutex mutex_;
 };
 
-}  // namespace rviz
-}  // namespace cartographer_ros
+}  // namespace cartographer_rviz
 
-#endif  // CARTOGRAPHER_ROS_GOOGLE_CARTOGRAPHER_SRC_SUBMAPS_DISPLAY_H_
+#endif  // CARTOGRAPHER_RVIZ_SRC_SUBMAPS_DISPLAY_H_

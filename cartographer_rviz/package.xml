@@ -36,14 +36,15 @@
 
   <depend>cartographer_ros_msgs</depend>
 
-  <depend>roscpp</depend>
-  <depend>roslib</depend>
-  <depend>rviz</depend>
-  <depend>message_runtime</depend>
-  <depend>qtbase5-dev</depend>
+  <depend>eigen_conversions</depend>
   <depend>libqt5-core</depend>
   <depend>libqt5-gui</depend>
   <depend>libqt5-widgets</depend>
+  <depend>message_runtime</depend>
+  <depend>qtbase5-dev</depend>
+  <depend>roscpp</depend>
+  <depend>roslib</depend>
+  <depend>rviz</depend>
 
   <export>
       <rviz plugin="${prefix}/rviz_plugin_description.xml" />

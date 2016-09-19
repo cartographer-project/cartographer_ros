@@ -18,6 +18,7 @@ project(cartographer_rviz)
 
 set(PACKAGE_DEPENDENCIES
   cartographer_ros_msgs
+  eigen_conversions
   roscpp
   rviz
 )
@@ -89,15 +90,13 @@ add_dependencies(cartographer_rviz_submaps_visualization
   ${catkin_EXPORTED_TARGETS}
 )
 
-install(TARGETS
-  cartographer_rviz_submaps_visualization
+install(TARGETS cartographer_rviz_submaps_visualization
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-install(FILES
-  rviz_plugin_description.xml
+install(FILES rviz_plugin_description.xml
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
