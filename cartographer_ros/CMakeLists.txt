@@ -105,13 +105,11 @@ catkin_add_gtest(time_conversion_test
   src/time_conversion.h
   src/time_conversion.cc
 )
-
 target_link_libraries(time_conversion_test
   ${GTEST_BOTH_LIBRARIES}
   ${CARTOGRAPHER_LIBRARIES}
   ${catkin_LIBRARIES}
 )
-
 add_dependencies(time_conversion_test
   ${catkin_EXPORTED_TARGETS}
 )
@@ -126,4 +124,10 @@ install(DIRECTORY urdf/
 
 install(DIRECTORY configuration_files/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/configuration_files/
+)
+
+install(TARGETS cartographer_node
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
