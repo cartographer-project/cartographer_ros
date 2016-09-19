@@ -250,7 +250,6 @@ class Node {
   tf2_ros::TransformBroadcaster tf_broadcaster_;
 
   ::ros::Publisher occupancy_grid_publisher_;
-  carto::mapping_2d::proto::SubmapsOptions submaps_options_;
   std::thread occupancy_grid_thread_;
   bool terminating_ = false GUARDED_BY(mutex_);
 
@@ -611,12 +610,15 @@ void Node::SpinOccupancyGridThreadForever() {
       std::this_thread::sleep_for(carto::common::FromMilliseconds(1000));
       continue;
     }
+    const auto& submaps_options =
+        options_.map_builder_options.trajectory_builder_2d_options()
+            .submaps_options();
     const carto::mapping_2d::MapLimits map_limits =
         carto::mapping_2d::MapLimits::ComputeMapLimits(
-            submaps_options_.resolution(), trajectory_nodes);
+            submaps_options.resolution(), trajectory_nodes);
     carto::mapping_2d::ProbabilityGrid probability_grid(map_limits);
     carto::mapping_2d::LaserFanInserter laser_fan_inserter(
-        submaps_options_.laser_fan_inserter_options());
+        submaps_options.laser_fan_inserter_options());
     for (const auto& node : trajectory_nodes) {
       CHECK(node.constant_data->laser_fan_3d.returns.empty());  // No 3D yet.
       laser_fan_inserter.Insert(
