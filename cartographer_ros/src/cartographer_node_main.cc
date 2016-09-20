@@ -204,8 +204,8 @@ class Node {
   void HandleSensorData(int64 timestamp,
                         std::unique_ptr<SensorData> sensor_data);
 
-  void AddOdometry(int64 timestamp, const string& frame_id, const Rigid3d& pose,
-                   const PoseCovariance& covariance);
+  void AddOdometry(int64 timestamp, const string& frame_id,
+                   const SensorData::Odometry& odometry);
   void AddImu(int64 timestamp, const string& frame_id, const proto::Imu& imu);
   void AddHorizontalLaserFan(int64 timestamp, const string& frame_id,
                              const proto::LaserScan& laser_scan);
@@ -286,10 +286,10 @@ Rigid3d Node::LookupToTrackingTransformOrThrow(const carto::common::Time time,
       ::ros::Duration(options_.lookup_transform_timeout_sec)));
 }
 
-void Node::AddOdometry(int64 timestamp, const string& frame_id,
-                       const Rigid3d& pose, const PoseCovariance& covariance) {
+void Node::AddOdometry(const int64 timestamp, const string& frame_id,
+                       const SensorData::Odometry& odometry) {
   const carto::common::Time time = carto::common::FromUniversal(timestamp);
-  PoseCovariance applied_covariance = covariance;
+  PoseCovariance applied_covariance = odometry.covariance;
   if (options_.use_constant_odometry_variance) {
     const Eigen::Matrix3d translational =
         Eigen::Matrix3d::Identity() *
@@ -303,8 +303,16 @@ void Node::AddOdometry(int64 timestamp, const string& frame_id,
         Eigen::Matrix3d::Zero(), rotational;
     // clang-format on
   }
-  map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
-      ->AddOdometerPose(time, pose, applied_covariance);
+  try {
+    const Rigid3d sensor_to_tracking =
+        LookupToTrackingTransformOrThrow(time, frame_id);
+    map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
+        ->AddOdometerPose(time, odometry.pose * sensor_to_tracking.inverse(),
+                          applied_covariance);
+  } catch (const tf2::TransformException& ex) {
+    LOG(WARNING) << "Cannot transform " << frame_id << " -> "
+                 << options_.tracking_frame << ": " << ex.what();
+  }
 }
 
 void Node::AddImu(const int64 timestamp, const string& frame_id,
@@ -315,7 +323,7 @@ void Node::AddImu(const int64 timestamp, const string& frame_id,
         LookupToTrackingTransformOrThrow(time, frame_id);
     CHECK(sensor_to_tracking.translation().norm() < 1e-5)
         << "The IMU frame must be colocated with the tracking frame. "
-           "Transforming linear accelaration into the tracking frame will "
+           "Transforming linear acceleration into the tracking frame will "
            "otherwise be imprecise.";
     map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
         ->AddImuData(time,
@@ -328,6 +336,7 @@ void Node::AddImu(const int64 timestamp, const string& frame_id,
                  << options_.tracking_frame << ": " << ex.what();
   }
 }
+
 void Node::AddHorizontalLaserFan(const int64 timestamp, const string& frame_id,
                                  const proto::LaserScan& laser_scan) {
   const carto::common::Time time = carto::common::FromUniversal(timestamp);
@@ -713,8 +722,7 @@ void Node::HandleSensorData(const int64 timestamp,
       return;
 
     case SensorType::kOdometry:
-      AddOdometry(timestamp, sensor_data->frame_id, sensor_data->odometry.pose,
-                  sensor_data->odometry.covariance);
+      AddOdometry(timestamp, sensor_data->frame_id, sensor_data->odometry);
       return;
   }
   LOG(FATAL);
