@@ -34,6 +34,7 @@
 
   <build_depend>g++-static</build_depend>
 
+  <depend>cartographer</depend>
   <depend>cartographer_ros_msgs</depend>
 
   <depend>eigen_conversions</depend>

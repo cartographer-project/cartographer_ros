@@ -92,8 +92,8 @@ add_executable(cartographer_node
 )
 target_link_libraries(cartographer_node
   ${CARTOGRAPHER_LIBRARIES}
-  ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
+  ${catkin_LIBRARIES}
   gflags  # TODO(whess): CMake-ify?
 )
 add_dependencies(cartographer_node
@@ -106,8 +106,8 @@ catkin_add_gtest(time_conversion_test
   src/time_conversion.cc
 )
 target_link_libraries(time_conversion_test
-  ${GTEST_BOTH_LIBRARIES}
   ${CARTOGRAPHER_LIBRARIES}
+  ${GTEST_BOTH_LIBRARIES}
   ${catkin_LIBRARIES}
 )
 add_dependencies(time_conversion_test

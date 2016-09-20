@@ -50,6 +50,10 @@ catkin_package(
     ${PACKAGE_DEPENDENCIES}
 )
 
+find_package(cartographer REQUIRED)
+include_directories(${CARTOGRAPHER_INCLUDE_DIRS})
+link_directories(${CARTOGRAPHER_LIBRARY_DIRS})
+
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 
@@ -82,9 +86,10 @@ add_library(cartographer_rviz_submaps_visualization
 )
 target_link_libraries(cartographer_rviz_submaps_visualization
   ${Boost_LIBRARIES}
-  ${catkin_LIBRARIES}
+  ${CARTOGRAPHER_LIBRARIES}
   ${QT_LIBRARIES}
   ${ZLIB_LIBRARIES}
+  ${catkin_LIBRARIES}
 )
 add_dependencies(cartographer_rviz_submaps_visualization
   ${catkin_EXPORTED_TARGETS}
