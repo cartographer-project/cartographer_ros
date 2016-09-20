@@ -30,8 +30,7 @@
 #include <sstream>
 #include <string>
 
-namespace cartographer_ros {
-namespace rviz {
+namespace cartographer_rviz {
 
 namespace {
 
@@ -237,5 +236,4 @@ float DrawableSubmap::UpdateAlpha(const float target_alpha) {
   return current_alpha_;
 }
 
-}  // namespace rviz
-}  // namespace cartographer_ros
+}  // namespace cartographer_rviz

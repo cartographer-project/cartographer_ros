@@ -64,7 +64,6 @@
 #include "tf2_ros/transform_listener.h"
 
 #include "msg_conversion.h"
-#include "node_constants.h"
 #include "sensor_data.h"
 #include "sensor_data_producer.h"
 #include "time_conversion.h"
@@ -99,6 +98,8 @@ constexpr char kImuTopic[] = "imu";
 constexpr char kOdometryTopic[] = "odom";
 constexpr char kOccupancyGridTopic[] = "map";
 constexpr char kScanMatchedPointCloudTopic[] = "scan_matched_points2";
+constexpr char kSubmapListTopic[] = "submap_list";
+constexpr char kSubmapQueryServiceName[] = "submap_query";
 
 struct NodeOptions {
   carto::mapping::proto::MapBuilderOptions map_builder_options;

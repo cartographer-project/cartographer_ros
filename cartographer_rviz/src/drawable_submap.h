@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_ROS_GOOGLE_CARTOGRAPHER_SRC_DRAWABLE_SUBMAP_H_
-#define CARTOGRAPHER_ROS_GOOGLE_CARTOGRAPHER_SRC_DRAWABLE_SUBMAP_H_
+#ifndef CARTOGRAPHER_RVIZ_SRC_DRAWABLE_SUBMAP_H_
+#define CARTOGRAPHER_RVIZ_SRC_DRAWABLE_SUBMAP_H_
 
 #include <OgreManualObject.h>
 #include <OgreMaterial.h>
@@ -35,8 +35,7 @@
 
 #include <future>
 
-namespace cartographer_ros {
-namespace rviz {
+namespace cartographer_rviz {
 
 // Contains all the information needed to render a submap onto the final
 // texture representing the whole map.
@@ -103,7 +102,6 @@ class DrawableSubmap : public QObject {
   float current_alpha_ = 0.f;
 };
 
-}  // namespace rviz
-}  // namespace cartographer_ros
+}  // namespace cartographer_rviz
 
-#endif  // CARTOGRAPHER_ROS_GOOGLE_CARTOGRAPHER_SRC_DRAWABLE_SUBMAP_H_
+#endif  // CARTOGRAPHER_RVIZ_SRC_DRAWABLE_SUBMAP_H_

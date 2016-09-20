@@ -16,12 +16,12 @@
 -->
 
 <package format="2">
-  <name>cartographer_ros</name>
+  <name>cartographer_rviz</name>
   <version>1.0.0</version>
   <description>
     Cartographer is a system that provides real-time simultaneous localization
     and mapping SLAM across multiple platforms and sensor configurations. This
-    package provides Cartographer's ROS integration.
+    package provides Cartographer's RViz integration.
   </description>
   <maintainer email="google-cartographer@googlegroups.com">
     The Cartographer Authors
@@ -33,31 +33,19 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <build_depend>g++-static</build_depend>
-  <build_depend>google-mock</build_depend>
-  <build_depend>python-sphinx</build_depend>
-  <build_depend>protobuf-dev</build_depend>
 
   <depend>cartographer</depend>
   <depend>cartographer_ros_msgs</depend>
 
-  <depend>libgflags-dev</depend>
-  <depend>libgoogle-glog-dev</depend>
-  <depend>rosbag</depend>
+  <depend>eigen_conversions</depend>
+  <depend>libqt5-core</depend>
+  <depend>libqt5-gui</depend>
+  <depend>libqt5-widgets</depend>
+  <depend>message_runtime</depend>
+  <depend>qtbase5-dev</depend>
   <depend>roscpp</depend>
   <depend>roslib</depend>
-  <depend>sensor_msgs</depend>
-  <depend>std_msgs</depend>
-  <depend>tf2</depend>
-  <depend>tf2_eigen</depend>
-  <depend>tf2_ros</depend>
-  <depend>geometry_msgs</depend>
-  <depend>nav_msgs</depend>
-  <depend>libpcl-all-dev</depend>
-  <depend>pcl_conversions</depend>
-  <depend>eigen_conversions</depend>
-  <depend>message_runtime</depend>
-
-  <test_depend>rosunit</test_depend>
+  <depend>rviz</depend>
 
   <export>
       <rviz plugin="${prefix}/rviz_plugin_description.xml" />

@@ -14,18 +14,13 @@
 
 cmake_minimum_required(VERSION 2.8)
 
-project(cartographer_ros)
+project(cartographer_rviz)
 
 set(PACKAGE_DEPENDENCIES
-  eigen_conversions
-  geometry_msgs
   cartographer_ros_msgs
+  eigen_conversions
   roscpp
-  sensor_msgs
-  nav_msgs
-  tf2
-  tf2_eigen
-  tf2_ros
+  rviz
 )
 
 set(CMAKE_CXX_FLAGS "-pthread -std=c++11 -Wreorder")
@@ -55,20 +50,24 @@ catkin_package(
     ${PACKAGE_DEPENDENCIES}
 )
 
-find_package(PCL REQUIRED COMPONENTS common io)
-include_directories(${PCL_INCLUDE_DIRS})
-link_directories(${PCL_LIBRARY_DIRS})
-add_definitions(${PCL_DEFINITIONS})
-
-find_package(Eigen3 REQUIRED)
-include_directories(${EIGEN_INCLUDE_DIRS})
-
 find_package(cartographer REQUIRED)
 include_directories(${CARTOGRAPHER_INCLUDE_DIRS})
 link_directories(${CARTOGRAPHER_LIBRARY_DIRS})
 
 find_package(ZLIB REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
+
+set(CMAKE_AUTOMOC ON)
+if(rviz_QT_VERSION VERSION_LESS "5")
+  message(STATUS "Using Qt4 based on the rviz_QT_VERSION: ${rviz_QT_VERSION}")
+  find_package(Qt4 ${rviz_QT_VERSION} EXACT REQUIRED QtCore QtGui)
+  include(${QT_USE_FILE})
+else()
+  message(STATUS "Using Qt5 based on the rviz_QT_VERSION: ${rviz_QT_VERSION}")
+  find_package(Qt5 ${rviz_QT_VERSION} EXACT REQUIRED Core Widgets)
+  set(QT_LIBRARIES Qt5::Widgets)
+endif()
+add_definitions(-DQT_NO_KEYWORDS)
 
 find_package(Boost REQUIRED
  COMPONENTS
@@ -79,55 +78,33 @@ add_definitions(${BOOST_DEFINITIONS})
 include_directories(${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
 
-add_executable(cartographer_node
-  src/cartographer_node_main.cc
-  src/msg_conversion.cc
-  src/msg_conversion.h
-  src/sensor_data.cc
-  src/sensor_data.h
-  src/sensor_data_producer.cc
-  src/sensor_data_producer.h
-  src/time_conversion.cc
-  src/time_conversion.h
+add_library(cartographer_rviz_submaps_visualization
+  src/drawable_submap.cc
+  src/drawable_submap.h
+  src/submaps_display.cc
+  src/submaps_display.h
 )
-target_link_libraries(cartographer_node
+target_link_libraries(cartographer_rviz_submaps_visualization
+  ${Boost_LIBRARIES}
   ${CARTOGRAPHER_LIBRARIES}
-  ${PCL_LIBRARIES}
+  ${QT_LIBRARIES}
+  ${ZLIB_LIBRARIES}
   ${catkin_LIBRARIES}
-  gflags  # TODO(whess): CMake-ify?
 )
-add_dependencies(cartographer_node
+add_dependencies(cartographer_rviz_submaps_visualization
   ${catkin_EXPORTED_TARGETS}
 )
 
-catkin_add_gtest(time_conversion_test
-  src/time_conversion_test.cc
-  src/time_conversion.h
-  src/time_conversion.cc
-)
-target_link_libraries(time_conversion_test
-  ${CARTOGRAPHER_LIBRARIES}
-  ${GTEST_BOTH_LIBRARIES}
-  ${catkin_LIBRARIES}
-)
-add_dependencies(time_conversion_test
-  ${catkin_EXPORTED_TARGETS}
-)
-
-install(DIRECTORY launch/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch/
-)
-
-install(DIRECTORY urdf/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/urdf/
-)
-
-install(DIRECTORY configuration_files/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/configuration_files/
-)
-
-install(TARGETS cartographer_node
+install(TARGETS cartographer_rviz_submaps_visualization
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(FILES rviz_plugin_description.xml
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+install(DIRECTORY ogre_media/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/ogre_media
 )

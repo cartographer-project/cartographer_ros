@@ -29,10 +29,7 @@
 #include <rviz/frame_manager.h>
 #include <rviz/properties/string_property.h>
 
-#include "node_constants.h"
-
-namespace cartographer_ros {
-namespace rviz {
+namespace cartographer_rviz {
 
 namespace {
 
@@ -42,12 +39,13 @@ constexpr char kGlsl120Directory[] = "/glsl120";
 constexpr char kScriptsDirectory[] = "/scripts";
 constexpr char kDefaultMapFrame[] = "map";
 constexpr char kDefaultTrackingFrame[] = "base_link";
+constexpr char kDefaultSubmapQueryServiceName[] = "/submap_query";
 
 }  // namespace
 
 SubmapsDisplay::SubmapsDisplay() : tf_listener_(tf_buffer_) {
   submap_query_service_property_ = new ::rviz::StringProperty(
-      "Submap query service", QString("/") + kSubmapQueryServiceName,
+      "Submap query service", kDefaultSubmapQueryServiceName,
       "Submap query service to connect to.", this, SLOT(Reset()));
   map_frame_property_ = new ::rviz::StringProperty(
       "Map frame", kDefaultMapFrame, "Map frame, used for fading out submaps.",
@@ -149,7 +147,6 @@ void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
   }
 }
 
-}  // namespace rviz
-}  // namespace cartographer_ros
+}  // namespace cartographer_rviz
 
-PLUGINLIB_EXPORT_CLASS(cartographer_ros::rviz::SubmapsDisplay, ::rviz::Display)
+PLUGINLIB_EXPORT_CLASS(cartographer_rviz::SubmapsDisplay, ::rviz::Display)

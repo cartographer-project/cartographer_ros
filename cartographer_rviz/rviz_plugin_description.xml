@@ -16,7 +16,7 @@
 
 <library path="lib/libcartographer_rviz_submaps_visualization">
   <class name="Submaps"
-         type="cartographer_ros::rviz::SubmapsDisplay"
+         type="cartographer_rviz::SubmapsDisplay"
          base_class_type="rviz::Display">
     <description>
       Displays submaps as a unified map in RViz.
