@@ -53,10 +53,7 @@ SensorData::SensorData(const string& frame_id, proto::LaserFan3D laser_fan_3d)
       frame_id(CheckNoLeadingSlash(frame_id)),
       laser_fan_3d(laser_fan_3d) {}
 
-SensorData::SensorData(const string& frame_id, const Rigid3d& pose,
-                       const PoseCovariance& covariance)
-    : type(SensorType::kOdometry),
-      frame_id(frame_id),
-      odometry{pose, covariance} {}
+SensorData::SensorData(const string& frame_id, const Odometry& odometry)
+    : type(SensorType::kOdometry), frame_id(frame_id), odometry(odometry) {}
 
 }  // namespace cartorapher_ros

@@ -29,24 +29,24 @@ namespace cartographer_ros {
 // is only used for time ordering sensor data before passing it on.
 enum class SensorType { kImu, kLaserScan, kLaserFan3D, kOdometry };
 struct SensorData {
+  struct Odometry {
+    ::cartographer::transform::Rigid3d pose;
+    ::cartographer::kalman_filter::PoseCovariance covariance;
+  };
+
   SensorData(const string& frame_id, ::cartographer::sensor::proto::Imu imu);
   SensorData(const string& frame_id,
              ::cartographer::sensor::proto::LaserScan laser_scan);
   SensorData(const string& frame_id,
              ::cartographer::sensor::proto::LaserFan3D laser_fan_3d);
-  SensorData(const string& frame_id,
-             const ::cartographer::transform::Rigid3d& pose,
-             const ::cartographer::kalman_filter::PoseCovariance& covariance);
+  SensorData(const string& frame_id, const Odometry& odometry);
 
   SensorType type;
   string frame_id;
   ::cartographer::sensor::proto::Imu imu;
   ::cartographer::sensor::proto::LaserScan laser_scan;
   ::cartographer::sensor::proto::LaserFan3D laser_fan_3d;
-  struct {
-    ::cartographer::transform::Rigid3d pose;
-    ::cartographer::kalman_filter::PoseCovariance covariance;
-  } odometry;
+  Odometry odometry;
 };
 
 }  // namespace cartographer_ros
