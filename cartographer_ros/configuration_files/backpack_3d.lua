@@ -37,16 +37,16 @@ options = {
   pose_publish_period_sec = 5e-3,
 }
 
-options.map_builder.use_trajectory_builder_3d = true
-options.map_builder.sparse_pose_graph.optimize_every_n_scans = 320
-options.map_builder.sparse_pose_graph.constraint_builder.sampling_ratio = 0.03
-options.map_builder.sparse_pose_graph.optimization_problem.ceres_solver_options.max_num_iterations = 10
+MAP_BUILDER.use_trajectory_builder_3d = true
+MAP_BUILDER.sparse_pose_graph.optimize_every_n_scans = 320
+MAP_BUILDER.sparse_pose_graph.constraint_builder.sampling_ratio = 0.03
+MAP_BUILDER.sparse_pose_graph.optimization_problem.ceres_solver_options.max_num_iterations = 10
 -- Reuse the coarser 3D voxel filter to speed up the computation of loop closure
 -- constraints.
-options.map_builder.sparse_pose_graph.constraint_builder.adaptive_voxel_filter = TRAJECTORY_BUILDER_3D.high_resolution_adaptive_voxel_filter
-options.map_builder.sparse_pose_graph.constraint_builder.min_score = 0.62
-options.map_builder.sparse_pose_graph.constraint_builder.log_matches = true
+MAP_BUILDER.sparse_pose_graph.constraint_builder.adaptive_voxel_filter = TRAJECTORY_BUILDER_3D.high_resolution_adaptive_voxel_filter
+MAP_BUILDER.sparse_pose_graph.constraint_builder.min_score = 0.62
+MAP_BUILDER.sparse_pose_graph.constraint_builder.log_matches = true
 
-options.map_builder.trajectory_builder_3d.scans_per_accumulation = 20
+TRAJECTORY_BUILDER_3D.scans_per_accumulation = 20
 
 return options
