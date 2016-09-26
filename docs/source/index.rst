@@ -20,6 +20,8 @@ Cartographer ROS Integration
    :maxdepth: 2
    :hidden:
 
+   options
+
 `Cartographer`_ is a system that provides real-time simultaneous localization
 and mapping `SLAM`_ across multiple platforms and sensor configurations. This
 project provides Cartographer's ROS integration.
