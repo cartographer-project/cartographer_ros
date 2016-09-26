@@ -16,21 +16,23 @@
 Configuration Reference
 =======================
 
-Top-level options of the Cartographer ROS integration:
+Cartographer's ROS integration top-level options, all of which must be specified
+in the Lua configuration file:
 
 map_frame
-  The ROS frame id to use for publishing submaps, the parent frame of poses,
+  The ROS frame ID to use for publishing submaps, the parent frame of poses,
   usually "map".
 
 tracking_frame
-  The ROS frame id of the frame that is tracked by the SLAM algorithm. If an IMU
-  is used it should be at its position, although it might be rotated. A common
-  choice is "base_link".
+  The ROS frame ID of the frame that is tracked by the SLAM algorithm. If an IMU
+  is used, it should be at its position, although it might be rotated. A common
+  choice is "imu_link".
 
 published_frame
-  The ROS frame id to use as the child frame for publishing poses. For example
+  The ROS frame ID to use as the child frame for publishing poses. For example
   "odom" if an "odom" frame is supplied by a different part of the system. In
-  this case the pose of "odom" in the *map_frame* is to be published.
+  this case the pose of "odom" in the *map_frame* will be published. Otherwise,
+  setting it to "base_link" is likely appropriate.
 
 odom_frame
   Only used if *provide_odom_frame* is true. The frame between *published_frame*
@@ -38,14 +40,12 @@ odom_frame
   result. Usually "odom".
 
 provide_odom_frame
-  If enabled, not only the global SLAM result is published to place to
-  *published_frame* inside the *map_frame*, but also the local SLAM result at
-  the *odom_frame* in between the two.
+  If enabled, the local, non-loop-closed, continuous pose will be published as
+  the *odom_frame* in the *map_frame*.
 
 use_odometry_data
-  If enabled, subscribes to `nav_msgs::Odometry`_ under the topic "odom".
-  Odometry must be provided in this case, and the information will be included
-  in SLAM.
+  If enabled, subscribes to `nav_msgs::Odometry`_ on the topic "odom". Odometry
+  must be provided in this case, and the information will be included in SLAM.
 
 use_constant_odometry_variance
   If enabled, the configured variances will be used instead of the ones provided
@@ -61,17 +61,17 @@ constant_odometry_rotational_variance
 
 publish_occupancy_grid
   If enabled, a background thread will continuously compute and publish
-  `nav_msgs::OccupancyGrid`_ messages under the "map" topic. Depending on the
-  size of the map, it can take a few seconds between updates.
+  `nav_msgs::OccupancyGrid`_ messages on the "map" topic. Depending on the size
+  of the map, it can take a few seconds between updates.
 
 use_horizontal_laser
-  If enabled, the node subscribes to  `sensor_msgs::LaserScan`_ under the "scan"
+  If enabled, the node subscribes to `sensor_msgs::LaserScan`_ on the "scan"
   topic. If 2D SLAM is used, either this or *use_horizontal_multi_echo_laser*
   must be enabled.
 
 use_horizontal_multi_echo_laser
-  If enabled, the node subscribes to  `sensor_msgs::MultiEchoLaserScan`_ under
-  the "echoes" topic. If 2D SLAM is used, either this or *use_horizontal_laser*
+  If enabled, the node subscribes to  `sensor_msgs::MultiEchoLaserScan`_ on the
+  "echoes" topic. If 2D SLAM is used, either this or *use_horizontal_laser*
   must be enabled.
 
 horizontal_laser_min_range
@@ -86,12 +86,12 @@ horizontal_laser_missing_echo_ray_length
 
 num_lasers_3d
   Number of 3D lasers to subscribe to. Must be a positive value if and only if
-  using 3D SLAM. Subscribes to `sensor_msgs::PointCloud2`_ under the "points2"
+  using 3D SLAM. Subscribes to `sensor_msgs::PointCloud2`_ on the "points2"
   topic for one laser, or topics "points2_1", "points2_2", etc for multiple
   lasers.
 
 lookup_transform_timeout_sec
-  Timeout in seconds to use for looking up transforms using tf2.
+  Timeout in seconds to use for looking up transforms using `tf2`_.
 
 submap_publish_period_sec
   Interval in seconds at which to publish the submap poses, e.g. 0.3 seconds.
@@ -105,3 +105,4 @@ pose_publish_period_sec
 .. _sensor_msgs::LaserScan: http://docs.ros.org/api/sensor_msgs/html/msg/LaserScan.html
 .. _sensor_msgs::MultiEchoLaserScan: http://docs.ros.org/api/sensor_msgs/html/msg/MultiEchoLaserScan.html
 .. _sensor_msgs::PointCloud2: http://docs.ros.org/api/sensor_msgs/html/msg/PointCloud2.html
+.. _tf2: http://wiki.ros.org/tf2
