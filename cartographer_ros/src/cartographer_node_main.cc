@@ -87,7 +87,8 @@ using carto::kalman_filter::PoseCovariance;
 
 // TODO(hrapp): Support multi trajectory mapping.
 constexpr int64 kTrajectoryBuilderId = 0;
-constexpr int kSubscriberQueueSize = 150;
+constexpr int kInfiniteSubscriberQueueSize = 0;
+constexpr int kLatestOnlyPublisherQueueSize = 1;
 constexpr double kSensorDataRatesLoggingPeriodSeconds = 15.;
 
 // Unique default topic names. Expected to be remapped as needed.
@@ -384,7 +385,7 @@ void Node::Initialize() {
   // For 2D SLAM, subscribe to exactly one horizontal laser.
   if (options_.use_horizontal_laser) {
     horizontal_laser_scan_subscriber_ = node_handle_.subscribe(
-        kLaserScanTopic, kSubscriberQueueSize,
+        kLaserScanTopic, kInfiniteSubscriberQueueSize,
         boost::function<void(const sensor_msgs::LaserScan::ConstPtr&)>(
             [this](const sensor_msgs::LaserScan::ConstPtr& msg) {
               sensor_data_producer_.AddLaserScanMessage(kLaserScanTopic, msg);
@@ -393,7 +394,7 @@ void Node::Initialize() {
   }
   if (options_.use_horizontal_multi_echo_laser) {
     horizontal_laser_scan_subscriber_ = node_handle_.subscribe(
-        kMultiEchoLaserScanTopic, kSubscriberQueueSize,
+        kMultiEchoLaserScanTopic, kInfiniteSubscriberQueueSize,
         boost::function<void(const sensor_msgs::MultiEchoLaserScan::ConstPtr&)>(
             [this](const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
               sensor_data_producer_.AddMultiEchoLaserScanMessage(
@@ -410,7 +411,7 @@ void Node::Initialize() {
         topic += "_" + std::to_string(i + 1);
       }
       laser_subscribers_3d_.push_back(node_handle_.subscribe(
-          topic, kSubscriberQueueSize,
+          topic, kInfiniteSubscriberQueueSize,
           boost::function<void(const sensor_msgs::PointCloud2::ConstPtr&)>(
               [this, topic](const sensor_msgs::PointCloud2::ConstPtr& msg) {
                 sensor_data_producer_.AddPointCloud2Message(topic, msg);
@@ -426,7 +427,7 @@ void Node::Initialize() {
        options_.map_builder_options.trajectory_builder_2d_options()
            .use_imu_data())) {
     imu_subscriber_ = node_handle_.subscribe(
-        kImuTopic, kSubscriberQueueSize,
+        kImuTopic, kInfiniteSubscriberQueueSize,
         boost::function<void(const sensor_msgs::Imu::ConstPtr& msg)>(
             [this](const sensor_msgs::Imu::ConstPtr& msg) {
               sensor_data_producer_.AddImuMessage(kImuTopic, msg);
@@ -436,7 +437,7 @@ void Node::Initialize() {
 
   if (options_.use_odometry_data) {
     odometry_subscriber_ = node_handle_.subscribe(
-        kOdometryTopic, kSubscriberQueueSize,
+        kOdometryTopic, kInfiniteSubscriberQueueSize,
         boost::function<void(const nav_msgs::Odometry::ConstPtr&)>(
             [this](const nav_msgs::Odometry::ConstPtr& msg) {
               sensor_data_producer_.AddOdometryMessage(kOdometryTopic, msg);
@@ -454,21 +455,22 @@ void Node::Initialize() {
 
   submap_list_publisher_ =
       node_handle_.advertise<::cartographer_ros_msgs::SubmapList>(
-          kSubmapListTopic, 10);
+          kSubmapListTopic, kLatestOnlyPublisherQueueSize);
   submap_query_server_ = node_handle_.advertiseService(
       kSubmapQueryServiceName, &Node::HandleSubmapQuery, this);
 
   if (options_.publish_occupancy_grid) {
     occupancy_grid_publisher_ =
-        node_handle_.advertise<::nav_msgs::OccupancyGrid>(kOccupancyGridTopic,
-                                                          1, true);
+        node_handle_.advertise<::nav_msgs::OccupancyGrid>(
+            kOccupancyGridTopic, kLatestOnlyPublisherQueueSize,
+            true /* latched */);
     occupancy_grid_thread_ =
         std::thread(&Node::SpinOccupancyGridThreadForever, this);
   }
 
   scan_matched_point_cloud_publisher_ =
       node_handle_.advertise<sensor_msgs::PointCloud2>(
-          kScanMatchedPointCloudTopic, 10);
+          kScanMatchedPointCloudTopic, kLatestOnlyPublisherQueueSize);
 
   wall_timers_.push_back(node_handle_.createWallTimer(
       ::ros::WallDuration(options_.submap_publish_period_sec),

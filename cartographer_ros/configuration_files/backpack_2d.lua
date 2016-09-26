@@ -37,6 +37,6 @@ options = {
   pose_publish_period_sec = 5e-3,
 }
 
-options.map_builder.use_trajectory_builder_2d = true
+MAP_BUILDER.use_trajectory_builder_2d = true
 
 return options
