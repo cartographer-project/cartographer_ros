@@ -87,7 +87,7 @@ using carto::kalman_filter::PoseCovariance;
 
 // TODO(hrapp): Support multi trajectory mapping.
 constexpr int64 kTrajectoryBuilderId = 0;
-constexpr int kSubscriberQueueSize = 150;
+constexpr int kInfiniteQueueSize = 0;
 constexpr double kSensorDataRatesLoggingPeriodSeconds = 15.;
 
 // Unique default topic names. Expected to be remapped as needed.
@@ -384,7 +384,7 @@ void Node::Initialize() {
   // For 2D SLAM, subscribe to exactly one horizontal laser.
   if (options_.use_horizontal_laser) {
     horizontal_laser_scan_subscriber_ = node_handle_.subscribe(
-        kLaserScanTopic, kSubscriberQueueSize,
+        kLaserScanTopic, kInfiniteQueueSize,
         boost::function<void(const sensor_msgs::LaserScan::ConstPtr&)>(
             [this](const sensor_msgs::LaserScan::ConstPtr& msg) {
               sensor_data_producer_.AddLaserScanMessage(kLaserScanTopic, msg);
@@ -393,7 +393,7 @@ void Node::Initialize() {
   }
   if (options_.use_horizontal_multi_echo_laser) {
     horizontal_laser_scan_subscriber_ = node_handle_.subscribe(
-        kMultiEchoLaserScanTopic, kSubscriberQueueSize,
+        kMultiEchoLaserScanTopic, kInfiniteQueueSize,
         boost::function<void(const sensor_msgs::MultiEchoLaserScan::ConstPtr&)>(
             [this](const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
               sensor_data_producer_.AddMultiEchoLaserScanMessage(
@@ -410,7 +410,7 @@ void Node::Initialize() {
         topic += "_" + std::to_string(i + 1);
       }
       laser_subscribers_3d_.push_back(node_handle_.subscribe(
-          topic, kSubscriberQueueSize,
+          topic, kInfiniteQueueSize,
           boost::function<void(const sensor_msgs::PointCloud2::ConstPtr&)>(
               [this, topic](const sensor_msgs::PointCloud2::ConstPtr& msg) {
                 sensor_data_producer_.AddPointCloud2Message(topic, msg);
@@ -426,7 +426,7 @@ void Node::Initialize() {
        options_.map_builder_options.trajectory_builder_2d_options()
            .use_imu_data())) {
     imu_subscriber_ = node_handle_.subscribe(
-        kImuTopic, kSubscriberQueueSize,
+        kImuTopic, kInfiniteQueueSize,
         boost::function<void(const sensor_msgs::Imu::ConstPtr& msg)>(
             [this](const sensor_msgs::Imu::ConstPtr& msg) {
               sensor_data_producer_.AddImuMessage(kImuTopic, msg);
@@ -436,7 +436,7 @@ void Node::Initialize() {
 
   if (options_.use_odometry_data) {
     odometry_subscriber_ = node_handle_.subscribe(
-        kOdometryTopic, kSubscriberQueueSize,
+        kOdometryTopic, kInfiniteQueueSize,
         boost::function<void(const nav_msgs::Odometry::ConstPtr&)>(
             [this](const nav_msgs::Odometry::ConstPtr& msg) {
               sensor_data_producer_.AddOdometryMessage(kOdometryTopic, msg);
