@@ -30,17 +30,17 @@ tracking_frame
 published_frame
   The ROS frame id to use as the child frame for publishing poses. For example
   "odom" if an "odom" frame is supplied by a different part of the system. In
-  this case the pose of "odom" in the map frame is to be published.
+  this case the pose of "odom" in the *map_frame* is to be published.
 
 odom_frame
-  Only used if provide_odom_frame is true. The frame between published_frame and 
-  map_frame to be used for publishing the (non-loop-closed) local SLAM result.
-  Usually "odom".
+  Only used if *provide_odom_frame* is true. The frame between *published_frame*
+  and *map_frame* to be used for publishing the (non-loop-closed) local SLAM
+  result. Usually "odom".
 
 provide_odom_frame
   If enabled, not only the global SLAM result is published to place to
-  published_frame inside the map_frame, but also the local SLAM result at the
-  odom_frame in between the two.
+  *published_frame* inside the *map_frame*, but also the local SLAM result at
+  the *odom_frame* in between the two.
 
 use_odometry_data
   If enabled, subscribes to `nav_msgs::Odometry`_ under the topic "odom".
@@ -53,11 +53,11 @@ use_constant_odometry_variance
 
 constant_odometry_translational_variance
   The variance to use for the translational component of odometry to use if
-  use_constant_odometry_variance is enabled.
+  *use_constant_odometry_variance* is enabled.
 
 constant_odometry_rotational_variance
   The variance to use for the rotational component of odometry to use if
-  use_constant_odometry_variance is enabled.
+  *use_constant_odometry_variance* is enabled.
 
 publish_occupancy_grid
   If enabled, a background thread will continuously compute and publish
@@ -66,12 +66,12 @@ publish_occupancy_grid
 
 use_horizontal_laser
   If enabled, the node subscribes to  `sensor_msgs::LaserScan`_ under the "scan"
-  topic. If 2D SLAM is used, either this or use_horizontal_multi_echo_laser
+  topic. If 2D SLAM is used, either this or *use_horizontal_multi_echo_laser*
   must be enabled.
 
 use_horizontal_multi_echo_laser
   If enabled, the node subscribes to  `sensor_msgs::MultiEchoLaserScan`_ under
-  the "echoes" topic. If 2D SLAM is used, either this or use_horizontal_laser
+  the "echoes" topic. If 2D SLAM is used, either this or *use_horizontal_laser*
   must be enabled.
 
 horizontal_laser_min_range
