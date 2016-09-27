@@ -20,6 +20,10 @@ Note that Cartographer's ROS integration uses `tf2`_, thus all frame IDs are
 expected to contain only a frame name (lower-case with underscores) and no
 prefix or slashes. See `REP 105`_ for commonly used coordinate frames.
 
+Note that topic names are given as *base* names (see `ROS Names`_) in
+Cartographer's ROS integration. This means it is up to the user of the
+Cartographer node to remap, or put them into a namespace.
+
 The following are Cartographer's ROS integration top-level options, all of which
 must be specified in the Lua configuration file:
 
@@ -105,6 +109,7 @@ pose_publish_period_sec
   200 Hz.
 
 .. _REP 105: http://www.ros.org/reps/rep-0105.html
+.. _ROS Names: http://wiki.ros.org/Names
 .. _nav_msgs::OccupancyGrid: http://docs.ros.org/api/nav_msgs/html/msg/OccupancyGrid.html
 .. _nav_msgs::Odometry: http://docs.ros.org/api/nav_msgs/html/msg/Odometry.html
 .. _sensor_msgs::LaserScan: http://docs.ros.org/api/sensor_msgs/html/msg/LaserScan.html
