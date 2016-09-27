@@ -16,6 +16,10 @@
 Configuration Reference
 =======================
 
+Note that Cartographer's ROS integration uses `tf2`_, thus all frame IDs are
+expected to contain only a frame name (lower-case with underscores) and no
+prefix or slashes. See `REP 105`_ for commonly used coordinate frames.
+
 Cartographer's ROS integration top-level options, all of which must be specified
 in the Lua configuration file:
 
@@ -100,6 +104,7 @@ pose_publish_period_sec
   Interval in seconds at which to publish poses, e.g. 5e-3 for a frequency of
   200 Hz.
 
+.. _REP 105: http://www.ros.org/reps/rep-0105.html
 .. _nav_msgs::OccupancyGrid: http://docs.ros.org/api/nav_msgs/html/msg/OccupancyGrid.html
 .. _nav_msgs::Odometry: http://docs.ros.org/api/nav_msgs/html/msg/Odometry.html
 .. _sensor_msgs::LaserScan: http://docs.ros.org/api/sensor_msgs/html/msg/LaserScan.html
