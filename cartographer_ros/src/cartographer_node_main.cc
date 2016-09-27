@@ -286,14 +286,14 @@ Rigid3d Node::LookupToTrackingTransformOrThrow(const carto::common::Time time,
   ::ros::Duration timeout(options_.lookup_transform_timeout_sec);
   const ::ros::Time latest_tf_time =
       tf_buffer_
-          .lookupTransform(options_.tracking_frame, frame_id, ::ros::Time(0),
+          .lookupTransform(options_.tracking_frame, frame_id, ::ros::Time(0.),
                            timeout)
           .header.stamp;
   const ::ros::Time requested_time = ToRos(time);
   if (latest_tf_time >= requested_time) {
     // We already have newer data, so we do not wait. Otherwise, we would wait
     // for the full 'timeout' even if we ask for data that is too old.
-    timeout = ::ros::Duration(0);
+    timeout = ::ros::Duration(0.);
   }
   return ToRigid3d(tf_buffer_.lookupTransform(options_.tracking_frame, frame_id,
                                               requested_time, timeout));
