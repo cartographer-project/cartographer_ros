@@ -20,8 +20,8 @@ Note that Cartographer's ROS integration uses `tf2`_, thus all frame IDs are
 expected to contain only a frame name (lower-case with underscores) and no
 prefix or slashes. See `REP 105`_ for commonly used coordinate frames.
 
-Cartographer's ROS integration top-level options, all of which must be specified
-in the Lua configuration file:
+The following are Cartographer's ROS integration top-level options, all of which
+must be specified in the Lua configuration file:
 
 map_frame
   The ROS frame ID to use for publishing submaps, the parent frame of poses,
