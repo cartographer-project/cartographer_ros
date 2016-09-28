@@ -114,16 +114,8 @@ add_dependencies(time_conversion_test
   ${catkin_EXPORTED_TARGETS}
 )
 
-install(DIRECTORY launch/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch/
-)
-
-install(DIRECTORY urdf/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/urdf/
-)
-
-install(DIRECTORY configuration_files/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/configuration_files/
+install(DIRECTORY launch urdf configuration_files
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
 install(TARGETS cartographer_node
