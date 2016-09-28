@@ -26,11 +26,11 @@ sudo apt-get install -y ninja-build
 # Create a new workspace in 'catkin_ws'.
 mkdir catkin_ws
 cd catkin_ws
-wstool init
+wstool init src
 
-# Merge the cartographer_ros rosinstall file and fetch code for dependencies.
-wstool merge ../cartographer_ros/cartographer_ros.rosinstall
-wstool update
+# Merge the cartographer_ros.rosinstall file and fetch code for dependencies.
+wstool merge -t src ../cartographer_ros/cartographer_ros.rosinstall
+wstool update -t src
 
 # Use the local version of cartographer_ros to include local modifications.
 rm -rf src/cartographer_ros
