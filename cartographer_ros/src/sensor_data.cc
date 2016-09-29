@@ -56,4 +56,4 @@ SensorData::SensorData(const string& frame_id, proto::LaserFan3D laser_fan_3d)
 SensorData::SensorData(const string& frame_id, const Odometry& odometry)
     : type(SensorType::kOdometry), frame_id(frame_id), odometry(odometry) {}
 
-}  // namespace cartorapher_ros
+}  // namespace cartographer_ros
