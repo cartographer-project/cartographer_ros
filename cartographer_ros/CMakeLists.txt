@@ -83,6 +83,10 @@ add_executable(cartographer_node
   src/cartographer_node_main.cc
   src/msg_conversion.cc
   src/msg_conversion.h
+  src/node_options.cc
+  src/node_options.h
+  src/occupancy_grid.cc
+  src/occupancy_grid.h
   src/sensor_data.cc
   src/sensor_data.h
   src/sensor_data_producer.cc

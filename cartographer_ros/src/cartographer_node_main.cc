@@ -23,7 +23,6 @@
 #include "Eigen/Core"
 #include "cartographer/common/configuration_file_resolver.h"
 #include "cartographer/common/lua_parameter_dictionary.h"
-#include "cartographer/common/lua_parameter_dictionary_test_helpers.h"
 #include "cartographer/common/make_unique.h"
 #include "cartographer/common/mutex.h"
 #include "cartographer/common/port.h"
@@ -64,6 +63,8 @@
 #include "tf2_ros/transform_listener.h"
 
 #include "msg_conversion.h"
+#include "node_options.h"
+#include "occupancy_grid.h"
 #include "sensor_data.h"
 #include "sensor_data_producer.h"
 #include "time_conversion.h"
@@ -101,93 +102,6 @@ constexpr char kOccupancyGridTopic[] = "map";
 constexpr char kScanMatchedPointCloudTopic[] = "scan_matched_points2";
 constexpr char kSubmapListTopic[] = "submap_list";
 constexpr char kSubmapQueryServiceName[] = "submap_query";
-
-struct NodeOptions {
-  carto::mapping::proto::MapBuilderOptions map_builder_options;
-  string map_frame;
-  string tracking_frame;
-  string published_frame;
-  string odom_frame;
-  bool publish_occupancy_grid;
-  bool provide_odom_frame;
-  bool use_odometry_data;
-  bool use_constant_odometry_variance;
-  double constant_odometry_translational_variance;
-  double constant_odometry_rotational_variance;
-  bool use_horizontal_laser;
-  bool use_horizontal_multi_echo_laser;
-  double horizontal_laser_min_range;
-  double horizontal_laser_max_range;
-  double horizontal_laser_missing_echo_ray_length;
-  int num_lasers_3d;
-  double lookup_transform_timeout_sec;
-  double submap_publish_period_sec;
-  double pose_publish_period_sec;
-};
-
-NodeOptions CreateNodeOptions(
-    carto::common::LuaParameterDictionary* const lua_parameter_dictionary) {
-  NodeOptions options;
-  options.map_builder_options = carto::mapping::CreateMapBuilderOptions(
-      lua_parameter_dictionary->GetDictionary("map_builder").get());
-  options.map_frame = lua_parameter_dictionary->GetString("map_frame");
-  options.tracking_frame =
-      lua_parameter_dictionary->GetString("tracking_frame");
-  options.published_frame =
-      lua_parameter_dictionary->GetString("published_frame");
-  options.odom_frame = lua_parameter_dictionary->GetString("odom_frame");
-  options.publish_occupancy_grid =
-      lua_parameter_dictionary->GetBool("publish_occupancy_grid");
-  options.provide_odom_frame =
-      lua_parameter_dictionary->GetBool("provide_odom_frame");
-  options.use_odometry_data =
-      lua_parameter_dictionary->GetBool("use_odometry_data");
-  options.use_constant_odometry_variance =
-      lua_parameter_dictionary->GetBool("use_constant_odometry_variance");
-  options.constant_odometry_translational_variance =
-      lua_parameter_dictionary->GetDouble(
-          "constant_odometry_translational_variance");
-  options.constant_odometry_rotational_variance =
-      lua_parameter_dictionary->GetDouble(
-          "constant_odometry_rotational_variance");
-  options.use_horizontal_laser =
-      lua_parameter_dictionary->GetBool("use_horizontal_laser");
-  options.use_horizontal_multi_echo_laser =
-      lua_parameter_dictionary->GetBool("use_horizontal_multi_echo_laser");
-  options.horizontal_laser_min_range =
-      lua_parameter_dictionary->GetDouble("horizontal_laser_min_range");
-  options.horizontal_laser_max_range =
-      lua_parameter_dictionary->GetDouble("horizontal_laser_max_range");
-  options.horizontal_laser_missing_echo_ray_length =
-      lua_parameter_dictionary->GetDouble(
-          "horizontal_laser_missing_echo_ray_length");
-  options.num_lasers_3d =
-      lua_parameter_dictionary->GetNonNegativeInt("num_lasers_3d");
-  options.lookup_transform_timeout_sec =
-      lua_parameter_dictionary->GetDouble("lookup_transform_timeout_sec");
-  options.submap_publish_period_sec =
-      lua_parameter_dictionary->GetDouble("submap_publish_period_sec");
-  options.pose_publish_period_sec =
-      lua_parameter_dictionary->GetDouble("pose_publish_period_sec");
-
-  CHECK_EQ(options.use_horizontal_laser +
-               options.use_horizontal_multi_echo_laser +
-               (options.num_lasers_3d > 0),
-           1)
-      << "Configuration error: 'use_horizontal_laser', "
-         "'use_horizontal_multi_echo_laser' and 'num_lasers_3d' are "
-         "mutually exclusive, but one is required.";
-  CHECK_EQ(
-      options.map_builder_options.use_trajectory_builder_2d(),
-      options.use_horizontal_laser || options.use_horizontal_multi_echo_laser);
-  CHECK_EQ(options.map_builder_options.use_trajectory_builder_3d(),
-           options.num_lasers_3d > 0);
-  if (options.publish_occupancy_grid) {
-    CHECK(options.map_builder_options.use_trajectory_builder_2d())
-        << "Publishing OccupancyGrids for 3D data is not yet supported";
-  }
-  return options;
-}
 
 // Node that listens to all the sensor data that we are interested in and wires
 // it up to the SLAM.
@@ -633,68 +547,8 @@ void Node::SpinOccupancyGridThreadForever() {
       std::this_thread::sleep_for(carto::common::FromMilliseconds(1000));
       continue;
     }
-    const auto& submaps_options =
-        options_.map_builder_options.trajectory_builder_2d_options()
-            .submaps_options();
-    const carto::mapping_2d::MapLimits map_limits =
-        carto::mapping_2d::MapLimits::ComputeMapLimits(
-            submaps_options.resolution(), trajectory_nodes);
-    carto::mapping_2d::ProbabilityGrid probability_grid(map_limits);
-    carto::mapping_2d::LaserFanInserter laser_fan_inserter(
-        submaps_options.laser_fan_inserter_options());
-    for (const auto& node : trajectory_nodes) {
-      CHECK(node.constant_data->laser_fan_3d.returns.empty());  // No 3D yet.
-      laser_fan_inserter.Insert(
-          carto::sensor::TransformLaserFan(
-              node.constant_data->laser_fan,
-              carto::transform::Project2D(node.pose).cast<float>()),
-          &probability_grid);
-    }
-
     ::nav_msgs::OccupancyGrid occupancy_grid;
-    occupancy_grid.header.stamp = ToRos(trajectory_nodes.back().time());
-    occupancy_grid.header.frame_id = options_.map_frame;
-    occupancy_grid.info.map_load_time = occupancy_grid.header.stamp;
-
-    Eigen::Array2i offset;
-    carto::mapping_2d::CellLimits cell_limits;
-    probability_grid.ComputeCroppedLimits(&offset, &cell_limits);
-    const double resolution = probability_grid.limits().resolution();
-
-    occupancy_grid.info.resolution = resolution;
-    occupancy_grid.info.width = cell_limits.num_y_cells;
-    occupancy_grid.info.height = cell_limits.num_x_cells;
-
-    occupancy_grid.info.origin.position.x =
-        probability_grid.limits().max().x() -
-        (offset.y() + cell_limits.num_y_cells) * resolution;
-    occupancy_grid.info.origin.position.y =
-        probability_grid.limits().max().y() -
-        (offset.x() + cell_limits.num_x_cells) * resolution;
-    occupancy_grid.info.origin.position.z = 0.;
-    occupancy_grid.info.origin.orientation.w = 1.;
-    occupancy_grid.info.origin.orientation.x = 0.;
-    occupancy_grid.info.origin.orientation.y = 0.;
-    occupancy_grid.info.origin.orientation.z = 0.;
-
-    occupancy_grid.data.resize(
-        cell_limits.num_x_cells * cell_limits.num_y_cells, -1);
-    for (const Eigen::Array2i& xy_index :
-         carto::mapping_2d::XYIndexRangeIterator(cell_limits)) {
-      if (probability_grid.IsKnown(xy_index + offset)) {
-        const int value = carto::common::RoundToInt(
-            (probability_grid.GetProbability(xy_index + offset) -
-             carto::mapping::kMinProbability) *
-            100. / (carto::mapping::kMaxProbability -
-                    carto::mapping::kMinProbability));
-        CHECK_LE(0, value);
-        CHECK_GE(100, value);
-        occupancy_grid.data[(cell_limits.num_x_cells - xy_index.x()) *
-                                cell_limits.num_y_cells -
-                            xy_index.y() - 1] = value;
-      }
-    }
-
+    BuildOccupancyGrid(trajectory_nodes, options_, &occupancy_grid);
     occupancy_grid_publisher_.publish(occupancy_grid);
   }
 }
