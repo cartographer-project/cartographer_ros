@@ -49,11 +49,11 @@ using `Ninja <https://ninja-build.org>`_.
     # Create a new workspace in 'catkin_ws'.
     mkdir catkin_ws
     cd catkin_ws
-    wstool init
+    wstool init src
 
-    # Merge the cartographer_ros rosinstall file and fetch code for dependencies.
-    wstool merge https://raw.githubusercontent.com/googlecartographer/cartographer_ros/master/cartographer_ros.rosinstall
-    wstool update
+    # Merge the cartographer_ros.rosinstall file and fetch code for dependencies.
+    wstool merge -t src https://raw.githubusercontent.com/googlecartographer/cartographer_ros/master/cartographer_ros.rosinstall
+    wstool update -t src
 
     # Install deb dependencies.
     rosdep update
