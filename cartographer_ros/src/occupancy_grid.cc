@@ -28,6 +28,8 @@ void BuildOccupancyGrid(
     const NodeOptions& options,
     ::nav_msgs::OccupancyGrid* const occupancy_grid) {
   namespace carto = ::cartographer;
+  CHECK(options.map_builder_options.use_trajectory_builder_2d())
+      << "Publishing OccupancyGrids for 3D data is not yet supported";
   const auto& submaps_options =
       options.map_builder_options.trajectory_builder_2d_options()
           .submaps_options();

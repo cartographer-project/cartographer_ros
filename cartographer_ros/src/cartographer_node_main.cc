@@ -384,7 +384,7 @@ void Node::Initialize() {
   submap_query_server_ = node_handle_.advertiseService(
       kSubmapQueryServiceName, &Node::HandleSubmapQuery, this);
 
-  if (options_.publish_occupancy_grid) {
+  if (options_.map_builder_options.use_trajectory_builder_2d()) {
     occupancy_grid_publisher_ =
         node_handle_.advertise<::nav_msgs::OccupancyGrid>(
             kOccupancyGridTopic, kLatestOnlyPublisherQueueSize,
@@ -535,16 +535,19 @@ void Node::PublishPoseAndScanMatchedPointCloud(
 
 void Node::SpinOccupancyGridThreadForever() {
   for (;;) {
+    std::this_thread::sleep_for(carto::common::FromMilliseconds(1000));
     {
       carto::common::MutexLocker lock(&mutex_);
       if (terminating_) {
         return;
       }
     }
+    if (occupancy_grid_publisher_.getNumSubscribers() == 0) {
+      continue;
+    }
     const auto trajectory_nodes =
         map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
     if (trajectory_nodes.empty()) {
-      std::this_thread::sleep_for(carto::common::FromMilliseconds(1000));
       continue;
     }
     ::nav_msgs::OccupancyGrid occupancy_grid;

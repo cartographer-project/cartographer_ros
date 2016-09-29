@@ -32,7 +32,6 @@ struct NodeOptions {
   string tracking_frame;
   string published_frame;
   string odom_frame;
-  bool publish_occupancy_grid;
   bool provide_odom_frame;
   bool use_odometry_data;
   bool use_constant_odometry_variance;
