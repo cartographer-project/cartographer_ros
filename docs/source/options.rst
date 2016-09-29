@@ -67,11 +67,6 @@ constant_odometry_rotational_variance
   The variance to use for the rotational component of odometry to use if
   *use_constant_odometry_variance* is enabled.
 
-publish_occupancy_grid
-  If enabled, a background thread will continuously compute and publish
-  `nav_msgs::OccupancyGrid`_ messages on the "map" topic. Depending on the size
-  of the map, it can take a few seconds between updates.
-
 use_horizontal_laser
   If enabled, the node subscribes to `sensor_msgs::LaserScan`_ on the "scan"
   topic. If 2D SLAM is used, either this or *use_horizontal_multi_echo_laser*

@@ -21,6 +21,7 @@ Cartographer ROS Integration
    :hidden:
 
    options
+   rosapi
 
 `Cartographer`_ is a system that provides real-time simultaneous localization
 and mapping `SLAM`_ across multiple platforms and sensor configurations. This
