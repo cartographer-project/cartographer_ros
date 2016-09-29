@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <cstring>
+#include <chrono>
 #include <map>
 #include <queue>
 #include <string>
@@ -51,7 +51,6 @@
 #include "cartographer_ros_msgs/SubmapQuery.h"
 #include "cartographer_ros_msgs/TrajectorySubmapList.h"
 #include "gflags/gflags.h"
-#include "glog/log_severity.h"
 #include "glog/logging.h"
 #include "nav_msgs/OccupancyGrid.h"
 #include "nav_msgs/Odometry.h"
@@ -65,6 +64,7 @@
 #include "msg_conversion.h"
 #include "node_options.h"
 #include "occupancy_grid.h"
+#include "ros_log_sink.h"
 #include "sensor_data.h"
 #include "sensor_data_producer.h"
 #include "time_conversion.h"
@@ -535,7 +535,7 @@ void Node::PublishPoseAndScanMatchedPointCloud(
 
 void Node::SpinOccupancyGridThreadForever() {
   for (;;) {
-    std::this_thread::sleep_for(carto::common::FromMilliseconds(1000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     {
       carto::common::MutexLocker lock(&mutex_);
       if (terminating_) {
@@ -614,54 +614,6 @@ void Run() {
   node.Initialize();
   node.SpinForever();
 }
-
-const char* GetBasename(const char* filepath) {
-  const char* base = strrchr(filepath, '/');
-  return base ? (base + 1) : filepath;
-}
-
-// Makes Google logging use ROS logging for output while an instance of this
-// class exists.
-class ScopedRosLogSink : public google::LogSink {
- public:
-  ScopedRosLogSink() : will_die_(false) { AddLogSink(this); }
-  ~ScopedRosLogSink() override { RemoveLogSink(this); }
-
-  void send(google::LogSeverity severity, const char* filename,
-            const char* base_filename, int line, const struct ::tm* tm_time,
-            const char* message, size_t message_len) override {
-    const std::string message_string = google::LogSink::ToString(
-        severity, GetBasename(filename), line, tm_time, message, message_len);
-    switch (severity) {
-      case google::GLOG_INFO:
-        ROS_INFO_STREAM(message_string);
-        break;
-
-      case google::GLOG_WARNING:
-        ROS_WARN_STREAM(message_string);
-        break;
-
-      case google::GLOG_ERROR:
-        ROS_ERROR_STREAM(message_string);
-        break;
-
-      case google::GLOG_FATAL:
-        ROS_FATAL_STREAM(message_string);
-        will_die_ = true;
-        break;
-    }
-  }
-
-  void WaitTillSent() override {
-    if (will_die_) {
-      // Give ROS some time to actually publish our message.
-      std::this_thread::sleep_for(carto::common::FromMilliseconds(1000));
-    }
-  }
-
- private:
-  bool will_die_;
-};
 
 }  // namespace
 }  // namespace cartographer_ros

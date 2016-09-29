@@ -14,22 +14,32 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_ROS_OCCUPANCY_GRID_H_
-#define CARTOGRAPHER_ROS_OCCUPANCY_GRID_H_
+#ifndef CARTOGRAPHER_ROS_ROS_LOG_SINK_H_
+#define CARTOGRAPHER_ROS_ROS_LOG_SINK_H_
 
-#include <vector>
+#include <ctime>
 
-#include "cartographer/mapping/trajectory_node.h"
-#include "nav_msgs/OccupancyGrid.h"
-#include "node_options.h"
+#include "glog/logging.h"
 
 namespace cartographer_ros {
 
-void BuildOccupancyGrid(
-    const std::vector<::cartographer::mapping::TrajectoryNode>&
-        trajectory_nodes,
-    const NodeOptions& options, ::nav_msgs::OccupancyGrid* occupancy_grid);
+// Makes Google logging use ROS logging for output while an instance of this
+// class exists.
+class ScopedRosLogSink : public ::google::LogSink {
+ public:
+  ScopedRosLogSink();
+  ~ScopedRosLogSink() override;
+
+  void send(::google::LogSeverity severity, const char* filename,
+            const char* base_filename, int line, const struct std::tm* tm_time,
+            const char* message, size_t message_len) override;
+
+  void WaitTillSent() override;
+
+ private:
+  bool will_die_;
+};
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAPHER_ROS_OCCUPANCY_GRID_H_
+#endif  // CARTOGRAPHER_ROS_ROS_LOG_SINK_H_

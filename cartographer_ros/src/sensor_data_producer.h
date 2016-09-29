@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAHPER_ROS_SENSOR_DATA_PRODUCER_H_
-#define CARTOGRAHPER_ROS_SENSOR_DATA_PRODUCER_H_
+#ifndef CARTOGRAPHER_ROS_SENSOR_DATA_PRODUCER_H_
+#define CARTOGRAPHER_ROS_SENSOR_DATA_PRODUCER_H_
 
 #include "cartographer/mapping/sensor_collator.h"
 #include "geometry_msgs/Transform.h"
@@ -60,4 +60,4 @@ class SensorDataProducer {
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAHPER_ROS_SENSOR_DATA_PRODUCER_H_
+#endif  // CARTOGRAPHER_ROS_SENSOR_DATA_PRODUCER_H_

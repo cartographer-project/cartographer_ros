@@ -87,6 +87,8 @@ add_executable(cartographer_node
   src/node_options.h
   src/occupancy_grid.cc
   src/occupancy_grid.h
+  src/ros_log_sink.cc
+  src/ros_log_sink.h
   src/sensor_data.cc
   src/sensor_data.h
   src/sensor_data_producer.cc
