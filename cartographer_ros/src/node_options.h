@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAHPER_ROS_NODE_OPTIONS_H_
-#define CARTOGRAHPER_ROS_NODE_OPTIONS_H_
+#ifndef CARTOGRAPHER_ROS_NODE_OPTIONS_H_
+#define CARTOGRAPHER_ROS_NODE_OPTIONS_H_
 
 #include <string>
 
@@ -53,4 +53,4 @@ NodeOptions CreateNodeOptions(
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAHPER_ROS_NODE_OPTIONS_H_
+#endif  // CARTOGRAPHER_ROS_NODE_OPTIONS_H_

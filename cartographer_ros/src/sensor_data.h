@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAHPER_ROS_SENSOR_DATA_H_
-#define CARTOGRAHPER_ROS_SENSOR_DATA_H_
+#ifndef CARTOGRAPHER_ROS_SENSOR_DATA_H_
+#define CARTOGRAPHER_ROS_SENSOR_DATA_H_
 
 #include <string>
 
@@ -51,4 +51,4 @@ struct SensorData {
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAHPER_ROS_SENSOR_DATA_H_
+#endif  // CARTOGRAPHER_ROS_SENSOR_DATA_H_
