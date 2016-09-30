@@ -87,9 +87,15 @@ in this case ``~/Downloads``, and use ``roslaunch`` to bring up the demo:
     roslaunch cartographer_ros demo_backpack_3d.launch bag_filename:=${HOME}/Downloads/cartographer_3d_deutsches_museum.bag
 
     # Download the Revo LDS example bag.
-    wget -P ~/Downloads https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/cartographer_paper_revo_lds.bag
+    wget -P ~/Downloads https://storage.googleapis.com/cartographer-public-data/bags/revo_lds/cartographer_paper_revo_lds.bag
 
     # Launch the Revo LDS demo.
     roslaunch cartographer_ros demo_revo_lds.launch bag_filename:=${HOME}/Downloads/cartographer_paper_revo_lds.bag
+
+    # Download the PR2 example bag.
+    wget -P ~/Downloads https://storage.googleapis.com/cartographer-public-data/bags/pr2/2011-09-15-08-32-46.bag
+
+    # Launch the PR2 demo.
+    roslaunch cartographer_ros demo_pr2.launch bag_filename:=${HOME}/Downloads/2011-09-15-08-32-46.bag
 
 The launch files will bring up ``roscore`` and ``rviz`` automatically.
