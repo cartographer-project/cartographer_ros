@@ -22,7 +22,7 @@
           -configuration_directory $(find cartographer_ros)/configuration_files
           -configuration_basename revo_lds.lua"
       output="screen">
-    <remap from="echoes" to="horizontal_laser_2d" />
+    <remap from="scan" to="horizontal_laser_2d" />
   </node>
 
   <node name="rviz" pkg="rviz" type="rviz" required="true"
