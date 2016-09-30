@@ -26,7 +26,8 @@
     <remap from="scan" to="/base_scan" />
   </node>
 
-  <node name="tf_remove_frames" pkg="cartographer_ros" type="tf_remove_frames.py">
+  <node name="tf_remove_frames" pkg="cartographer_ros"
+      type="tf_remove_frames.py">
     <remap from="tf_out" to="/tf" />
     <rosparam param="remove_frames">
       - map
@@ -37,7 +38,7 @@
   <node name="rviz" pkg="rviz" type="rviz" required="true"
       args="-d $(find cartographer_ros)/configuration_files/demo_2d.rviz" />
   <node name="playbag" pkg="rosbag" type="play"
-      args="--clock -r 2 $(arg bag_filename)">
+      args="--clock $(arg bag_filename)">
     <remap from="tf" to="tf_in" />
   </node>
 </launch>
