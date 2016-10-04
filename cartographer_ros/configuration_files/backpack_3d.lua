@@ -31,12 +31,16 @@ options = {
   horizontal_laser_max_range = 30.,
   horizontal_laser_missing_echo_ray_length = 5.,
   num_lasers_3d = 2,
-  lookup_transform_timeout_sec = 0.01,
+  lookup_transform_timeout_sec = 0.2,
   submap_publish_period_sec = 0.3,
   pose_publish_period_sec = 5e-3,
 }
 
+TRAJECTORY_BUILDER_3D.scans_per_accumulation = 160
+
 MAP_BUILDER.use_trajectory_builder_3d = true
+MAP_BUILDER.num_background_threads = 7
+MAP_BUILDER.sparse_pose_graph.optimization_problem.huber_scale = 5e2
 MAP_BUILDER.sparse_pose_graph.optimize_every_n_scans = 320
 MAP_BUILDER.sparse_pose_graph.constraint_builder.sampling_ratio = 0.03
 MAP_BUILDER.sparse_pose_graph.optimization_problem.ceres_solver_options.max_num_iterations = 10
@@ -45,7 +49,5 @@ MAP_BUILDER.sparse_pose_graph.optimization_problem.ceres_solver_options.max_num_
 MAP_BUILDER.sparse_pose_graph.constraint_builder.adaptive_voxel_filter = TRAJECTORY_BUILDER_3D.high_resolution_adaptive_voxel_filter
 MAP_BUILDER.sparse_pose_graph.constraint_builder.min_score = 0.62
 MAP_BUILDER.sparse_pose_graph.constraint_builder.log_matches = true
-
-TRAJECTORY_BUILDER_3D.scans_per_accumulation = 20
 
 return options
