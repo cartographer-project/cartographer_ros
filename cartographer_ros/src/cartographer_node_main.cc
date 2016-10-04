@@ -470,6 +470,8 @@ bool Node::HandleFinishTrajectory(
     ::cartographer_ros_msgs::FinishTrajectory::Request& request,
     ::cartographer_ros_msgs::FinishTrajectory::Response& response) {
   carto::common::MutexLocker lock(&mutex_);
+  // TODO(whess): Add multi-trajectory support.
+  sensor_collator_.FinishTrajectory(kTrajectoryBuilderId);
   map_builder_.sparse_pose_graph()->RunFinalOptimization();
   // TODO(whess): Write X-rays in 3D.
   if (options_.map_builder_options.use_trajectory_builder_2d()) {
