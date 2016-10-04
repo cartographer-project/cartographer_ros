@@ -46,6 +46,7 @@ add_message_files(
 add_service_files(
   FILES
     SubmapQuery.srv
+    FinishTrajectory.srv
 )
 
 generate_messages(
