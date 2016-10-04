@@ -22,8 +22,8 @@ Purpose
 =======
 
 `Cartographer`_ is a system that provides real-time simultaneous localization
-and mapping `SLAM`_ across multiple platforms and sensor configurations. This
-project provides Cartographer's ROS integration.
+and mapping `SLAM`_ in 2D and 3D across multiple platforms and sensor
+configurations. This project provides Cartographer's ROS integration.
 
 .. _Cartographer: https://github.com/googlecartographer/cartographer
 .. _SLAM: https://en.wikipedia.org/wiki/Simultaneous_localization_and_mapping
@@ -40,9 +40,9 @@ Contributing
 ============
 
 You can find information about contributing to Cartographer's ROS integration
-at our `Contribution page`_.
+at `our Contribution page`_.
 
-.. _Contribution page: https://github.com/googlecartographer/cartographer_ros/blob/master/CONTRIBUTING.md
+.. _our Contribution page: https://github.com/googlecartographer/cartographer_ros/blob/master/CONTRIBUTING.md
 
 .. |build| image:: https://travis-ci.org/googlecartographer/cartographer_ros.svg?branch=master
     :alt: Build Status
