@@ -19,9 +19,9 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /PointCloud21
-        - /PointCloud22
         - /Submaps1
+        - /PointCloud23
+        - /PointCloud23/Autocompute Value Bounds1
       Splitter Ratio: 0.600671
     Tree Height: 817
   - Class: rviz/Selection
@@ -145,7 +145,7 @@ Visualization Manager:
       Color: 20; 220; 20
       Color Transformer: FlatColor
       Decay Time: 0.1
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 4096
@@ -153,7 +153,7 @@ Visualization Manager:
       Min Intensity: 0
       Name: PointCloud2
       Position Transformer: XYZ
-      Queue Size: 20
+      Queue Size: 200
       Selectable: true
       Size (Pixels): 3
       Size (m): 0.03
@@ -162,7 +162,7 @@ Visualization Manager:
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
+      Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -175,7 +175,7 @@ Visualization Manager:
       Color: 240; 220; 20
       Color Transformer: FlatColor
       Decay Time: 0.1
-      Enabled: true
+      Enabled: false
       Invert Rainbow: true
       Max Color: 255; 255; 255
       Max Intensity: 4096
@@ -183,7 +183,7 @@ Visualization Manager:
       Min Intensity: 0
       Name: PointCloud2
       Position Transformer: XYZ
-      Queue Size: 20
+      Queue Size: 200
       Selectable: true
       Size (Pixels): 3
       Size (m): 0.03
@@ -192,7 +192,7 @@ Visualization Manager:
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
+      Value: false
     - Class: Submaps
       Enabled: true
       Map frame: map
@@ -205,16 +205,16 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 8.77916
-        Min Value: 4.51287
-        Value: true
+        Max Value: 10
+        Min Value: -10
+        Value: false
       Axis: Z
       Channel Name: intensity
       Class: rviz/PointCloud2
       Color: 0; 255; 0
       Color Transformer: AxisColor
       Decay Time: 0
-      Enabled: false
+      Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 4096
@@ -231,7 +231,7 @@ Visualization Manager:
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
-      Value: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 100; 100; 100
