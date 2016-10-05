@@ -22,7 +22,7 @@ Purpose
 =======
 
 `Cartographer`_ is a system that provides real-time simultaneous localization
-and mapping `SLAM`_ in 2D and 3D across multiple platforms and sensor
+and mapping (`SLAM`_) in 2D and 3D across multiple platforms and sensor
 configurations. This project provides Cartographer's ROS integration.
 
 .. _Cartographer: https://github.com/googlecartographer/cartographer

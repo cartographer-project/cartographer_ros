@@ -24,8 +24,8 @@ Cartographer ROS Integration
    ros_api
 
 `Cartographer`_ is a system that provides real-time simultaneous localization
-and mapping `SLAM`_ across multiple platforms and sensor configurations. This
-project provides Cartographer's ROS integration.
+and mapping (`SLAM`_) in 2D and 3D across multiple platforms and sensor
+configurations. This project provides Cartographer's ROS integration.
 
 .. _Cartographer: https://github.com/googlecartographer/cartographer
 .. _SLAM: https://en.wikipedia.org/wiki/Simultaneous_localization_and_mapping
@@ -68,9 +68,10 @@ Running the demo
 ================
 
 Now that Cartographer and Cartographer's ROS integration are installed,
-download the example bags, 2D and 3D backpack collections of the `Deutsches
-Museum <https://en.wikipedia.org/wiki/Deutsches_Museum>`_, to a known location,
-in this case ``~/Downloads``, and use ``roslaunch`` to bring up the demo:
+download the example bags (e.g. 2D and 3D backpack collections of the
+`Deutsches Museum <https://en.wikipedia.org/wiki/Deutsches_Museum>`_) to a
+known location, in this case ``~/Downloads``, and use ``roslaunch`` to bring up
+the demo:
 
   .. code-block:: bash
 
