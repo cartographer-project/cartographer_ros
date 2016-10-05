@@ -21,55 +21,61 @@ The following ROS API is provided by `cartographer_node`_.
 Command-line Flags
 ==================
 
-.. TODO(damonkoler): Use an options list if it can be made to render nicely.
+.. TODO(damonkohler): Use an options list if it can be made to render nicely.
 
 \-\-configuration_directory
-  First directory in which configuration files are searched, "second is always
+  First directory in which configuration files are searched, second is always
   the Cartographer installation to allow including files from there.
 
 \-\-configuration_basename
-  Basename, i.e. not containing any directory prefix, of the configuration file.
+  Basename (i.e. not containing any directory prefix) of the configuration file
+  (e.g. backpack_3d.lua).
 
 Subscribed Topics
 =================
 
-The following range data topics are mutually exclusive.
+The following range data topics are mutually exclusive. At least one source of
+range data is required.
 
 scan (`sensor_msgs/LaserScan`_)
-  Currently only supported in 2D. If *use_horizontal_laser* is enabled in the
+  Only supported in 2D. If *use_horizontal_laser* is enabled in the
   :doc:`configuration`, this topic will be used as input for SLAM.
 
 echoes (`sensor_msgs/MultiEchoLaserScan`_)
-  Currently only supported in 2D. If *use_horizontal_multi_echo_laser* is
-  enabled in the :doc:`configuration`, this topic will be used as input for
-  SLAM. Only the first echo is used.
+  Only supported in 2D. If *use_horizontal_multi_echo_laser* is enabled in the
+  :doc:`configuration`, this topic will be used as input for SLAM. Only the
+  first echo is used.
 
 points2 (`sensor_msgs/PointCloud2`_)
-  Currently only supported in 3D. If *num_lasers_3d* is set to 1 in the
+  Only supported in 3D. If *num_lasers_3d* is set to 1 in the
   :doc:`configuration`, this topic will be used as input for SLAM. If
   *num_lasers_3d* is greater than 1, multiple numbered points2 topics (i.e.
   points2_1, points2_2, points2_3, ...  up to and including *num_lasers_3d*)
   will be used as inputs for SLAM.
 
-The following additional sensor data topics are optional.
+The following additional sensor data topics may also be provided.
 
 imu (`sensor_msgs/Imu`_)
-  Supported in 2D and 3D. This topic will be used as input for SLAM.
+  Supported in 2D (optional) and 3D (required). This topic will be used as
+  input for SLAM.
 
 odom (`nav_msgs/Odometry`_)
-  Supported in 2D and 3D. If *use_odometry_data* is enabled in the
-  :doc:`configuration`, this topic will be used as input for SLAM.
+  Supported in 2D (optional) and 3D (optional). If *use_odometry_data* is
+  enabled in the :doc:`configuration`, this topic will be used as input for
+  SLAM.
 
 Published Topics
 ================
 
 map (`nav_msgs/OccupancyGrid`_)
-  Currently only supported in 2D. If subscribed to, a background thread will
-  continuously compute and publish the map. Depending on the size of the map, it
-  can take a few seconds between updates.
+  Only supported in 2D. If subscribed to, a background thread will continuously
+  compute and publish the map. The time between updates will increase with the
+  size of the map. For faster updates, use the submaps APIs.
 
 scan_matched_points2 (`sensor_msgs/PointCloud2`_)
-  Point cloud as it was used for the purpose of scan-to-submap matching.
+  Point cloud as it was used for the purpose of scan-to-submap matching. This
+  cloud may be both filtered and projected depending on the
+  :doc:`configuration`.
 
 submap_list (`cartographer_ros_msgs/SubmapList`_)
   List of all submaps, including the pose and latest version number of each
@@ -83,9 +89,10 @@ submap_query (`cartographer_ros_msgs/SubmapQuery`_)
 
 finish_trajectory (`cartographer_ros_msgs/FinishTrajectory`_)
   Finishes the current trajectory by flushing all queued sensor data, running a
-  final optimization, and writing the map to disk.
+  final optimization, and writing the map to disk. Currently, this also
+  triggers shutdown.
 
-Required TF Transforms
+Required tf Transforms
 ======================
 
 Transforms from all incoming sensor data frames to the :doc:`configured
@@ -93,7 +100,7 @@ Transforms from all incoming sensor data frames to the :doc:`configured
 Typically, these are published periodically by a `robot_state_publisher` or a
 `static_transform_publisher`.
 
-Provided TF Transforms
+Provided tf Transforms
 ======================
 
 The transformation between the :doc:`configured <configuration>` *map_frame*
