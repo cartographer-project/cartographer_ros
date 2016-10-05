@@ -27,7 +27,7 @@ namespace {
 
 void WriteOccupancyGridToPgm(const ::nav_msgs::OccupancyGrid& grid,
                              const std::string& filename) {
-  LOG(INFO) << "Saving final map to '" << filename << "'...";
+  LOG(INFO) << "Saving map to '" << filename << "'...";
   std::ofstream pgm_file(filename, std::ios::out | std::ios::binary);
   const std::string header = "P5\n# Cartographer map; " +
                              std::to_string(grid.info.resolution) +
@@ -36,10 +36,11 @@ void WriteOccupancyGridToPgm(const ::nav_msgs::OccupancyGrid& grid,
   pgm_file.write(header.data(), header.size());
   for (size_t y = 0; y < grid.info.height; ++y) {
     for (size_t x = 0; x < grid.info.width; ++x) {
-      size_t i = x + (grid.info.height - y - 1) * grid.info.width;
+      const size_t i = x + (grid.info.height - y - 1) * grid.info.width;
       if (grid.data[i] >= 0 && grid.data[i] <= 100) {
         pgm_file.put((100 - grid.data[i]) * 255 / 100);
       } else {
+        // We choose a value between the free and occupied threshold.
         constexpr uint8_t kUnknownValue = 128;
         pgm_file.put(kUnknownValue);
       }
@@ -52,7 +53,7 @@ void WriteOccupancyGridToPgm(const ::nav_msgs::OccupancyGrid& grid,
 void WriteOccupancyGridInfoToYaml(const ::nav_msgs::OccupancyGrid& grid,
                                   const std::string& map_filename,
                                   const std::string& yaml_filename) {
-  LOG(INFO) << "Saving final map info to '" << yaml_filename << "'...";
+  LOG(INFO) << "Saving map info to '" << yaml_filename << "'...";
   std::ofstream yaml_file(yaml_filename, std::ios::out | std::ios::binary);
   {
     YAML::Emitter out(yaml_file);
@@ -60,6 +61,8 @@ void WriteOccupancyGridInfoToYaml(const ::nav_msgs::OccupancyGrid& grid,
     // TODO(whess): Use basename only?
     out << YAML::Key << "image" << YAML::Value << map_filename;
     out << YAML::Key << "resolution" << YAML::Value << grid.info.resolution;
+    // According to map_server documentation "many parts of the system currently
+    // ignore yaw" so it is good we use a zero value.
     constexpr double kYawButMaybeIgnored = 0.;
     out << YAML::Key << "origin" << YAML::Value << YAML::Flow << YAML::BeginSeq
         << grid.info.origin.position.x << grid.info.origin.position.y
