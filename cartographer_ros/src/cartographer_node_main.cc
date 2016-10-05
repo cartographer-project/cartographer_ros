@@ -15,6 +15,7 @@
  */
 
 #include <chrono>
+#include <fstream>
 #include <map>
 #include <queue>
 #include <string>
@@ -46,6 +47,7 @@
 #include "cartographer/sensor/proto/sensor.pb.h"
 #include "cartographer/transform/rigid_transform.h"
 #include "cartographer/transform/transform.h"
+#include "cartographer_ros_msgs/FinishTrajectory.h"
 #include "cartographer_ros_msgs/SubmapEntry.h"
 #include "cartographer_ros_msgs/SubmapList.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
@@ -102,6 +104,7 @@ constexpr char kOccupancyGridTopic[] = "map";
 constexpr char kScanMatchedPointCloudTopic[] = "scan_matched_points2";
 constexpr char kSubmapListTopic[] = "submap_list";
 constexpr char kSubmapQueryServiceName[] = "submap_query";
+constexpr char kFinishTrajectoryServiceName[] = "finish_trajectory";
 
 // Node that listens to all the sensor data that we are interested in and wires
 // it up to the SLAM.
@@ -136,6 +139,9 @@ class Node {
   bool HandleSubmapQuery(
       ::cartographer_ros_msgs::SubmapQuery::Request& request,
       ::cartographer_ros_msgs::SubmapQuery::Response& response);
+  bool HandleFinishTrajectory(
+      ::cartographer_ros_msgs::FinishTrajectory::Request& request,
+      ::cartographer_ros_msgs::FinishTrajectory::Response& response);
 
   void PublishSubmapList(const ::ros::WallTimerEvent& timer_event);
   void PublishPoseAndScanMatchedPointCloud(
@@ -160,6 +166,7 @@ class Node {
   ::ros::Publisher submap_list_publisher_;
   ::ros::ServiceServer submap_query_server_;
   ::ros::Publisher scan_matched_point_cloud_publisher_;
+  ::ros::ServiceServer finish_trajectory_server_;
 
   tf2_ros::Buffer tf_buffer_;
   tf2_ros::TransformListener tf_;
@@ -237,8 +244,7 @@ void Node::AddOdometry(const int64 timestamp, const string& frame_id,
         ->AddOdometerPose(time, odometry.pose * sensor_to_tracking.inverse(),
                           applied_covariance);
   } catch (const tf2::TransformException& ex) {
-    LOG(WARNING) << "Cannot transform " << frame_id << " -> "
-                 << options_.tracking_frame << ": " << ex.what();
+    LOG(WARNING) << ex.what();
   }
 }
 
@@ -259,8 +265,7 @@ void Node::AddImu(const int64 timestamp, const string& frame_id,
                      sensor_to_tracking.rotation() *
                          carto::transform::ToEigen(imu.angular_velocity()));
   } catch (const tf2::TransformException& ex) {
-    LOG(WARNING) << "Cannot transform " << frame_id << " -> "
-                 << options_.tracking_frame << ": " << ex.what();
+    LOG(WARNING) << ex.what();
   }
 }
 
@@ -281,8 +286,7 @@ void Node::AddHorizontalLaserFan(const int64 timestamp, const string& frame_id,
     map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
         ->AddHorizontalLaserFan(time, laser_fan_3d);
   } catch (const tf2::TransformException& ex) {
-    LOG(WARNING) << "Cannot transform " << frame_id << " -> "
-                 << options_.tracking_frame << ": " << ex.what();
+    LOG(WARNING) << ex.what();
   }
 }
 
@@ -297,8 +301,7 @@ void Node::AddLaserFan3D(const int64 timestamp, const string& frame_id,
                                   carto::sensor::FromProto(laser_fan_3d),
                                   sensor_to_tracking.cast<float>()));
   } catch (const tf2::TransformException& ex) {
-    LOG(WARNING) << "Cannot transform " << frame_id << " -> "
-                 << options_.tracking_frame << ": " << ex.what();
+    LOG(WARNING) << ex.what();
   }
 }
 
@@ -397,6 +400,9 @@ void Node::Initialize() {
       node_handle_.advertise<sensor_msgs::PointCloud2>(
           kScanMatchedPointCloudTopic, kLatestOnlyPublisherQueueSize);
 
+  finish_trajectory_server_ = node_handle_.advertiseService(
+      kFinishTrajectoryServiceName, &Node::HandleFinishTrajectory, this);
+
   wall_timers_.push_back(node_handle_.createWallTimer(
       ::ros::WallDuration(options_.submap_publish_period_sec),
       &Node::PublishSubmapList, this));
@@ -453,6 +459,52 @@ bool Node::HandleSubmapQuery(
       response_proto.slice_pose().rotation().z();
   response.slice_pose.orientation.w =
       response_proto.slice_pose().rotation().w();
+  return true;
+}
+
+bool Node::HandleFinishTrajectory(
+    ::cartographer_ros_msgs::FinishTrajectory::Request& request,
+    ::cartographer_ros_msgs::FinishTrajectory::Response& response) {
+  // After shutdown, ROS messages will no longer be received and therefore not
+  // pile up.
+  //
+  // TODO(whess): Continue with a new trajectory instead?
+  ::ros::shutdown();
+  carto::common::MutexLocker lock(&mutex_);
+  // TODO(whess): Add multi-trajectory support.
+  sensor_collator_.FinishTrajectory(kTrajectoryBuilderId);
+  map_builder_.sparse_pose_graph()->RunFinalOptimization();
+  // TODO(whess): Write X-rays in 3D.
+  if (options_.map_builder_options.use_trajectory_builder_2d()) {
+    const auto trajectory_nodes =
+        map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
+    if (!trajectory_nodes.empty()) {
+      std::string filename = request.stem + ".pgm";
+      LOG(INFO) << "Saving final map to '" << filename << "'...";
+      ::nav_msgs::OccupancyGrid grid;
+      BuildOccupancyGrid(trajectory_nodes, options_, &grid);
+      std::ofstream output_file(filename, std::ios::out | std::ios::binary);
+      const std::string header =
+          "P5\n# Cartographer map; " + std::to_string(grid.info.resolution) +
+          " m/pixel\n" + std::to_string(grid.info.width) + " " +
+          std::to_string(grid.info.height) + "\n255\n";
+      output_file.write(header.data(), header.size());
+      for (size_t y = 0; y < grid.info.height; ++y) {
+        for (size_t x = 0; x < grid.info.width; ++x) {
+          size_t i = x + (grid.info.height - y - 1) * grid.info.width;
+          if (grid.data[i] >= 0 && grid.data[i] <= 100) {
+            output_file.put((100 - grid.data[i]) * 254 / 100);
+          } else {
+            constexpr uint8_t kUnknownValue = 205;
+            output_file.put(kUnknownValue);
+          }
+        }
+      }
+      output_file.close();
+      CHECK(output_file) << "Writing '" << filename << "' failed.";
+      // TODO(whess): Also write a yaml file similar to map_saver?
+    }
+  }
   return true;
 }
 
@@ -522,8 +574,7 @@ void Node::PublishPoseAndScanMatchedPointCloud(
       tf_broadcaster_.sendTransform(stamped_transform);
     }
   } catch (const tf2::TransformException& ex) {
-    LOG(WARNING) << "Cannot transform " << options_.published_frame << " -> "
-                 << options_.tracking_frame << ": " << ex.what();
+    LOG(WARNING) << ex.what();
   }
 
   scan_matched_point_cloud_publisher_.publish(ToPointCloud2Message(
