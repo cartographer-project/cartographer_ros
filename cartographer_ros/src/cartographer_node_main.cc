@@ -244,8 +244,7 @@ void Node::AddOdometry(const int64 timestamp, const string& frame_id,
         ->AddOdometerPose(time, odometry.pose * sensor_to_tracking.inverse(),
                           applied_covariance);
   } catch (const tf2::TransformException& ex) {
-    LOG(WARNING) << "Cannot transform " << frame_id << " -> "
-                 << options_.tracking_frame << ": " << ex.what();
+    LOG(WARNING) << ex.what();
   }
 }
 
@@ -266,8 +265,7 @@ void Node::AddImu(const int64 timestamp, const string& frame_id,
                      sensor_to_tracking.rotation() *
                          carto::transform::ToEigen(imu.angular_velocity()));
   } catch (const tf2::TransformException& ex) {
-    LOG(WARNING) << "Cannot transform " << frame_id << " -> "
-                 << options_.tracking_frame << ": " << ex.what();
+    LOG(WARNING) << ex.what();
   }
 }
 
@@ -288,8 +286,7 @@ void Node::AddHorizontalLaserFan(const int64 timestamp, const string& frame_id,
     map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
         ->AddHorizontalLaserFan(time, laser_fan_3d);
   } catch (const tf2::TransformException& ex) {
-    LOG(WARNING) << "Cannot transform " << frame_id << " -> "
-                 << options_.tracking_frame << ": " << ex.what();
+    LOG(WARNING) << ex.what();
   }
 }
 
@@ -304,8 +301,7 @@ void Node::AddLaserFan3D(const int64 timestamp, const string& frame_id,
                                   carto::sensor::FromProto(laser_fan_3d),
                                   sensor_to_tracking.cast<float>()));
   } catch (const tf2::TransformException& ex) {
-    LOG(WARNING) << "Cannot transform " << frame_id << " -> "
-                 << options_.tracking_frame << ": " << ex.what();
+    LOG(WARNING) << ex.what();
   }
 }
 
@@ -469,6 +465,11 @@ bool Node::HandleSubmapQuery(
 bool Node::HandleFinishTrajectory(
     ::cartographer_ros_msgs::FinishTrajectory::Request& request,
     ::cartographer_ros_msgs::FinishTrajectory::Response& response) {
+  // After shutdown, ROS messages will no longer be received and therefore not
+  // pile up.
+  //
+  // TODO(whess): Continue with a new trajectory instead?
+  ::ros::shutdown();
   carto::common::MutexLocker lock(&mutex_);
   // TODO(whess): Add multi-trajectory support.
   sensor_collator_.FinishTrajectory(kTrajectoryBuilderId);
@@ -479,7 +480,7 @@ bool Node::HandleFinishTrajectory(
         map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
     if (!trajectory_nodes.empty()) {
       std::string filename = request.stem + ".pgm";
-      LOG(INFO) << "Saving final map to " << filename << "...";
+      LOG(INFO) << "Saving final map to '" << filename << "'...";
       ::nav_msgs::OccupancyGrid grid;
       BuildOccupancyGrid(trajectory_nodes, options_, &grid);
       std::ofstream output_file(filename, std::ios::out | std::ios::binary);
@@ -500,12 +501,10 @@ bool Node::HandleFinishTrajectory(
         }
       }
       output_file.close();
-      CHECK(output_file) << "Writing " << filename << " failed.";
+      CHECK(output_file) << "Writing '" << filename << "' failed.";
       // TODO(whess): Also write a yaml file similar to map_saver?
     }
   }
-  // TODO(whess): Continue with a new trajectory.
-  ::ros::shutdown();
   return true;
 }
 
@@ -575,8 +574,7 @@ void Node::PublishPoseAndScanMatchedPointCloud(
       tf_broadcaster_.sendTransform(stamped_transform);
     }
   } catch (const tf2::TransformException& ex) {
-    LOG(WARNING) << "Cannot transform " << options_.published_frame << " -> "
-                 << options_.tracking_frame << ": " << ex.what();
+    LOG(WARNING) << ex.what();
   }
 
   scan_matched_point_cloud_publisher_.publish(ToPointCloud2Message(
