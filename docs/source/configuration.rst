@@ -12,9 +12,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-=======================
-Configuration Reference
-=======================
+=============
+Configuration
+=============
 
 Note that Cartographer's ROS integration uses `tf2`_, thus all frame IDs are
 expected to contain only a frame name (lower-case with underscores) and no
@@ -52,7 +52,7 @@ provide_odom_frame
   the *odom_frame* in the *map_frame*.
 
 use_odometry_data
-  If enabled, subscribes to `nav_msgs::Odometry`_ on the topic "odom". Odometry
+  If enabled, subscribes to `nav_msgs/Odometry`_ on the topic "odom". Odometry
   must be provided in this case, and the information will be included in SLAM.
 
 use_constant_odometry_variance
@@ -68,12 +68,12 @@ constant_odometry_rotational_variance
   *use_constant_odometry_variance* is enabled.
 
 use_horizontal_laser
-  If enabled, the node subscribes to `sensor_msgs::LaserScan`_ on the "scan"
+  If enabled, the node subscribes to `sensor_msgs/LaserScan`_ on the "scan"
   topic. If 2D SLAM is used, either this or *use_horizontal_multi_echo_laser*
   must be enabled.
 
 use_horizontal_multi_echo_laser
-  If enabled, the node subscribes to  `sensor_msgs::MultiEchoLaserScan`_ on the
+  If enabled, the node subscribes to  `sensor_msgs/MultiEchoLaserScan`_ on the
   "echoes" topic. If 2D SLAM is used, either this or *use_horizontal_laser*
   must be enabled.
 
@@ -89,7 +89,7 @@ horizontal_laser_missing_echo_ray_length
 
 num_lasers_3d
   Number of 3D lasers to subscribe to. Must be a positive value if and only if
-  using 3D SLAM. Subscribes to `sensor_msgs::PointCloud2`_ on the "points2"
+  using 3D SLAM. Subscribes to `sensor_msgs/PointCloud2`_ on the "points2"
   topic for one laser, or topics "points2_1", "points2_2", etc for multiple
   lasers.
 
@@ -105,9 +105,9 @@ pose_publish_period_sec
 
 .. _REP 105: http://www.ros.org/reps/rep-0105.html
 .. _ROS Names: http://wiki.ros.org/Names
-.. _nav_msgs::OccupancyGrid: http://docs.ros.org/api/nav_msgs/html/msg/OccupancyGrid.html
-.. _nav_msgs::Odometry: http://docs.ros.org/api/nav_msgs/html/msg/Odometry.html
-.. _sensor_msgs::LaserScan: http://docs.ros.org/api/sensor_msgs/html/msg/LaserScan.html
-.. _sensor_msgs::MultiEchoLaserScan: http://docs.ros.org/api/sensor_msgs/html/msg/MultiEchoLaserScan.html
-.. _sensor_msgs::PointCloud2: http://docs.ros.org/api/sensor_msgs/html/msg/PointCloud2.html
+.. _nav_msgs/OccupancyGrid: http://docs.ros.org/api/nav_msgs/html/msg/OccupancyGrid.html
+.. _nav_msgs/Odometry: http://docs.ros.org/api/nav_msgs/html/msg/Odometry.html
+.. _sensor_msgs/LaserScan: http://docs.ros.org/api/sensor_msgs/html/msg/LaserScan.html
+.. _sensor_msgs/MultiEchoLaserScan: http://docs.ros.org/api/sensor_msgs/html/msg/MultiEchoLaserScan.html
+.. _sensor_msgs/PointCloud2: http://docs.ros.org/api/sensor_msgs/html/msg/PointCloud2.html
 .. _tf2: http://wiki.ros.org/tf2
