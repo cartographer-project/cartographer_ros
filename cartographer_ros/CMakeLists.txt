@@ -81,6 +81,8 @@ link_directories(${Boost_LIBRARY_DIRS})
 
 add_executable(cartographer_node
   src/cartographer_node_main.cc
+  src/map_writer.cc
+  src/map_writer.h
   src/msg_conversion.cc
   src/msg_conversion.h
   src/node_options.cc
@@ -100,7 +102,8 @@ target_link_libraries(cartographer_node
   ${CARTOGRAPHER_LIBRARIES}
   ${PCL_LIBRARIES}
   ${catkin_LIBRARIES}
-  gflags  # TODO(whess): CMake-ify?
+  gflags
+  yaml-cpp
 )
 add_dependencies(cartographer_node
   ${catkin_EXPORTED_TARGETS}

@@ -56,6 +56,7 @@
   <depend>pcl_conversions</depend>
   <depend>eigen_conversions</depend>
   <depend>message_runtime</depend>
+  <depend>yaml-cpp</depend>
 
   <test_depend>rosunit</test_depend>
 

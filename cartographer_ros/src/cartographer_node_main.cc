@@ -15,7 +15,6 @@
  */
 
 #include <chrono>
-#include <fstream>
 #include <map>
 #include <queue>
 #include <string>
@@ -63,6 +62,7 @@
 #include "tf2_ros/transform_broadcaster.h"
 #include "tf2_ros/transform_listener.h"
 
+#include "map_writer.h"
 #include "msg_conversion.h"
 #include "node_options.h"
 #include "occupancy_grid.h"
@@ -479,30 +479,11 @@ bool Node::HandleFinishTrajectory(
     const auto trajectory_nodes =
         map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
     if (!trajectory_nodes.empty()) {
-      std::string filename = request.stem + ".pgm";
-      LOG(INFO) << "Saving final map to '" << filename << "'...";
-      ::nav_msgs::OccupancyGrid grid;
-      BuildOccupancyGrid(trajectory_nodes, options_, &grid);
-      std::ofstream output_file(filename, std::ios::out | std::ios::binary);
-      const std::string header =
-          "P5\n# Cartographer map; " + std::to_string(grid.info.resolution) +
-          " m/pixel\n" + std::to_string(grid.info.width) + " " +
-          std::to_string(grid.info.height) + "\n255\n";
-      output_file.write(header.data(), header.size());
-      for (size_t y = 0; y < grid.info.height; ++y) {
-        for (size_t x = 0; x < grid.info.width; ++x) {
-          size_t i = x + (grid.info.height - y - 1) * grid.info.width;
-          if (grid.data[i] >= 0 && grid.data[i] <= 100) {
-            output_file.put((100 - grid.data[i]) * 254 / 100);
-          } else {
-            constexpr uint8_t kUnknownValue = 205;
-            output_file.put(kUnknownValue);
-          }
-        }
-      }
-      output_file.close();
-      CHECK(output_file) << "Writing '" << filename << "' failed.";
-      // TODO(whess): Also write a yaml file similar to map_saver?
+      ::nav_msgs::OccupancyGrid occupancy_grid;
+      BuildOccupancyGrid(trajectory_nodes, options_, &occupancy_grid);
+      WriteOccupancyGridToPgmAndYaml(occupancy_grid, request.stem);
+    } else {
+      LOG(WARNING) << "Map is empty and will not be saved.";
     }
   }
   return true;
