@@ -67,6 +67,8 @@ DrawableSubmap::DrawableSubmap(const int submap_id, const int trajectory_id,
                                GetSubmapIdentifier(trajectory_id_, submap_id));
   material_->setReceiveShadows(false);
   material_->getTechnique(0)->setLightingEnabled(false);
+  material_->setCullingMode(Ogre::CULL_NONE);
+  material_->setDepthBias(-1.f, 0.f);
   material_->setDepthWriteEnabled(false);
   scene_node_->attachObject(manual_object_);
   connect(this, SIGNAL(RequestSucceeded()), this, SLOT(UpdateSceneNode()));
