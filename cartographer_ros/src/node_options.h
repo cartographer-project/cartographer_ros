@@ -23,25 +23,22 @@
 #include "cartographer/common/port.h"
 #include "cartographer/mapping/map_builder.h"
 
+#include "sensor_bridge.h"
+
 namespace cartographer_ros {
 
 // Top-level options of Cartographer's ROS integration.
 struct NodeOptions {
   ::cartographer::mapping::proto::MapBuilderOptions map_builder_options;
+  SensorBridgeOptions sensor_bridge_options;
   string map_frame;
   string tracking_frame;
   string published_frame;
   string odom_frame;
   bool provide_odom_frame;
   bool use_odometry_data;
-  bool use_constant_odometry_variance;
-  double constant_odometry_translational_variance;
-  double constant_odometry_rotational_variance;
   bool use_horizontal_laser;
   bool use_horizontal_multi_echo_laser;
-  double horizontal_laser_min_range;
-  double horizontal_laser_max_range;
-  double horizontal_laser_missing_echo_ray_length;
   int num_lasers_3d;
   double lookup_transform_timeout_sec;
   double submap_publish_period_sec;

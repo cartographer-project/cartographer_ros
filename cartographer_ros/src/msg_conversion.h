@@ -73,6 +73,7 @@ geometry_msgs::Pose ToGeometryMsgPose(
 ::cartographer::transform::Rigid3d ToRigid3d(const geometry_msgs::Pose& pose);
 
 Eigen::Vector3d ToEigen(const geometry_msgs::Vector3& vector3);
+
 Eigen::Quaterniond ToEigen(const geometry_msgs::Quaternion& quaternion);
 
 ::cartographer::kalman_filter::PoseCovariance ToPoseCovariance(
