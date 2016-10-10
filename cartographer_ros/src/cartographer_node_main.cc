@@ -504,7 +504,7 @@ void Node::HandleSensorData(const int64 timestamp,
   }
 
   const auto time = carto::common::FromUniversal(timestamp);
-  auto trajectory_builder =
+  auto* const trajectory_builder =
       map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId);
   switch (sensor_data->type) {
     case SensorType::kImu:
