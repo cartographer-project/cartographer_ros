@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_ROS_SENSOR_DATA_PRODUCER_H_
-#define CARTOGRAPHER_ROS_SENSOR_DATA_PRODUCER_H_
+#ifndef CARTOGRAPHER_ROS_SENSOR_BRIDGE_H_
+#define CARTOGRAPHER_ROS_SENSOR_BRIDGE_H_
 
 #include "cartographer/mapping/sensor_collator.h"
 #include "geometry_msgs/Transform.h"
@@ -32,14 +32,14 @@ namespace cartographer_ros {
 
 // A wrapper around SensorCollator that converts ROS messages into our internal
 // representation and passes them on to the 'sensor_collator'.
-class SensorDataProducer {
+class SensorBridge {
  public:
-  explicit SensorDataProducer(
+  explicit SensorBridge(
       int trajectory_id,
       ::cartographer::mapping::SensorCollator<SensorData>* sensor_collator);
 
-  SensorDataProducer(const SensorDataProducer&) = delete;
-  SensorDataProducer& operator=(const SensorDataProducer&) = delete;
+  SensorBridge(const SensorBridge&) = delete;
+  SensorBridge& operator=(const SensorBridge&) = delete;
 
   void AddOdometryMessage(const string& topic,
                           const nav_msgs::Odometry::ConstPtr& msg);
@@ -60,4 +60,4 @@ class SensorDataProducer {
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAPHER_ROS_SENSOR_DATA_PRODUCER_H_
+#endif  // CARTOGRAPHER_ROS_SENSOR_BRIDGE_H_

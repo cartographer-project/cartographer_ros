@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-#include "sensor_data_producer.h"
+#include "sensor_bridge.h"
 
 #include "msg_conversion.h"
 #include "time_conversion.h"
 
 namespace cartographer_ros {
 
-SensorDataProducer::SensorDataProducer(
+SensorBridge::SensorBridge(
     const int trajectory_id,
     ::cartographer::mapping::SensorCollator<SensorData>* sensor_collator)
     : trajectory_id_(trajectory_id), sensor_collator_(sensor_collator) {}
 
-void SensorDataProducer::AddOdometryMessage(
-    const string& topic, const nav_msgs::Odometry::ConstPtr& msg) {
+void SensorBridge::AddOdometryMessage(const string& topic,
+                                      const nav_msgs::Odometry::ConstPtr& msg) {
   auto sensor_data = ::cartographer::common::make_unique<SensorData>(
       msg->child_frame_id,
       SensorData::Odometry{ToRigid3d(msg->pose.pose),
@@ -38,8 +38,8 @@ void SensorDataProducer::AddOdometryMessage(
       std::move(sensor_data));
 }
 
-void SensorDataProducer::AddImuMessage(const string& topic,
-                                       const sensor_msgs::Imu::ConstPtr& msg) {
+void SensorBridge::AddImuMessage(const string& topic,
+                                 const sensor_msgs::Imu::ConstPtr& msg) {
   auto sensor_data = ::cartographer::common::make_unique<SensorData>(
       msg->header.frame_id, ToCartographer(*msg));
   sensor_collator_->AddSensorData(
@@ -48,7 +48,7 @@ void SensorDataProducer::AddImuMessage(const string& topic,
       std::move(sensor_data));
 }
 
-void SensorDataProducer::AddLaserScanMessage(
+void SensorBridge::AddLaserScanMessage(
     const string& topic, const sensor_msgs::LaserScan::ConstPtr& msg) {
   auto sensor_data = ::cartographer::common::make_unique<SensorData>(
       msg->header.frame_id, ToCartographer(*msg));
@@ -58,7 +58,7 @@ void SensorDataProducer::AddLaserScanMessage(
       std::move(sensor_data));
 }
 
-void SensorDataProducer::AddMultiEchoLaserScanMessage(
+void SensorBridge::AddMultiEchoLaserScanMessage(
     const string& topic, const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
   auto sensor_data = ::cartographer::common::make_unique<SensorData>(
       msg->header.frame_id, ToCartographer(*msg));
@@ -68,7 +68,7 @@ void SensorDataProducer::AddMultiEchoLaserScanMessage(
       std::move(sensor_data));
 }
 
-void SensorDataProducer::AddPointCloud2Message(
+void SensorBridge::AddPointCloud2Message(
     const string& topic, const sensor_msgs::PointCloud2::ConstPtr& msg) {
   pcl::PointCloud<pcl::PointXYZ> pcl_points;
   pcl::fromROSMsg(*msg, pcl_points);

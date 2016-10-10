@@ -67,8 +67,8 @@
 #include "node_options.h"
 #include "occupancy_grid.h"
 #include "ros_log_sink.h"
+#include "sensor_bridge.h"
 #include "sensor_data.h"
-#include "sensor_data_producer.h"
 #include "time_conversion.h"
 
 DEFINE_string(configuration_directory, "",
@@ -156,7 +156,7 @@ class Node {
   carto::mapping::MapBuilder map_builder_ GUARDED_BY(mutex_);
   carto::mapping::SensorCollator<SensorData> sensor_collator_
       GUARDED_BY(mutex_);
-  SensorDataProducer sensor_data_producer_ GUARDED_BY(mutex_);
+  SensorBridge sensor_bridge_ GUARDED_BY(mutex_);
 
   ::ros::NodeHandle node_handle_;
   ::ros::Subscriber imu_subscriber_;
@@ -190,7 +190,7 @@ class Node {
 Node::Node(const NodeOptions& options)
     : options_(options),
       map_builder_(options.map_builder_options, &constant_data_),
-      sensor_data_producer_(kTrajectoryBuilderId, &sensor_collator_),
+      sensor_bridge_(kTrajectoryBuilderId, &sensor_collator_),
       tf_buffer_(::ros::Duration(1000)),
       tf_(tf_buffer_) {}
 
@@ -318,7 +318,7 @@ void Node::Initialize() {
         kLaserScanTopic, kInfiniteSubscriberQueueSize,
         boost::function<void(const sensor_msgs::LaserScan::ConstPtr&)>(
             [this](const sensor_msgs::LaserScan::ConstPtr& msg) {
-              sensor_data_producer_.AddLaserScanMessage(kLaserScanTopic, msg);
+              sensor_bridge_.AddLaserScanMessage(kLaserScanTopic, msg);
             }));
     expected_sensor_identifiers.insert(kLaserScanTopic);
   }
@@ -327,7 +327,7 @@ void Node::Initialize() {
         kMultiEchoLaserScanTopic, kInfiniteSubscriberQueueSize,
         boost::function<void(const sensor_msgs::MultiEchoLaserScan::ConstPtr&)>(
             [this](const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
-              sensor_data_producer_.AddMultiEchoLaserScanMessage(
+              sensor_bridge_.AddMultiEchoLaserScanMessage(
                   kMultiEchoLaserScanTopic, msg);
             }));
     expected_sensor_identifiers.insert(kMultiEchoLaserScanTopic);
@@ -344,7 +344,7 @@ void Node::Initialize() {
           topic, kInfiniteSubscriberQueueSize,
           boost::function<void(const sensor_msgs::PointCloud2::ConstPtr&)>(
               [this, topic](const sensor_msgs::PointCloud2::ConstPtr& msg) {
-                sensor_data_producer_.AddPointCloud2Message(topic, msg);
+                sensor_bridge_.AddPointCloud2Message(topic, msg);
               })));
       expected_sensor_identifiers.insert(topic);
     }
@@ -360,7 +360,7 @@ void Node::Initialize() {
         kImuTopic, kInfiniteSubscriberQueueSize,
         boost::function<void(const sensor_msgs::Imu::ConstPtr& msg)>(
             [this](const sensor_msgs::Imu::ConstPtr& msg) {
-              sensor_data_producer_.AddImuMessage(kImuTopic, msg);
+              sensor_bridge_.AddImuMessage(kImuTopic, msg);
             }));
     expected_sensor_identifiers.insert(kImuTopic);
   }
@@ -370,7 +370,7 @@ void Node::Initialize() {
         kOdometryTopic, kInfiniteSubscriberQueueSize,
         boost::function<void(const nav_msgs::Odometry::ConstPtr&)>(
             [this](const nav_msgs::Odometry::ConstPtr& msg) {
-              sensor_data_producer_.AddOdometryMessage(kOdometryTopic, msg);
+              sensor_bridge_.AddOdometryMessage(kOdometryTopic, msg);
             }));
     expected_sensor_identifiers.insert(kOdometryTopic);
   }
