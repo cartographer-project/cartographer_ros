@@ -123,23 +123,6 @@ sensor_msgs::MultiEchoLaserScan ToMultiEchoLaserScanMessage(
   return msg;
 }
 
-sensor_msgs::Imu ToImuMessage(const int64 timestamp, const string& frame_id,
-                              const ::cartographer::sensor::proto::Imu& imu) {
-  sensor_msgs::Imu message;
-  message.header.stamp =
-      ToRos(::cartographer::common::FromUniversal(timestamp));
-  message.header.frame_id = frame_id;
-
-  ToMessage(imu.orientation(), &message.orientation);
-  message.orientation_covariance = {{0., 0., 0., 0., 0., 0., 0., 0., 0.}};
-  ToMessage(imu.angular_velocity(), &message.angular_velocity);
-  message.angular_velocity_covariance = {{0., 0., 0., 0., 0., 0., 0., 0., 0.}};
-  ToMessage(imu.linear_acceleration(), &message.linear_acceleration);
-  message.linear_acceleration_covariance = {
-      {0., 0., 0., 0., 0., 0., 0., 0., 0.}};
-  return message;
-}
-
 sensor_msgs::LaserScan ToLaserScan(
     const int64 timestamp, const string& frame_id,
     const ::cartographer::sensor::proto::LaserScan& laser_scan) {
@@ -213,33 +196,6 @@ sensor_msgs::PointCloud2 ToPointCloud2Message(
     stream.next(kPointCloudComponentFourMagic);
   }
   return msg;
-}
-
-::cartographer::sensor::proto::Imu ToCartographer(const sensor_msgs::Imu& msg) {
-  ::cartographer::sensor::proto::Imu proto;
-
-  if (msg.orientation_covariance[0] != -1) {
-    auto* orientation = proto.mutable_orientation();
-    orientation->set_x(msg.orientation.x);
-    orientation->set_y(msg.orientation.y);
-    orientation->set_z(msg.orientation.z);
-    orientation->set_w(msg.orientation.w);
-  }
-
-  if (msg.angular_velocity_covariance[0] != -1) {
-    auto* angular_velocity = proto.mutable_angular_velocity();
-    angular_velocity->set_x(msg.angular_velocity.x);
-    angular_velocity->set_y(msg.angular_velocity.y);
-    angular_velocity->set_z(msg.angular_velocity.z);
-  }
-
-  if (msg.linear_acceleration_covariance[0] != -1) {
-    auto* linear_acceleration = proto.mutable_linear_acceleration();
-    linear_acceleration->set_x(msg.linear_acceleration.x);
-    linear_acceleration->set_y(msg.linear_acceleration.y);
-    linear_acceleration->set_z(msg.linear_acceleration.z);
-  }
-  return proto;
 }
 
 ::cartographer::sensor::proto::LaserScan ToCartographer(

@@ -22,11 +22,13 @@
 #include "cartographer/kalman_filter/pose_tracker.h"
 #include "cartographer/sensor/proto/sensor.pb.h"
 #include "cartographer/transform/rigid_transform.h"
+#include "glog/logging.h"
 
 namespace cartographer_ros {
 
-// This type is a logical union, i.e. only one proto is actually filled in. It
-// is only used for time ordering sensor data before passing it on.
+// This type is a logical union, i.e. only one type of sensor data is actually
+// filled in. It is only used for time ordering sensor data before passing it
+// on.
 enum class SensorType { kImu, kLaserScan, kLaserFan3D, kOdometry };
 struct SensorData {
   struct Odometry {
@@ -34,19 +36,43 @@ struct SensorData {
     ::cartographer::kalman_filter::PoseCovariance covariance;
   };
 
-  SensorData(const string& frame_id, ::cartographer::sensor::proto::Imu imu);
-  SensorData(const string& frame_id,
-             ::cartographer::sensor::proto::LaserScan laser_scan);
-  SensorData(const string& frame_id,
-             ::cartographer::sensor::proto::LaserFan3D laser_fan_3d);
-  SensorData(const string& frame_id, const Odometry& odometry);
+  struct Imu {
+    Eigen::Vector3d angular_velocity;
+    Eigen::Vector3d linear_acceleration;
+  };
+
+  SensorData(const string& frame_id, const Imu& imu)
+      : type(SensorType::kImu),
+        frame_id(CheckNoLeadingSlash(frame_id)),
+        imu(imu) {}
+
+  SensorData(const string& frame_id, const ::cartographer::sensor::proto::LaserScan& laser_scan)
+      : type(SensorType::kLaserScan),
+        frame_id(CheckNoLeadingSlash(frame_id)),
+        laser_scan(laser_scan) {}
+
+  SensorData(const string& frame_id, const ::cartographer::sensor::proto::LaserFan3D& laser_fan_3d)
+      : type(SensorType::kLaserFan3D),
+        frame_id(CheckNoLeadingSlash(frame_id)),
+        laser_fan_3d(laser_fan_3d) {}
+
+  SensorData(const string& frame_id, const Odometry& odometry)
+      : type(SensorType::kOdometry), frame_id(frame_id), odometry(odometry) {}
 
   SensorType type;
   string frame_id;
-  ::cartographer::sensor::proto::Imu imu;
+  Imu imu;
   ::cartographer::sensor::proto::LaserScan laser_scan;
   ::cartographer::sensor::proto::LaserFan3D laser_fan_3d;
   Odometry odometry;
+
+  private:
+    static const string& CheckNoLeadingSlash(const string& frame_id) {
+      if (frame_id.size() > 0) {
+        CHECK_NE(frame_id[0], '/');
+      }
+      return frame_id;
+    }
 };
 
 }  // namespace cartographer_ros

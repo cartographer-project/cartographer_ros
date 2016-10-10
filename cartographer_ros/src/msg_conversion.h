@@ -44,9 +44,6 @@ sensor_msgs::MultiEchoLaserScan ToMultiEchoLaserScanMessage(
     int64 timestamp, const string& frame_id,
     const ::cartographer::sensor::proto::LaserScan& laser_scan);
 
-sensor_msgs::Imu ToImuMessage(int64 timestamp, const string& frame_id,
-                              const ::cartographer::sensor::proto::Imu& imu);
-
 sensor_msgs::PointCloud2 ToPointCloud2Message(
     int64 timestamp, const string& frame_id,
     const ::cartographer::sensor::PointCloud& point_cloud);
@@ -60,8 +57,6 @@ geometry_msgs::Transform ToGeometryMsgTransform(
 
 geometry_msgs::Pose ToGeometryMsgPose(
     const ::cartographer::transform::Rigid3d& rigid);
-
-::cartographer::sensor::proto::Imu ToCartographer(const sensor_msgs::Imu& msg);
 
 ::cartographer::sensor::proto::LaserScan ToCartographer(
     const sensor_msgs::LaserScan& msg);
