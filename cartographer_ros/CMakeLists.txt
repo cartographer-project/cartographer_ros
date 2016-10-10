@@ -91,10 +91,10 @@ add_executable(cartographer_node
   src/occupancy_grid.h
   src/ros_log_sink.cc
   src/ros_log_sink.h
+  src/sensor_bridge.cc
+  src/sensor_bridge.h
   src/sensor_data.cc
   src/sensor_data.h
-  src/sensor_data_producer.cc
-  src/sensor_data_producer.h
   src/time_conversion.cc
   src/time_conversion.h
 )
