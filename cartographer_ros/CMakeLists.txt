@@ -94,6 +94,8 @@ add_executable(cartographer_node
   src/sensor_bridge.cc
   src/sensor_bridge.h
   src/sensor_data.h
+  src/tf_bridge.cc
+  src/tf_bridge.h
   src/time_conversion.cc
   src/time_conversion.h
 )

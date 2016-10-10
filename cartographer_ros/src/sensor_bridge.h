@@ -18,6 +18,8 @@
 #define CARTOGRAPHER_ROS_SENSOR_BRIDGE_H_
 
 #include "cartographer/mapping/sensor_collator.h"
+#include "cartographer/transform/rigid_transform.h"
+#include "cartographer/transform/transform.h"
 #include "geometry_msgs/Transform.h"
 #include "geometry_msgs/TransformStamped.h"
 #include "nav_msgs/OccupancyGrid.h"
@@ -28,34 +30,54 @@
 #include "sensor_msgs/MultiEchoLaserScan.h"
 #include "sensor_msgs/PointCloud2.h"
 
+#include "tf_bridge.h"
+
 namespace cartographer_ros {
 
-// A wrapper around SensorCollator that converts ROS messages into our internal
-// representation and passes them on to the 'sensor_collator'.
+struct SensorBridgeOptions {
+  double horizontal_laser_min_range;
+  double horizontal_laser_max_range;
+  double horizontal_laser_missing_echo_ray_length;
+  double constant_odometry_translational_variance;
+  double constant_odometry_rotational_variance;
+};
+
+SensorBridgeOptions CreateSensorBridgeOptions(
+    ::cartographer::common::LuaParameterDictionary* lua_parameter_dictionary);
+
+// Converts ROS messages into SensorData in tracking frame for the MapBuilder.
 class SensorBridge {
  public:
   explicit SensorBridge(
+      const SensorBridgeOptions& options, const TfBridge* tf_bridge,
       int trajectory_id,
       ::cartographer::mapping::SensorCollator<SensorData>* sensor_collator);
 
   SensorBridge(const SensorBridge&) = delete;
   SensorBridge& operator=(const SensorBridge&) = delete;
 
-  void AddOdometryMessage(const string& topic,
-                          const nav_msgs::Odometry::ConstPtr& msg);
-  void AddImuMessage(const string& topic,
-                     const sensor_msgs::Imu::ConstPtr& msg);
-  void AddLaserScanMessage(const string& topic,
-                           const sensor_msgs::LaserScan::ConstPtr& msg);
-  void AddMultiEchoLaserScanMessage(
+  void HandleOdometryMessage(const string& topic,
+                             const nav_msgs::Odometry::ConstPtr& msg);
+  void HandleImuMessage(const string& topic,
+                        const sensor_msgs::Imu::ConstPtr& msg);
+  void HandleLaserScanMessage(const string& topic,
+                              const sensor_msgs::LaserScan::ConstPtr& msg);
+  void HandleMultiEchoLaserScanMessage(
       const string& topic,
       const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg);
-  void AddPointCloud2Message(const string& topic,
-                             const sensor_msgs::PointCloud2::ConstPtr& msg);
+  void HandlePointCloud2Message(const string& topic,
+                                const sensor_msgs::PointCloud2::ConstPtr& msg);
 
  private:
+  void HandleLaserScanProto(
+      const string& topic, const ::cartographer::common::Time time,
+      const string& frame_id,
+      const ::cartographer::sensor::proto::LaserScan& laser_scan);
+
+  const SensorBridgeOptions options_;
+  const TfBridge* const tf_bridge_;
   const int trajectory_id_;
-  ::cartographer::mapping::SensorCollator<SensorData>* sensor_collator_;
+  ::cartographer::mapping::SensorCollator<SensorData>* const sensor_collator_;
 };
 
 }  // namespace cartographer_ros

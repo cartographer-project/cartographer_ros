@@ -69,6 +69,7 @@
 #include "ros_log_sink.h"
 #include "sensor_bridge.h"
 #include "sensor_data.h"
+#include "tf_bridge.h"
 #include "time_conversion.h"
 
 DEFINE_string(configuration_directory, "",
@@ -122,20 +123,6 @@ class Node {
  private:
   void HandleSensorData(int64 timestamp,
                         std::unique_ptr<SensorData> sensor_data);
-
-  void AddOdometry(int64 timestamp, const string& frame_id,
-                   const SensorData::Odometry& odometry);
-  void AddImu(int64 timestamp, const string& frame_id, const SensorData::Imu& imu);
-  void AddHorizontalLaserFan(int64 timestamp, const string& frame_id,
-                             const proto::LaserScan& laser_scan);
-  void AddLaserFan3D(int64 timestamp, const string& frame_id,
-                     const proto::LaserFan3D& laser_fan_3d);
-
-  // Returns a transform for 'frame_id' to 'options_.tracking_frame' if it
-  // exists at 'time' or throws tf2::TransformException if it does not exist.
-  Rigid3d LookupToTrackingTransformOrThrow(carto::common::Time time,
-                                           const string& frame_id);
-
   bool HandleSubmapQuery(
       ::cartographer_ros_msgs::SubmapQuery::Request& request,
       ::cartographer_ros_msgs::SubmapQuery::Response& response);
@@ -149,6 +136,11 @@ class Node {
   void SpinOccupancyGridThreadForever();
 
   const NodeOptions options_;
+
+  tf2_ros::Buffer tf_buffer_;
+  tf2_ros::TransformListener tf_;
+  tf2_ros::TransformBroadcaster tf_broadcaster_;
+  TfBridge tf_bridge_;
 
   carto::common::Mutex mutex_;
   std::deque<carto::mapping::TrajectoryNode::ConstantData> constant_data_
@@ -170,10 +162,6 @@ class Node {
       carto::common::Time::min();
   ::ros::ServiceServer finish_trajectory_server_;
 
-  tf2_ros::Buffer tf_buffer_;
-  tf2_ros::TransformListener tf_;
-  tf2_ros::TransformBroadcaster tf_broadcaster_;
-
   ::ros::Publisher occupancy_grid_publisher_;
   std::thread occupancy_grid_thread_;
   bool terminating_ = false GUARDED_BY(mutex_);
@@ -189,10 +177,13 @@ class Node {
 
 Node::Node(const NodeOptions& options)
     : options_(options),
-      map_builder_(options.map_builder_options, &constant_data_),
-      sensor_bridge_(kTrajectoryBuilderId, &sensor_collator_),
       tf_buffer_(::ros::Duration(1000)),
-      tf_(tf_buffer_) {}
+      tf_(tf_buffer_),
+      tf_bridge_(options_.tracking_frame, options_.lookup_transform_timeout_sec,
+                 &tf_buffer_),
+      map_builder_(options.map_builder_options, &constant_data_),
+      sensor_bridge_(options.sensor_bridge_options, &tf_bridge_,
+                     kTrajectoryBuilderId, &sensor_collator_) {}
 
 Node::~Node() {
   {
@@ -201,107 +192,6 @@ Node::~Node() {
   }
   if (occupancy_grid_thread_.joinable()) {
     occupancy_grid_thread_.join();
-  }
-}
-
-Rigid3d Node::LookupToTrackingTransformOrThrow(const carto::common::Time time,
-                                               const string& frame_id) {
-  ::ros::Duration timeout(options_.lookup_transform_timeout_sec);
-  const ::ros::Time latest_tf_time =
-      tf_buffer_
-          .lookupTransform(options_.tracking_frame, frame_id, ::ros::Time(0.),
-                           timeout)
-          .header.stamp;
-  const ::ros::Time requested_time = ToRos(time);
-  if (latest_tf_time >= requested_time) {
-    // We already have newer data, so we do not wait. Otherwise, we would wait
-    // for the full 'timeout' even if we ask for data that is too old.
-    timeout = ::ros::Duration(0.);
-  }
-  return ToRigid3d(tf_buffer_.lookupTransform(options_.tracking_frame, frame_id,
-                                              requested_time, timeout));
-}
-
-void Node::AddOdometry(const int64 timestamp, const string& frame_id,
-                       const SensorData::Odometry& odometry) {
-  const carto::common::Time time = carto::common::FromUniversal(timestamp);
-  PoseCovariance applied_covariance = odometry.covariance;
-  if (options_.use_constant_odometry_variance) {
-    const Eigen::Matrix3d translational =
-        Eigen::Matrix3d::Identity() *
-        options_.constant_odometry_translational_variance;
-    const Eigen::Matrix3d rotational =
-        Eigen::Matrix3d::Identity() *
-        options_.constant_odometry_rotational_variance;
-    // clang-format off
-    applied_covariance <<
-        translational, Eigen::Matrix3d::Zero(),
-        Eigen::Matrix3d::Zero(), rotational;
-    // clang-format on
-  }
-  try {
-    const Rigid3d sensor_to_tracking =
-        LookupToTrackingTransformOrThrow(time, frame_id);
-    map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
-        ->AddOdometerPose(time, odometry.pose * sensor_to_tracking.inverse(),
-                          applied_covariance);
-  } catch (const tf2::TransformException& ex) {
-    LOG(WARNING) << ex.what();
-  }
-}
-
-void Node::AddImu(const int64 timestamp, const string& frame_id,
-                  const SensorData::Imu& imu) {
-  const carto::common::Time time = carto::common::FromUniversal(timestamp);
-  try {
-    const Rigid3d sensor_to_tracking =
-        LookupToTrackingTransformOrThrow(time, frame_id);
-    CHECK(sensor_to_tracking.translation().norm() < 1e-5)
-        << "The IMU frame must be colocated with the tracking frame. "
-           "Transforming linear acceleration into the tracking frame will "
-           "otherwise be imprecise.";
-    map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
-        ->AddImuData(time,
-                     sensor_to_tracking.rotation() * imu.linear_acceleration,
-                     sensor_to_tracking.rotation() * imu.angular_velocity);
-  } catch (const tf2::TransformException& ex) {
-    LOG(WARNING) << ex.what();
-  }
-}
-
-void Node::AddHorizontalLaserFan(const int64 timestamp, const string& frame_id,
-                                 const proto::LaserScan& laser_scan) {
-  const carto::common::Time time = carto::common::FromUniversal(timestamp);
-  try {
-    const Rigid3d sensor_to_tracking =
-        LookupToTrackingTransformOrThrow(time, frame_id);
-    const carto::sensor::LaserFan laser_fan = carto::sensor::ToLaserFan(
-        laser_scan, options_.horizontal_laser_min_range,
-        options_.horizontal_laser_max_range,
-        options_.horizontal_laser_missing_echo_ray_length);
-
-    const auto laser_fan_3d = carto::sensor::TransformLaserFan3D(
-        carto::sensor::ToLaserFan3D(laser_fan),
-        sensor_to_tracking.cast<float>());
-    map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
-        ->AddHorizontalLaserFan(time, laser_fan_3d);
-  } catch (const tf2::TransformException& ex) {
-    LOG(WARNING) << ex.what();
-  }
-}
-
-void Node::AddLaserFan3D(const int64 timestamp, const string& frame_id,
-                         const proto::LaserFan3D& laser_fan_3d) {
-  const carto::common::Time time = carto::common::FromUniversal(timestamp);
-  try {
-    const Rigid3d sensor_to_tracking =
-        LookupToTrackingTransformOrThrow(time, frame_id);
-    map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
-        ->AddLaserFan3D(time, carto::sensor::TransformLaserFan3D(
-                                  carto::sensor::FromProto(laser_fan_3d),
-                                  sensor_to_tracking.cast<float>()));
-  } catch (const tf2::TransformException& ex) {
-    LOG(WARNING) << ex.what();
   }
 }
 
@@ -316,7 +206,7 @@ void Node::Initialize() {
         kLaserScanTopic, kInfiniteSubscriberQueueSize,
         boost::function<void(const sensor_msgs::LaserScan::ConstPtr&)>(
             [this](const sensor_msgs::LaserScan::ConstPtr& msg) {
-              sensor_bridge_.AddLaserScanMessage(kLaserScanTopic, msg);
+              sensor_bridge_.HandleLaserScanMessage(kLaserScanTopic, msg);
             }));
     expected_sensor_identifiers.insert(kLaserScanTopic);
   }
@@ -325,7 +215,7 @@ void Node::Initialize() {
         kMultiEchoLaserScanTopic, kInfiniteSubscriberQueueSize,
         boost::function<void(const sensor_msgs::MultiEchoLaserScan::ConstPtr&)>(
             [this](const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
-              sensor_bridge_.AddMultiEchoLaserScanMessage(
+              sensor_bridge_.HandleMultiEchoLaserScanMessage(
                   kMultiEchoLaserScanTopic, msg);
             }));
     expected_sensor_identifiers.insert(kMultiEchoLaserScanTopic);
@@ -342,7 +232,7 @@ void Node::Initialize() {
           topic, kInfiniteSubscriberQueueSize,
           boost::function<void(const sensor_msgs::PointCloud2::ConstPtr&)>(
               [this, topic](const sensor_msgs::PointCloud2::ConstPtr& msg) {
-                sensor_bridge_.AddPointCloud2Message(topic, msg);
+                sensor_bridge_.HandlePointCloud2Message(topic, msg);
               })));
       expected_sensor_identifiers.insert(topic);
     }
@@ -358,7 +248,7 @@ void Node::Initialize() {
         kImuTopic, kInfiniteSubscriberQueueSize,
         boost::function<void(const sensor_msgs::Imu::ConstPtr& msg)>(
             [this](const sensor_msgs::Imu::ConstPtr& msg) {
-              sensor_bridge_.AddImuMessage(kImuTopic, msg);
+              sensor_bridge_.HandleImuMessage(kImuTopic, msg);
             }));
     expected_sensor_identifiers.insert(kImuTopic);
   }
@@ -368,7 +258,7 @@ void Node::Initialize() {
         kOdometryTopic, kInfiniteSubscriberQueueSize,
         boost::function<void(const nav_msgs::Odometry::ConstPtr&)>(
             [this](const nav_msgs::Odometry::ConstPtr& msg) {
-              sensor_bridge_.AddOdometryMessage(kOdometryTopic, msg);
+              sensor_bridge_.HandleOdometryMessage(kOdometryTopic, msg);
             }));
     expected_sensor_identifiers.insert(kOdometryTopic);
   }
@@ -533,9 +423,9 @@ void Node::PublishPoseAndScanMatchedPointCloud(
   geometry_msgs::TransformStamped stamped_transform;
   stamped_transform.header.stamp = ToRos(last_pose_estimate.time);
 
-  try {
-    const Rigid3d published_to_tracking = LookupToTrackingTransformOrThrow(
-        last_pose_estimate.time, options_.published_frame);
+  const auto published_to_tracking = tf_bridge_.LookupToTracking(
+      last_pose_estimate.time, options_.published_frame);
+  if (published_to_tracking != nullptr) {
     if (options_.provide_odom_frame) {
       stamped_transform.header.frame_id = options_.map_frame;
       stamped_transform.child_frame_id = options_.odom_frame;
@@ -545,17 +435,15 @@ void Node::PublishPoseAndScanMatchedPointCloud(
       stamped_transform.header.frame_id = options_.odom_frame;
       stamped_transform.child_frame_id = options_.published_frame;
       stamped_transform.transform =
-          ToGeometryMsgTransform(tracking_to_local * published_to_tracking);
+          ToGeometryMsgTransform(tracking_to_local * (*published_to_tracking));
       tf_broadcaster_.sendTransform(stamped_transform);
     } else {
       stamped_transform.header.frame_id = options_.map_frame;
       stamped_transform.child_frame_id = options_.published_frame;
       stamped_transform.transform =
-          ToGeometryMsgTransform(tracking_to_map * published_to_tracking);
+          ToGeometryMsgTransform(tracking_to_map * (*published_to_tracking));
       tf_broadcaster_.sendTransform(stamped_transform);
     }
-  } catch (const tf2::TransformException& ex) {
-    LOG(WARNING) << ex.what();
   }
 
   // We only publish a point cloud if it has changed. It is not needed at high
@@ -615,23 +503,28 @@ void Node::HandleSensorData(const int64 timestamp,
     last_sensor_data_rates_logging_time_ = std::chrono::steady_clock::now();
   }
 
+  const auto time = carto::common::FromUniversal(timestamp);
+  auto* const trajectory_builder =
+      map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId);
   switch (sensor_data->type) {
     case SensorType::kImu:
-      AddImu(timestamp, sensor_data->frame_id, sensor_data->imu);
-      return;
-
-    case SensorType::kLaserScan:
-      AddHorizontalLaserFan(timestamp, sensor_data->frame_id,
-                            sensor_data->laser_scan);
+      trajectory_builder->AddImuData(time, sensor_data->imu.linear_acceleration,
+                                     sensor_data->imu.angular_velocity);
       return;
 
     case SensorType::kLaserFan3D:
-      AddLaserFan3D(timestamp, sensor_data->frame_id,
-                    sensor_data->laser_fan_3d);
+      if (options_.map_builder_options.use_trajectory_builder_2d()) {
+        trajectory_builder->AddHorizontalLaserFan(time,
+                                                  sensor_data->laser_fan_3d);
+      } else {
+        CHECK(options_.map_builder_options.use_trajectory_builder_3d());
+        trajectory_builder->AddLaserFan3D(time, sensor_data->laser_fan_3d);
+      }
       return;
 
     case SensorType::kOdometry:
-      AddOdometry(timestamp, sensor_data->frame_id, sensor_data->odometry);
+      trajectory_builder->AddOdometerPose(time, sensor_data->odometry.pose,
+                                          sensor_data->odometry.covariance);
       return;
   }
   LOG(FATAL);

@@ -55,17 +55,11 @@ use_odometry_data
   If enabled, subscribes to `nav_msgs/Odometry`_ on the topic "odom". Odometry
   must be provided in this case, and the information will be included in SLAM.
 
-use_constant_odometry_variance
-  If enabled, the configured variances will be used instead of the ones provided
-  in the Odometry messages.
+sensor_bridge.constant_odometry_translational_variance
+  The variance to use for the translational component of odometry.
 
-constant_odometry_translational_variance
-  The variance to use for the translational component of odometry to use if
-  *use_constant_odometry_variance* is enabled.
-
-constant_odometry_rotational_variance
-  The variance to use for the rotational component of odometry to use if
-  *use_constant_odometry_variance* is enabled.
+sensor_bridge.constant_odometry_rotational_variance
+  The variance to use for the rotational component of odometry.
 
 use_horizontal_laser
   If enabled, the node subscribes to `sensor_msgs/LaserScan`_ on the "scan"
@@ -77,13 +71,13 @@ use_horizontal_multi_echo_laser
   "echoes" topic. If 2D SLAM is used, either this or *use_horizontal_laser*
   must be enabled.
 
-horizontal_laser_min_range
+sensor_bridge.horizontal_laser_min_range
   Range in meters below which laser returns are ignored for the purpose of SLAM.
 
-horizontal_laser_max_range
+sensor_bridge.horizontal_laser_max_range
   Range in meters above which laser returns are ignored for the purpose of SLAM.
 
-horizontal_laser_missing_echo_ray_length
+sensor_bridge.horizontal_laser_missing_echo_ray_length
   Range in meters to use for inserting free space when no laser return was
   detected.
 

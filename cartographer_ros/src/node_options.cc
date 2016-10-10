@@ -27,6 +27,8 @@ NodeOptions CreateNodeOptions(
   options.map_builder_options =
       ::cartographer::mapping::CreateMapBuilderOptions(
           lua_parameter_dictionary->GetDictionary("map_builder").get());
+  options.sensor_bridge_options = CreateSensorBridgeOptions(
+      lua_parameter_dictionary->GetDictionary("sensor_bridge").get());
   options.map_frame = lua_parameter_dictionary->GetString("map_frame");
   options.tracking_frame =
       lua_parameter_dictionary->GetString("tracking_frame");
@@ -37,25 +39,10 @@ NodeOptions CreateNodeOptions(
       lua_parameter_dictionary->GetBool("provide_odom_frame");
   options.use_odometry_data =
       lua_parameter_dictionary->GetBool("use_odometry_data");
-  options.use_constant_odometry_variance =
-      lua_parameter_dictionary->GetBool("use_constant_odometry_variance");
-  options.constant_odometry_translational_variance =
-      lua_parameter_dictionary->GetDouble(
-          "constant_odometry_translational_variance");
-  options.constant_odometry_rotational_variance =
-      lua_parameter_dictionary->GetDouble(
-          "constant_odometry_rotational_variance");
   options.use_horizontal_laser =
       lua_parameter_dictionary->GetBool("use_horizontal_laser");
   options.use_horizontal_multi_echo_laser =
       lua_parameter_dictionary->GetBool("use_horizontal_multi_echo_laser");
-  options.horizontal_laser_min_range =
-      lua_parameter_dictionary->GetDouble("horizontal_laser_min_range");
-  options.horizontal_laser_max_range =
-      lua_parameter_dictionary->GetDouble("horizontal_laser_max_range");
-  options.horizontal_laser_missing_echo_ray_length =
-      lua_parameter_dictionary->GetDouble(
-          "horizontal_laser_missing_echo_ray_length");
   options.num_lasers_3d =
       lua_parameter_dictionary->GetNonNegativeInt("num_lasers_3d");
   options.lookup_transform_timeout_sec =

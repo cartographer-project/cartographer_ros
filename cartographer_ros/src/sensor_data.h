@@ -20,16 +20,15 @@
 #include <string>
 
 #include "cartographer/kalman_filter/pose_tracker.h"
-#include "cartographer/sensor/proto/sensor.pb.h"
+#include "cartographer/sensor/laser.h"
 #include "cartographer/transform/rigid_transform.h"
-#include "glog/logging.h"
 
 namespace cartographer_ros {
 
 // This type is a logical union, i.e. only one type of sensor data is actually
 // filled in. It is only used for time ordering sensor data before passing it
 // on.
-enum class SensorType { kImu, kLaserScan, kLaserFan3D, kOdometry };
+enum class SensorType { kImu, kLaserFan3D, kOdometry };
 struct SensorData {
   struct Odometry {
     ::cartographer::transform::Rigid3d pose;
@@ -37,8 +36,8 @@ struct SensorData {
   };
 
   struct Imu {
-    Eigen::Vector3d angular_velocity;
     Eigen::Vector3d linear_acceleration;
+    Eigen::Vector3d angular_velocity;
   };
 
   SensorData(const string& frame_id, const Imu& imu)
@@ -46,33 +45,30 @@ struct SensorData {
         frame_id(CheckNoLeadingSlash(frame_id)),
         imu(imu) {}
 
-  SensorData(const string& frame_id, const ::cartographer::sensor::proto::LaserScan& laser_scan)
-      : type(SensorType::kLaserScan),
-        frame_id(CheckNoLeadingSlash(frame_id)),
-        laser_scan(laser_scan) {}
-
-  SensorData(const string& frame_id, const ::cartographer::sensor::proto::LaserFan3D& laser_fan_3d)
+  SensorData(const string& frame_id,
+             const ::cartographer::sensor::LaserFan3D& laser_fan_3d)
       : type(SensorType::kLaserFan3D),
         frame_id(CheckNoLeadingSlash(frame_id)),
         laser_fan_3d(laser_fan_3d) {}
 
   SensorData(const string& frame_id, const Odometry& odometry)
-      : type(SensorType::kOdometry), frame_id(frame_id), odometry(odometry) {}
+      : type(SensorType::kOdometry),
+        frame_id(CheckNoLeadingSlash(frame_id)),
+        odometry(odometry) {}
 
   SensorType type;
   string frame_id;
   Imu imu;
-  ::cartographer::sensor::proto::LaserScan laser_scan;
-  ::cartographer::sensor::proto::LaserFan3D laser_fan_3d;
+  ::cartographer::sensor::LaserFan3D laser_fan_3d;
   Odometry odometry;
 
-  private:
-    static const string& CheckNoLeadingSlash(const string& frame_id) {
-      if (frame_id.size() > 0) {
-        CHECK_NE(frame_id[0], '/');
-      }
-      return frame_id;
+ private:
+  static const string& CheckNoLeadingSlash(const string& frame_id) {
+    if (frame_id.size() > 0) {
+      CHECK_NE(frame_id[0], '/');
     }
+    return frame_id;
+  }
 };
 
 }  // namespace cartographer_ros
