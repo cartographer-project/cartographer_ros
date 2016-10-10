@@ -56,12 +56,10 @@ use_odometry_data
   must be provided in this case, and the information will be included in SLAM.
 
 sensor_bridge.constant_odometry_translational_variance
-  The variance to use for the translational component of odometry to use if
-  *use_constant_odometry_variance* is enabled.
+  The variance to use for the translational component of odometry.
 
 sensor_bridge.constant_odometry_rotational_variance
-  The variance to use for the rotational component of odometry to use if
-  *use_constant_odometry_variance* is enabled.
+  The variance to use for the rotational component of odometry.
 
 use_horizontal_laser
   If enabled, the node subscribes to `sensor_msgs/LaserScan`_ on the "scan"

@@ -20,7 +20,6 @@ options = {
     horizontal_laser_min_range = 0.,
     horizontal_laser_max_range = 30.,
     horizontal_laser_missing_echo_ray_length = 5.,
-    use_constant_odometry_variance = false,
     constant_odometry_translational_variance = 0.,
     constant_odometry_rotational_variance = 0.,
   },
