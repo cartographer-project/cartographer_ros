@@ -93,7 +93,6 @@ add_executable(cartographer_node
   src/ros_log_sink.h
   src/sensor_bridge.cc
   src/sensor_bridge.h
-  src/sensor_data.cc
   src/sensor_data.h
   src/time_conversion.cc
   src/time_conversion.h

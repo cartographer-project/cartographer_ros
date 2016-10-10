@@ -44,9 +44,6 @@ sensor_msgs::MultiEchoLaserScan ToMultiEchoLaserScanMessage(
     int64 timestamp, const string& frame_id,
     const ::cartographer::sensor::proto::LaserScan& laser_scan);
 
-sensor_msgs::Imu ToImuMessage(int64 timestamp, const string& frame_id,
-                              const ::cartographer::sensor::proto::Imu& imu);
-
 sensor_msgs::PointCloud2 ToPointCloud2Message(
     int64 timestamp, const string& frame_id,
     const ::cartographer::sensor::PointCloud& point_cloud);
@@ -56,12 +53,10 @@ sensor_msgs::PointCloud2 ToPointCloud2Message(
     const ::cartographer::sensor::proto::LaserFan3D& laser_scan_3d);
 
 geometry_msgs::Transform ToGeometryMsgTransform(
-    const ::cartographer::transform::Rigid3d& rigid);
+    const ::cartographer::transform::Rigid3d& rigid3d);
 
 geometry_msgs::Pose ToGeometryMsgPose(
-    const ::cartographer::transform::Rigid3d& rigid);
-
-::cartographer::sensor::proto::Imu ToCartographer(const sensor_msgs::Imu& msg);
+    const ::cartographer::transform::Rigid3d& rigid3d);
 
 ::cartographer::sensor::proto::LaserScan ToCartographer(
     const sensor_msgs::LaserScan& msg);
@@ -76,6 +71,9 @@ geometry_msgs::Pose ToGeometryMsgPose(
     const geometry_msgs::TransformStamped& transform);
 
 ::cartographer::transform::Rigid3d ToRigid3d(const geometry_msgs::Pose& pose);
+
+Eigen::Vector3d ToEigen(const geometry_msgs::Vector3& vector3);
+Eigen::Quaterniond ToEigen(const geometry_msgs::Quaternion& quaternion);
 
 ::cartographer::kalman_filter::PoseCovariance ToPoseCovariance(
     const boost::array<double, 36>& covariance);

@@ -40,8 +40,14 @@ void SensorBridge::AddOdometryMessage(const string& topic,
 
 void SensorBridge::AddImuMessage(const string& topic,
                                  const sensor_msgs::Imu::ConstPtr& msg) {
+  CHECK_NE(msg->angular_velocity_covariance[0], -1);
+  CHECK_NE(msg->linear_acceleration_covariance[0], -1);
   auto sensor_data = ::cartographer::common::make_unique<SensorData>(
-      msg->header.frame_id, ToCartographer(*msg));
+      msg->header.frame_id,
+      SensorData::Imu{{msg->angular_velocity.x, msg->angular_velocity.y,
+                       msg->angular_velocity.z},
+                      {msg->linear_acceleration.x, msg->linear_acceleration.y,
+                       msg->linear_acceleration.z}});
   sensor_collator_->AddSensorData(
       trajectory_id_,
       ::cartographer::common::ToUniversal(FromRos(msg->header.stamp)), topic,

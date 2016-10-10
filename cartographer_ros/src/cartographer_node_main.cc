@@ -125,7 +125,7 @@ class Node {
 
   void AddOdometry(int64 timestamp, const string& frame_id,
                    const SensorData::Odometry& odometry);
-  void AddImu(int64 timestamp, const string& frame_id, const proto::Imu& imu);
+  void AddImu(int64 timestamp, const string& frame_id, const SensorData::Imu& imu);
   void AddHorizontalLaserFan(int64 timestamp, const string& frame_id,
                              const proto::LaserScan& laser_scan);
   void AddLaserFan3D(int64 timestamp, const string& frame_id,
@@ -251,7 +251,7 @@ void Node::AddOdometry(const int64 timestamp, const string& frame_id,
 }
 
 void Node::AddImu(const int64 timestamp, const string& frame_id,
-                  const proto::Imu& imu) {
+                  const SensorData::Imu& imu) {
   const carto::common::Time time = carto::common::FromUniversal(timestamp);
   try {
     const Rigid3d sensor_to_tracking =
@@ -262,10 +262,8 @@ void Node::AddImu(const int64 timestamp, const string& frame_id,
            "otherwise be imprecise.";
     map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
         ->AddImuData(time,
-                     sensor_to_tracking.rotation() *
-                         carto::transform::ToEigen(imu.linear_acceleration()),
-                     sensor_to_tracking.rotation() *
-                         carto::transform::ToEigen(imu.angular_velocity()));
+                     sensor_to_tracking.rotation() * imu.linear_acceleration,
+                     sensor_to_tracking.rotation() * imu.angular_velocity);
   } catch (const tf2::TransformException& ex) {
     LOG(WARNING) << ex.what();
   }
