@@ -36,8 +36,8 @@ struct SensorData {
   };
 
   struct Imu {
-    Eigen::Vector3d angular_velocity;
     Eigen::Vector3d linear_acceleration;
+    Eigen::Vector3d angular_velocity;
   };
 
   SensorData(const string& frame_id, const Imu& imu)

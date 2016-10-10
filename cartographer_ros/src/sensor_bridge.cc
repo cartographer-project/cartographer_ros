@@ -85,8 +85,8 @@ void SensorBridge::HandleOdometryMessage(
 
 void SensorBridge::HandleImuMessage(const string& topic,
                                     const sensor_msgs::Imu::ConstPtr& msg) {
-  CHECK_NE(msg->angular_velocity_covariance[0], -1);
   CHECK_NE(msg->linear_acceleration_covariance[0], -1);
+  CHECK_NE(msg->angular_velocity_covariance[0], -1);
   const carto::common::Time time = FromRos(msg->header.stamp);
   const auto sensor_to_tracking =
       tf_bridge_->LookupToTracking(time, msg->header.frame_id);
@@ -100,9 +100,10 @@ void SensorBridge::HandleImuMessage(const string& topic,
         carto::common::make_unique<SensorData>(
             msg->header.frame_id,
             SensorData::Imu{
-                sensor_to_tracking->rotation() * ToEigen(msg->angular_velocity),
                 sensor_to_tracking->rotation() *
-                    ToEigen(msg->linear_acceleration)}));
+                    ToEigen(msg->linear_acceleration),
+                sensor_to_tracking->rotation() * ToEigen(msg->angular_velocity),
+            }));
   }
 }
 
