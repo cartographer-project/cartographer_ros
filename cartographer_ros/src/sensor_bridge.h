@@ -38,7 +38,6 @@ struct SensorBridgeOptions {
   double horizontal_laser_min_range;
   double horizontal_laser_max_range;
   double horizontal_laser_missing_echo_ray_length;
-  bool use_constant_odometry_variance;
   double constant_odometry_translational_variance;
   double constant_odometry_rotational_variance;
 };
@@ -76,9 +75,9 @@ class SensorBridge {
       const ::cartographer::sensor::proto::LaserScan& laser_scan);
 
   const SensorBridgeOptions options_;
-  const TfBridge* tf_bridge_;
+  const TfBridge* const tf_bridge_;
   const int trajectory_id_;
-  ::cartographer::mapping::SensorCollator<SensorData>* sensor_collator_;
+  ::cartographer::mapping::SensorCollator<SensorData>* const sensor_collator_;
 };
 
 }  // namespace cartographer_ros

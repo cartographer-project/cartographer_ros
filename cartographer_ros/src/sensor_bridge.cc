@@ -37,8 +37,6 @@ SensorBridgeOptions CreateSensorBridgeOptions(
   options.horizontal_laser_missing_echo_ray_length =
       lua_parameter_dictionary->GetDouble(
           "horizontal_laser_missing_echo_ray_length");
-  options.use_constant_odometry_variance =
-      lua_parameter_dictionary->GetBool("use_constant_odometry_variance");
   options.constant_odometry_translational_variance =
       lua_parameter_dictionary->GetDouble(
           "constant_odometry_translational_variance");
@@ -49,9 +47,9 @@ SensorBridgeOptions CreateSensorBridgeOptions(
 }
 
 SensorBridge::SensorBridge(
-    const SensorBridgeOptions& options, const TfBridge* tf_bridge,
+    const SensorBridgeOptions& options, const TfBridge* const tf_bridge,
     const int trajectory_id,
-    carto::mapping::SensorCollator<SensorData>* sensor_collator)
+    carto::mapping::SensorCollator<SensorData>* const sensor_collator)
     : options_(options),
       tf_bridge_(tf_bridge),
       trajectory_id_(trajectory_id),
@@ -60,21 +58,18 @@ SensorBridge::SensorBridge(
 void SensorBridge::HandleOdometryMessage(
     const string& topic, const nav_msgs::Odometry::ConstPtr& msg) {
   const carto::common::Time time = FromRos(msg->header.stamp);
-  carto::kalman_filter::PoseCovariance applied_covariance =
-      ToPoseCovariance(msg->pose.covariance);
-  if (options_.use_constant_odometry_variance) {
-    const Eigen::Matrix3d translational =
-        Eigen::Matrix3d::Identity() *
-        options_.constant_odometry_translational_variance;
-    const Eigen::Matrix3d rotational =
-        Eigen::Matrix3d::Identity() *
-        options_.constant_odometry_rotational_variance;
-    // clang-format off
-    applied_covariance <<
-        translational, Eigen::Matrix3d::Zero(),
-        Eigen::Matrix3d::Zero(), rotational;
-    // clang-format on
-  }
+  const Eigen::Matrix3d translational =
+      Eigen::Matrix3d::Identity() *
+      options_.constant_odometry_translational_variance;
+  const Eigen::Matrix3d rotational =
+      Eigen::Matrix3d::Identity() *
+      options_.constant_odometry_rotational_variance;
+  // clang-format off
+  carto::kalman_filter::PoseCovariance covariance;
+  covariance <<
+      translational, Eigen::Matrix3d::Zero(),
+      Eigen::Matrix3d::Zero(), rotational;
+  // clang-format on
   const auto sensor_to_tracking =
       tf_bridge_->LookupToTracking(time, msg->child_frame_id);
   if (sensor_to_tracking != nullptr) {
@@ -84,7 +79,7 @@ void SensorBridge::HandleOdometryMessage(
             msg->child_frame_id,
             SensorData::Odometry{
                 ToRigid3d(msg->pose.pose) * sensor_to_tracking->inverse(),
-                applied_covariance}));
+                covariance}));
   }
 }
 
@@ -127,12 +122,12 @@ void SensorBridge::HandlePointCloud2Message(
     const string& topic, const sensor_msgs::PointCloud2::ConstPtr& msg) {
   pcl::PointCloud<pcl::PointXYZ> pcl_point_cloud;
   pcl::fromROSMsg(*msg, pcl_point_cloud);
-  const auto sensor_to_tracking = tf_bridge_->LookupToTracking(
-      FromRos(msg->header.stamp), msg->header.frame_id);
+  const carto::common::Time time = FromRos(msg->header.stamp);
+  const auto sensor_to_tracking =
+      tf_bridge_->LookupToTracking(time, msg->header.frame_id);
   if (sensor_to_tracking != nullptr) {
     sensor_collator_->AddSensorData(
-        trajectory_id_, carto::common::ToUniversal(FromRos(msg->header.stamp)),
-        topic,
+        trajectory_id_, carto::common::ToUniversal(time), topic,
         carto::common::make_unique<SensorData>(
             msg->header.frame_id,
             carto::sensor::TransformLaserFan3D(

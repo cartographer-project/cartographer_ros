@@ -123,16 +123,6 @@ class Node {
  private:
   void HandleSensorData(int64 timestamp,
                         std::unique_ptr<SensorData> sensor_data);
-
-  void AddOdometry(int64 timestamp, const string& frame_id,
-                   const SensorData::Odometry& odometry);
-  void AddImu(int64 timestamp, const string& frame_id,
-              const SensorData::Imu& imu);
-  void AddHorizontalLaserFan(int64 timestamp, const string& frame_id,
-                             const carto::sensor::LaserFan3D& laser_fan_3d);
-  void AddLaserFan3D(int64 timestamp, const string& frame_id,
-                     const carto::sensor::LaserFan3D& laser_fan_3d);
-
   bool HandleSubmapQuery(
       ::cartographer_ros_msgs::SubmapQuery::Request& request,
       ::cartographer_ros_msgs::SubmapQuery::Response& response);
@@ -203,34 +193,6 @@ Node::~Node() {
   if (occupancy_grid_thread_.joinable()) {
     occupancy_grid_thread_.join();
   }
-}
-
-void Node::AddOdometry(const int64 timestamp, const string& frame_id,
-                       const SensorData::Odometry& odometry) {
-  map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
-      ->AddOdometerPose(carto::common::FromUniversal(timestamp), odometry.pose,
-                        odometry.covariance);
-}
-
-void Node::AddImu(const int64 timestamp, const string& frame_id,
-                  const SensorData::Imu& imu) {
-  map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
-      ->AddImuData(carto::common::FromUniversal(timestamp),
-                   imu.linear_acceleration, imu.angular_velocity);
-}
-
-void Node::AddHorizontalLaserFan(
-    const int64 timestamp, const string& frame_id,
-    const carto::sensor::LaserFan3D& laser_fan_3d) {
-  map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
-      ->AddHorizontalLaserFan(carto::common::FromUniversal(timestamp),
-                              laser_fan_3d);
-}
-
-void Node::AddLaserFan3D(const int64 timestamp, const string& frame_id,
-                         const carto::sensor::LaserFan3D& laser_fan_3d) {
-  map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
-      ->AddLaserFan3D(carto::common::FromUniversal(timestamp), laser_fan_3d);
 }
 
 void Node::Initialize() {
@@ -541,24 +503,28 @@ void Node::HandleSensorData(const int64 timestamp,
     last_sensor_data_rates_logging_time_ = std::chrono::steady_clock::now();
   }
 
+  const auto time = carto::common::FromUniversal(timestamp);
+  auto trajectory_builder =
+      map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId);
   switch (sensor_data->type) {
     case SensorType::kImu:
-      AddImu(timestamp, sensor_data->frame_id, sensor_data->imu);
+      trajectory_builder->AddImuData(time, sensor_data->imu.linear_acceleration,
+                                     sensor_data->imu.angular_velocity);
       return;
 
     case SensorType::kLaserFan3D:
       if (options_.map_builder_options.use_trajectory_builder_2d()) {
-        AddHorizontalLaserFan(timestamp, sensor_data->frame_id,
-                              sensor_data->laser_fan_3d);
+        trajectory_builder->AddHorizontalLaserFan(time,
+                                                  sensor_data->laser_fan_3d);
       } else {
         CHECK(options_.map_builder_options.use_trajectory_builder_3d());
-        AddLaserFan3D(timestamp, sensor_data->frame_id,
-                      sensor_data->laser_fan_3d);
+        trajectory_builder->AddLaserFan3D(time, sensor_data->laser_fan_3d);
       }
       return;
 
     case SensorType::kOdometry:
-      AddOdometry(timestamp, sensor_data->frame_id, sensor_data->odometry);
+      trajectory_builder->AddOdometerPose(time, sensor_data->odometry.pose,
+                                          sensor_data->odometry.covariance);
       return;
   }
   LOG(FATAL);

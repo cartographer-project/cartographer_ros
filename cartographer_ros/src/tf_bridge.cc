@@ -22,7 +22,7 @@
 namespace cartographer_ros {
 
 TfBridge::TfBridge(const string& tracking_frame,
-                   double lookup_transform_timeout_sec,
+                   const double lookup_transform_timeout_sec,
                    const tf2_ros::Buffer* buffer)
     : tracking_frame_(tracking_frame),
       lookup_transform_timeout_sec_(lookup_transform_timeout_sec),
@@ -44,14 +44,13 @@ std::unique_ptr<::cartographer::transform::Rigid3d> TfBridge::LookupToTracking(
       // for the full 'timeout' even if we ask for data that is too old.
       timeout = ::ros::Duration(0.);
     }
-    frame_id_to_tracking =
-        ::cartographer::common::make_unique<::cartographer::transform::Rigid3d>(
-            ToRigid3d(buffer_->lookupTransform(tracking_frame_, frame_id,
-                                               requested_time, timeout)));
+    return ::cartographer::common::make_unique<
+        ::cartographer::transform::Rigid3d>(ToRigid3d(buffer_->lookupTransform(
+        tracking_frame_, frame_id, requested_time, timeout)));
   } catch (const tf2::TransformException& ex) {
     LOG(WARNING) << ex.what();
   }
-  return std::move(frame_id_to_tracking);
+  return nullptr;
 }
 
 }  // namespace cartographer_ros

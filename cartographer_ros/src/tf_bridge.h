@@ -43,7 +43,7 @@ class TfBridge {
  private:
   const string tracking_frame_;
   const double lookup_transform_timeout_sec_;
-  const tf2_ros::Buffer* buffer_;
+  const tf2_ros::Buffer* const buffer_;
 };
 
 }  // namespace cartographer_ros
