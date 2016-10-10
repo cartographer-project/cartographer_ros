@@ -254,7 +254,8 @@ Rigid3d ToRigid3d(const geometry_msgs::TransformStamped& transform) {
 }
 
 Rigid3d ToRigid3d(const geometry_msgs::Pose& pose) {
-  return Rigid3d(ToEigen(pose.position), ToEigen(pose.orientation));
+  return Rigid3d({pose.position.x, pose.position.y, pose.position.z},
+                 ToEigen(pose.orientation));
 }
 
 Eigen::Vector3d ToEigen(const geometry_msgs::Vector3& vector3) {
@@ -293,3 +294,5 @@ geometry_msgs::Pose ToGeometryMsgPose(const Rigid3d& rigid3d) {
   pose.orientation.z = rigid3d.rotation().z();
   return pose;
 }
+
+}  // namespace cartographer_ros
