@@ -53,10 +53,10 @@ sensor_msgs::PointCloud2 ToPointCloud2Message(
     const ::cartographer::sensor::proto::LaserFan3D& laser_scan_3d);
 
 geometry_msgs::Transform ToGeometryMsgTransform(
-    const ::cartographer::transform::Rigid3d& rigid);
+    const ::cartographer::transform::Rigid3d& rigid3d);
 
 geometry_msgs::Pose ToGeometryMsgPose(
-    const ::cartographer::transform::Rigid3d& rigid);
+    const ::cartographer::transform::Rigid3d& rigid3d);
 
 ::cartographer::sensor::proto::LaserScan ToCartographer(
     const sensor_msgs::LaserScan& msg);
@@ -71,6 +71,9 @@ geometry_msgs::Pose ToGeometryMsgPose(
     const geometry_msgs::TransformStamped& transform);
 
 ::cartographer::transform::Rigid3d ToRigid3d(const geometry_msgs::Pose& pose);
+
+Eigen::Vector3d ToEigen(const geometry_msgs::Vector3& vector3);
+Eigen::Quaterniond ToEigen(const geometry_msgs::Quaterniond& quaternion);
 
 ::cartographer::kalman_filter::PoseCovariance ToPoseCovariance(
     const boost::array<double, 36>& covariance);

@@ -48,21 +48,6 @@ constexpr float kPointCloudComponentFourMagic = 1.;
 using ::cartographer::transform::Rigid3d;
 using ::cartographer::kalman_filter::PoseCovariance;
 
-void ToMessage(const ::cartographer::transform::proto::Vector3d& proto,
-               geometry_msgs::Vector3* vector) {
-  vector->x = proto.x();
-  vector->y = proto.y();
-  vector->z = proto.z();
-}
-
-void ToMessage(const ::cartographer::transform::proto::Quaterniond& proto,
-               geometry_msgs::Quaternion* quaternion) {
-  quaternion->w = proto.w();
-  quaternion->x = proto.x();
-  quaternion->y = proto.y();
-  quaternion->z = proto.z();
-}
-
 sensor_msgs::PointCloud2 PreparePointCloud2Message(const int64 timestamp,
                                                    const string& frame_id,
                                                    const int num_points) {
@@ -264,48 +249,47 @@ sensor_msgs::PointCloud2 ToPointCloud2Message(
 }
 
 Rigid3d ToRigid3d(const geometry_msgs::TransformStamped& transform) {
-  return Rigid3d(Eigen::Vector3d(transform.transform.translation.x,
-                                 transform.transform.translation.y,
-                                 transform.transform.translation.z),
-                 Eigen::Quaterniond(transform.transform.rotation.w,
-                                    transform.transform.rotation.x,
-                                    transform.transform.rotation.y,
-                                    transform.transform.rotation.z));
+  return Rigid3d(ToEigen(transform.transform.translation),
+                 ToEigen(transform.transform.rotation));
 }
 
 Rigid3d ToRigid3d(const geometry_msgs::Pose& pose) {
-  return Rigid3d(
-      Eigen::Vector3d(pose.position.x, pose.position.y, pose.position.z),
-      Eigen::Quaterniond(pose.orientation.w, pose.orientation.x,
-                         pose.orientation.y, pose.orientation.z));
+  return Rigid3d(ToEigen(pose.position), ToEigen(pose.orientation));
+}
+
+Eigen::Vector3d ToEigen(const geometry_msgs::Vector3& vector3) {
+  return Eigen::Vector3d(vector3.x, vector3.y, vector3.z);
+}
+
+Eigen::Quaterniond ToEigen(const geometry_msgs::Quaternion& quaternion) {
+  return Eigen::Quaterniond(quaternion.w, quaternion.x, quaternion.y,
+                            quaternion.z);
 }
 
 PoseCovariance ToPoseCovariance(const boost::array<double, 36>& covariance) {
   return Eigen::Map<const Eigen::Matrix<double, 6, 6>>(covariance.data());
 }
 
-geometry_msgs::Transform ToGeometryMsgTransform(const Rigid3d& rigid) {
+geometry_msgs::Transform ToGeometryMsgTransform(const Rigid3d& rigid3d) {
   geometry_msgs::Transform transform;
-  transform.translation.x = rigid.translation().x();
-  transform.translation.y = rigid.translation().y();
-  transform.translation.z = rigid.translation().z();
-  transform.rotation.w = rigid.rotation().w();
-  transform.rotation.x = rigid.rotation().x();
-  transform.rotation.y = rigid.rotation().y();
-  transform.rotation.z = rigid.rotation().z();
+  transform.translation.x = rigid3d.translation().x();
+  transform.translation.y = rigid3d.translation().y();
+  transform.translation.z = rigid3d.translation().z();
+  transform.rotation.w = rigid3d.rotation().w();
+  transform.rotation.x = rigid3d.rotation().x();
+  transform.rotation.y = rigid3d.rotation().y();
+  transform.rotation.z = rigid3d.rotation().z();
   return transform;
 }
 
-geometry_msgs::Pose ToGeometryMsgPose(const Rigid3d& rigid) {
+geometry_msgs::Pose ToGeometryMsgPose(const Rigid3d& rigid3d) {
   geometry_msgs::Pose pose;
-  pose.position.x = rigid.translation().x();
-  pose.position.y = rigid.translation().y();
-  pose.position.z = rigid.translation().z();
-  pose.orientation.w = rigid.rotation().w();
-  pose.orientation.x = rigid.rotation().x();
-  pose.orientation.y = rigid.rotation().y();
-  pose.orientation.z = rigid.rotation().z();
+  pose.position.x = rigid3d.translation().x();
+  pose.position.y = rigid3d.translation().y();
+  pose.position.z = rigid3d.translation().z();
+  pose.orientation.w = rigid3d.rotation().w();
+  pose.orientation.x = rigid3d.rotation().x();
+  pose.orientation.y = rigid3d.rotation().y();
+  pose.orientation.z = rigid3d.rotation().z();
   return pose;
 }
-
-}  // namespace cartographer_ros
