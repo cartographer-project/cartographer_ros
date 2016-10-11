@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "drawable_submap.h"
+#include "cartographer_rviz/drawable_submap.h"
 
 #include <OgreGpuProgramParams.h>
 #include <OgreImage.h>

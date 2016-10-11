@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "msg_conversion.h"
+#include "cartographer_ros/msg_conversion.h"
 
 #include "cartographer/common/port.h"
 #include "cartographer/common/time.h"
@@ -34,7 +34,7 @@
 #include "sensor_msgs/MultiEchoLaserScan.h"
 #include "sensor_msgs/PointCloud2.h"
 
-#include "time_conversion.h"
+#include "cartographer_ros/time_conversion.h"
 
 namespace cartographer_ros {
 

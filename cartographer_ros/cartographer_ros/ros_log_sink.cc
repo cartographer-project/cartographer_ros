@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "ros_log_sink.h"
+#include "cartographer_ros/ros_log_sink.h"
 
 #include <chrono>
 #include <cstring>

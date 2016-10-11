@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "submaps_display.h"
+#include "cartographer_rviz/submaps_display.h"
 
 #include <OgreResourceGroupManager.h>
 #include <cartographer/common/make_unique.h>

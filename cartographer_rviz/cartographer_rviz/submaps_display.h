@@ -27,7 +27,7 @@
 #include <memory>
 #include <vector>
 
-#include "drawable_submap.h"
+#include "cartographer_rviz/drawable_submap.h"
 
 namespace cartographer_rviz {
 

@@ -16,23 +16,9 @@ cmake_minimum_required(VERSION 2.8.3)
 
 project(cartographer_ros_msgs)
 
-set(CMAKE_CXX_FLAGS "-pthread -std=c++11 ${CMAKE_CXX_FLAGS}")
-
-if(NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
-  set(CMAKE_BUILD_TYPE Release)
-endif()
-
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG")
-elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -DNDEBUG")
-elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  message(FATAL_ERROR "Cartographer is too slow to be useful in debug mode.")
-else()
-  message(FATAL_ERROR "Unknown CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
-endif()
-
-message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+find_package(Cartographer REQUIRED)
+include("${CARTOGRAPHER_CMAKE_DIR}/functions.cmake")
+google_initialize_cartographer_project()
 
 find_package(catkin REQUIRED COMPONENTS geometry_msgs message_generation)
 

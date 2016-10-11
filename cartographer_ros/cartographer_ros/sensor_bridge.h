@@ -24,13 +24,13 @@
 #include "geometry_msgs/TransformStamped.h"
 #include "nav_msgs/OccupancyGrid.h"
 #include "nav_msgs/Odometry.h"
-#include "sensor_data.h"
+#include "cartographer_ros/sensor_data.h"
 #include "sensor_msgs/Imu.h"
 #include "sensor_msgs/LaserScan.h"
 #include "sensor_msgs/MultiEchoLaserScan.h"
 #include "sensor_msgs/PointCloud2.h"
 
-#include "tf_bridge.h"
+#include "cartographer_ros/tf_bridge.h"
 
 namespace cartographer_ros {
 

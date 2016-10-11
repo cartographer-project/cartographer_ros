@@ -21,7 +21,7 @@
 
 #include "cartographer/mapping/trajectory_node.h"
 #include "nav_msgs/OccupancyGrid.h"
-#include "node_options.h"
+#include "cartographer_ros/node_options.h"
 
 namespace cartographer_ros {
 

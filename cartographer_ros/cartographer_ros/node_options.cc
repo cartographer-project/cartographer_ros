@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "node_options.h"
+#include "cartographer_ros/node_options.h"
 
 #include "glog/logging.h"
 

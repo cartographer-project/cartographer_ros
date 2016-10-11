@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "map_writer.h"
+#include "cartographer_ros/map_writer.h"
 
 #include <fstream>
 
