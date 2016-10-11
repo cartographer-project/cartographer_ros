@@ -42,9 +42,9 @@ This data was collected using a 2D LIDAR backpack at the
 Each bag contains data from an IMU, data from a horizontal LIDAR intended for 2D
 SLAM, and data from an additional vertical (i.e. push broom) LIDAR.
 
-=================================================================================================================================== ==================
-`ROS Bag <http://wiki.ros.org/Bags>`_                                                                                                                          Known Issues
-=================================================================================================================================== ==================
+=================================================================================================================================== ==========================================
+`ROS Bag <http://wiki.ros.org/Bags>`_                                                                                               Known Issues
+=================================================================================================================================== ==========================================
 `b0-2014-07-11-10-58-16.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b0-2014-07-11-10-58-16.bag>`_
 `b0-2014-07-11-11-00-49.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b0-2014-07-11-11-00-49.bag>`_
 `b0-2014-07-21-12-42-53.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b0-2014-07-21-12-42-53.bag>`_
@@ -81,7 +81,7 @@ SLAM, and data from an additional vertical (i.e. push broom) LIDAR.
 `b2-2015-04-28-13-01-40.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b2-2015-04-28-13-01-40.bag>`_
 `b2-2015-04-28-13-17-23.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b2-2015-04-28-13-17-23.bag>`_
 `b2-2015-05-12-12-29-05.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b2-2015-05-12-12-29-05.bag>`_ 2 gaps in laser data
-`b2-2015-05-12-12-46-34.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b2-2015-05-12-12-46-34.bag>`_ 14 gaps in laser data in the later part
+`b2-2015-05-12-12-46-34.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b2-2015-05-12-12-46-34.bag>`_ 14 gaps in laser data
 `b2-2015-05-26-13-15-25.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b2-2015-05-26-13-15-25.bag>`_
 `b2-2015-06-09-14-31-16.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b2-2015-06-09-14-31-16.bag>`_
 `b2-2015-06-25-14-25-51.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b2-2015-06-25-14-25-51.bag>`_
@@ -101,5 +101,5 @@ SLAM, and data from an additional vertical (i.e. push broom) LIDAR.
 `b2-2016-03-15-14-23-01.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b2-2016-03-15-14-23-01.bag>`_
 `b2-2016-04-05-14-44-52.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b2-2016-04-05-14-44-52.bag>`_
 `b2-2016-04-27-12-31-41.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b2-2016-04-27-12-31-41.bag>`_
-=================================================================================================================================== ==================
+=================================================================================================================================== ==========================================
 
