@@ -28,13 +28,14 @@ configurations. This project provides Cartographer's ROS integration.
 .. _Cartographer: https://github.com/googlecartographer/cartographer
 .. _SLAM: https://en.wikipedia.org/wiki/Simultaneous_localization_and_mapping
 
-Documentation
-=============
+Getting started
+===============
 
-You will find complete documentation for using Cartographer with ROS at `our
-Read the Docs site`_.
+* Learn to use Cartographer with ROS at `our Read the Docs site`_.
+* Please join the `mailing list`_ and ask questions.
 
 .. _our Read the Docs site: https://google-cartographer-ros.readthedocs.io
+.. _mailing list: https://groups.google.com/forum/#!forum/google-cartographer
 
 Contributing
 ============
@@ -48,7 +49,6 @@ at `our Contribution page`_.
     :alt: Build Status
     :scale: 100%
     :target: https://travis-ci.org/googlecartographer/cartographer_ros
-
 .. |docs| image:: https://readthedocs.org/projects/google-cartographer-ros/badge/?version=latest
     :alt: Documentation Status
     :scale: 100%

@@ -30,16 +30,24 @@ configurations. This project provides Cartographer's ROS integration.
 .. _Cartographer: https://github.com/googlecartographer/cartographer
 .. _SLAM: https://en.wikipedia.org/wiki/Simultaneous_localization_and_mapping
 
-.. _getting-started:
+System Requirements
+===================
+
+Although Cartographer ROS may run on other systems, it is confirmed to be
+working on systems that meet the following requirements:
+
+* 64-bit, modern CPU (e.g. 3rd generation i7)
+* 16 GB RAM
+* Ubuntu 14.04 (Trusty)
+* gcc version 4.8.4
+* ROS Indigo
 
 Building & Installation
 =======================
 
-Installation has been tested on Ubuntu 14.04 (Trusty) with ROS Indigo, but may
-also work on Ubuntu 16.04 (Xenial) with ROS Kinetic. We recommend using
-`wstool <http://wiki.ros.org/wstool>`_ and
-`rosdep <http://wiki.ros.org/rosdep>`_. For faster builds, we also recommend
-using `Ninja <https://ninja-build.org>`_.
+We recommend using `wstool <http://wiki.ros.org/wstool>`_ and `rosdep
+<http://wiki.ros.org/rosdep>`_. For faster builds, we also recommend using
+`Ninja <https://ninja-build.org>`_.
 
   .. code-block:: bash
 
@@ -64,8 +72,8 @@ using `Ninja <https://ninja-build.org>`_.
     catkin_make_isolated --install --use-ninja
     source install_isolated/setup.bash
 
-Running the demo
-================
+Running the demos
+=================
 
 Now that Cartographer and Cartographer's ROS integration are installed,
 download the example bags (e.g. 2D and 3D backpack collections of the
