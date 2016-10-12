@@ -20,8 +20,8 @@
 #include <vector>
 
 #include "cartographer/mapping/trajectory_node.h"
-#include "nav_msgs/OccupancyGrid.h"
 #include "cartographer_ros/node_options.h"
+#include "nav_msgs/OccupancyGrid.h"
 
 namespace cartographer_ros {
 
