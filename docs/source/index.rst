@@ -34,14 +34,13 @@ configurations. This project provides Cartographer's ROS integration.
 System Requirements
 ===================
 
-Although Cartographer ROS may run on other systems, it is confirmed to be
-working on systems that meet the following requirements:
+See Cartographer's :ref:`system requirements <cartographer:system-requirements>`.
 
-* 64-bit, modern CPU (e.g. 3rd generation i7)
-* 16 GB RAM
-* Ubuntu 14.04 (Trusty)
-* gcc version 4.8.4
+The following `ROS distributions`_ are currently supported:
+
 * ROS Indigo
+
+.. _ROS distributions: http://wiki.ros.org/Distributions
 
 Building & Installation
 =======================
