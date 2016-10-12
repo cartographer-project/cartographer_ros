@@ -20,8 +20,6 @@ options = {
     horizontal_laser_min_range = 0.,
     horizontal_laser_max_range = 30.,
     horizontal_laser_missing_echo_ray_length = 5.,
-    constant_odometry_translational_variance = 0.,
-    constant_odometry_rotational_variance = 0.,
   },
   map_frame = "map",
   tracking_frame = "base_footprint",
