@@ -17,7 +17,6 @@
 #include "cartographer_ros/occupancy_grid.h"
 
 #include "cartographer_ros/time_conversion.h"
-
 #include "glog/logging.h"
 
 namespace cartographer_ros {
