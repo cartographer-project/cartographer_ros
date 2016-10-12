@@ -43,7 +43,6 @@ catkin_package(
 
 find_package(PCL REQUIRED COMPONENTS common io)
 find_package(Eigen3 REQUIRED)
-find_package(ZLIB REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system iostreams)
 
 add_subdirectory("cartographer_ros")
