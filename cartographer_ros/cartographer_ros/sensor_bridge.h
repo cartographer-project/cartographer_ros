@@ -37,8 +37,6 @@ struct SensorBridgeOptions {
   double horizontal_laser_min_range;
   double horizontal_laser_max_range;
   double horizontal_laser_missing_echo_ray_length;
-  double constant_odometry_translational_variance;
-  double constant_odometry_rotational_variance;
 };
 
 SensorBridgeOptions CreateSensorBridgeOptions(
