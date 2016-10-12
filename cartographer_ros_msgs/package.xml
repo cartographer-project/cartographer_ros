@@ -30,5 +30,7 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
+  <depend>cartographer</depend>
+
   <build_depend>message_generation</build_depend>
 </package>

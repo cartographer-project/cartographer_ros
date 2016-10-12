@@ -23,7 +23,7 @@
 #include "cartographer/common/port.h"
 #include "cartographer/mapping/map_builder.h"
 
-#include "sensor_bridge.h"
+#include "cartographer_ros/sensor_bridge.h"
 
 namespace cartographer_ros {
 

@@ -22,7 +22,7 @@
 #include "cartographer/transform/rigid_transform.h"
 #include "tf2_ros/buffer.h"
 
-#include "time_conversion.h"
+#include "cartographer_ros/time_conversion.h"
 
 namespace cartographer_ros {
 

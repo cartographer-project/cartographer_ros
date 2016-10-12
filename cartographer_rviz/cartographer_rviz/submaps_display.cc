@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-#include "submaps_display.h"
+#include "cartographer_rviz/submaps_display.h"
 
-#include <OgreResourceGroupManager.h>
-#include <cartographer/common/make_unique.h>
-#include <cartographer/common/mutex.h>
-#include <cartographer_ros_msgs/SubmapList.h>
-#include <cartographer_ros_msgs/SubmapQuery.h>
-#include <geometry_msgs/TransformStamped.h>
-#include <pluginlib/class_list_macros.h>
-#include <ros/package.h>
-#include <ros/ros.h>
-#include <rviz/display_context.h>
-#include <rviz/frame_manager.h>
-#include <rviz/properties/string_property.h>
+#include "OgreResourceGroupManager.h"
+#include "cartographer/common/make_unique.h"
+#include "cartographer/common/mutex.h"
+#include "cartographer_ros_msgs/SubmapList.h"
+#include "cartographer_ros_msgs/SubmapQuery.h"
+#include "geometry_msgs/TransformStamped.h"
+#include "pluginlib/class_list_macros.h"
+#include "ros/package.h"
+#include "ros/ros.h"
+#include "rviz/display_context.h"
+#include "rviz/frame_manager.h"
+#include "rviz/properties/string_property.h"
 
 namespace cartographer_rviz {
 

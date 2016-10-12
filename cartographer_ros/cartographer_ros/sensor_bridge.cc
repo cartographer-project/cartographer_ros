@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-#include "sensor_bridge.h"
+#include "cartographer_ros/sensor_bridge.h"
 
 #include "cartographer/kalman_filter/pose_tracker.h"
-
-#include "msg_conversion.h"
-#include "time_conversion.h"
+#include "cartographer_ros/msg_conversion.h"
+#include "cartographer_ros/time_conversion.h"
 
 namespace cartographer_ros {
 

@@ -17,23 +17,23 @@
 #ifndef CARTOGRAPHER_RVIZ_SRC_DRAWABLE_SUBMAP_H_
 #define CARTOGRAPHER_RVIZ_SRC_DRAWABLE_SUBMAP_H_
 
-#include <OgreManualObject.h>
-#include <OgreMaterial.h>
-#include <OgreQuaternion.h>
-#include <OgreSceneManager.h>
-#include <OgreSceneNode.h>
-#include <OgreTexture.h>
-#include <OgreVector3.h>
-#include <cartographer/common/mutex.h>
-#include <cartographer_ros_msgs/SubmapEntry.h>
-#include <cartographer_ros_msgs/SubmapQuery.h>
-#include <ros/ros.h>
-#include <rviz/display_context.h>
-#include <rviz/frame_manager.h>
-#include <Eigen/Core>
-#include <Eigen/Geometry>
-
 #include <future>
+
+#include "Eigen/Core"
+#include "Eigen/Geometry"
+#include "OgreManualObject.h"
+#include "OgreMaterial.h"
+#include "OgreQuaternion.h"
+#include "OgreSceneManager.h"
+#include "OgreSceneNode.h"
+#include "OgreTexture.h"
+#include "OgreVector3.h"
+#include "cartographer/common/mutex.h"
+#include "cartographer_ros_msgs/SubmapEntry.h"
+#include "cartographer_ros_msgs/SubmapQuery.h"
+#include "ros/ros.h"
+#include "rviz/display_context.h"
+#include "rviz/frame_manager.h"
 
 namespace cartographer_rviz {
 

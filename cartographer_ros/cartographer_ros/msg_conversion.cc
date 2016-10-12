@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-#include "msg_conversion.h"
+#include "cartographer_ros/msg_conversion.h"
 
 #include "cartographer/common/port.h"
 #include "cartographer/common/time.h"
 #include "cartographer/sensor/proto/sensor.pb.h"
 #include "cartographer/transform/proto/transform.pb.h"
 #include "cartographer/transform/transform.h"
+#include "cartographer_ros/time_conversion.h"
 #include "geometry_msgs/Pose.h"
 #include "geometry_msgs/Quaternion.h"
 #include "geometry_msgs/Transform.h"
@@ -33,8 +34,6 @@
 #include "sensor_msgs/LaserScan.h"
 #include "sensor_msgs/MultiEchoLaserScan.h"
 #include "sensor_msgs/PointCloud2.h"
-
-#include "time_conversion.h"
 
 namespace cartographer_ros {
 

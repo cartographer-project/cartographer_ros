@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-#include "drawable_submap.h"
-
-#include <OgreGpuProgramParams.h>
-#include <OgreImage.h>
-#include <cartographer/common/port.h>
-#include <cartographer_ros_msgs/SubmapQuery.h>
-#include <eigen_conversions/eigen_msg.h>
-#include <ros/ros.h>
-#include <Eigen/Core>
-#include <Eigen/Geometry>
+#include "cartographer_rviz/drawable_submap.h"
 
 #include <chrono>
 #include <future>
 #include <sstream>
 #include <string>
+
+#include "Eigen/Core"
+#include "Eigen/Geometry"
+#include "OgreGpuProgramParams.h"
+#include "OgreImage.h"
+#include "cartographer/common/port.h"
+#include "cartographer_ros_msgs/SubmapQuery.h"
+#include "eigen_conversions/eigen_msg.h"
+#include "ros/ros.h"
 
 namespace cartographer_rviz {
 

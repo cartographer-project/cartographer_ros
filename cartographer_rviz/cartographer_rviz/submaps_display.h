@@ -17,17 +17,16 @@
 #ifndef CARTOGRAPHER_RVIZ_SRC_SUBMAPS_DISPLAY_H_
 #define CARTOGRAPHER_RVIZ_SRC_SUBMAPS_DISPLAY_H_
 
-#include <cartographer/common/mutex.h>
-#include <cartographer/common/port.h>
-#include <cartographer_ros_msgs/SubmapList.h>
-#include <rviz/message_filter_display.h>
-#include <tf2_ros/buffer.h>
-#include <tf2_ros/transform_listener.h>
-
 #include <memory>
 #include <vector>
 
-#include "drawable_submap.h"
+#include "cartographer/common/mutex.h"
+#include "cartographer/common/port.h"
+#include "cartographer_ros_msgs/SubmapList.h"
+#include "cartographer_rviz/drawable_submap.h"
+#include "rviz/message_filter_display.h"
+#include "tf2_ros/buffer.h"
+#include "tf2_ros/transform_listener.h"
 
 namespace cartographer_rviz {
 

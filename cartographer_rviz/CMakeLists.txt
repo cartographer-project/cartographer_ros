@@ -23,39 +23,19 @@ set(PACKAGE_DEPENDENCIES
   rviz
 )
 
-set(CMAKE_CXX_FLAGS "-pthread -std=c++11 -Wreorder")
+find_package(Cartographer REQUIRED)
+include("${CARTOGRAPHER_CMAKE_DIR}/functions.cmake")
+google_initialize_cartographer_project()
 
-if(NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
-  set(CMAKE_BUILD_TYPE Release)
-endif()
-
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG")
-elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -DNDEBUG")
-elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  message(FATAL_ERROR "Cartographer is too slow to be useful in debug mode.")
-else()
-  message(FATAL_ERROR "Unknown CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
-endif()
-
-message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
-
+find_package(Boost REQUIRED COMPONENTS system iostreams)
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
-include_directories(${catkin_INCLUDE_DIRS})
+find_package(ZLIB REQUIRED)
 
 catkin_package(
   CATKIN_DEPENDS
     message_runtime
     ${PACKAGE_DEPENDENCIES}
 )
-
-find_package(cartographer REQUIRED)
-include_directories(${CARTOGRAPHER_INCLUDE_DIRS})
-link_directories(${CARTOGRAPHER_LIBRARY_DIRS})
-
-find_package(ZLIB REQUIRED)
-include_directories(${ZLIB_INCLUDE_DIRS})
 
 set(CMAKE_AUTOMOC ON)
 if(rviz_QT_VERSION VERSION_LESS "5")
@@ -69,30 +49,23 @@ else()
 endif()
 add_definitions(-DQT_NO_KEYWORDS)
 
-find_package(Boost REQUIRED
- COMPONENTS
- system
- iostreams
-)
-add_definitions(${BOOST_DEFINITIONS})
-include_directories(${Boost_INCLUDE_DIRS})
-link_directories(${Boost_LIBRARY_DIRS})
+SET(ALL_LIBRARIES "" CACHE INTERNAL "ALL_LIBRARIES")
 
-add_library(cartographer_rviz_submaps_visualization
-  src/drawable_submap.cc
-  src/drawable_submap.h
-  src/submaps_display.cc
-  src/submaps_display.h
+add_subdirectory("cartographer_rviz")
+
+# Create an empty file for the shared library we require for RViz.
+set(DUMMY_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/empty.cc)
+add_custom_command(
+  OUTPUT  ${DUMMY_SOURCE}
+  COMMAND cmake -E touch ${DUMMY_SOURCE}
+  DEPENDS ${ARG_SRCS}
 )
+add_library(cartographer_rviz_submaps_visualization ${DUMMY_SOURCE})
 target_link_libraries(cartographer_rviz_submaps_visualization
-  ${Boost_LIBRARIES}
-  ${CARTOGRAPHER_LIBRARIES}
   ${QT_LIBRARIES}
-  ${ZLIB_LIBRARIES}
-  ${catkin_LIBRARIES}
-)
-add_dependencies(cartographer_rviz_submaps_visualization
-  ${catkin_EXPORTED_TARGETS}
+  "-Wl,--whole-archive"
+  ${ALL_LIBRARIES}
+  "-Wl,--no-whole-archive"
 )
 
 install(TARGETS cartographer_rviz_submaps_visualization
