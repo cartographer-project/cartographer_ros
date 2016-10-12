@@ -57,18 +57,9 @@ SensorBridge::SensorBridge(
 void SensorBridge::HandleOdometryMessage(
     const string& topic, const nav_msgs::Odometry::ConstPtr& msg) {
   const carto::common::Time time = FromRos(msg->header.stamp);
-  const Eigen::Matrix3d translational =
-      Eigen::Matrix3d::Identity() *
-      options_.constant_odometry_translational_variance;
-  const Eigen::Matrix3d rotational =
-      Eigen::Matrix3d::Identity() *
-      options_.constant_odometry_rotational_variance;
-  // clang-format off
-  carto::kalman_filter::PoseCovariance covariance;
-  covariance <<
-      translational, Eigen::Matrix3d::Zero(),
-      Eigen::Matrix3d::Zero(), rotational;
-  // clang-format on
+  const carto::kalman_filter::PoseCovariance covariance =
+      Eigen::Map<const carto::kalman_filter::PoseCovariance>(
+          msg->pose.covariance.data());
   const auto sensor_to_tracking =
       tf_bridge_->LookupToTracking(time, msg->child_frame_id);
   if (sensor_to_tracking != nullptr) {
