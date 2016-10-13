@@ -26,6 +26,17 @@ namespace carto = ::cartographer;
 
 using carto::transform::Rigid3d;
 
+namespace {
+
+const string& CheckNoLeadingSlash(const string& frame_id) {
+  if (frame_id.size() > 0) {
+    CHECK_NE(frame_id[0], '/');
+  }
+  return frame_id;
+}
+
+}  // namespace
+
 SensorBridgeOptions CreateSensorBridgeOptions(
     carto::common::LuaParameterDictionary* const lua_parameter_dictionary) {
   SensorBridgeOptions options;
@@ -48,7 +59,7 @@ SensorBridgeOptions CreateSensorBridgeOptions(
 SensorBridge::SensorBridge(
     const SensorBridgeOptions& options, const TfBridge* const tf_bridge,
     const int trajectory_id,
-    carto::mapping::SensorCollator<SensorData>* const sensor_collator)
+    carto::mapping::SensorCollator<carto::sensor::Data>* const sensor_collator)
     : options_(options),
       tf_bridge_(tf_bridge),
       trajectory_id_(trajectory_id),
@@ -74,9 +85,9 @@ void SensorBridge::HandleOdometryMessage(
   if (sensor_to_tracking != nullptr) {
     sensor_collator_->AddSensorData(
         trajectory_id_, carto::common::ToUniversal(time), topic,
-        carto::common::make_unique<SensorData>(
-            msg->child_frame_id,
-            SensorData::Odometry{
+        carto::common::make_unique<::cartographer::sensor::Data>(
+            CheckNoLeadingSlash(msg->child_frame_id),
+            ::cartographer::sensor::Data::Odometry{
                 ToRigid3d(msg->pose.pose) * sensor_to_tracking->inverse(),
                 covariance}));
   }
@@ -96,9 +107,9 @@ void SensorBridge::HandleImuMessage(const string& topic,
            "otherwise be imprecise.";
     sensor_collator_->AddSensorData(
         trajectory_id_, carto::common::ToUniversal(time), topic,
-        carto::common::make_unique<SensorData>(
-            msg->header.frame_id,
-            SensorData::Imu{
+        carto::common::make_unique<::cartographer::sensor::Data>(
+            CheckNoLeadingSlash(msg->header.frame_id),
+            ::cartographer::sensor::Data::Imu{
                 sensor_to_tracking->rotation() *
                     ToEigen(msg->linear_acceleration),
                 sensor_to_tracking->rotation() * ToEigen(msg->angular_velocity),
@@ -128,8 +139,8 @@ void SensorBridge::HandlePointCloud2Message(
   if (sensor_to_tracking != nullptr) {
     sensor_collator_->AddSensorData(
         trajectory_id_, carto::common::ToUniversal(time), topic,
-        carto::common::make_unique<SensorData>(
-            msg->header.frame_id,
+        carto::common::make_unique<::cartographer::sensor::Data>(
+            CheckNoLeadingSlash(msg->header.frame_id),
             carto::sensor::TransformLaserFan3D(
                 carto::sensor::FromProto(ToCartographer(pcl_point_cloud)),
                 sensor_to_tracking->cast<float>())));
@@ -148,10 +159,11 @@ void SensorBridge::HandleLaserScanProto(
   if (sensor_to_tracking != nullptr) {
     sensor_collator_->AddSensorData(
         trajectory_id_, carto::common::ToUniversal(time), topic,
-        carto::common::make_unique<SensorData>(
-            frame_id, carto::sensor::TransformLaserFan3D(
-                          carto::sensor::ToLaserFan3D(laser_fan_2d),
-                          sensor_to_tracking->cast<float>())));
+        carto::common::make_unique<::cartographer::sensor::Data>(
+            CheckNoLeadingSlash(frame_id),
+            carto::sensor::TransformLaserFan3D(
+                carto::sensor::ToLaserFan3D(laser_fan_2d),
+                sensor_to_tracking->cast<float>())));
   }
 }
 

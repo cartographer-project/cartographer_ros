@@ -63,15 +63,8 @@ google_library(sensor_bridge
     sensor_bridge.h
   DEPENDS
     msg_conversion
-    sensor_data
     tf_bridge
     time_conversion
-)
-
-google_library(sensor_data
-  USES_CARTOGRAPHER
-  HDRS
-    sensor_data.h
 )
 
 google_library(tf_bridge
@@ -118,7 +111,6 @@ google_binary(cartographer_node
     occupancy_grid
     ros_log_sink
     sensor_bridge
-    sensor_data
     tf_bridge
     time_conversion
 )
