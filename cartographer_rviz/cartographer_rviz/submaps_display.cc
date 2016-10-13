@@ -91,7 +91,7 @@ void SubmapsDisplay::reset() {
 void SubmapsDisplay::processMessage(
     const ::cartographer_ros_msgs::SubmapList::ConstPtr& msg) {
   ::cartographer::common::MutexLocker locker(&mutex_);
-  for (int trajectory_id = 0; trajectory_id < msg->trajectory.size();
+  for (size_t trajectory_id = 0; trajectory_id < msg->trajectory.size();
        ++trajectory_id) {
     if (trajectory_id >= trajectories_.size()) {
       trajectories_.emplace_back();
@@ -99,7 +99,7 @@ void SubmapsDisplay::processMessage(
     auto& trajectory = trajectories_[trajectory_id];
     const std::vector<::cartographer_ros_msgs::SubmapEntry>& submap_entries =
         msg->trajectory[trajectory_id].submap;
-    for (int submap_id = 0; submap_id < submap_entries.size(); ++submap_id) {
+    for (size_t submap_id = 0; submap_id < submap_entries.size(); ++submap_id) {
       if (submap_id >= trajectory.size()) {
         trajectory.push_back(
             ::cartographer::common::make_unique<DrawableSubmap>(

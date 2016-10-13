@@ -333,7 +333,6 @@ bool Node::HandleSubmapQuery(
   response.height = response_proto.height();
   response.resolution = response_proto.resolution();
 
-  auto pose = carto::transform::ToRigid3(response_proto.slice_pose());
   response.slice_pose.position.x =
       response_proto.slice_pose().translation().x();
   response.slice_pose.position.y =
