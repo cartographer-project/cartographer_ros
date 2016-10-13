@@ -53,6 +53,7 @@ class SubmapsDisplay
  private:
   void CreateClient();
 
+  // These are called by RViz and therefore do not adhere to the style guide.
   void onInitialize() override;
   void reset() override;
   void processMessage(
