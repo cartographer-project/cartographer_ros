@@ -29,7 +29,6 @@ google_initialize_cartographer_project()
 
 find_package(Boost REQUIRED COMPONENTS system iostreams)
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
-find_package(ZLIB REQUIRED)
 
 catkin_package(
   CATKIN_DEPENDS
