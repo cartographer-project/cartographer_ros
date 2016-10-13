@@ -151,7 +151,7 @@ void SensorBridge::HandleLaserScanProto(
     const string& topic, const ::cartographer::common::Time time,
     const string& frame_id,
     const ::cartographer::sensor::proto::LaserScan& laser_scan) {
-  const auto laser_fan_2d = carto::sensor::ToLaserFan(
+  const auto laser_fan = carto::sensor::ToLaserFan3D(
       laser_scan, options_.horizontal_laser_min_range,
       options_.horizontal_laser_max_range,
       options_.horizontal_laser_missing_echo_ray_length);
@@ -162,8 +162,7 @@ void SensorBridge::HandleLaserScanProto(
         carto::common::make_unique<::cartographer::sensor::Data>(
             CheckNoLeadingSlash(frame_id),
             carto::sensor::TransformLaserFan3D(
-                carto::sensor::ToLaserFan3D(laser_fan_2d),
-                sensor_to_tracking->cast<float>())));
+                laser_fan, sensor_to_tracking->cast<float>())));
   }
 }
 
