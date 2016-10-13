@@ -115,7 +115,6 @@ google_binary(cartographer_node
     time_conversion
 )
 
-# TODO(hrapp): The update_cmakelists.py file will happy overwrite this.
 install(TARGETS cartographer_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
