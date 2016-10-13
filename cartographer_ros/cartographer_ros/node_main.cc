@@ -29,6 +29,9 @@
 #include "cartographer/common/rate_timer.h"
 #include "cartographer/common/thread_pool.h"
 #include "cartographer/common/time.h"
+#include "cartographer/io/null_points_processor.h"
+#include "cartographer/io/points_processor.h"
+#include "cartographer/io/xray_points_processor.h"
 #include "cartographer/kalman_filter/pose_tracker.h"
 #include "cartographer/mapping/global_trajectory_builder_interface.h"
 #include "cartographer/mapping/map_builder.h"
@@ -363,17 +366,52 @@ bool Node::HandleFinishTrajectory(
   // TODO(whess): Add multi-trajectory support.
   sensor_collator_.FinishTrajectory(kTrajectoryBuilderId);
   map_builder_.sparse_pose_graph()->RunFinalOptimization();
-  // TODO(whess): Write X-rays in 3D.
+
+  const auto trajectory_nodes =
+      map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
+  if (trajectory_nodes.empty()) {
+    LOG(WARNING) << "Map is empty and will not be saved.";
+    return true;
+  }
+
   if (options_.map_builder_options.use_trajectory_builder_2d()) {
-    const auto trajectory_nodes =
-        map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
-    if (!trajectory_nodes.empty()) {
-      ::nav_msgs::OccupancyGrid occupancy_grid;
-      BuildOccupancyGrid(trajectory_nodes, options_, &occupancy_grid);
-      WriteOccupancyGridToPgmAndYaml(occupancy_grid, request.stem);
-    } else {
-      LOG(WARNING) << "Map is empty and will not be saved.";
+    ::nav_msgs::OccupancyGrid occupancy_grid;
+    BuildOccupancyGrid(trajectory_nodes, options_, &occupancy_grid);
+    WriteOccupancyGridToPgmAndYaml(occupancy_grid, request.stem);
+  }
+
+  if (options_.map_builder_options.use_trajectory_builder_3d()) {
+    const double voxel_size =
+        options_.map_builder_options.trajectory_builder_2d_options()
+            .submaps_options()
+            .resolution();
+
+    carto::io::NullPointsProcessor null_points_processor;
+    carto::io::XRayPointsProcessor xy_xray_points_processor(
+        voxel_size, carto::transform::Rigid3f::Rotation(Eigen::AngleAxisf(
+                        -M_PI / 2.f, Eigen::Vector3f::UnitY())),
+        request.stem + "_xray_xy.png", &null_points_processor);
+    carto::io::XRayPointsProcessor yz_xray_points_processor(
+        voxel_size, carto::transform::Rigid3f::Rotation(
+                        Eigen::AngleAxisf(M_PI, Eigen::Vector3f::UnitZ())),
+        request.stem + "_xray_yz.png", &xy_xray_points_processor);
+    carto::io::XRayPointsProcessor xz_xray_points_processor(
+        voxel_size, carto::transform::Rigid3f::Rotation(Eigen::AngleAxisf(
+                        -M_PI / 2.f, Eigen::Vector3f::UnitZ())),
+        request.stem + "_xray_xz.png", &yz_xray_points_processor);
+
+    for (const auto& node : trajectory_nodes) {
+      const carto::sensor::LaserFan laser_fan =
+          carto::sensor::TransformLaserFan(
+              carto::sensor::Decompress(node.constant_data->laser_fan_3d),
+              node.pose.template cast<float>());
+
+      carto::io::PointsBatch points_batch;
+      points_batch.origin = laser_fan.origin;
+      points_batch.points = laser_fan.returns;
+      xz_xray_points_processor.Process(points_batch);
     }
+    xz_xray_points_processor.Flush();
   }
   return true;
 }
