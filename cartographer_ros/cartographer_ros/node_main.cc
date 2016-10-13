@@ -41,6 +41,7 @@
 #include "cartographer/mapping_3d/local_trajectory_builder.h"
 #include "cartographer/mapping_3d/local_trajectory_builder_options.h"
 #include "cartographer/mapping_3d/sparse_pose_graph.h"
+#include "cartographer/sensor/data.h"
 #include "cartographer/sensor/laser.h"
 #include "cartographer/sensor/point_cloud.h"
 #include "cartographer/sensor/proto/sensor.pb.h"
@@ -52,7 +53,6 @@
 #include "cartographer_ros/occupancy_grid.h"
 #include "cartographer_ros/ros_log_sink.h"
 #include "cartographer_ros/sensor_bridge.h"
-#include "cartographer_ros/sensor_data.h"
 #include "cartographer_ros/tf_bridge.h"
 #include "cartographer_ros/time_conversion.h"
 #include "cartographer_ros_msgs/FinishTrajectory.h"
@@ -121,7 +121,7 @@ class Node {
 
  private:
   void HandleSensorData(int64 timestamp,
-                        std::unique_ptr<SensorData> sensor_data);
+                        std::unique_ptr<carto::sensor::Data> sensor_data);
   bool HandleSubmapQuery(
       ::cartographer_ros_msgs::SubmapQuery::Request& request,
       ::cartographer_ros_msgs::SubmapQuery::Response& response);
@@ -145,7 +145,7 @@ class Node {
   std::deque<carto::mapping::TrajectoryNode::ConstantData> constant_data_
       GUARDED_BY(mutex_);
   carto::mapping::MapBuilder map_builder_ GUARDED_BY(mutex_);
-  carto::mapping::SensorCollator<SensorData> sensor_collator_
+  carto::mapping::SensorCollator<carto::sensor::Data> sensor_collator_
       GUARDED_BY(mutex_);
   SensorBridge sensor_bridge_ GUARDED_BY(mutex_);
 
@@ -266,7 +266,8 @@ void Node::Initialize() {
   CHECK_EQ(kTrajectoryBuilderId, map_builder_.AddTrajectoryBuilder());
   sensor_collator_.AddTrajectory(
       kTrajectoryBuilderId, expected_sensor_identifiers,
-      [this](const int64 timestamp, std::unique_ptr<SensorData> sensor_data) {
+      [this](const int64 timestamp,
+             std::unique_ptr<carto::sensor::Data> sensor_data) {
         HandleSensorData(timestamp, std::move(sensor_data));
       });
 
@@ -481,7 +482,7 @@ void Node::SpinOccupancyGridThreadForever() {
 }
 
 void Node::HandleSensorData(const int64 timestamp,
-                            std::unique_ptr<SensorData> sensor_data) {
+                            std::unique_ptr<carto::sensor::Data> sensor_data) {
   auto it = rate_timers_.find(sensor_data->frame_id);
   if (it == rate_timers_.end()) {
     it = rate_timers_
@@ -505,12 +506,12 @@ void Node::HandleSensorData(const int64 timestamp,
   auto* const trajectory_builder =
       map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId);
   switch (sensor_data->type) {
-    case SensorType::kImu:
+    case carto::sensor::Data::Type::kImu:
       trajectory_builder->AddImuData(time, sensor_data->imu.linear_acceleration,
                                      sensor_data->imu.angular_velocity);
       return;
 
-    case SensorType::kLaserFan3D:
+    case carto::sensor::Data::Type::kLaserFan3D:
       if (options_.map_builder_options.use_trajectory_builder_2d()) {
         trajectory_builder->AddHorizontalLaserFan(time,
                                                   sensor_data->laser_fan_3d);
@@ -520,7 +521,7 @@ void Node::HandleSensorData(const int64 timestamp,
       }
       return;
 
-    case SensorType::kOdometry:
+    case carto::sensor::Data::Type::kOdometry:
       trajectory_builder->AddOdometerPose(time, sensor_data->odometry.pose,
                                           sensor_data->odometry.covariance);
       return;
