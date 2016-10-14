@@ -380,12 +380,11 @@ bool Node::HandleFinishTrajectory(
 
   if (options_.map_builder_options.use_trajectory_builder_3d()) {
     WriteXRayImages(trajectory_nodes,
-                    options_.map_builder_options.trajectory_builder_2d_options()
+                    options_.map_builder_options.trajectory_builder_3d_options()
                         .submaps_options()
-                        .resolution(),
+                        .high_resolution(),
                     request.stem);
   }
-
   return true;
 }
 
