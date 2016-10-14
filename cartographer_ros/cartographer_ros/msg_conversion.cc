@@ -162,11 +162,11 @@ sensor_msgs::PointCloud2 ToPointCloud2Message(
 
 sensor_msgs::PointCloud2 ToPointCloud2Message(
     const int64 timestamp, const string& frame_id,
-    const ::cartographer::sensor::proto::LaserFan3D& laser_scan_3d) {
-  CHECK(::cartographer::transform::ToEigen(laser_scan_3d.origin()).norm() == 0)
-      << "Trying to convert a laser_scan_3d that is not at the origin.";
+    const ::cartographer::sensor::proto::LaserFan& laser_fan) {
+  CHECK(::cartographer::transform::ToEigen(laser_fan.origin()).norm() == 0)
+      << "Trying to convert a laser_fan that is not at the origin.";
 
-  const auto& point_cloud = laser_scan_3d.point_cloud();
+  const auto& point_cloud = laser_fan.point_cloud();
   CHECK_EQ(point_cloud.x_size(), point_cloud.y_size());
   CHECK_EQ(point_cloud.x_size(), point_cloud.z_size());
   const auto num_points = point_cloud.x_size();
@@ -229,9 +229,9 @@ sensor_msgs::PointCloud2 ToPointCloud2Message(
   return proto;
 }
 
-::cartographer::sensor::proto::LaserFan3D ToCartographer(
+::cartographer::sensor::proto::LaserFan ToCartographer(
     const pcl::PointCloud<pcl::PointXYZ>& pcl_points) {
-  ::cartographer::sensor::proto::LaserFan3D proto;
+  ::cartographer::sensor::proto::LaserFan proto;
 
   auto* origin = proto.mutable_origin();
   origin->set_x(0.);
