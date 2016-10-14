@@ -112,7 +112,7 @@ If *provide_odom_frame* is enabled in the :doc:`configuration`, a continuous
 
 .. _robot_state_publisher: http://wiki.ros.org/robot_state_publisher
 .. _static_transform_publisher: http://wiki.ros.org/tf#static_transform_publisher
-.. _cartographer_node: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros/src/cartographer_node_main.cc
+.. _cartographer_node: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros/cartographer_ros/node_main.cc
 .. _cartographer_ros_msgs/FinishTrajectory: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/srv/FinishTrajectory.srv
 .. _cartographer_ros_msgs/SubmapList: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/msg/SubmapList.msg
 .. _cartographer_ros_msgs/SubmapQuery: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/srv/SubmapQuery.srv
