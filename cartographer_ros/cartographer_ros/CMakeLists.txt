@@ -87,6 +87,14 @@ google_library(time_conversion
     time_conversion.h
 )
 
+google_library(xray
+  USES_CARTOGRAPHER
+  SRCS
+    xray.cc
+  HDRS
+    xray.h
+)
+
 google_catkin_test(time_conversion_test
   USES_CARTOGRAPHER
   USES_ROS
@@ -113,6 +121,7 @@ google_binary(cartographer_node
     sensor_bridge
     tf_bridge
     time_conversion
+    xray
 )
 
 install(TARGETS cartographer_node
