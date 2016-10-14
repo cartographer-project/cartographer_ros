@@ -141,7 +141,7 @@ void SensorBridge::HandlePointCloud2Message(
         trajectory_id_, carto::common::ToUniversal(time), topic,
         carto::common::make_unique<::cartographer::sensor::Data>(
             CheckNoLeadingSlash(msg->header.frame_id),
-            carto::sensor::TransformLaserFan3D(
+            carto::sensor::TransformLaserFan(
                 carto::sensor::FromProto(ToCartographer(pcl_point_cloud)),
                 sensor_to_tracking->cast<float>())));
   }
@@ -151,7 +151,7 @@ void SensorBridge::HandleLaserScanProto(
     const string& topic, const ::cartographer::common::Time time,
     const string& frame_id,
     const ::cartographer::sensor::proto::LaserScan& laser_scan) {
-  const auto laser_fan = carto::sensor::ToLaserFan3D(
+  const auto laser_fan = carto::sensor::ToLaserFan(
       laser_scan, options_.horizontal_laser_min_range,
       options_.horizontal_laser_max_range,
       options_.horizontal_laser_missing_echo_ray_length);
@@ -161,7 +161,7 @@ void SensorBridge::HandleLaserScanProto(
         trajectory_id_, carto::common::ToUniversal(time), topic,
         carto::common::make_unique<::cartographer::sensor::Data>(
             CheckNoLeadingSlash(frame_id),
-            carto::sensor::TransformLaserFan3D(
+            carto::sensor::TransformLaserFan(
                 laser_fan, sensor_to_tracking->cast<float>())));
   }
 }

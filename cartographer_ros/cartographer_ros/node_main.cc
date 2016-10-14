@@ -511,13 +511,12 @@ void Node::HandleSensorData(const int64 timestamp,
                                      sensor_data->imu.angular_velocity);
       return;
 
-    case carto::sensor::Data::Type::kLaserFan3D:
+    case carto::sensor::Data::Type::kLaserFan:
       if (options_.map_builder_options.use_trajectory_builder_2d()) {
-        trajectory_builder->AddHorizontalLaserFan(time,
-                                                  sensor_data->laser_fan_3d);
+        trajectory_builder->AddHorizontalLaserFan(time, sensor_data->laser_fan);
       } else {
         CHECK(options_.map_builder_options.use_trajectory_builder_3d());
-        trajectory_builder->AddLaserFan3D(time, sensor_data->laser_fan_3d);
+        trajectory_builder->AddLaserFan3D(time, sensor_data->laser_fan);
       }
       return;
 
