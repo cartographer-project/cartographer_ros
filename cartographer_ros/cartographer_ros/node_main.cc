@@ -146,8 +146,7 @@ class Node {
   std::deque<carto::mapping::TrajectoryNode::ConstantData> constant_data_
       GUARDED_BY(mutex_);
   carto::mapping::MapBuilder map_builder_ GUARDED_BY(mutex_);
-  carto::sensor::Collator<carto::sensor::Data> sensor_collator_
-      GUARDED_BY(mutex_);
+  carto::sensor::Collator sensor_collator_ GUARDED_BY(mutex_);
   SensorBridge sensor_bridge_ GUARDED_BY(mutex_);
 
   ::ros::NodeHandle node_handle_;

@@ -56,10 +56,10 @@ SensorBridgeOptions CreateSensorBridgeOptions(
   return options;
 }
 
-SensorBridge::SensorBridge(
-    const SensorBridgeOptions& options, const TfBridge* const tf_bridge,
-    const int trajectory_id,
-    carto::sensor::Collator<carto::sensor::Data>* const sensor_collator)
+SensorBridge::SensorBridge(const SensorBridgeOptions& options,
+                           const TfBridge* const tf_bridge,
+                           const int trajectory_id,
+                           carto::sensor::Collator* const sensor_collator)
     : options_(options),
       tf_bridge_(tf_bridge),
       trajectory_id_(trajectory_id),
