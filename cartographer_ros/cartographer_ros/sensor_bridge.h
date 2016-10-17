@@ -17,7 +17,7 @@
 #ifndef CARTOGRAPHER_ROS_SENSOR_BRIDGE_H_
 #define CARTOGRAPHER_ROS_SENSOR_BRIDGE_H_
 
-#include "cartographer/mapping/sensor_collator.h"
+#include "cartographer/sensor/collator.h"
 #include "cartographer/sensor/data.h"
 #include "cartographer/transform/rigid_transform.h"
 #include "cartographer/transform/transform.h"
@@ -50,7 +50,7 @@ class SensorBridge {
   explicit SensorBridge(
       const SensorBridgeOptions& options, const TfBridge* tf_bridge,
       int trajectory_id,
-      ::cartographer::mapping::SensorCollator<::cartographer::sensor::Data>*
+      ::cartographer::sensor::Collator<::cartographer::sensor::Data>*
           sensor_collator);
 
   SensorBridge(const SensorBridge&) = delete;
@@ -77,7 +77,7 @@ class SensorBridge {
   const SensorBridgeOptions options_;
   const TfBridge* const tf_bridge_;
   const int trajectory_id_;
-  ::cartographer::mapping::SensorCollator<::cartographer::sensor::Data>* const
+  ::cartographer::sensor::Collator<::cartographer::sensor::Data>* const
       sensor_collator_;
 };
 

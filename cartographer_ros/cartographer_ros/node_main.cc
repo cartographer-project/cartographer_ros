@@ -33,7 +33,7 @@
 #include "cartographer/mapping/global_trajectory_builder_interface.h"
 #include "cartographer/mapping/map_builder.h"
 #include "cartographer/mapping/proto/submaps.pb.h"
-#include "cartographer/mapping/sensor_collator.h"
+#include "cartographer/sensor/collator.h"
 #include "cartographer/mapping_2d/global_trajectory_builder.h"
 #include "cartographer/mapping_2d/local_trajectory_builder.h"
 #include "cartographer/mapping_2d/sparse_pose_graph.h"
@@ -146,7 +146,7 @@ class Node {
   std::deque<carto::mapping::TrajectoryNode::ConstantData> constant_data_
       GUARDED_BY(mutex_);
   carto::mapping::MapBuilder map_builder_ GUARDED_BY(mutex_);
-  carto::mapping::SensorCollator<carto::sensor::Data> sensor_collator_
+  carto::sensor::Collator<carto::sensor::Data> sensor_collator_
       GUARDED_BY(mutex_);
   SensorBridge sensor_bridge_ GUARDED_BY(mutex_);
 
