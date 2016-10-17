@@ -55,6 +55,7 @@
 #include "cartographer_ros/sensor_bridge.h"
 #include "cartographer_ros/tf_bridge.h"
 #include "cartographer_ros/time_conversion.h"
+#include "cartographer_ros/xray.h"
 #include "cartographer_ros_msgs/FinishTrajectory.h"
 #include "cartographer_ros_msgs/SubmapEntry.h"
 #include "cartographer_ros_msgs/SubmapList.h"
@@ -363,17 +364,26 @@ bool Node::HandleFinishTrajectory(
   // TODO(whess): Add multi-trajectory support.
   sensor_collator_.FinishTrajectory(kTrajectoryBuilderId);
   map_builder_.sparse_pose_graph()->RunFinalOptimization();
-  // TODO(whess): Write X-rays in 3D.
+
+  const auto trajectory_nodes =
+      map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
+  if (trajectory_nodes.empty()) {
+    LOG(WARNING) << "Map is empty and will not be saved.";
+    return true;
+  }
+
   if (options_.map_builder_options.use_trajectory_builder_2d()) {
-    const auto trajectory_nodes =
-        map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
-    if (!trajectory_nodes.empty()) {
-      ::nav_msgs::OccupancyGrid occupancy_grid;
-      BuildOccupancyGrid(trajectory_nodes, options_, &occupancy_grid);
-      WriteOccupancyGridToPgmAndYaml(occupancy_grid, request.stem);
-    } else {
-      LOG(WARNING) << "Map is empty and will not be saved.";
-    }
+    ::nav_msgs::OccupancyGrid occupancy_grid;
+    BuildOccupancyGrid(trajectory_nodes, options_, &occupancy_grid);
+    WriteOccupancyGridToPgmAndYaml(occupancy_grid, request.stem);
+  }
+
+  if (options_.map_builder_options.use_trajectory_builder_3d()) {
+    WriteXRayImages(trajectory_nodes,
+                    options_.map_builder_options.trajectory_builder_3d_options()
+                        .submaps_options()
+                        .high_resolution(),
+                    request.stem);
   }
   return true;
 }
@@ -511,13 +521,12 @@ void Node::HandleSensorData(const int64 timestamp,
                                      sensor_data->imu.angular_velocity);
       return;
 
-    case carto::sensor::Data::Type::kLaserFan3D:
+    case carto::sensor::Data::Type::kLaserFan:
       if (options_.map_builder_options.use_trajectory_builder_2d()) {
-        trajectory_builder->AddHorizontalLaserFan(time,
-                                                  sensor_data->laser_fan_3d);
+        trajectory_builder->AddHorizontalLaserFan(time, sensor_data->laser_fan);
       } else {
         CHECK(options_.map_builder_options.use_trajectory_builder_3d());
-        trajectory_builder->AddLaserFan3D(time, sensor_data->laser_fan_3d);
+        trajectory_builder->AddLaserFan3D(time, sensor_data->laser_fan);
       }
       return;
 

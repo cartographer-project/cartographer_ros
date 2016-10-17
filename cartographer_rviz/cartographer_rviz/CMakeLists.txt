@@ -1,5 +1,6 @@
 google_library(drawable_submap
   USES_CARTOGRAPHER
+  USES_EIGEN
   USES_ROS
   SRCS
     drawable_submap.cc
