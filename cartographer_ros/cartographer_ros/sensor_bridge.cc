@@ -80,8 +80,8 @@ void SensorBridge::HandleOdometryMessage(
       translational, Eigen::Matrix3d::Zero(),
       Eigen::Matrix3d::Zero(), rotational;
   // clang-format on
-  const auto sensor_to_tracking =
-      tf_bridge_->LookupToTracking(time, CheckNoLeadingSlash(msg->child_frame_id));
+  const auto sensor_to_tracking = tf_bridge_->LookupToTracking(
+      time, CheckNoLeadingSlash(msg->child_frame_id));
   if (sensor_to_tracking != nullptr) {
     sensor_collator_->AddSensorData(
         trajectory_id_, topic,
@@ -97,8 +97,8 @@ void SensorBridge::HandleImuMessage(const string& topic,
   CHECK_NE(msg->linear_acceleration_covariance[0], -1);
   CHECK_NE(msg->angular_velocity_covariance[0], -1);
   const carto::common::Time time = FromRos(msg->header.stamp);
-  const auto sensor_to_tracking =
-      tf_bridge_->LookupToTracking(time, CheckNoLeadingSlash(msg->header.frame_id));
+  const auto sensor_to_tracking = tf_bridge_->LookupToTracking(
+      time, CheckNoLeadingSlash(msg->header.frame_id));
   if (sensor_to_tracking != nullptr) {
     CHECK(sensor_to_tracking->translation().norm() < 1e-5)
         << "The IMU frame must be colocated with the tracking frame. "
@@ -133,8 +133,8 @@ void SensorBridge::HandlePointCloud2Message(
   pcl::PointCloud<pcl::PointXYZ> pcl_point_cloud;
   pcl::fromROSMsg(*msg, pcl_point_cloud);
   const carto::common::Time time = FromRos(msg->header.stamp);
-  const auto sensor_to_tracking =
-      tf_bridge_->LookupToTracking(time, CheckNoLeadingSlash(msg->header.frame_id));
+  const auto sensor_to_tracking = tf_bridge_->LookupToTracking(
+      time, CheckNoLeadingSlash(msg->header.frame_id));
   if (sensor_to_tracking != nullptr) {
     sensor_collator_->AddSensorData(
         trajectory_id_, topic,
@@ -153,7 +153,8 @@ void SensorBridge::HandleLaserScanProto(
       laser_scan, options_.horizontal_laser_min_range,
       options_.horizontal_laser_max_range,
       options_.horizontal_laser_missing_echo_ray_length);
-  const auto sensor_to_tracking = tf_bridge_->LookupToTracking(time, CheckNoLeadingSlash(frame_id));
+  const auto sensor_to_tracking =
+      tf_bridge_->LookupToTracking(time, CheckNoLeadingSlash(frame_id));
   if (sensor_to_tracking != nullptr) {
     sensor_collator_->AddSensorData(
         trajectory_id_, topic,

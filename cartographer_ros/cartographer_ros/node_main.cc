@@ -33,7 +33,6 @@
 #include "cartographer/mapping/global_trajectory_builder_interface.h"
 #include "cartographer/mapping/map_builder.h"
 #include "cartographer/mapping/proto/submaps.pb.h"
-#include "cartographer/sensor/collator.h"
 #include "cartographer/mapping_2d/global_trajectory_builder.h"
 #include "cartographer/mapping_2d/local_trajectory_builder.h"
 #include "cartographer/mapping_2d/sparse_pose_graph.h"
@@ -41,6 +40,7 @@
 #include "cartographer/mapping_3d/local_trajectory_builder.h"
 #include "cartographer/mapping_3d/local_trajectory_builder_options.h"
 #include "cartographer/mapping_3d/sparse_pose_graph.h"
+#include "cartographer/sensor/collator.h"
 #include "cartographer/sensor/data.h"
 #include "cartographer/sensor/laser.h"
 #include "cartographer/sensor/point_cloud.h"
@@ -121,7 +121,8 @@ class Node {
   void Initialize();
 
  private:
-  void HandleSensorData(const string& sensor_id, std::unique_ptr<carto::sensor::Data> sensor_data);
+  void HandleSensorData(const string& sensor_id,
+                        std::unique_ptr<carto::sensor::Data> sensor_data);
   bool HandleSubmapQuery(
       ::cartographer_ros_msgs::SubmapQuery::Request& request,
       ::cartographer_ros_msgs::SubmapQuery::Response& response);
@@ -265,7 +266,8 @@ void Node::Initialize() {
   CHECK_EQ(kTrajectoryBuilderId, map_builder_.AddTrajectoryBuilder());
   sensor_collator_.AddTrajectory(
       kTrajectoryBuilderId, expected_sensor_identifiers,
-      [this](const string& sensor_id, std::unique_ptr<carto::sensor::Data> sensor_data) {
+      [this](const string& sensor_id,
+             std::unique_ptr<carto::sensor::Data> sensor_data) {
         HandleSensorData(sensor_id, std::move(sensor_data));
       });
 
@@ -488,15 +490,16 @@ void Node::SpinOccupancyGridThreadForever() {
   }
 }
 
-void Node::HandleSensorData(const string& sensor_id, std::unique_ptr<carto::sensor::Data> sensor_data) {
+void Node::HandleSensorData(const string& sensor_id,
+                            std::unique_ptr<carto::sensor::Data> sensor_data) {
   auto it = rate_timers_.find(sensor_id);
   if (it == rate_timers_.end()) {
-    it = rate_timers_
-             .emplace(std::piecewise_construct,
-                      std::forward_as_tuple(sensor_id),
-                      std::forward_as_tuple(carto::common::FromSeconds(
-                          kSensorDataRatesLoggingPeriodSeconds)))
-             .first;
+    it =
+        rate_timers_
+            .emplace(std::piecewise_construct, std::forward_as_tuple(sensor_id),
+                     std::forward_as_tuple(carto::common::FromSeconds(
+                         kSensorDataRatesLoggingPeriodSeconds)))
+            .first;
   }
   it->second.Pulse(sensor_data->time);
 
@@ -512,21 +515,25 @@ void Node::HandleSensorData(const string& sensor_id, std::unique_ptr<carto::sens
       map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId);
   switch (sensor_data->type) {
     case carto::sensor::Data::Type::kImu:
-      trajectory_builder->AddImuData(sensor_data->time, sensor_data->imu.linear_acceleration,
+      trajectory_builder->AddImuData(sensor_data->time,
+                                     sensor_data->imu.linear_acceleration,
                                      sensor_data->imu.angular_velocity);
       return;
 
     case carto::sensor::Data::Type::kLaserFan:
       if (options_.map_builder_options.use_trajectory_builder_2d()) {
-        trajectory_builder->AddHorizontalLaserFan(sensor_data->time, sensor_data->laser_fan);
+        trajectory_builder->AddHorizontalLaserFan(sensor_data->time,
+                                                  sensor_data->laser_fan);
       } else {
         CHECK(options_.map_builder_options.use_trajectory_builder_3d());
-        trajectory_builder->AddLaserFan3D(sensor_data->time, sensor_data->laser_fan);
+        trajectory_builder->AddLaserFan3D(sensor_data->time,
+                                          sensor_data->laser_fan);
       }
       return;
 
     case carto::sensor::Data::Type::kOdometry:
-      trajectory_builder->AddOdometerPose(sensor_data->time, sensor_data->odometry.pose,
+      trajectory_builder->AddOdometerPose(sensor_data->time,
+                                          sensor_data->odometry.pose,
                                           sensor_data->odometry.covariance);
       return;
   }
