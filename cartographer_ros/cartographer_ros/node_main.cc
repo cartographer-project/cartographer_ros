@@ -121,8 +121,7 @@ class Node {
   void Initialize();
 
  private:
-  void HandleSensorData(int64 timestamp,
-                        std::unique_ptr<carto::sensor::Data> sensor_data);
+  void HandleSensorData(const string& sensor_id, std::unique_ptr<carto::sensor::Data> sensor_data);
   bool HandleSubmapQuery(
       ::cartographer_ros_msgs::SubmapQuery::Request& request,
       ::cartographer_ros_msgs::SubmapQuery::Response& response);
@@ -266,9 +265,8 @@ void Node::Initialize() {
   CHECK_EQ(kTrajectoryBuilderId, map_builder_.AddTrajectoryBuilder());
   sensor_collator_.AddTrajectory(
       kTrajectoryBuilderId, expected_sensor_identifiers,
-      [this](const int64 timestamp,
-             std::unique_ptr<carto::sensor::Data> sensor_data) {
-        HandleSensorData(timestamp, std::move(sensor_data));
+      [this](const string& sensor_id, std::unique_ptr<carto::sensor::Data> sensor_data) {
+        HandleSensorData(sensor_id, std::move(sensor_data));
       });
 
   submap_list_publisher_ =
@@ -490,18 +488,17 @@ void Node::SpinOccupancyGridThreadForever() {
   }
 }
 
-void Node::HandleSensorData(const int64 timestamp,
-                            std::unique_ptr<carto::sensor::Data> sensor_data) {
-  auto it = rate_timers_.find(sensor_data->frame_id);
+void Node::HandleSensorData(const string& sensor_id, std::unique_ptr<carto::sensor::Data> sensor_data) {
+  auto it = rate_timers_.find(sensor_id);
   if (it == rate_timers_.end()) {
     it = rate_timers_
              .emplace(std::piecewise_construct,
-                      std::forward_as_tuple(sensor_data->frame_id),
+                      std::forward_as_tuple(sensor_id),
                       std::forward_as_tuple(carto::common::FromSeconds(
                           kSensorDataRatesLoggingPeriodSeconds)))
              .first;
   }
-  it->second.Pulse(carto::common::FromUniversal(timestamp));
+  it->second.Pulse(sensor_data->time);
 
   if (std::chrono::steady_clock::now() - last_sensor_data_rates_logging_time_ >
       carto::common::FromSeconds(kSensorDataRatesLoggingPeriodSeconds)) {
@@ -511,26 +508,25 @@ void Node::HandleSensorData(const int64 timestamp,
     last_sensor_data_rates_logging_time_ = std::chrono::steady_clock::now();
   }
 
-  const auto time = carto::common::FromUniversal(timestamp);
   auto* const trajectory_builder =
       map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId);
   switch (sensor_data->type) {
     case carto::sensor::Data::Type::kImu:
-      trajectory_builder->AddImuData(time, sensor_data->imu.linear_acceleration,
+      trajectory_builder->AddImuData(sensor_data->time, sensor_data->imu.linear_acceleration,
                                      sensor_data->imu.angular_velocity);
       return;
 
     case carto::sensor::Data::Type::kLaserFan:
       if (options_.map_builder_options.use_trajectory_builder_2d()) {
-        trajectory_builder->AddHorizontalLaserFan(time, sensor_data->laser_fan);
+        trajectory_builder->AddHorizontalLaserFan(sensor_data->time, sensor_data->laser_fan);
       } else {
         CHECK(options_.map_builder_options.use_trajectory_builder_3d());
-        trajectory_builder->AddLaserFan3D(time, sensor_data->laser_fan);
+        trajectory_builder->AddLaserFan3D(sensor_data->time, sensor_data->laser_fan);
       }
       return;
 
     case carto::sensor::Data::Type::kOdometry:
-      trajectory_builder->AddOdometerPose(time, sensor_data->odometry.pose,
+      trajectory_builder->AddOdometerPose(sensor_data->time, sensor_data->odometry.pose,
                                           sensor_data->odometry.covariance);
       return;
   }
