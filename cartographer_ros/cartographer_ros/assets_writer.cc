@@ -56,7 +56,7 @@ void WriteAssets(const std::vector<::cartographer::mapping::TrajectoryNode>&
     for (const uint8 reflectivity :
          node.constant_data->laser_fan_3d.reflectivities) {
       points_batch->colors.push_back(
-          carto::io::Color(reflectivity, reflectivity, reflectivity));
+          carto::io::Color{{reflectivity, reflectivity, reflectivity}});
     }
     ply_writing_points_processor.Process(std::move(points_batch));
   }
