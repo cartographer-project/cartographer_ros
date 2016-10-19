@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_ROS_XRAY_H_
-#define CARTOGRAPHER_ROS_XRAY_H_
+#ifndef CARTOGRAPHER_ROS_ASSETS_WRITER_H_
+#define CARTOGRAPHER_ROS_ASSETS_WRITER_H_
 
 #include <string>
 #include <vector>
@@ -24,12 +24,12 @@
 
 namespace cartographer_ros {
 
-// Writes X-ray images from the 'trajectory_nodes'. The filenames will all start
-// with 'stem'.
-void WriteXRayImages(const std::vector<::cartographer::mapping::TrajectoryNode>&
-                         trajectory_nodes,
-                     double voxel_size, const std::string& stem);
+// Writes X-ray images and PLY files from the 'trajectory_nodes'. The filenames
+// will all start with 'stem'.
+void WriteAssets(const std::vector<::cartographer::mapping::TrajectoryNode>&
+                     trajectory_nodes,
+                 double voxel_size, const std::string& stem);
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAPHER_ROS_XRAY_H_
+#endif  // CARTOGRAPHER_ROS_ASSETS_WRITER_H_
