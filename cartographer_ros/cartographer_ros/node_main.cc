@@ -39,6 +39,7 @@
 #include "cartographer/mapping_3d/local_trajectory_builder.h"
 #include "cartographer/mapping_3d/local_trajectory_builder_options.h"
 #include "cartographer/mapping_3d/sparse_pose_graph.h"
+#include "cartographer/proto/trajectory.pb.h"
 #include "cartographer/sensor/collator.h"
 #include "cartographer/sensor/data.h"
 #include "cartographer/sensor/laser.h"
@@ -357,6 +358,13 @@ bool Node::HandleFinishTrajectory(
     LOG(WARNING) << "Map is empty and will not be saved.";
     return true;
   }
+
+  // Write the trajectory.
+  std::ofstream proto_file(request.stem + ".pb",
+                           std::ios_base::out | std::ios_base::binary);
+  const carto::proto::Trajectory trajectory =
+      carto::mapping::ToProto(trajectory_nodes);
+  CHECK(trajectory.SerializeToOstream(&proto_file)) << "Could not write trajectory.";
 
   if (options_.map_builder_options.use_trajectory_builder_2d()) {
     ::nav_msgs::OccupancyGrid occupancy_grid;
