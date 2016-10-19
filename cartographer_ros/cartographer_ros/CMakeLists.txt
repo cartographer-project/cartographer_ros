@@ -95,6 +95,14 @@ google_library(xray
     xray.h
 )
 
+google_library(pcd
+  USES_CARTOGRAPHER
+  SRCS
+    pcd.cc
+  HDRS
+    pcd.h
+)
+
 google_catkin_test(time_conversion_test
   USES_CARTOGRAPHER
   USES_ROS
@@ -122,6 +130,7 @@ google_binary(cartographer_node
     tf_bridge
     time_conversion
     xray
+    pcd
 )
 
 install(TARGETS cartographer_node
