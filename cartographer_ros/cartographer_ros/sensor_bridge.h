@@ -17,8 +17,7 @@
 #ifndef CARTOGRAPHER_ROS_SENSOR_BRIDGE_H_
 #define CARTOGRAPHER_ROS_SENSOR_BRIDGE_H_
 
-#include "cartographer/sensor/collator.h"
-#include "cartographer/sensor/data.h"
+#include "cartographer/mapping/trajectory_builder.h"
 #include "cartographer/transform/rigid_transform.h"
 #include "cartographer/transform/transform.h"
 #include "cartographer_ros/tf_bridge.h"
@@ -47,9 +46,9 @@ SensorBridgeOptions CreateSensorBridgeOptions(
 // Converts ROS messages into SensorData in tracking frame for the MapBuilder.
 class SensorBridge {
  public:
-  explicit SensorBridge(const SensorBridgeOptions& options,
-                        const TfBridge* tf_bridge, int trajectory_id,
-                        ::cartographer::sensor::Collator* sensor_collator);
+  explicit SensorBridge(
+      const SensorBridgeOptions& options, const TfBridge* tf_bridge,
+      ::cartographer::mapping::TrajectoryBuilder* trajectory_builder);
 
   SensorBridge(const SensorBridge&) = delete;
   SensorBridge& operator=(const SensorBridge&) = delete;
@@ -74,8 +73,7 @@ class SensorBridge {
 
   const SensorBridgeOptions options_;
   const TfBridge* const tf_bridge_;
-  const int trajectory_id_;
-  ::cartographer::sensor::Collator* const sensor_collator_;
+  ::cartographer::mapping::TrajectoryBuilder* const trajectory_builder_;
 };
 
 }  // namespace cartographer_ros
