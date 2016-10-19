@@ -47,6 +47,7 @@
 #include "cartographer/sensor/proto/sensor.pb.h"
 #include "cartographer/transform/rigid_transform.h"
 #include "cartographer/transform/transform.h"
+#include "cartographer_ros/assets_writer.h"
 #include "cartographer_ros/map_writer.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/node_options.h"
@@ -55,7 +56,6 @@
 #include "cartographer_ros/sensor_bridge.h"
 #include "cartographer_ros/tf_bridge.h"
 #include "cartographer_ros/time_conversion.h"
-#include "cartographer_ros/xray.h"
 #include "cartographer_ros_msgs/FinishTrajectory.h"
 #include "cartographer_ros_msgs/SubmapEntry.h"
 #include "cartographer_ros_msgs/SubmapList.h"
@@ -378,11 +378,11 @@ bool Node::HandleFinishTrajectory(
   }
 
   if (options_.map_builder_options.use_trajectory_builder_3d()) {
-    WriteXRayImages(trajectory_nodes,
-                    options_.map_builder_options.trajectory_builder_3d_options()
-                        .submaps_options()
-                        .high_resolution(),
-                    request.stem);
+    WriteAssets(trajectory_nodes,
+                options_.map_builder_options.trajectory_builder_3d_options()
+                    .submaps_options()
+                    .high_resolution(),
+                request.stem);
   }
   return true;
 }
