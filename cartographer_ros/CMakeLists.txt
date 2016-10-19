@@ -17,16 +17,18 @@ cmake_minimum_required(VERSION 2.8)
 project(cartographer_ros)
 
 set(PACKAGE_DEPENDENCIES
+  cartographer_ros_msgs
   eigen_conversions
   geometry_msgs
-  cartographer_ros_msgs
+  nav_msgs
+  pcl_conversions
   roscpp
   sensor_msgs
-  nav_msgs
   tf2
   tf2_eigen
   tf2_ros
 )
+
 
 find_package(cartographer REQUIRED)
 include("${CARTOGRAPHER_CMAKE_DIR}/functions.cmake")
@@ -34,6 +36,9 @@ google_initialize_cartographer_project()
 google_enable_testing()
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
+
+include(FindPkgConfig)
+PKG_SEARCH_MODULE(YAMLCPP REQUIRED yaml-cpp>=0.5.1)
 
 catkin_package(
   CATKIN_DEPENDS
