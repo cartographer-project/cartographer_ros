@@ -521,14 +521,8 @@ void Node::HandleSensorData(const string& sensor_id,
       return;
 
     case carto::sensor::Data::Type::kLaserFan:
-      if (options_.map_builder_options.use_trajectory_builder_2d()) {
-        trajectory_builder->AddHorizontalLaserFan(sensor_data->time,
-                                                  sensor_data->laser_fan);
-      } else {
-        CHECK(options_.map_builder_options.use_trajectory_builder_3d());
-        trajectory_builder->AddLaserFan3D(sensor_data->time,
-                                          sensor_data->laser_fan);
-      }
+      trajectory_builder->AddLaserFan(sensor_data->time,
+                                      sensor_data->laser_fan);
       return;
 
     case carto::sensor::Data::Type::kOdometry:
