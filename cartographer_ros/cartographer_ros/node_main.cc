@@ -26,7 +26,6 @@
 #include "cartographer/common/make_unique.h"
 #include "cartographer/common/mutex.h"
 #include "cartographer/common/port.h"
-#include "cartographer/common/rate_timer.h"
 #include "cartographer/common/thread_pool.h"
 #include "cartographer/common/time.h"
 #include "cartographer/kalman_filter/pose_tracker.h"
@@ -93,7 +92,6 @@ using carto::kalman_filter::PoseCovariance;
 constexpr int64 kTrajectoryBuilderId = 0;
 constexpr int kInfiniteSubscriberQueueSize = 0;
 constexpr int kLatestOnlyPublisherQueueSize = 1;
-constexpr double kSensorDataRatesLoggingPeriodSeconds = 15.;
 
 // Unique default topic names. Expected to be remapped as needed.
 constexpr char kLaserScanTopic[] = "scan";
@@ -121,8 +119,6 @@ class Node {
   void Initialize();
 
  private:
-  void HandleSensorData(const string& sensor_id,
-                        std::unique_ptr<carto::sensor::Data> sensor_data);
   bool HandleSubmapQuery(
       ::cartographer_ros_msgs::SubmapQuery::Request& request,
       ::cartographer_ros_msgs::SubmapQuery::Response& response);
@@ -146,8 +142,7 @@ class Node {
   std::deque<carto::mapping::TrajectoryNode::ConstantData> constant_data_
       GUARDED_BY(mutex_);
   carto::mapping::MapBuilder map_builder_ GUARDED_BY(mutex_);
-  carto::sensor::Collator sensor_collator_ GUARDED_BY(mutex_);
-  SensorBridge sensor_bridge_ GUARDED_BY(mutex_);
+  std::unique_ptr<SensorBridge> sensor_bridge_ GUARDED_BY(mutex_);
 
   ::ros::NodeHandle node_handle_;
   ::ros::Subscriber imu_subscriber_;
@@ -165,10 +160,6 @@ class Node {
   std::thread occupancy_grid_thread_;
   bool terminating_ = false GUARDED_BY(mutex_);
 
-  // Time at which we last logged the rates of incoming sensor data.
-  std::chrono::steady_clock::time_point last_sensor_data_rates_logging_time_;
-  std::map<string, carto::common::RateTimer<>> rate_timers_;
-
   // We have to keep the timer handles of ::ros::WallTimers around, otherwise
   // they do not fire.
   std::vector<::ros::WallTimer> wall_timers_;
@@ -180,9 +171,7 @@ Node::Node(const NodeOptions& options)
       tf_(tf_buffer_),
       tf_bridge_(options_.tracking_frame, options_.lookup_transform_timeout_sec,
                  &tf_buffer_),
-      map_builder_(options.map_builder_options, &constant_data_),
-      sensor_bridge_(options.sensor_bridge_options, &tf_bridge_,
-                     kTrajectoryBuilderId, &sensor_collator_) {}
+      map_builder_(options.map_builder_options, &constant_data_) {}
 
 Node::~Node() {
   {
@@ -197,7 +186,7 @@ Node::~Node() {
 void Node::Initialize() {
   // Set of all topics we subscribe to. We use the non-remapped default names
   // which are unique.
-  std::unordered_set<string> expected_sensor_identifiers;
+  std::unordered_set<string> expected_sensor_ids;
 
   // For 2D SLAM, subscribe to exactly one horizontal laser.
   if (options_.use_horizontal_laser) {
@@ -205,19 +194,19 @@ void Node::Initialize() {
         kLaserScanTopic, kInfiniteSubscriberQueueSize,
         boost::function<void(const sensor_msgs::LaserScan::ConstPtr&)>(
             [this](const sensor_msgs::LaserScan::ConstPtr& msg) {
-              sensor_bridge_.HandleLaserScanMessage(kLaserScanTopic, msg);
+              sensor_bridge_->HandleLaserScanMessage(kLaserScanTopic, msg);
             }));
-    expected_sensor_identifiers.insert(kLaserScanTopic);
+    expected_sensor_ids.insert(kLaserScanTopic);
   }
   if (options_.use_horizontal_multi_echo_laser) {
     horizontal_laser_scan_subscriber_ = node_handle_.subscribe(
         kMultiEchoLaserScanTopic, kInfiniteSubscriberQueueSize,
         boost::function<void(const sensor_msgs::MultiEchoLaserScan::ConstPtr&)>(
             [this](const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
-              sensor_bridge_.HandleMultiEchoLaserScanMessage(
+              sensor_bridge_->HandleMultiEchoLaserScanMessage(
                   kMultiEchoLaserScanTopic, msg);
             }));
-    expected_sensor_identifiers.insert(kMultiEchoLaserScanTopic);
+    expected_sensor_ids.insert(kMultiEchoLaserScanTopic);
   }
 
   // For 3D SLAM, subscribe to all 3D lasers.
@@ -231,9 +220,9 @@ void Node::Initialize() {
           topic, kInfiniteSubscriberQueueSize,
           boost::function<void(const sensor_msgs::PointCloud2::ConstPtr&)>(
               [this, topic](const sensor_msgs::PointCloud2::ConstPtr& msg) {
-                sensor_bridge_.HandlePointCloud2Message(topic, msg);
+                sensor_bridge_->HandlePointCloud2Message(topic, msg);
               })));
-      expected_sensor_identifiers.insert(topic);
+      expected_sensor_ids.insert(topic);
     }
   }
 
@@ -247,9 +236,9 @@ void Node::Initialize() {
         kImuTopic, kInfiniteSubscriberQueueSize,
         boost::function<void(const sensor_msgs::Imu::ConstPtr& msg)>(
             [this](const sensor_msgs::Imu::ConstPtr& msg) {
-              sensor_bridge_.HandleImuMessage(kImuTopic, msg);
+              sensor_bridge_->HandleImuMessage(kImuTopic, msg);
             }));
-    expected_sensor_identifiers.insert(kImuTopic);
+    expected_sensor_ids.insert(kImuTopic);
   }
 
   if (options_.use_odometry_data) {
@@ -257,19 +246,17 @@ void Node::Initialize() {
         kOdometryTopic, kInfiniteSubscriberQueueSize,
         boost::function<void(const nav_msgs::Odometry::ConstPtr&)>(
             [this](const nav_msgs::Odometry::ConstPtr& msg) {
-              sensor_bridge_.HandleOdometryMessage(kOdometryTopic, msg);
+              sensor_bridge_->HandleOdometryMessage(kOdometryTopic, msg);
             }));
-    expected_sensor_identifiers.insert(kOdometryTopic);
+    expected_sensor_ids.insert(kOdometryTopic);
   }
 
   // TODO(damonkohler): Add multi-trajectory support.
-  CHECK_EQ(kTrajectoryBuilderId, map_builder_.AddTrajectoryBuilder());
-  sensor_collator_.AddTrajectory(
-      kTrajectoryBuilderId, expected_sensor_identifiers,
-      [this](const string& sensor_id,
-             std::unique_ptr<carto::sensor::Data> sensor_data) {
-        HandleSensorData(sensor_id, std::move(sensor_data));
-      });
+  CHECK_EQ(kTrajectoryBuilderId,
+           map_builder_.AddTrajectoryBuilder(expected_sensor_ids));
+  sensor_bridge_ = carto::common::make_unique<SensorBridge>(
+      options_.sensor_bridge_options, &tf_bridge_,
+      map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId));
 
   submap_list_publisher_ =
       node_handle_.advertise<::cartographer_ros_msgs::SubmapList>(
@@ -310,7 +297,7 @@ bool Node::HandleSubmapQuery(
 
   carto::common::MutexLocker lock(&mutex_);
   // TODO(hrapp): return error messages and extract common code from MapBuilder.
-  carto::mapping::Submaps* submaps =
+  carto::mapping::Submaps* const submaps =
       map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)->submaps();
   if (request.submap_id < 0 || request.submap_id >= submaps->size()) {
     return false;
@@ -361,7 +348,7 @@ bool Node::HandleFinishTrajectory(
   ::ros::shutdown();
   carto::common::MutexLocker lock(&mutex_);
   // TODO(whess): Add multi-trajectory support.
-  sensor_collator_.FinishTrajectory(kTrajectoryBuilderId);
+  map_builder_.FinishTrajectory(kTrajectoryBuilderId);
   map_builder_.sparse_pose_graph()->RunFinalOptimization();
 
   const auto trajectory_nodes =
@@ -488,50 +475,6 @@ void Node::SpinOccupancyGridThreadForever() {
     BuildOccupancyGrid(trajectory_nodes, options_, &occupancy_grid);
     occupancy_grid_publisher_.publish(occupancy_grid);
   }
-}
-
-void Node::HandleSensorData(const string& sensor_id,
-                            std::unique_ptr<carto::sensor::Data> sensor_data) {
-  auto it = rate_timers_.find(sensor_id);
-  if (it == rate_timers_.end()) {
-    it =
-        rate_timers_
-            .emplace(std::piecewise_construct, std::forward_as_tuple(sensor_id),
-                     std::forward_as_tuple(carto::common::FromSeconds(
-                         kSensorDataRatesLoggingPeriodSeconds)))
-            .first;
-  }
-  it->second.Pulse(sensor_data->time);
-
-  if (std::chrono::steady_clock::now() - last_sensor_data_rates_logging_time_ >
-      carto::common::FromSeconds(kSensorDataRatesLoggingPeriodSeconds)) {
-    for (const auto& pair : rate_timers_) {
-      LOG(INFO) << pair.first << " rate: " << pair.second.DebugString();
-    }
-    last_sensor_data_rates_logging_time_ = std::chrono::steady_clock::now();
-  }
-
-  auto* const trajectory_builder =
-      map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId);
-  switch (sensor_data->type) {
-    case carto::sensor::Data::Type::kImu:
-      trajectory_builder->AddImuData(sensor_data->time,
-                                     sensor_data->imu.linear_acceleration,
-                                     sensor_data->imu.angular_velocity);
-      return;
-
-    case carto::sensor::Data::Type::kLaserFan:
-      trajectory_builder->AddLaserFan(sensor_data->time,
-                                      sensor_data->laser_fan);
-      return;
-
-    case carto::sensor::Data::Type::kOdometry:
-      trajectory_builder->AddOdometerPose(sensor_data->time,
-                                          sensor_data->odometry.pose,
-                                          sensor_data->odometry.covariance);
-      return;
-  }
-  LOG(FATAL);
 }
 
 void Node::SpinForever() { ::ros::spin(); }
