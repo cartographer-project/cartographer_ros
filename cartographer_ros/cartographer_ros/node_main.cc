@@ -56,6 +56,7 @@
 #include "cartographer_ros/tf_bridge.h"
 #include "cartographer_ros/time_conversion.h"
 #include "cartographer_ros/xray.h"
+#include "cartographer_ros/pcd.h"
 #include "cartographer_ros_msgs/FinishTrajectory.h"
 #include "cartographer_ros_msgs/SubmapEntry.h"
 #include "cartographer_ros_msgs/SubmapList.h"
@@ -379,6 +380,11 @@ bool Node::HandleFinishTrajectory(
 
   if (options_.map_builder_options.use_trajectory_builder_3d()) {
     WriteXRayImages(trajectory_nodes,
+                    options_.map_builder_options.trajectory_builder_3d_options()
+                        .submaps_options()
+                        .high_resolution(),
+                    request.stem);
+    WritePCDFile(trajectory_nodes,
                     options_.map_builder_options.trajectory_builder_3d_options()
                         .submaps_options()
                         .high_resolution(),
