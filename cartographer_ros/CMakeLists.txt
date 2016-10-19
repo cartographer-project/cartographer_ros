@@ -29,12 +29,16 @@ set(PACKAGE_DEPENDENCIES
   tf2_ros
 )
 
+
 find_package(cartographer REQUIRED)
 include("${CARTOGRAPHER_CMAKE_DIR}/functions.cmake")
 google_initialize_cartographer_project()
 google_enable_testing()
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
+
+include(FindPkgConfig)
+PKG_SEARCH_MODULE(YAMLCPP REQUIRED yaml-cpp>=0.5.1)
 
 catkin_package(
   CATKIN_DEPENDS
