@@ -17,12 +17,13 @@ cmake_minimum_required(VERSION 2.8)
 project(cartographer_ros)
 
 set(PACKAGE_DEPENDENCIES
+  cartographer_ros_msgs
   eigen_conversions
   geometry_msgs
-  cartographer_ros_msgs
+  nav_msgs
+  pcl_conversions
   roscpp
   sensor_msgs
-  nav_msgs
   tf2
   tf2_eigen
   tf2_ros
