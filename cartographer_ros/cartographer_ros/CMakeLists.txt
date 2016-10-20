@@ -1,9 +1,14 @@
 google_library(assets_writer
   USES_CARTOGRAPHER
+  USES_ROS
   SRCS
     assets_writer.cc
   HDRS
     assets_writer.h
+  DEPENDS
+    map_writer
+    node_options
+    occupancy_grid
 )
 
 google_library(map_writer
@@ -114,7 +119,6 @@ google_binary(cartographer_node
     node_main.cc
   DEPENDS
     assets_writer
-    map_writer
     msg_conversion
     node_options
     occupancy_grid

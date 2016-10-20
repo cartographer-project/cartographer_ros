@@ -21,14 +21,14 @@
 #include <vector>
 
 #include "cartographer/mapping/trajectory_node.h"
+#include "cartographer_ros/node_options.h"
 
 namespace cartographer_ros {
 
-// Writes X-ray images and PLY files from the 'trajectory_nodes'. The filenames
-// will all start with 'stem'.
+// Writes all assets derivable from the 'trajectory_nodes' and 'options'.
 void WriteAssets(const std::vector<::cartographer::mapping::TrajectoryNode>&
                      trajectory_nodes,
-                 double voxel_size, const std::string& stem);
+                 const NodeOptions& options, const std::string& stem);
 
 }  // namespace cartographer_ros
 

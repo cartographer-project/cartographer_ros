@@ -47,7 +47,6 @@
 #include "cartographer/transform/rigid_transform.h"
 #include "cartographer/transform/transform.h"
 #include "cartographer_ros/assets_writer.h"
-#include "cartographer_ros/map_writer.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/node_options.h"
 #include "cartographer_ros/occupancy_grid.h"
@@ -357,20 +356,7 @@ bool Node::HandleFinishTrajectory(
     LOG(WARNING) << "Map is empty and will not be saved.";
     return true;
   }
-
-  if (options_.map_builder_options.use_trajectory_builder_2d()) {
-    ::nav_msgs::OccupancyGrid occupancy_grid;
-    BuildOccupancyGrid(trajectory_nodes, options_, &occupancy_grid);
-    WriteOccupancyGridToPgmAndYaml(occupancy_grid, request.stem);
-  }
-
-  if (options_.map_builder_options.use_trajectory_builder_3d()) {
-    WriteAssets(trajectory_nodes,
-                options_.map_builder_options.trajectory_builder_3d_options()
-                    .submaps_options()
-                    .high_resolution(),
-                request.stem);
-  }
+  WriteAssets(trajectory_nodes, options_, request.stem);
   return true;
 }
 

@@ -21,14 +21,32 @@
 #include "cartographer/io/ply_writing_points_processor.h"
 #include "cartographer/io/points_processor.h"
 #include "cartographer/io/xray_points_processor.h"
+#include "cartographer/mapping_2d/proto/laser_fan_inserter_options.pb.h"
+#include "cartographer/proto/trajectory.pb.h"
+#include "cartographer_ros/map_writer.h"
+#include "cartographer_ros/occupancy_grid.h"
+#include "nav_msgs/OccupancyGrid.h"
 
 namespace cartographer_ros {
 
+namespace {
+
 namespace carto = ::cartographer;
 
-void WriteAssets(const std::vector<::cartographer::mapping::TrajectoryNode>&
-                     trajectory_nodes,
-                 const double voxel_size, const std::string& stem) {
+// Writes an occupany grid.
+void Write2DAssets(const std::vector<::cartographer::mapping::TrajectoryNode>&
+                       trajectory_nodes,
+                   const NodeOptions& options, const std::string& stem) {
+  ::nav_msgs::OccupancyGrid occupancy_grid;
+  BuildOccupancyGrid(trajectory_nodes, options, &occupancy_grid);
+  WriteOccupancyGridToPgmAndYaml(occupancy_grid, stem);
+}
+
+// Writes X-ray images and PLY files from the 'trajectory_nodes'. The filenames
+// will all start with 'stem'.
+void Write3DAssets(const std::vector<::cartographer::mapping::TrajectoryNode>&
+                       trajectory_nodes,
+                   const double voxel_size, const std::string& stem) {
   carto::io::NullPointsProcessor null_points_processor;
   carto::io::XRayPointsProcessor xy_xray_points_processor(
       voxel_size, carto::transform::Rigid3f::Rotation(
@@ -61,6 +79,34 @@ void WriteAssets(const std::vector<::cartographer::mapping::TrajectoryNode>&
     ply_writing_points_processor.Process(std::move(points_batch));
   }
   ply_writing_points_processor.Flush();
+}
+
+}  // namespace
+
+void WriteAssets(const std::vector<::cartographer::mapping::TrajectoryNode>&
+                     trajectory_nodes,
+                 const NodeOptions& options, const std::string& stem) {
+  // Write the trajectory.
+  std::ofstream proto_file(stem + ".pb",
+                           std::ios_base::out | std::ios_base::binary);
+  const carto::proto::Trajectory trajectory =
+      carto::mapping::ToProto(trajectory_nodes);
+  CHECK(trajectory.SerializeToOstream(&proto_file))
+      << "Could not serialize trajectory.";
+  proto_file.close();
+  CHECK(proto_file) << "Could not write trajectory.";
+
+  if (options.map_builder_options.use_trajectory_builder_2d()) {
+    Write2DAssets(trajectory_nodes, options, stem);
+  }
+
+  if (options.map_builder_options.use_trajectory_builder_3d()) {
+    Write3DAssets(trajectory_nodes,
+                  options.map_builder_options.trajectory_builder_3d_options()
+                      .submaps_options()
+                      .high_resolution(),
+                  stem);
+  }
 }
 
 }  // namespace cartographer_ros
