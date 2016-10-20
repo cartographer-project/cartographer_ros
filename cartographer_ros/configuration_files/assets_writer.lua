@@ -1,0 +1,69 @@
+VOXEL_SIZE = 5e-2
+options = {
+  tracking_frame = "base_link",
+  pipeline = {
+    -- {
+      -- action = "fixed_ratio_sampler",
+      -- sampling_ratio = 1.,
+    -- },
+    -- {
+      -- action = "min_max_range_filter",
+      -- min_range = 1.,
+      -- max_range = 150.,
+    -- },
+    -- {
+      -- action = "voxel_filter_and_remove_moving_objects",
+      -- voxel_size = VOXEL_SIZE,
+    -- },
+    -- {
+      -- action = "dump_num_points",
+    -- },
+    -- {
+      -- action = "color_with_panos",
+      -- run_ids = {
+        -- "20120119_193543_L19220",
+      -- },
+    -- },
+    {
+      action = "write_xray_image",
+      voxel_size = VOXEL_SIZE,
+      filename = "xray_yz.png",
+      transform = {
+        translation = { 0., 0., 0. },
+        rotation = { 0. , 0., math.pi, },
+      },
+    },
+    {
+      action = "write_xray_image",
+      voxel_size = VOXEL_SIZE,
+      filename = "xray_xy.png",
+      transform = {
+        translation = { 0., 0., 0. },
+        rotation = { 0., -math.pi / 2., 0., },
+      },
+    },
+    {
+      action = "write_xray_image",
+      voxel_size = VOXEL_SIZE,
+      filename = "xray_xz.png",
+      transform = {
+        translation = { 0., 0., 0. },
+        rotation = { 0. , 0., -math.pi / 2, },
+      },
+    },
+    -- {
+      -- action = "write_xyz",
+      -- filename = "points.xyz",
+    -- },
+    -- {
+      -- action = "write_octree",
+      -- directory = "octree",
+    -- },
+    -- {
+      -- action = "write_ply",
+      -- filename = "points.ply",
+    -- },
+  }
+}
+
+return options
