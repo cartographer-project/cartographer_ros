@@ -7,6 +7,7 @@ google_library(assets_writer
     assets_writer.h
   DEPENDS
     map_writer
+    node_options
     occupancy_grid
 )
 

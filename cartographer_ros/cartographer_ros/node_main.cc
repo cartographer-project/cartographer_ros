@@ -39,7 +39,6 @@
 #include "cartographer/mapping_3d/local_trajectory_builder.h"
 #include "cartographer/mapping_3d/local_trajectory_builder_options.h"
 #include "cartographer/mapping_3d/sparse_pose_graph.h"
-#include "cartographer/proto/trajectory.pb.h"
 #include "cartographer/sensor/collator.h"
 #include "cartographer/sensor/data.h"
 #include "cartographer/sensor/laser.h"
@@ -357,25 +356,7 @@ bool Node::HandleFinishTrajectory(
     LOG(WARNING) << "Map is empty and will not be saved.";
     return true;
   }
-
-  WriteCommonAssets(trajectory_nodes, request.stem);
-
-  if (options_.map_builder_options.use_trajectory_builder_2d()) {
-    const auto& submaps_options =
-        options_.map_builder_options.trajectory_builder_2d_options()
-            .submaps_options();
-    Write2DAssets(trajectory_nodes, options_.map_frame,
-                  submaps_options.resolution(),
-                  submaps_options.laser_fan_inserter_options(), request.stem);
-  }
-
-  if (options_.map_builder_options.use_trajectory_builder_3d()) {
-    Write3DAssets(trajectory_nodes,
-                  options_.map_builder_options.trajectory_builder_3d_options()
-                      .submaps_options()
-                      .high_resolution(),
-                  request.stem);
-  }
+  WriteAssets(trajectory_nodes, options_, request.stem);
   return true;
 }
 
@@ -477,13 +458,7 @@ void Node::SpinOccupancyGridThreadForever() {
       continue;
     }
     ::nav_msgs::OccupancyGrid occupancy_grid;
-
-    const auto& submaps_options =
-        options_.map_builder_options.trajectory_builder_2d_options()
-            .submaps_options();
-    BuildOccupancyGrid(
-        trajectory_nodes, options_.map_frame, submaps_options.resolution(),
-        submaps_options.laser_fan_inserter_options(), &occupancy_grid);
+    BuildOccupancyGrid(trajectory_nodes, options_, &occupancy_grid);
     occupancy_grid_publisher_.publish(occupancy_grid);
   }
 }

@@ -21,21 +21,23 @@
 
 namespace cartographer_ros {
 
-namespace carto = ::cartographer;
-
 void BuildOccupancyGrid(
     const std::vector<::cartographer::mapping::TrajectoryNode>&
         trajectory_nodes,
-    const std::string& frame_id, const double resolution,
-    const carto::mapping_2d::proto::LaserFanInserterOptions&
-        laser_fan_inserter_options,
+    const NodeOptions& options,
     ::nav_msgs::OccupancyGrid* const occupancy_grid) {
+  namespace carto = ::cartographer;
+  CHECK(options.map_builder_options.use_trajectory_builder_2d())
+      << "Publishing OccupancyGrids for 3D data is not yet supported";
+  const auto& submaps_options =
+      options.map_builder_options.trajectory_builder_2d_options()
+          .submaps_options();
   const carto::mapping_2d::MapLimits map_limits =
-      carto::mapping_2d::MapLimits::ComputeMapLimits(resolution,
-                                                     trajectory_nodes);
+      carto::mapping_2d::MapLimits::ComputeMapLimits(
+          submaps_options.resolution(), trajectory_nodes);
   carto::mapping_2d::ProbabilityGrid probability_grid(map_limits);
   carto::mapping_2d::LaserFanInserter laser_fan_inserter(
-      laser_fan_inserter_options);
+      submaps_options.laser_fan_inserter_options());
   for (const auto& node : trajectory_nodes) {
     CHECK(node.constant_data->laser_fan_3d.returns.empty());  // No 3D yet.
     laser_fan_inserter.Insert(
@@ -45,12 +47,13 @@ void BuildOccupancyGrid(
   }
 
   occupancy_grid->header.stamp = ToRos(trajectory_nodes.back().time());
-  occupancy_grid->header.frame_id = frame_id;
+  occupancy_grid->header.frame_id = options.map_frame;
   occupancy_grid->info.map_load_time = occupancy_grid->header.stamp;
 
   Eigen::Array2i offset;
   carto::mapping_2d::CellLimits cell_limits;
   probability_grid.ComputeCroppedLimits(&offset, &cell_limits);
+  const double resolution = probability_grid.limits().resolution();
 
   occupancy_grid->info.resolution = resolution;
   occupancy_grid->info.width = cell_limits.num_y_cells;
