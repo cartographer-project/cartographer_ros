@@ -93,7 +93,9 @@ void WriteAssets(const std::vector<::cartographer::mapping::TrajectoryNode>&
   const carto::proto::Trajectory trajectory =
       carto::mapping::ToProto(trajectory_nodes);
   CHECK(trajectory.SerializeToOstream(&proto_file))
-      << "Could not write trajectory.";
+      << "Could not serialize trajectory.";
+  proto_file.close();
+  CHECK(proto_file) << "Could not write trajectory.";
 
   if (options.map_builder_options.use_trajectory_builder_2d()) {
     Write2DAssets(trajectory_nodes, options, stem);
