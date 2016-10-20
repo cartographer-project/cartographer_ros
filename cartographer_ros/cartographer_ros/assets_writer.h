@@ -27,7 +27,8 @@ namespace cartographer_ros {
 
 // Writes the trajectory.
 void WriteCommonAssets(
-    const std::vector<::cartographer::mapping::TrajectoryNode>& trajectory_nodes,
+    const std::vector<::cartographer::mapping::TrajectoryNode>&
+        trajectory_nodes,
     const std::string& stem);
 
 // Writes an occupany grid.
@@ -42,8 +43,8 @@ void Write2DAssets(
 // Writes X-ray images and PLY files from the 'trajectory_nodes'. The filenames
 // will all start with 'stem'.
 void Write3DAssets(const std::vector<::cartographer::mapping::TrajectoryNode>&
-                     trajectory_nodes,
-                 double voxel_size, const std::string& stem);
+                       trajectory_nodes,
+                   double voxel_size, const std::string& stem);
 
 }  // namespace cartographer_ros
 

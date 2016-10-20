@@ -371,10 +371,10 @@ bool Node::HandleFinishTrajectory(
 
   if (options_.map_builder_options.use_trajectory_builder_3d()) {
     Write3DAssets(trajectory_nodes,
-                options_.map_builder_options.trajectory_builder_3d_options()
-                    .submaps_options()
-                    .high_resolution(),
-                request.stem);
+                  options_.map_builder_options.trajectory_builder_3d_options()
+                      .submaps_options()
+                      .high_resolution(),
+                  request.stem);
   }
   return true;
 }

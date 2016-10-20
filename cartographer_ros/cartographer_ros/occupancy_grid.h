@@ -28,8 +28,7 @@ namespace cartographer_ros {
 void BuildOccupancyGrid(
     const std::vector<::cartographer::mapping::TrajectoryNode>&
         trajectory_nodes,
-    const std::string& frame_id,
-    double resolution,
+    const std::string& frame_id, double resolution,
     const ::cartographer::mapping_2d::proto::LaserFanInserterOptions&
         laser_fan_inserter_options,
     ::nav_msgs::OccupancyGrid* const occupancy_grid);

@@ -26,14 +26,13 @@ namespace carto = ::cartographer;
 void BuildOccupancyGrid(
     const std::vector<::cartographer::mapping::TrajectoryNode>&
         trajectory_nodes,
-    const std::string& frame_id,
-    const double resolution,
+    const std::string& frame_id, const double resolution,
     const carto::mapping_2d::proto::LaserFanInserterOptions&
         laser_fan_inserter_options,
     ::nav_msgs::OccupancyGrid* const occupancy_grid) {
   const carto::mapping_2d::MapLimits map_limits =
-      carto::mapping_2d::MapLimits::ComputeMapLimits(
-          resolution, trajectory_nodes);
+      carto::mapping_2d::MapLimits::ComputeMapLimits(resolution,
+                                                     trajectory_nodes);
   carto::mapping_2d::ProbabilityGrid probability_grid(map_limits);
   carto::mapping_2d::LaserFanInserter laser_fan_inserter(
       laser_fan_inserter_options);

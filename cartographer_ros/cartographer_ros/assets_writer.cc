@@ -29,21 +29,25 @@ namespace cartographer_ros {
 
 namespace carto = ::cartographer;
 
-void WriteCommonAssets(const std::vector<::cartographer::mapping::TrajectoryNode>&
-                       trajectory_nodes, const std::string& stem) {
+void WriteCommonAssets(
+    const std::vector<::cartographer::mapping::TrajectoryNode>&
+        trajectory_nodes,
+    const std::string& stem) {
   // Write the trajectory.
   std::ofstream proto_file(stem + ".pb",
                            std::ios_base::out | std::ios_base::binary);
   const carto::proto::Trajectory trajectory =
       carto::mapping::ToProto(trajectory_nodes);
-  CHECK(trajectory.SerializeToOstream(&proto_file)) << "Could not write trajectory.";
+  CHECK(trajectory.SerializeToOstream(&proto_file))
+      << "Could not write trajectory.";
 }
 
 void Write2DAssets(
-    const std::vector<::cartographer::mapping::TrajectoryNode>& trajectory_nodes,
-    const std::string& map_frame, 
-    const double resolution,
-    const ::cartographer::mapping_2d::proto::LaserFanInserterOptions& laser_fan_inserter_options,
+    const std::vector<::cartographer::mapping::TrajectoryNode>&
+        trajectory_nodes,
+    const std::string& map_frame, const double resolution,
+    const ::cartographer::mapping_2d::proto::LaserFanInserterOptions&
+        laser_fan_inserter_options,
     const std::string& stem) {
   ::nav_msgs::OccupancyGrid occupancy_grid;
   BuildOccupancyGrid(trajectory_nodes, map_frame, resolution,
@@ -52,8 +56,8 @@ void Write2DAssets(
 }
 
 void Write3DAssets(const std::vector<::cartographer::mapping::TrajectoryNode>&
-                     trajectory_nodes,
-                 const double voxel_size, const std::string& stem) {
+                       trajectory_nodes,
+                   const double voxel_size, const std::string& stem) {
   carto::io::NullPointsProcessor null_points_processor;
   carto::io::XRayPointsProcessor xy_xray_points_processor(
       voxel_size, carto::transform::Rigid3f::Rotation(
