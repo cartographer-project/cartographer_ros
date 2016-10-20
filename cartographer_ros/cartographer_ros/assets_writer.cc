@@ -42,7 +42,6 @@ void Write2DAssets(const std::vector<::cartographer::mapping::TrajectoryNode>&
   WriteOccupancyGridToPgmAndYaml(occupancy_grid, stem);
 }
 
-
 // Writes X-ray images and PLY files from the 'trajectory_nodes'. The filenames
 // will all start with 'stem'.
 void Write3DAssets(const std::vector<::cartographer::mapping::TrajectoryNode>&
@@ -109,6 +108,5 @@ void WriteAssets(const std::vector<::cartographer::mapping::TrajectoryNode>&
                   stem);
   }
 }
-
 
 }  // namespace cartographer_ros
