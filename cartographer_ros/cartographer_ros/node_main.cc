@@ -48,7 +48,6 @@
 #include "cartographer/transform/rigid_transform.h"
 #include "cartographer/transform/transform.h"
 #include "cartographer_ros/assets_writer.h"
-#include "cartographer_ros/map_writer.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/node_options.h"
 #include "cartographer_ros/occupancy_grid.h"
@@ -359,21 +358,19 @@ bool Node::HandleFinishTrajectory(
     return true;
   }
 
-  // Write the trajectory.
-  std::ofstream proto_file(request.stem + ".pb",
-                           std::ios_base::out | std::ios_base::binary);
-  const carto::proto::Trajectory trajectory =
-      carto::mapping::ToProto(trajectory_nodes);
-  CHECK(trajectory.SerializeToOstream(&proto_file)) << "Could not write trajectory.";
+  WriteCommonAssets(trajectory_nodes, request.stem);
 
   if (options_.map_builder_options.use_trajectory_builder_2d()) {
-    ::nav_msgs::OccupancyGrid occupancy_grid;
-    BuildOccupancyGrid(trajectory_nodes, options_, &occupancy_grid);
-    WriteOccupancyGridToPgmAndYaml(occupancy_grid, request.stem);
+    const auto& submaps_options =
+        options_.map_builder_options.trajectory_builder_2d_options()
+            .submaps_options();
+    Write2DAssets(trajectory_nodes, options_.map_frame,
+                  submaps_options.resolution(),
+                  submaps_options.laser_fan_inserter_options(), request.stem);
   }
 
   if (options_.map_builder_options.use_trajectory_builder_3d()) {
-    WriteAssets(trajectory_nodes,
+    Write3DAssets(trajectory_nodes,
                 options_.map_builder_options.trajectory_builder_3d_options()
                     .submaps_options()
                     .high_resolution(),
@@ -480,7 +477,13 @@ void Node::SpinOccupancyGridThreadForever() {
       continue;
     }
     ::nav_msgs::OccupancyGrid occupancy_grid;
-    BuildOccupancyGrid(trajectory_nodes, options_, &occupancy_grid);
+
+    const auto& submaps_options =
+        options_.map_builder_options.trajectory_builder_2d_options()
+            .submaps_options();
+    BuildOccupancyGrid(
+        trajectory_nodes, options_.map_frame, submaps_options.resolution(),
+        submaps_options.laser_fan_inserter_options(), &occupancy_grid);
     occupancy_grid_publisher_.publish(occupancy_grid);
   }
 }

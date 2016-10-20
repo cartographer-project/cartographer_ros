@@ -21,12 +21,27 @@
 #include <vector>
 
 #include "cartographer/mapping/trajectory_node.h"
+#include "cartographer/mapping_2d/proto/laser_fan_inserter_options.pb.h"
 
 namespace cartographer_ros {
 
+// Writes the trajectory.
+void WriteCommonAssets(
+    const std::vector<::cartographer::mapping::TrajectoryNode>& trajectory_nodes,
+    const std::string& stem);
+
+// Writes an occupany grid.
+void Write2DAssets(
+    const std::vector<::cartographer::mapping::TrajectoryNode>&
+        trajectory_nodes,
+    const std::string& map_frame, double resolution,
+    const ::cartographer::mapping_2d::proto::LaserFanInserterOptions&
+        laser_fan_inserter_options,
+    const std::string& stem);
+
 // Writes X-ray images and PLY files from the 'trajectory_nodes'. The filenames
 // will all start with 'stem'.
-void WriteAssets(const std::vector<::cartographer::mapping::TrajectoryNode>&
+void Write3DAssets(const std::vector<::cartographer::mapping::TrajectoryNode>&
                      trajectory_nodes,
                  double voxel_size, const std::string& stem);
 
