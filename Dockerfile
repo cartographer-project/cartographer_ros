@@ -13,7 +13,9 @@
 # limitations under the License.
 
 FROM ros:indigo
+# wstool needs the updated rosinstall file to clone the correct repos.
 COPY cartographer_ros.rosinstall cartographer_ros/
+# rosdep needs the updated package.xml files to install the correct debs.
 COPY cartographer_ros/package.xml cartographer_ros/cartographer_ros/
 COPY cartographer_ros_msgs/package.xml cartographer_ros/cartographer_ros_msgs/
 COPY cartographer_rviz/package.xml cartographer_ros/cartographer_rviz/
