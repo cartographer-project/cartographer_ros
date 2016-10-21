@@ -17,7 +17,10 @@ FROM ros:indigo
 # wstool needs the updated rosinstall file to clone the correct repos.
 COPY cartographer_ros.rosinstall cartographer_ros/
 COPY scripts/prepare_catkin_workspace.sh cartographer_ros/scripts/
-RUN cartographer_ros/scripts/prepare_catkin_workspace.sh
+# We remove the contents of the cartographer_ros repo and copy in the updated
+# files as necessary.
+RUN cartographer_ros/scripts/prepare_catkin_workspace.sh && \
+    rm -rf catkin_ws/src/cartographer_ros/*
 
 # rosdep needs the updated package.xml files to install the correct debs.
 COPY cartographer_ros/package.xml catkin_ws/src/cartographer_ros/cartographer_ros/
@@ -27,10 +30,7 @@ COPY ceres_solver/package.xml catkin_ws/src/cartographer_ros/ceres_solver/
 COPY scripts/install_debs.sh cartographer_ros/scripts/
 RUN cartographer_ros/scripts/install_debs.sh && rm -rf /var/lib/apt/lists/*
 
-# Build, install, and test all packages individually to allow caching. First,
-# we remove everything in the cartographer_ros repo. Then we individually copy
-# in the updated versions to build, install, and test them.
-RUN rm -rf catkin_ws/src/cartographer_ros/*
+# Build, install, and test all packages individually to allow caching.
 COPY scripts/install.sh cartographer_ros/scripts/
 
 COPY ceres_solver catkin_ws/src/cartographer_ros/
@@ -56,4 +56,6 @@ RUN cartographer_ros/scripts/install.sh --pkg cartographer_rviz \
     --catkin-make-args run_tests
 
 COPY scripts/ros_entrypoint.sh /
-RUN rm -rf cartographer_ros catkin_ws
+# A BTRFS bug may prevent us from cleaning up these directories.
+# https://btrfs.wiki.kernel.org/index.php/Problem_FAQ#I_cannot_delete_an_empty_directory
+RUN rm -rf cartographer_ros catkin_ws || true
