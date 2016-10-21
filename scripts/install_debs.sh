@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # Copyright 2016 The Cartographer Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,20 +14,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-sudo: required
-services: docker
+set -o errexit
+set -o verbose
 
-# Cache intermediate Docker layers. For a description of how this works, see:
-# https://giorgos.sealabs.net/docker-cache-on-travis-and-docker-112.html
-cache:
-  directories:
-    - /home/travis/docker/
-env:
-  global:
-    - DOCKER_CACHE_FILE=/home/travis/docker/cache.tar.gz
-before_install: scripts/load_docker_cache.sh
+# Install Ninja.
+sudo apt-get update
+sudo apt-get install -y ninja-build
 
-install: true
-script:
-  - docker build ${TRAVIS_BUILD_DIR} -t cartographer_ros
-  - scripts/save_docker_cache.sh
+. /opt/ros/${ROS_DISTRO}/setup.sh
+
+# Create a new workspace in 'catkin_ws'.
+mkdir catkin_ws
+cd catkin_ws
+wstool init src
+
+# Merge the cartographer_ros.rosinstall file and fetch code for dependencies.
+wstool merge -t src ../cartographer_ros/cartographer_ros.rosinstall
+wstool update -t src
+
+# Install rosdep dependencies.
+rosdep update
+rosdep install --from-paths src --ignore-src --rosdistro=${ROS_DISTRO} -y
