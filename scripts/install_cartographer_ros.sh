@@ -17,28 +17,13 @@
 set -o errexit
 set -o verbose
 
-# Install Ninja.
-sudo apt-get update
-sudo apt-get install -y ninja-build
-
 . /opt/ros/${ROS_DISTRO}/setup.sh
 
-# Create a new workspace in 'catkin_ws'.
-mkdir catkin_ws
 cd catkin_ws
-wstool init src
-
-# Merge the cartographer_ros.rosinstall file and fetch code for dependencies.
-wstool merge -t src ../cartographer_ros/cartographer_ros.rosinstall
-wstool update -t src
 
 # Use the local version of cartographer_ros to include local modifications.
 rm -rf src/cartographer_ros
 mv ../cartographer_ros src
-
-# Install rosdep dependencies.
-rosdep update
-rosdep install --from-paths src --ignore-src --rosdistro=${ROS_DISTRO} -y
 
 # Build, install, and test.
 #
@@ -50,7 +35,3 @@ rosdep install --from-paths src --ignore-src --rosdistro=${ROS_DISTRO} -y
 export BUILD_FLAGS="--use-ninja --install-space /opt/cartographer_ros --install"
 catkin_make_isolated ${BUILD_FLAGS} --catkin-make-args run_tests
 catkin_make_isolated ${BUILD_FLAGS} --pkg cartographer --make-args test
-
-# Clean up.
-cd ..
-rm -rf catkin_ws /var/lib/apt/lists/*
