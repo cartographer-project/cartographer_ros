@@ -19,12 +19,11 @@ set -o verbose
 
 . /opt/ros/${ROS_DISTRO}/setup.sh
 
+# Create a new workspace in 'catkin_ws'.
+mkdir catkin_ws
 cd catkin_ws
+wstool init src
 
-# Install Ninja.
-sudo apt-get update
-sudo apt-get install -y ninja-build
-
-# Install rosdep dependencies.
-rosdep update
-rosdep install --from-paths src --ignore-src --rosdistro=${ROS_DISTRO} -y
+# Merge the cartographer_ros.rosinstall file and fetch code for dependencies.
+wstool merge -t src ../cartographer_ros/cartographer_ros.rosinstall
+wstool update -t src

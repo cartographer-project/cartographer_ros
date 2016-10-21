@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Copyright 2016 The Cartographer Authors
 #
@@ -21,10 +21,6 @@ set -o verbose
 
 cd catkin_ws
 
-# Use the local version of cartographer_ros to include local modifications.
-rm -rf src/cartographer_ros
-mv ../cartographer_ros src
-
 # Build, install, and test.
 #
 # It's necessary to use the '--install' flag for every call to
@@ -33,5 +29,4 @@ mv ../cartographer_ros src
 # avoid any issues caused by using 'CMAKE_INSTALL_PREFIX' during the
 # configuration phase of the build (e.g. cartographer/common/config.h.cmake).
 export BUILD_FLAGS="--use-ninja --install-space /opt/cartographer_ros --install"
-catkin_make_isolated ${BUILD_FLAGS} --catkin-make-args run_tests
-catkin_make_isolated ${BUILD_FLAGS} --pkg cartographer --make-args test
+catkin_make_isolated ${BUILD_FLAGS} $@
