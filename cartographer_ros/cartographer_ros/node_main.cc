@@ -31,7 +31,7 @@
 #include "cartographer/kalman_filter/pose_tracker.h"
 #include "cartographer/mapping/global_trajectory_builder_interface.h"
 #include "cartographer/mapping/map_builder.h"
-#include "cartographer/mapping/proto/submaps.pb.h"
+#include "cartographer/mapping/proto/submap_visualization.pb.h"
 #include "cartographer/mapping_2d/global_trajectory_builder.h"
 #include "cartographer/mapping_2d/local_trajectory_builder.h"
 #include "cartographer/mapping_2d/sparse_pose_graph.h"
