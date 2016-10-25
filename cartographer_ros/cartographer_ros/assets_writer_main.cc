@@ -48,129 +48,131 @@ DEFINE_string(configuration_basename, "",
 DEFINE_string(
     urdf, "",
     "URDF file that contains static links for your sensor configuration.");
-DEFINE_string(bag_filename, "", "The bag to run over.");
-DEFINE_string(trajectory_filename, "", "The proto containing the trajectory.
-              Written by the node on /finish_trajectory.");
+DEFINE_string(bag_filename, "", "Bag to process.");
+DEFINE_string(
+    trajectory_filename, "",
+    "Proto containing the trajectory written by /finish_trajectory service.");
 
 namespace cartographer_ros {
-  namespace {
+namespace {
 
-  namespace carto = ::cartographer;
+namespace carto = ::cartographer;
 
-  std::unique_ptr<carto::transform::TransformInterpolationBuffer>
-  ReadTrajectory(const std::string& trajectory_filename) {
-    std::ifstream stream(trajectory_filename.c_str());
-    carto::proto::Trajectory trajectory_proto;
-    CHECK(trajectory_proto.ParseFromIstream(&stream));
-    return carto::transform::TransformInterpolationBuffer::FromTrajectory(
-        trajectory_proto);
-  }
+std::unique_ptr<carto::transform::TransformInterpolationBuffer> ReadTrajectory(
+    const std::string& trajectory_filename) {
+  std::ifstream stream(trajectory_filename.c_str());
+  carto::proto::Trajectory trajectory_proto;
+  CHECK(trajectory_proto.ParseFromIstream(&stream));
+  return carto::transform::TransformInterpolationBuffer::FromTrajectory(
+      trajectory_proto);
+}
 
-  void ReadStaticTransformsFromUrdf(const string& urdf_filename,
-                                    ::tf2_ros::Buffer* buffer) {
-    urdf::Model model;
-    CHECK(model.initFile(urdf_filename));
-    std::vector<boost::shared_ptr<urdf::Link>> links;
-    model.getLinks(links);
-    for (const auto& link : links) {
-      if (!link->getParent() ||
-          link->parent_joint->type != urdf::Joint::FIXED) {
-        continue;
-      }
-
-      const urdf::Pose& pose =
-          link->parent_joint->parent_to_joint_origin_transform;
-      geometry_msgs::TransformStamped transform;
-      transform.transform = ToGeometryMsgTransform(carto::transform::Rigid3d(
-          Eigen::Vector3d(pose.position.x, pose.position.y, pose.position.z),
-          Eigen::Quaterniond(pose.rotation.w, pose.rotation.x, pose.rotation.y,
-                             pose.rotation.z)));
-      transform.child_frame_id = link->name;
-      transform.header.frame_id = link->getParent()->name;
-      buffer->setTransform(transform, "urdf", true /* is_static */);
+void ReadStaticTransformsFromUrdf(const string& urdf_filename,
+                                  ::tf2_ros::Buffer* const buffer) {
+  urdf::Model model;
+  CHECK(model.initFile(urdf_filename));
+  std::vector<boost::shared_ptr<urdf::Link>> links;
+  model.getLinks(links);
+  for (const auto& link : links) {
+    if (!link->getParent() || link->parent_joint->type != urdf::Joint::FIXED) {
+      continue;
     }
+
+    const urdf::Pose& pose =
+        link->parent_joint->parent_to_joint_origin_transform;
+    geometry_msgs::TransformStamped transform;
+    transform.transform = ToGeometryMsgTransform(carto::transform::Rigid3d(
+        Eigen::Vector3d(pose.position.x, pose.position.y, pose.position.z),
+        Eigen::Quaterniond(pose.rotation.w, pose.rotation.x, pose.rotation.y,
+                           pose.rotation.z)));
+    transform.child_frame_id = link->name;
+    transform.header.frame_id = link->getParent()->name;
+    buffer->setTransform(transform, "urdf", true /* is_static */);
   }
+}
 
-  void Run(const string& trajectory_filename, const string& bag_filename,
-           const string& configuration_directory,
-           const string& configuration_basename, const string& urdf_filename) {
-    ::tf2_ros::Buffer buffer;
-    ReadStaticTransformsFromUrdf(urdf_filename, &buffer);
+void Run(const string& trajectory_filename, const string& bag_filename,
+         const string& configuration_directory,
+         const string& configuration_basename, const string& urdf_filename) {
+  ::tf2_ros::Buffer buffer;
+  ReadStaticTransformsFromUrdf(urdf_filename, &buffer);
 
-    auto transform_interpolation_buffer = ReadTrajectory(trajectory_filename);
+  auto transform_interpolation_buffer = ReadTrajectory(trajectory_filename);
 
-    // TODO(hrapp): Add all points processors here and pull out into the
-    // creation.
-    auto* builder = carto::io::PointsProcessorPipelineBuilder::instance();
-    builder->Register<carto::io::XyzWriterPointsProcessor>();
-    builder->Register<carto::io::XRayPointsProcessor>();
+  // TODO(hrapp): Add all points processors here and pull out into the
+  // creation.
+  auto* builder = carto::io::PointsProcessorPipelineBuilder::instance();
+  builder->Register<carto::io::XyzWriterPointsProcessor>();
+  builder->Register<carto::io::XRayPointsProcessor>();
 
-    auto file_resolver =
-        carto::common::make_unique<carto::common::ConfigurationFileResolver>(
-            std::vector<string>{configuration_directory});
-    const string code =
-        file_resolver->GetFileContentOrDie(configuration_basename);
-    carto::common::LuaParameterDictionary lua_parameter_dictionary(
-        code, std::move(file_resolver), nullptr);
-    const string tracking_frame =
-        lua_parameter_dictionary.GetString("tracking_frame");
+  auto file_resolver =
+      carto::common::make_unique<carto::common::ConfigurationFileResolver>(
+          std::vector<string>{configuration_directory});
+  const string code =
+      file_resolver->GetFileContentOrDie(configuration_basename);
+  carto::common::LuaParameterDictionary lua_parameter_dictionary(
+      code, std::move(file_resolver), nullptr);
+  const string tracking_frame =
+      lua_parameter_dictionary.GetString("tracking_frame");
 
-    std::vector<std::unique_ptr<carto::io::PointsProcessor>> pipeline =
-        builder->CreatePipeline(
-            lua_parameter_dictionary.GetDictionary("pipeline").get());
+  std::vector<std::unique_ptr<carto::io::PointsProcessor>> pipeline =
+      builder->CreatePipeline(
+          lua_parameter_dictionary.GetDictionary("pipeline").get());
 
-    do {
-      rosbag::Bag bag;
-      bag.open(bag_filename, rosbag::bagmode::Read);
-      rosbag::View view(bag, rosbag::TypeQuery(std::vector<std::string>{
-                                 "sensor_msgs/PointCloud2"}));
-      const ros::Time bag_start_timestamp = view.getBeginTime();
-      const ros::Time bag_end_timestamp = view.getEndTime();
+  do {
+    rosbag::Bag bag;
+    bag.open(bag_filename, rosbag::bagmode::Read);
+    // TODO(hrapp): Also parse tf messages and keep the 'buffer' updated as to
+    // support non-rigid sensor configurations.
+    rosbag::View view(
+        bag,
+        rosbag::TypeQuery(std::vector<std::string>{"sensor_msgs/PointCloud2"}));
+    const ros::Time bag_start_timestamp = view.getBeginTime();
+    const ros::Time bag_end_timestamp = view.getEndTime();
 
-      for (const rosbag::MessageInstance& m : view) {
-        auto point_cloud_msg = m.instantiate<sensor_msgs::PointCloud2>();
-        if (point_cloud_msg != nullptr) {
-          const carto::common::Time time =
-              FromRos(point_cloud_msg->header.stamp);
-          if (!transform_interpolation_buffer->Has(time)) {
-            continue;
-          }
-          carto::transform::Rigid3d tracking_to_map =
-              transform_interpolation_buffer->Lookup(time);
-          pcl::PointCloud<pcl::PointXYZ> pcl_point_cloud;
-          pcl::fromROSMsg(*point_cloud_msg, pcl_point_cloud);
-
-          const carto::transform::Rigid3d sensor_to_tracking =
-              ToRigid3d(buffer.lookupTransform(tracking_frame,
-                                               point_cloud_msg->header.frame_id,
-                                               point_cloud_msg->header.stamp));
-
-          const carto::transform::Rigid3f sensor_to_map =
-              (tracking_to_map * sensor_to_tracking).cast<float>();
-
-          auto batch = carto::common::make_unique<carto::io::PointsBatch>();
-          batch->time = time;
-          batch->origin = sensor_to_map * Eigen::Vector3f::Zero();
-          batch->frame_id = point_cloud_msg->header.frame_id;
-
-          for (const auto& point : pcl_point_cloud) {
-            batch->points.push_back(sensor_to_map *
-                                    Eigen::Vector3f(point.x, point.y, point.z));
-          }
-          pipeline.back()->Process(std::move(batch));
+    for (const rosbag::MessageInstance& m : view) {
+      auto point_cloud_msg = m.instantiate<sensor_msgs::PointCloud2>();
+      if (point_cloud_msg != nullptr) {
+        const carto::common::Time time = FromRos(point_cloud_msg->header.stamp);
+        if (!transform_interpolation_buffer->Has(time)) {
+          continue;
         }
-        ::ros::Time ros_time = m.getTime();
-        LOG_EVERY_N(INFO, 1000)
-            << "Processed " << (ros_time - bag_start_timestamp).toSec()
-            << " of " << (bag_end_timestamp - bag_start_timestamp).toSec()
-            << " bag time seconds.";
-      }
-      bag.close();
-    } while (pipeline.back()->Flush() ==
-             carto::io::PointsProcessor::FlushResult::kRestartStream);
-  }
+        carto::transform::Rigid3d tracking_to_map =
+            transform_interpolation_buffer->Lookup(time);
+        pcl::PointCloud<pcl::PointXYZ> pcl_point_cloud;
+        pcl::fromROSMsg(*point_cloud_msg, pcl_point_cloud);
 
-  }  // namespace
+        const carto::transform::Rigid3d sensor_to_tracking =
+            ToRigid3d(buffer.lookupTransform(tracking_frame,
+                                             point_cloud_msg->header.frame_id,
+                                             point_cloud_msg->header.stamp));
+
+        const carto::transform::Rigid3f sensor_to_map =
+            (tracking_to_map * sensor_to_tracking).cast<float>();
+
+        auto batch = carto::common::make_unique<carto::io::PointsBatch>();
+        batch->time = time;
+        batch->origin = sensor_to_map * Eigen::Vector3f::Zero();
+        batch->frame_id = point_cloud_msg->header.frame_id;
+
+        for (const auto& point : pcl_point_cloud) {
+          batch->points.push_back(sensor_to_map *
+                                  Eigen::Vector3f(point.x, point.y, point.z));
+        }
+        pipeline.back()->Process(std::move(batch));
+      }
+      ::ros::Time ros_time = m.getTime();
+      LOG_EVERY_N(INFO, 1000)
+          << "Processed " << (ros_time - bag_start_timestamp).toSec() << " of "
+          << (bag_end_timestamp - bag_start_timestamp).toSec()
+          << " bag time seconds.";
+    }
+    bag.close();
+  } while (pipeline.back()->Flush() ==
+           carto::io::PointsProcessor::FlushResult::kRestartStream);
+}
+
+}  // namespace
 }  // namespace cartographer_ros
 
 int main(int argc, char** argv) {
