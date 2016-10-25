@@ -109,6 +109,18 @@ google_catkin_test(time_conversion_test
     time_conversion
 )
 
+google_binary(cartographer_assets_writer
+  USES_CARTOGRAPHER
+  USES_GFLAGS
+  USES_GLOG
+  USES_ROS
+  SRCS
+    assets_writer_main.cc
+  DEPENDS
+    msg_conversion
+    time_conversion
+)
+
 google_binary(cartographer_node
   USES_CARTOGRAPHER
   USES_EIGEN
@@ -129,6 +141,12 @@ google_binary(cartographer_node
 )
 
 install(TARGETS cartographer_node
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(TARGETS cartographer_assets_writer
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
