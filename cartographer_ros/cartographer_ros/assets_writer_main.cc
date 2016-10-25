@@ -23,8 +23,6 @@
 #include "cartographer/common/make_unique.h"
 #include "cartographer/io/points_processor.h"
 #include "cartographer/io/points_processor_pipeline_builder.h"
-#include "cartographer/io/xray_points_processor.h"
-#include "cartographer/io/xyz_writing_points_processor.h"
 #include "cartographer/transform/transform_interpolation_buffer.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/time_conversion.h"
@@ -99,11 +97,7 @@ void Run(const string& trajectory_filename, const string& bag_filename,
 
   auto transform_interpolation_buffer = ReadTrajectory(trajectory_filename);
 
-  // TODO(hrapp): Add all points processors here and pull out into the
-  // creation.
   auto* builder = carto::io::PointsProcessorPipelineBuilder::instance();
-  builder->Register<carto::io::XyzWriterPointsProcessor>();
-  builder->Register<carto::io::XRayPointsProcessor>();
 
   auto file_resolver =
       carto::common::make_unique<carto::common::ConfigurationFileResolver>(
