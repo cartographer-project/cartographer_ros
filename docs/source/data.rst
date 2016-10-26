@@ -115,8 +115,8 @@ PR2 - Willow Garage
 
 This is the Willow Garage data set, described in:
 
-"An Object-Based Semantic World Model for Long-Term Change Detection and
-Semantic Querying.", by Julian Mason and Bhaskara Marthi, IROS 2012.
+  * "An Object-Based Semantic World Model for Long-Term Change Detection and
+    Semantic Querying.", by Julian Mason and Bhaskara Marthi, IROS 2012.
 
 More details about these data can be found in:
 
