@@ -26,5 +26,6 @@ sudo apt-get update
 sudo apt-get install -y ninja-build
 
 # Install rosdep dependencies.
+rosdep init
 rosdep update
 rosdep install --from-paths src --ignore-src --rosdistro=${ROS_DISTRO} -y
