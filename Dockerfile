@@ -14,6 +14,12 @@
 
 FROM ros:indigo
 
+# First, we invalidate the entire cache if googlecartographer/cartographer has
+# changed. This file's content changes whenever master changes. See:
+# http://stackoverflow.com/questions/36996046/how-to-prevent-dockerfile-caching-git-clone
+ADD https://api.github.com/repos/googlecartographer/cartographer/git/refs/heads/master \
+    cartographer_ros/cartographer_version.json
+
 # wstool needs the updated rosinstall file to clone the correct repos.
 COPY cartographer_ros.rosinstall cartographer_ros/
 COPY scripts/prepare_catkin_workspace.sh cartographer_ros/scripts/
@@ -36,10 +42,6 @@ COPY scripts/install.sh cartographer_ros/scripts/
 COPY ceres_solver catkin_ws/src/cartographer_ros/
 RUN cartographer_ros/scripts/install.sh --pkg ceres_solver
 
-# This file's content changes whenever master changes. See:
-# http://stackoverflow.com/questions/36996046/how-to-prevent-dockerfile-caching-git-clone
-ADD https://api.github.com/repos/googlecartographer/cartographer/git/refs/heads/master \
-    cartographer_ros/cartographer_version.json
 RUN cartographer_ros/scripts/install.sh --pkg cartographer && \
     cartographer_ros/scripts/install.sh --pkg cartographer --make-args test
 
