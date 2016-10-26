@@ -16,7 +16,7 @@
 Public Data
 ===========
 
-2D Cartographer Backpack - Deutsches Museum
+2D Cartographer Backpack – Deutsches Museum
 ===========================================
 
 This data was collected using a 2D LIDAR backpack at the
@@ -105,12 +105,12 @@ Data
 `b2-2016-04-27-12-31-41.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b2-2016-04-27-12-31-41.bag>`_
 =================================================================================================================================== ============================
 
-3D Cartographer Backpack - Deutsches Museum
+3D Cartographer Backpack – Deutsches Museum
 ===========================================
 
 3D data sets are still being curated and will be made available soon.
 
-PR2 - Willow Garage
+PR2 – Willow Garage
 ===================
 
 This is the Willow Garage data set, described in:
