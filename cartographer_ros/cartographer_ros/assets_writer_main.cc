@@ -59,7 +59,7 @@ namespace carto = ::cartographer;
 std::unique_ptr<carto::transform::TransformInterpolationBuffer> ReadTrajectory(
     const std::string& trajectory_filename) {
   std::ifstream stream(trajectory_filename.c_str());
-  carto::proto::Trajectory trajectory_proto;
+  carto::mapping::proto::Trajectory trajectory_proto;
   CHECK(trajectory_proto.ParseFromIstream(&stream));
   return carto::transform::TransformInterpolationBuffer::FromTrajectory(
       trajectory_proto);

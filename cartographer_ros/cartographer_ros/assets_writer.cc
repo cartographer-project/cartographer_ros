@@ -21,8 +21,8 @@
 #include "cartographer/io/ply_writing_points_processor.h"
 #include "cartographer/io/points_processor.h"
 #include "cartographer/io/xray_points_processor.h"
+#include "cartographer/mapping/proto/trajectory.pb.h"
 #include "cartographer/mapping_2d/proto/laser_fan_inserter_options.pb.h"
-#include "cartographer/proto/trajectory.pb.h"
 #include "cartographer_ros/map_writer.h"
 #include "cartographer_ros/occupancy_grid.h"
 #include "nav_msgs/OccupancyGrid.h"
@@ -89,7 +89,7 @@ void WriteAssets(const std::vector<::cartographer::mapping::TrajectoryNode>&
   // Write the trajectory.
   std::ofstream proto_file(stem + ".pb",
                            std::ios_base::out | std::ios_base::binary);
-  const carto::proto::Trajectory trajectory =
+  const carto::mapping::proto::Trajectory trajectory =
       carto::mapping::ToProto(trajectory_nodes);
   CHECK(trajectory.SerializeToOstream(&proto_file))
       << "Could not serialize trajectory.";
