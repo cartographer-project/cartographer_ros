@@ -65,6 +65,7 @@ We recommend using `wstool <http://wiki.ros.org/wstool>`_ and `rosdep
     wstool update -t src
 
     # Install deb dependencies.
+    rosdep init
     rosdep update
     rosdep install --from-paths src --ignore-src --rosdistro=${ROS_DISTRO} -y
 
