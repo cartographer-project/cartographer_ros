@@ -402,30 +402,7 @@ void Node::PublishPoseAndScanMatchedPointCloud(
   const Rigid3d tracking_to_map = local_to_map * tracking_to_local;
 
   geometry_msgs::TransformStamped stamped_transform;
-  stamped_transform.header.stamp = ros::Time::now();
-
-  const auto published_to_tracking = tf_bridge_.LookupToTracking(
-      last_pose_estimate.time, options_.published_frame);
-  if (published_to_tracking != nullptr) {
-    if (options_.provide_odom_frame) {
-      stamped_transform.header.frame_id = options_.map_frame;
-      stamped_transform.child_frame_id = options_.odom_frame;
-      stamped_transform.transform = ToGeometryMsgTransform(local_to_map);
-      tf_broadcaster_.sendTransform(stamped_transform);
-
-      stamped_transform.header.frame_id = options_.odom_frame;
-      stamped_transform.child_frame_id = options_.published_frame;
-      stamped_transform.transform =
-          ToGeometryMsgTransform(tracking_to_local * (*published_to_tracking));
-      tf_broadcaster_.sendTransform(stamped_transform);
-    } else {
-      stamped_transform.header.frame_id = options_.map_frame;
-      stamped_transform.child_frame_id = options_.published_frame;
-      stamped_transform.transform =
-          ToGeometryMsgTransform(tracking_to_map * (*published_to_tracking));
-      tf_broadcaster_.sendTransform(stamped_transform);
-    }
-  }
+  stamped_transform.header.stamp = ToRos(last_pose_estimate.time);
 
   // We only publish a point cloud if it has changed. It is not needed at high
   // frequency, and republishing it would be computationally wasteful.
@@ -437,6 +414,37 @@ void Node::PublishPoseAndScanMatchedPointCloud(
             last_pose_estimate.point_cloud,
             tracking_to_local.inverse().cast<float>())));
     last_scan_matched_point_cloud_time_ = last_pose_estimate.time;
+  } else {
+    // If we do not publish a new point cloud, we still allow time of the
+    // published poses to advance.
+    stamped_transform.header.stamp = ros::Time::now();
+  }
+
+  const auto published_to_tracking = tf_bridge_.LookupToTracking(
+      last_pose_estimate.time, options_.published_frame);
+  if (published_to_tracking != nullptr) {
+    if (options_.provide_odom_frame) {
+      std::vector<geometry_msgs::TransformStamped> stamped_transforms;
+
+      stamped_transform.header.frame_id = options_.map_frame;
+      stamped_transform.child_frame_id = options_.odom_frame;
+      stamped_transform.transform = ToGeometryMsgTransform(local_to_map);
+      stamped_transforms.push_back(stamped_transform);
+
+      stamped_transform.header.frame_id = options_.odom_frame;
+      stamped_transform.child_frame_id = options_.published_frame;
+      stamped_transform.transform =
+          ToGeometryMsgTransform(tracking_to_local * (*published_to_tracking));
+      stamped_transforms.push_back(stamped_transform);
+
+      tf_broadcaster_.sendTransform(stamped_transforms);
+    } else {
+      stamped_transform.header.frame_id = options_.map_frame;
+      stamped_transform.child_frame_id = options_.published_frame;
+      stamped_transform.transform =
+          ToGeometryMsgTransform(tracking_to_map * (*published_to_tracking));
+      tf_broadcaster_.sendTransform(stamped_transform);
+    }
   }
 }
 
