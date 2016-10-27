@@ -285,34 +285,13 @@ bool Node::HandleSubmapQuery(
     ::cartographer_ros_msgs::SubmapQuery::Response& response) {
   carto::common::MutexLocker lock(&mutex_);
 
-  if (request.trajectory_id < 0 ||
-      request.trajectory_id >= map_builder_.num_trajectory_builders()) {
-    LOG(ERROR) << "Requested submap from trajectory " << request.trajectory_id
-               << " but there are only "
-               << map_builder_.num_trajectory_builders() << " trajectories.";
-    return false;
-  }
-
-  const carto::mapping::Submaps* const submaps =
-      map_builder_.GetTrajectoryBuilder(request.trajectory_id)->submaps();
-  if (request.submap_index < 0 || request.submap_index >= submaps->size()) {
-    LOG(ERROR) << "Requested submap " << request.submap_index
-               << " from trajectory " << request.trajectory_id
-               << " but there are only " << submaps->size()
-               << " submaps in this trajectory.";
-    return false;
-  }
-
   carto::mapping::proto::SubmapQuery::Response response_proto;
-  response_proto.set_submap_version(
-      submaps->Get(request.submap_index)->end_laser_fan_index);
-  const std::vector<carto::transform::Rigid3d> submap_transforms =
-      map_builder_.sparse_pose_graph()->GetSubmapTransforms(*submaps);
-  CHECK_EQ(submap_transforms.size(), submaps->size());
-  submaps->SubmapToProto(request.submap_index,
-                         map_builder_.sparse_pose_graph()->GetTrajectoryNodes(),
-                         submap_transforms[request.submap_index],
-                         &response_proto);
+  const std::string error = map_builder_.SubmapToProto(
+      request.trajectory_id, request.submap_index, &response_proto);
+  if (!error.empty()) {
+    LOG(ERROR) << error;
+    return false;
+  }
 
   response.submap_version = response_proto.submap_version();
   response.cells.insert(response.cells.begin(), response_proto.cells().begin(),
