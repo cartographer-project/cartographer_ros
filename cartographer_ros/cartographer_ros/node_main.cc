@@ -286,7 +286,7 @@ bool Node::HandleSubmapQuery(
   carto::common::MutexLocker lock(&mutex_);
 
   carto::mapping::proto::SubmapQuery::Response response_proto;
-  std::string error = map_builder_.SubmapToProto(
+  const std::string error = map_builder_.SubmapToProto(
       request.trajectory_id, request.submap_index, &response_proto);
   if (!error.empty()) {
     LOG(ERROR) << error;
