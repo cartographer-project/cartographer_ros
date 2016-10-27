@@ -26,18 +26,11 @@
 #include "cartographer/common/make_unique.h"
 #include "cartographer/common/mutex.h"
 #include "cartographer/common/port.h"
-#include "cartographer/common/thread_pool.h"
 #include "cartographer/common/time.h"
-#include "cartographer/kalman_filter/pose_tracker.h"
 #include "cartographer/mapping/map_builder.h"
 #include "cartographer/mapping/proto/submap_visualization.pb.h"
-#include "cartographer/mapping_2d/sparse_pose_graph.h"
-#include "cartographer/mapping_3d/local_trajectory_builder_options.h"
-#include "cartographer/mapping_3d/sparse_pose_graph.h"
-#include "cartographer/sensor/data.h"
-#include "cartographer/sensor/laser.h"
+#include "cartographer/mapping/sparse_pose_graph.h"
 #include "cartographer/sensor/point_cloud.h"
-#include "cartographer/sensor/proto/sensor.pb.h"
 #include "cartographer/transform/rigid_transform.h"
 #include "cartographer/transform/transform.h"
 #include "cartographer_ros/assets_writer.h"
@@ -76,7 +69,6 @@ namespace cartographer_ros {
 namespace {
 
 namespace carto = ::cartographer;
-namespace proto = carto::sensor::proto;
 
 using carto::transform::Rigid3d;
 using carto::kalman_filter::PoseCovariance;
@@ -299,21 +291,8 @@ bool Node::HandleSubmapQuery(
   response.width = response_proto.width();
   response.height = response_proto.height();
   response.resolution = response_proto.resolution();
-
-  response.slice_pose.position.x =
-      response_proto.slice_pose().translation().x();
-  response.slice_pose.position.y =
-      response_proto.slice_pose().translation().y();
-  response.slice_pose.position.z =
-      response_proto.slice_pose().translation().z();
-  response.slice_pose.orientation.x =
-      response_proto.slice_pose().rotation().x();
-  response.slice_pose.orientation.y =
-      response_proto.slice_pose().rotation().y();
-  response.slice_pose.orientation.z =
-      response_proto.slice_pose().rotation().z();
-  response.slice_pose.orientation.w =
-      response_proto.slice_pose().rotation().w();
+  response.slice_pose = ToGeometryMsgPose(
+      carto::transform::ToRigid3(response_proto.slice_pose()));
   return true;
 }
 
