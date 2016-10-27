@@ -99,14 +99,16 @@ void SubmapsDisplay::processMessage(
     auto& trajectory = trajectories_[trajectory_id];
     const std::vector<::cartographer_ros_msgs::SubmapEntry>& submap_entries =
         msg->trajectory[trajectory_id].submap;
-    for (size_t submap_id = 0; submap_id < submap_entries.size(); ++submap_id) {
-      if (submap_id >= trajectory.size()) {
+    for (size_t submap_index = 0; submap_index < submap_entries.size();
+         ++submap_index) {
+      if (submap_index >= trajectory.size()) {
         trajectory.push_back(
             ::cartographer::common::make_unique<DrawableSubmap>(
-                submap_id, trajectory_id, context_->getSceneManager()));
+                trajectory_id, submap_index, context_->getSceneManager()));
       }
-      trajectory[submap_id]->Update(msg->header, submap_entries[submap_id],
-                                    context_->getFrameManager());
+      trajectory[submap_index]->Update(msg->header,
+                                       submap_entries[submap_index],
+                                       context_->getFrameManager());
     }
   }
 }
@@ -136,11 +138,11 @@ void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
         ++num_ongoing_requests;
       }
     }
-    for (int submap_id = trajectory.size() - 1;
-         submap_id >= 0 &&
+    for (int submap_index = trajectory.size() - 1;
+         submap_index >= 0 &&
          num_ongoing_requests < kMaxOnGoingRequestsPerTrajectory;
-         --submap_id) {
-      if (trajectory[submap_id]->MaybeFetchTexture(&client_)) {
+         --submap_index) {
+      if (trajectory[submap_index]->MaybeFetchTexture(&client_)) {
         ++num_ongoing_requests;
       }
     }

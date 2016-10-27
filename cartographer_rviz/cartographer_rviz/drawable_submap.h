@@ -43,9 +43,9 @@ class DrawableSubmap : public QObject {
   Q_OBJECT
 
  public:
-  // Each submap is identified by a 'trajectory_id' plus a 'submap_id'.
+  // Each submap is identified by a 'trajectory_id' plus a 'submap_index'.
   // 'scene_manager' is the Ogre scene manager to which to add a node.
-  DrawableSubmap(int submap_id, int trajectory_id,
+  DrawableSubmap(int trajectory_id, int submap_index,
                  Ogre::SceneManager* scene_manager);
   ~DrawableSubmap() override;
   DrawableSubmap(const DrawableSubmap&) = delete;
@@ -80,8 +80,8 @@ class DrawableSubmap : public QObject {
   void UpdateTransform();
   float UpdateAlpha(float target_alpha);
 
-  const int submap_id_;
   const int trajectory_id_;
+  const int submap_index_;
 
   ::cartographer::common::Mutex mutex_;
   Ogre::SceneManager* const scene_manager_;

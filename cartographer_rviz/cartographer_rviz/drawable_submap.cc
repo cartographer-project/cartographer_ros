@@ -46,25 +46,28 @@ constexpr double kFadeOutStartDistanceInMeters = 1.;
 constexpr double kFadeOutDistanceInMeters = 2.;
 constexpr float kAlphaUpdateThreshold = 0.2f;
 
-std::string GetSubmapIdentifier(const int trajectory_id, const int submap_id) {
-  return std::to_string(trajectory_id) + "-" + std::to_string(submap_id);
+std::string GetSubmapIdentifier(const int trajectory_id,
+                                const int submap_index) {
+  return std::to_string(trajectory_id) + "-" + std::to_string(submap_index);
 }
 
 }  // namespace
 
-DrawableSubmap::DrawableSubmap(const int submap_id, const int trajectory_id,
+DrawableSubmap::DrawableSubmap(const int trajectory_id, const int submap_index,
                                Ogre::SceneManager* const scene_manager)
-    : submap_id_(submap_id),
-      trajectory_id_(trajectory_id),
+    : trajectory_id_(trajectory_id),
+      submap_index_(submap_index),
       scene_manager_(scene_manager),
       scene_node_(scene_manager->getRootSceneNode()->createChildSceneNode()),
       manual_object_(scene_manager->createManualObject(
-          kManualObjectPrefix + GetSubmapIdentifier(trajectory_id, submap_id))),
+          kManualObjectPrefix +
+          GetSubmapIdentifier(trajectory_id, submap_index))),
       last_query_timestamp_(0) {
   material_ = Ogre::MaterialManager::getSingleton().getByName(
       kSubmapSourceMaterialName);
-  material_ = material_->clone(kSubmapMaterialPrefix +
-                               GetSubmapIdentifier(trajectory_id_, submap_id));
+  material_ =
+      material_->clone(kSubmapMaterialPrefix +
+                       GetSubmapIdentifier(trajectory_id_, submap_index));
   material_->setReceiveShadows(false);
   material_->getTechnique(0)->setLightingEnabled(false);
   material_->setCullingMode(Ogre::CULL_NONE);
@@ -121,8 +124,8 @@ bool DrawableSubmap::MaybeFetchTexture(ros::ServiceClient* const client) {
   last_query_timestamp_ = now;
   rpc_request_future_ = std::async(std::launch::async, [this, client]() {
     ::cartographer_ros_msgs::SubmapQuery srv;
-    srv.request.submap_id = submap_id_;
     srv.request.trajectory_id = trajectory_id_;
+    srv.request.submap_index = submap_index_;
     if (client->call(srv)) {
       // We emit a signal to update in the right thread, and pass via the
       // 'response_' member to simplify the signal-slot connection slightly.
@@ -203,7 +206,7 @@ void DrawableSubmap::UpdateSceneNode() {
     texture_.setNull();
   }
   const std::string texture_name =
-      kSubmapTexturePrefix + GetSubmapIdentifier(trajectory_id_, submap_id_);
+      kSubmapTexturePrefix + GetSubmapIdentifier(trajectory_id_, submap_index_);
   texture_ = Ogre::TextureManager::getSingleton().loadRawData(
       texture_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
       pixel_stream, response_.width, response_.height, Ogre::PF_BYTE_RGB,
