@@ -287,7 +287,7 @@ bool Node::HandleSubmapQuery(
 
   if (request.trajectory_id < 0 ||
       request.trajectory_id >= map_builder_.num_trajectory_builders()) {
-    LOG(ERROR) << "Requested submap of trajectory " << request.trajectory_id
+    LOG(ERROR) << "Requested submap from trajectory " << request.trajectory_id
                << " but there are only "
                << map_builder_.num_trajectory_builders() << " trajectories.";
     return false;
@@ -297,7 +297,7 @@ bool Node::HandleSubmapQuery(
       map_builder_.GetTrajectoryBuilder(request.trajectory_id)->submaps();
   if (request.submap_index < 0 || request.submap_index >= submaps->size()) {
     LOG(ERROR) << "Requested submap " << request.submap_index
-               << " of trajectory " << request.trajectory_id
+               << " from trajectory " << request.trajectory_id
                << " but there are only " << submaps->size()
                << " submaps in this trajectory.";
     return false;
