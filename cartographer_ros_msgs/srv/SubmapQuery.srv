@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-int32 submap_id
 int32 trajectory_id
+int32 submap_index
 ---
 int32 submap_version
 uint8[] cells

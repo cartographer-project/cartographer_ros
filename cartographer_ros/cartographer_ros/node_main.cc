@@ -29,17 +29,11 @@
 #include "cartographer/common/thread_pool.h"
 #include "cartographer/common/time.h"
 #include "cartographer/kalman_filter/pose_tracker.h"
-#include "cartographer/mapping/global_trajectory_builder_interface.h"
 #include "cartographer/mapping/map_builder.h"
 #include "cartographer/mapping/proto/submap_visualization.pb.h"
-#include "cartographer/mapping_2d/global_trajectory_builder.h"
-#include "cartographer/mapping_2d/local_trajectory_builder.h"
 #include "cartographer/mapping_2d/sparse_pose_graph.h"
-#include "cartographer/mapping_3d/global_trajectory_builder.h"
-#include "cartographer/mapping_3d/local_trajectory_builder.h"
 #include "cartographer/mapping_3d/local_trajectory_builder_options.h"
 #include "cartographer/mapping_3d/sparse_pose_graph.h"
-#include "cartographer/sensor/collator.h"
 #include "cartographer/sensor/data.h"
 #include "cartographer/sensor/laser.h"
 #include "cartographer/sensor/point_cloud.h"
@@ -87,8 +81,6 @@ namespace proto = carto::sensor::proto;
 using carto::transform::Rigid3d;
 using carto::kalman_filter::PoseCovariance;
 
-// TODO(hrapp): Support multi trajectory mapping.
-constexpr int64 kTrajectoryBuilderId = 0;
 constexpr int kInfiniteSubscriberQueueSize = 0;
 constexpr int kLatestOnlyPublisherQueueSize = 1;
 
@@ -142,6 +134,11 @@ class Node {
       GUARDED_BY(mutex_);
   carto::mapping::MapBuilder map_builder_ GUARDED_BY(mutex_);
   std::unique_ptr<SensorBridge> sensor_bridge_ GUARDED_BY(mutex_);
+  int trajectory_id_ = -1 GUARDED_BY(mutex_);
+
+  // Set of all topics we subscribe to. We use the non-remapped default names
+  // which are unique.
+  std::unordered_set<string> expected_sensor_ids_;
 
   ::ros::NodeHandle node_handle_;
   ::ros::Subscriber imu_subscriber_;
@@ -183,9 +180,7 @@ Node::~Node() {
 }
 
 void Node::Initialize() {
-  // Set of all topics we subscribe to. We use the non-remapped default names
-  // which are unique.
-  std::unordered_set<string> expected_sensor_ids;
+  carto::common::MutexLocker lock(&mutex_);
 
   // For 2D SLAM, subscribe to exactly one horizontal laser.
   if (options_.use_horizontal_laser) {
@@ -195,7 +190,7 @@ void Node::Initialize() {
             [this](const sensor_msgs::LaserScan::ConstPtr& msg) {
               sensor_bridge_->HandleLaserScanMessage(kLaserScanTopic, msg);
             }));
-    expected_sensor_ids.insert(kLaserScanTopic);
+    expected_sensor_ids_.insert(kLaserScanTopic);
   }
   if (options_.use_horizontal_multi_echo_laser) {
     horizontal_laser_scan_subscriber_ = node_handle_.subscribe(
@@ -205,7 +200,7 @@ void Node::Initialize() {
               sensor_bridge_->HandleMultiEchoLaserScanMessage(
                   kMultiEchoLaserScanTopic, msg);
             }));
-    expected_sensor_ids.insert(kMultiEchoLaserScanTopic);
+    expected_sensor_ids_.insert(kMultiEchoLaserScanTopic);
   }
 
   // For 3D SLAM, subscribe to all 3D lasers.
@@ -221,7 +216,7 @@ void Node::Initialize() {
               [this, topic](const sensor_msgs::PointCloud2::ConstPtr& msg) {
                 sensor_bridge_->HandlePointCloud2Message(topic, msg);
               })));
-      expected_sensor_ids.insert(topic);
+      expected_sensor_ids_.insert(topic);
     }
   }
 
@@ -237,7 +232,7 @@ void Node::Initialize() {
             [this](const sensor_msgs::Imu::ConstPtr& msg) {
               sensor_bridge_->HandleImuMessage(kImuTopic, msg);
             }));
-    expected_sensor_ids.insert(kImuTopic);
+    expected_sensor_ids_.insert(kImuTopic);
   }
 
   if (options_.use_odometry_data) {
@@ -247,15 +242,13 @@ void Node::Initialize() {
             [this](const nav_msgs::Odometry::ConstPtr& msg) {
               sensor_bridge_->HandleOdometryMessage(kOdometryTopic, msg);
             }));
-    expected_sensor_ids.insert(kOdometryTopic);
+    expected_sensor_ids_.insert(kOdometryTopic);
   }
 
-  // TODO(damonkohler): Add multi-trajectory support.
-  CHECK_EQ(kTrajectoryBuilderId,
-           map_builder_.AddTrajectoryBuilder(expected_sensor_ids));
+  trajectory_id_ = map_builder_.AddTrajectoryBuilder(expected_sensor_ids_);
   sensor_bridge_ = carto::common::make_unique<SensorBridge>(
       options_.sensor_bridge_options, &tf_bridge_,
-      map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId));
+      map_builder_.GetTrajectoryBuilder(trajectory_id_));
 
   submap_list_publisher_ =
       node_handle_.advertise<::cartographer_ros_msgs::SubmapList>(
@@ -290,28 +283,36 @@ void Node::Initialize() {
 bool Node::HandleSubmapQuery(
     ::cartographer_ros_msgs::SubmapQuery::Request& request,
     ::cartographer_ros_msgs::SubmapQuery::Response& response) {
-  if (request.trajectory_id != 0) {
+  carto::common::MutexLocker lock(&mutex_);
+
+  if (request.trajectory_id < 0 ||
+      request.trajectory_id >= map_builder_.num_trajectory_builders()) {
+    LOG(ERROR) << "Requested submap from trajectory " << request.trajectory_id
+               << " but there are only "
+               << map_builder_.num_trajectory_builders() << " trajectories.";
     return false;
   }
 
-  carto::common::MutexLocker lock(&mutex_);
-  // TODO(hrapp): return error messages and extract common code from MapBuilder.
   const carto::mapping::Submaps* const submaps =
-      map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)->submaps();
-  if (request.submap_id < 0 || request.submap_id >= submaps->size()) {
+      map_builder_.GetTrajectoryBuilder(request.trajectory_id)->submaps();
+  if (request.submap_index < 0 || request.submap_index >= submaps->size()) {
+    LOG(ERROR) << "Requested submap " << request.submap_index
+               << " from trajectory " << request.trajectory_id
+               << " but there are only " << submaps->size()
+               << " submaps in this trajectory.";
     return false;
   }
 
   carto::mapping::proto::SubmapQuery::Response response_proto;
-  response_proto.set_submap_id(request.submap_id);
   response_proto.set_submap_version(
-      submaps->Get(request.submap_id)->end_laser_fan_index);
+      submaps->Get(request.submap_index)->end_laser_fan_index);
   const std::vector<carto::transform::Rigid3d> submap_transforms =
       map_builder_.sparse_pose_graph()->GetSubmapTransforms(*submaps);
-
-  submaps->SubmapToProto(request.submap_id,
+  CHECK_EQ(submap_transforms.size(), submaps->size());
+  submaps->SubmapToProto(request.submap_index,
                          map_builder_.sparse_pose_graph()->GetTrajectoryNodes(),
-                         submap_transforms[request.submap_id], &response_proto);
+                         submap_transforms[request.submap_index],
+                         &response_proto);
 
   response.submap_version = response_proto.submap_version();
   response.cells.insert(response.cells.begin(), response_proto.cells().begin(),
@@ -340,14 +341,8 @@ bool Node::HandleSubmapQuery(
 bool Node::HandleFinishTrajectory(
     ::cartographer_ros_msgs::FinishTrajectory::Request& request,
     ::cartographer_ros_msgs::FinishTrajectory::Response& response) {
-  // After shutdown, ROS messages will no longer be received and therefore not
-  // pile up.
-  //
-  // TODO(whess): Continue with a new trajectory instead?
-  ::ros::shutdown();
   carto::common::MutexLocker lock(&mutex_);
-  // TODO(whess): Add multi-trajectory support.
-  map_builder_.FinishTrajectory(kTrajectoryBuilderId);
+  map_builder_.FinishTrajectory(trajectory_id_);
   map_builder_.sparse_pose_graph()->RunFinalOptimization();
 
   const auto trajectory_nodes =
@@ -357,48 +352,59 @@ bool Node::HandleFinishTrajectory(
     return true;
   }
   WriteAssets(trajectory_nodes, options_, request.stem);
+
+  // Start a new trajectory.
+  trajectory_id_ = map_builder_.AddTrajectoryBuilder(expected_sensor_ids_);
+  sensor_bridge_ = carto::common::make_unique<SensorBridge>(
+      options_.sensor_bridge_options, &tf_bridge_,
+      map_builder_.GetTrajectoryBuilder(trajectory_id_));
   return true;
 }
 
 void Node::PublishSubmapList(const ::ros::WallTimerEvent& timer_event) {
-  carto::common::MutexLocker lock(&mutex_);
-  const carto::mapping::Submaps* submaps =
-      map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)->submaps();
-  const std::vector<carto::transform::Rigid3d> submap_transforms =
-      map_builder_.sparse_pose_graph()->GetSubmapTransforms(*submaps);
-  CHECK_EQ(submap_transforms.size(), submaps->size());
-
-  ::cartographer_ros_msgs::TrajectorySubmapList ros_trajectory;
-  for (int i = 0; i != submaps->size(); ++i) {
-    ::cartographer_ros_msgs::SubmapEntry ros_submap;
-    ros_submap.submap_version = submaps->Get(i)->end_laser_fan_index;
-    ros_submap.pose = ToGeometryMsgPose(submap_transforms[i]);
-    ros_trajectory.submap.push_back(ros_submap);
-  }
-
   ::cartographer_ros_msgs::SubmapList ros_submap_list;
   ros_submap_list.header.stamp = ::ros::Time::now();
   ros_submap_list.header.frame_id = options_.map_frame;
-  ros_submap_list.trajectory.push_back(ros_trajectory);
+
+  carto::common::MutexLocker lock(&mutex_);
+  for (int trajectory_id = 0;
+       trajectory_id < map_builder_.num_trajectory_builders();
+       ++trajectory_id) {
+    const carto::mapping::Submaps* submaps =
+        map_builder_.GetTrajectoryBuilder(trajectory_id)->submaps();
+    const std::vector<carto::transform::Rigid3d> submap_transforms =
+        map_builder_.sparse_pose_graph()->GetSubmapTransforms(*submaps);
+    CHECK_EQ(submap_transforms.size(), submaps->size());
+
+    ::cartographer_ros_msgs::TrajectorySubmapList ros_trajectory;
+    for (int submap_index = 0; submap_index != submaps->size();
+         ++submap_index) {
+      ::cartographer_ros_msgs::SubmapEntry ros_submap;
+      ros_submap.submap_version =
+          submaps->Get(submap_index)->end_laser_fan_index;
+      ros_submap.pose = ToGeometryMsgPose(submap_transforms[submap_index]);
+      ros_trajectory.submap.push_back(ros_submap);
+    }
+    ros_submap_list.trajectory.push_back(ros_trajectory);
+  }
   submap_list_publisher_.publish(ros_submap_list);
 }
 
 void Node::PublishPoseAndScanMatchedPointCloud(
     const ::ros::WallTimerEvent& timer_event) {
   carto::common::MutexLocker lock(&mutex_);
-  const carto::mapping::GlobalTrajectoryBuilderInterface::PoseEstimate
-      last_pose_estimate =
-          map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)
-              ->pose_estimate();
+  const carto::mapping::TrajectoryBuilder* trajectory_builder =
+      map_builder_.GetTrajectoryBuilder(trajectory_id_);
+  const carto::mapping::TrajectoryBuilder::PoseEstimate last_pose_estimate =
+      trajectory_builder->pose_estimate();
   if (carto::common::ToUniversal(last_pose_estimate.time) < 0) {
     return;
   }
 
   const Rigid3d tracking_to_local = last_pose_estimate.pose;
-  const carto::mapping::Submaps* submaps =
-      map_builder_.GetTrajectoryBuilder(kTrajectoryBuilderId)->submaps();
   const Rigid3d local_to_map =
-      map_builder_.sparse_pose_graph()->GetLocalToGlobalTransform(*submaps);
+      map_builder_.sparse_pose_graph()->GetLocalToGlobalTransform(
+          *trajectory_builder->submaps());
   const Rigid3d tracking_to_map = local_to_map * tracking_to_local;
 
   geometry_msgs::TransformStamped stamped_transform;
