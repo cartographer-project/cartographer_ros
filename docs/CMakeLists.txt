@@ -16,16 +16,13 @@ cmake_minimum_required (VERSION 2.8.7)
 
 project(cartographer_ros_docs)
 
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR})
 find_package(Sphinx)
-
-set(OUTPUT_DIR "${CMAKE_BINARY_DIR}/docs/html")
-
-add_custom_target(build_doc ALL
-    ${SPHINX_EXECUTABLE} -b html
-    ${CMAKE_CURRENT_SOURCE_DIR}/source
-    ${CMAKE_CURRENT_BINARY_DIR}/html
-    COMMENT "Building documentation."
-)
-
-# TODO(hrapp): Install documentation?
+if(SPHINX_FOUND)
+  set(OUTPUT_DIR "${CMAKE_BINARY_DIR}/docs/html")
+  add_custom_target(build_doc ALL
+      ${SPHINX_EXECUTABLE} -b html
+      ${CMAKE_CURRENT_SOURCE_DIR}/source
+      ${CMAKE_CURRENT_BINARY_DIR}/html
+      COMMENT "Building documentation."
+  )
+endif()
