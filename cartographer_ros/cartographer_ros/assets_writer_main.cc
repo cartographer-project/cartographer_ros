@@ -69,7 +69,11 @@ void ReadStaticTransformsFromUrdf(const string& urdf_filename,
                                   ::tf2_ros::Buffer* const buffer) {
   urdf::Model model;
   CHECK(model.initFile(urdf_filename));
+#if URDFDOM_HEADERS_HAS_SHARED_PTR_DEFS
+  std::vector<urdf::LinkSharedPtr> links;
+#else
   std::vector<boost::shared_ptr<urdf::Link>> links;
+#endif
   model.getLinks(links);
   for (const auto& link : links) {
     if (!link->getParent() || link->parent_joint->type != urdf::Joint::FIXED) {

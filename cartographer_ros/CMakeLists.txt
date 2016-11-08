@@ -53,6 +53,13 @@ find_package(PCL REQUIRED COMPONENTS common io)
 find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system iostreams)
 
+find_package(urdfdom_headers REQUIRED)
+if(DEFINED urdfdom_headers_VERSION)
+  if(${urdfdom_headers_VERSION} GREATER 0.4.1)
+    add_definitions(-DURDFDOM_HEADERS_HAS_SHARED_PTR_DEFS)
+  endif()
+endif()
+
 add_subdirectory("cartographer_ros")
 
 install(DIRECTORY launch urdf configuration_files
