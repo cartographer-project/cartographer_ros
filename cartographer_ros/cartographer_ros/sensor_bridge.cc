@@ -40,13 +40,6 @@ const string& CheckNoLeadingSlash(const string& frame_id) {
 SensorBridgeOptions CreateSensorBridgeOptions(
     carto::common::LuaParameterDictionary* const lua_parameter_dictionary) {
   SensorBridgeOptions options;
-  options.horizontal_laser_min_range =
-      lua_parameter_dictionary->GetDouble("horizontal_laser_min_range");
-  options.horizontal_laser_max_range =
-      lua_parameter_dictionary->GetDouble("horizontal_laser_max_range");
-  options.horizontal_laser_missing_echo_ray_length =
-      lua_parameter_dictionary->GetDouble(
-          "horizontal_laser_missing_echo_ray_length");
   options.constant_odometry_translational_variance =
       lua_parameter_dictionary->GetDouble(
           "constant_odometry_translational_variance");
@@ -137,10 +130,11 @@ void SensorBridge::HandlePointCloud2Message(
 void SensorBridge::HandleLaserScanProto(
     const string& topic, const carto::common::Time time, const string& frame_id,
     const carto::sensor::proto::LaserScan& laser_scan) {
-  const auto laser_fan = carto::sensor::ToLaserFan(
-      laser_scan, options_.horizontal_laser_min_range,
-      options_.horizontal_laser_max_range,
-      options_.horizontal_laser_missing_echo_ray_length);
+  const carto::sensor::LaserFan laser_fan = {
+      Eigen::Vector3f::Zero(),
+      carto::sensor::ToPointCloud(laser_scan),
+      {},
+      {}};
   const auto sensor_to_tracking =
       tf_bridge_->LookupToTracking(time, CheckNoLeadingSlash(frame_id));
   if (sensor_to_tracking != nullptr) {

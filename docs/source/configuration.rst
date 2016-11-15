@@ -71,16 +71,6 @@ use_horizontal_multi_echo_laser
   "echoes" topic. If 2D SLAM is used, either this or *use_horizontal_laser*
   must be enabled.
 
-sensor_bridge.horizontal_laser_min_range
-  Range in meters below which laser returns are ignored for the purpose of SLAM.
-
-sensor_bridge.horizontal_laser_max_range
-  Range in meters above which laser returns are ignored for the purpose of SLAM.
-
-sensor_bridge.horizontal_laser_missing_echo_ray_length
-  Range in meters to use for inserting free space when no laser return was
-  detected.
-
 num_lasers_3d
   Number of 3D lasers to subscribe to. Must be a positive value if and only if
   using 3D SLAM. Subscribes to `sensor_msgs/PointCloud2`_ on the "points2"

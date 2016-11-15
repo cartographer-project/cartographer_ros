@@ -17,9 +17,6 @@ include "map_builder.lua"
 options = {
   map_builder = MAP_BUILDER,
   sensor_bridge = {
-    horizontal_laser_min_range = 0.,
-    horizontal_laser_max_range = 30.,
-    horizontal_laser_missing_echo_ray_length = 5.,
     constant_odometry_translational_variance = 0.,
     constant_odometry_rotational_variance = 0.,
   },
