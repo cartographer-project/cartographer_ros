@@ -1,4 +1,6 @@
 VOXEL_SIZE = 5e-2
+
+
 options = {
   tracking_frame = "base_link",
   pipeline = {
@@ -27,7 +29,7 @@ options = {
     {
       action = "write_xray_image",
       voxel_size = VOXEL_SIZE,
-      filename = "xray_yz.png",
+      filename = "xray_yz_all",
       transform = {
         translation = { 0., 0., 0. },
         rotation = { 0. , 0., math.pi, },
@@ -36,7 +38,7 @@ options = {
     {
       action = "write_xray_image",
       voxel_size = VOXEL_SIZE,
-      filename = "xray_xy.png",
+      filename = "xray_xy_all",
       transform = {
         translation = { 0., 0., 0. },
         rotation = { 0., -math.pi / 2., 0., },
@@ -45,7 +47,37 @@ options = {
     {
       action = "write_xray_image",
       voxel_size = VOXEL_SIZE,
-      filename = "xray_xz.png",
+      filename = "xray_xz_all",
+      transform = {
+        translation = { 0., 0., 0. },
+        rotation = { 0. , 0., -math.pi / 2, },
+      },
+    },
+    {
+      action = "write_xray_image",
+      voxel_size = VOXEL_SIZE,
+      separate_floors = true,
+      filename = "xray_yz_level_",
+      transform = {
+        translation = { 0., 0., 0. },
+        rotation = { 0. , 0., math.pi, },
+      },
+    },
+    {
+      action = "write_xray_image",
+      voxel_size = VOXEL_SIZE,
+      separate_floors = true,
+      filename = "xray_xy_level_",
+      transform = {
+        translation = { 0., 0., 0. },
+        rotation = { 0., -math.pi / 2., 0., },
+      },
+    },
+    {
+      action = "write_xray_image",
+      voxel_size = VOXEL_SIZE,
+      separate_floors = true,
+      filename = "xray_xz_level_",
       transform = {
         translation = { 0., 0., 0. },
         rotation = { 0. , 0., -math.pi / 2, },
