@@ -93,6 +93,14 @@ google_library(time_conversion
     time_conversion.h
 )
 
+google_test(configuration_files_test
+  USES_CARTOGRAPHER
+  SRCS
+    configuration_files_test.cc
+  DEPENDS
+    node_options
+)
+
 google_test(time_conversion_test
   USES_CARTOGRAPHER
   SRCS
