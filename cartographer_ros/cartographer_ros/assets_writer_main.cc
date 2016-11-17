@@ -99,7 +99,7 @@ void Run(const string& trajectory_filename, const string& bag_filename,
           trajectory_proto);
 
   carto::io::PointsProcessorPipelineBuilder builder;
-  carto::io::RegisterCartographerPointsProcessors(trajectory_proto, &builder);
+  carto::io::RegisterBuiltInPointsProcessors(trajectory_proto, &builder);
 
   auto file_resolver =
       carto::common::make_unique<carto::common::ConfigurationFileResolver>(
