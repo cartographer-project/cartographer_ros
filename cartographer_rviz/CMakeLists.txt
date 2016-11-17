@@ -34,7 +34,7 @@ catkin_package(
   CATKIN_DEPENDS
     message_runtime
     ${PACKAGE_DEPENDENCIES}
-  INCLUDE_DIRS ${PROJECT_NAME}
+  INCLUDE_DIRS "."
 )
 
 set(CMAKE_AUTOMOC ON)
