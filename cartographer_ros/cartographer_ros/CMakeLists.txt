@@ -1,6 +1,5 @@
 google_library(assets_writer
   USES_CARTOGRAPHER
-  USES_ROS
   SRCS
     assets_writer.cc
   HDRS
@@ -13,7 +12,6 @@ google_library(assets_writer
 
 google_library(map_writer
   USES_GLOG
-  USES_ROS
   USES_YAMLCPP
   SRCS
     map_writer.cc
@@ -25,7 +23,6 @@ google_library(msg_conversion
   USES_CARTOGRAPHER
   USES_GLOG
   USES_PCL
-  USES_ROS
   SRCS
     msg_conversion.cc
   HDRS
@@ -48,7 +45,6 @@ google_library(node_options
 google_library(occupancy_grid
   USES_CARTOGRAPHER
   USES_GLOG
-  USES_ROS
   SRCS
     occupancy_grid.cc
   HDRS
@@ -60,7 +56,6 @@ google_library(occupancy_grid
 
 google_library(ros_log_sink
   USES_GLOG
-  USES_ROS
   SRCS
     ros_log_sink.cc
   HDRS
@@ -69,7 +64,6 @@ google_library(ros_log_sink
 
 google_library(sensor_bridge
   USES_CARTOGRAPHER
-  USES_ROS
   SRCS
     sensor_bridge.cc
   HDRS
@@ -93,16 +87,14 @@ google_library(tf_bridge
 
 google_library(time_conversion
   USES_CARTOGRAPHER
-  USES_ROS
   SRCS
     time_conversion.cc
   HDRS
     time_conversion.h
 )
 
-google_catkin_test(time_conversion_test
+google_test(time_conversion_test
   USES_CARTOGRAPHER
-  USES_ROS
   SRCS
     time_conversion_test.cc
   DEPENDS
@@ -113,7 +105,6 @@ google_binary(cartographer_assets_writer
   USES_CARTOGRAPHER
   USES_GFLAGS
   USES_GLOG
-  USES_ROS
   SRCS
     assets_writer_main.cc
   DEPENDS
@@ -126,7 +117,6 @@ google_binary(cartographer_node
   USES_EIGEN
   USES_GFLAGS
   USES_GLOG
-  USES_ROS
   SRCS
     node_main.cc
   DEPENDS
