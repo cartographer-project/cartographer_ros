@@ -22,8 +22,9 @@ set(PACKAGE_DEPENDENCIES
   geometry_msgs
   nav_msgs
   pcl_conversions
-  roscpp
   rosbag
+  roscpp
+  roslib
   sensor_msgs
   tf2
   tf2_eigen
