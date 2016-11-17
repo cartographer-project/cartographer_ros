@@ -107,7 +107,7 @@ void Run(const string& trajectory_filename, const string& bag_filename,
   const string code =
       file_resolver->GetFileContentOrDie(configuration_basename);
   carto::common::LuaParameterDictionary lua_parameter_dictionary(
-      code, std::move(file_resolver), nullptr);
+      code, std::move(file_resolver));
   const string tracking_frame =
       lua_parameter_dictionary.GetString("tracking_frame");
 
