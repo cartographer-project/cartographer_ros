@@ -165,6 +165,7 @@ Node::~Node() {
   {
     carto::common::MutexLocker lock(&mutex_);
     terminating_ = true;
+    map_builder_.FinishTrajectory(trajectory_id_);
   }
   if (occupancy_grid_thread_.joinable()) {
     occupancy_grid_thread_.join();
