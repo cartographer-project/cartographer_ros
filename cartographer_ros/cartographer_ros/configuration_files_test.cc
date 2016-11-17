@@ -24,7 +24,7 @@
 #include "ros/package.h"
 
 namespace cartographer_ros {
-namespace  {
+namespace {
 
 class ConfigurationFilesTest : public ::testing::TestWithParam<const char*> {};
 
