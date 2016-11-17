@@ -56,15 +56,6 @@ namespace {
 
 namespace carto = ::cartographer;
 
-std::unique_ptr<carto::transform::TransformInterpolationBuffer> ReadTrajectory(
-    const std::string& trajectory_filename) {
-  std::ifstream stream(trajectory_filename.c_str());
-  carto::mapping::proto::Trajectory trajectory_proto;
-  CHECK(trajectory_proto.ParseFromIstream(&stream));
-  return carto::transform::TransformInterpolationBuffer::FromTrajectory(
-      trajectory_proto);
-}
-
 void ReadStaticTransformsFromUrdf(const string& urdf_filename,
                                   ::tf2_ros::Buffer* const buffer) {
   urdf::Model model;
@@ -99,9 +90,16 @@ void Run(const string& trajectory_filename, const string& bag_filename,
   ::tf2_ros::Buffer buffer;
   ReadStaticTransformsFromUrdf(urdf_filename, &buffer);
 
-  auto transform_interpolation_buffer = ReadTrajectory(trajectory_filename);
+  std::ifstream stream(trajectory_filename.c_str());
+  carto::mapping::proto::Trajectory trajectory_proto;
+  CHECK(trajectory_proto.ParseFromIstream(&stream));
 
-  auto* builder = carto::io::PointsProcessorPipelineBuilder::instance();
+  auto transform_interpolation_buffer =
+      carto::transform::TransformInterpolationBuffer::FromTrajectory(
+          trajectory_proto);
+
+  carto::io::PointsProcessorPipelineBuilder builder;
+  carto::io::RegisterBuiltInPointsProcessors(trajectory_proto, &builder);
 
   auto file_resolver =
       carto::common::make_unique<carto::common::ConfigurationFileResolver>(
@@ -114,7 +112,7 @@ void Run(const string& trajectory_filename, const string& bag_filename,
       lua_parameter_dictionary.GetString("tracking_frame");
 
   std::vector<std::unique_ptr<carto::io::PointsProcessor>> pipeline =
-      builder->CreatePipeline(
+      builder.CreatePipeline(
           lua_parameter_dictionary.GetDictionary("pipeline").get());
 
   do {
