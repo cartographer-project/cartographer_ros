@@ -43,13 +43,6 @@ find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
 include(FindPkgConfig)
 PKG_SEARCH_MODULE(YAMLCPP REQUIRED yaml-cpp>=0.5.1)
 
-catkin_package(
-  CATKIN_DEPENDS
-    message_runtime
-    ${PACKAGE_DEPENDENCIES}
-  INCLUDE_DIRS ${PROJECT_NAME}
-)
-
 find_package(PCL REQUIRED COMPONENTS common io)
 find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system iostreams)
@@ -61,7 +54,25 @@ if(DEFINED urdfdom_headers_VERSION)
   endif()
 endif()
 
+catkin_package(
+  CATKIN_DEPENDS
+    message_runtime
+    ${PACKAGE_DEPENDENCIES}
+  DEPENDS
+    PCL
+    Eigen3
+    Boost
+  INCLUDE_DIRS "."
+  LIBRARIES ${PROJECT_NAME}
+)
+
+SET(ALL_LIBRARIES "" CACHE INTERNAL "ALL_LIBRARIES")
+
 add_subdirectory("cartographer_ros")
+
+google_combined_library(${PROJECT_NAME}
+  SRCS "${ALL_LIBRARIES}"
+)
 
 install(DIRECTORY launch urdf configuration_files
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
@@ -69,4 +80,10 @@ install(DIRECTORY launch urdf configuration_files
 
 install(PROGRAMS scripts/tf_remove_frames.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(TARGETS ${PROJECT_NAME}
+        ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+        LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+        RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
