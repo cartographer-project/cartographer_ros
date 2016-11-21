@@ -51,7 +51,7 @@ provide_odom_frame
   If enabled, the local, non-loop-closed, continuous pose will be published as
   the *odom_frame* in the *map_frame*.
 
-use_odometer
+use_odometry
   If enabled, subscribes to `nav_msgs/Odometry`_ on the topic "odom". Odometry
   must be provided in this case, and the information will be included in SLAM.
 

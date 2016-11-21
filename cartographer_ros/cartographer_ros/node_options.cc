@@ -35,7 +35,7 @@ NodeOptions CreateNodeOptions(
   options.odom_frame = lua_parameter_dictionary->GetString("odom_frame");
   options.provide_odom_frame =
       lua_parameter_dictionary->GetBool("provide_odom_frame");
-  options.use_odometer = lua_parameter_dictionary->GetBool("use_odometer");
+  options.use_odometry = lua_parameter_dictionary->GetBool("use_odometry");
   options.use_laser_scan = lua_parameter_dictionary->GetBool("use_laser_scan");
   options.use_multi_echo_laser_scan =
       lua_parameter_dictionary->GetBool("use_multi_echo_laser_scan");
@@ -54,9 +54,7 @@ NodeOptions CreateNodeOptions(
       << "Configuration error: 'use_laser_scan', "
          "'use_multi_echo_laser_scan' and 'num_point_clouds' are "
          "mutually exclusive, but one is required.";
-  CHECK_EQ(options.map_builder_options.use_trajectory_builder_2d(),
-           options.use_laser_scan || options.use_multi_echo_laser_scan);
-  CHECK_EQ(options.map_builder_options.use_trajectory_builder_3d(),
+  CHECK_NE(options.map_builder_options.use_trajectory_builder_2d(),
            options.num_point_clouds > 0);
   return options;
 }

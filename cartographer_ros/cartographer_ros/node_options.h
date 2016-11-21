@@ -34,7 +34,7 @@ struct NodeOptions {
   string published_frame;
   string odom_frame;
   bool provide_odom_frame;
-  bool use_odometer;
+  bool use_odometry;
   bool use_laser_scan;
   bool use_multi_echo_laser_scan;
   int num_point_clouds;

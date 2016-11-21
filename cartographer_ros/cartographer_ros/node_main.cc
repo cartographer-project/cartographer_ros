@@ -228,7 +228,7 @@ void Node::Initialize() {
     expected_sensor_ids_.insert(kImuTopic);
   }
 
-  if (options_.use_odometer) {
+  if (options_.use_odometry) {
     odometry_subscriber_ = node_handle_.subscribe(
         kOdometryTopic, kInfiniteSubscriberQueueSize,
         boost::function<void(const nav_msgs::Odometry::ConstPtr&)>(

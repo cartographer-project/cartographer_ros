@@ -61,7 +61,7 @@ imu (`sensor_msgs/Imu`_)
   input for SLAM.
 
 odom (`nav_msgs/Odometry`_)
-  Supported in 2D (optional) and 3D (optional). If *use_odometer* is
+  Supported in 2D (optional) and 3D (optional). If *use_odometry* is
   enabled in the :doc:`configuration`, this topic will be used as input for
   SLAM.
 
