@@ -16,10 +16,6 @@ include "map_builder.lua"
 
 options = {
   map_builder = MAP_BUILDER,
-  sensor_bridge = {
-    constant_odometry_translational_variance = 0.,
-    constant_odometry_rotational_variance = 0.,
-  },
   map_frame = "map",
   tracking_frame = "horizontal_laser_link",
   published_frame = "horizontal_laser_link",

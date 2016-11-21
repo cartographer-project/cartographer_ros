@@ -32,19 +32,11 @@
 
 namespace cartographer_ros {
 
-struct SensorBridgeOptions {
-  double constant_odometry_translational_variance;
-  double constant_odometry_rotational_variance;
-};
-
-SensorBridgeOptions CreateSensorBridgeOptions(
-    ::cartographer::common::LuaParameterDictionary* lua_parameter_dictionary);
-
 // Converts ROS messages into SensorData in tracking frame for the MapBuilder.
 class SensorBridge {
  public:
   explicit SensorBridge(
-      const SensorBridgeOptions& options, const TfBridge* tf_bridge,
+      const TfBridge* tf_bridge,
       ::cartographer::mapping::TrajectoryBuilder* trajectory_builder);
 
   SensorBridge(const SensorBridge&) = delete;
@@ -68,7 +60,6 @@ class SensorBridge {
                          const string& frame_id,
                          const ::cartographer::sensor::PointCloud& ranges);
 
-  const SensorBridgeOptions options_;
   const TfBridge* const tf_bridge_;
   ::cartographer::mapping::TrajectoryBuilder* const trajectory_builder_;
 };

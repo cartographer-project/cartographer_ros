@@ -27,8 +27,6 @@ NodeOptions CreateNodeOptions(
   options.map_builder_options =
       ::cartographer::mapping::CreateMapBuilderOptions(
           lua_parameter_dictionary->GetDictionary("map_builder").get());
-  options.sensor_bridge_options = CreateSensorBridgeOptions(
-      lua_parameter_dictionary->GetDictionary("sensor_bridge").get());
   options.map_frame = lua_parameter_dictionary->GetString("map_frame");
   options.tracking_frame =
       lua_parameter_dictionary->GetString("tracking_frame");

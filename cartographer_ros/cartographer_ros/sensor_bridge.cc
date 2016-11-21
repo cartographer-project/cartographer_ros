@@ -37,46 +37,19 @@ const string& CheckNoLeadingSlash(const string& frame_id) {
 
 }  // namespace
 
-SensorBridgeOptions CreateSensorBridgeOptions(
-    carto::common::LuaParameterDictionary* const lua_parameter_dictionary) {
-  SensorBridgeOptions options;
-  options.constant_odometry_translational_variance =
-      lua_parameter_dictionary->GetDouble(
-          "constant_odometry_translational_variance");
-  options.constant_odometry_rotational_variance =
-      lua_parameter_dictionary->GetDouble(
-          "constant_odometry_rotational_variance");
-  return options;
-}
-
 SensorBridge::SensorBridge(
-    const SensorBridgeOptions& options, const TfBridge* const tf_bridge,
+    const TfBridge* const tf_bridge,
     carto::mapping::TrajectoryBuilder* const trajectory_builder)
-    : options_(options),
-      tf_bridge_(tf_bridge),
-      trajectory_builder_(trajectory_builder) {}
+    : tf_bridge_(tf_bridge), trajectory_builder_(trajectory_builder) {}
 
 void SensorBridge::HandleOdometryMessage(
     const string& topic, const nav_msgs::Odometry::ConstPtr& msg) {
   const carto::common::Time time = FromRos(msg->header.stamp);
-  const Eigen::Matrix3d translational =
-      Eigen::Matrix3d::Identity() *
-      options_.constant_odometry_translational_variance;
-  const Eigen::Matrix3d rotational =
-      Eigen::Matrix3d::Identity() *
-      options_.constant_odometry_rotational_variance;
-  // clang-format off
-  carto::kalman_filter::PoseCovariance covariance;
-  covariance <<
-      translational, Eigen::Matrix3d::Zero(),
-      Eigen::Matrix3d::Zero(), rotational;
-  // clang-format on
   const auto sensor_to_tracking = tf_bridge_->LookupToTracking(
       time, CheckNoLeadingSlash(msg->child_frame_id));
   if (sensor_to_tracking != nullptr) {
     trajectory_builder_->AddOdometerData(
-        topic, time, ToRigid3d(msg->pose.pose) * sensor_to_tracking->inverse(),
-        covariance);
+        topic, time, ToRigid3d(msg->pose.pose) * sensor_to_tracking->inverse());
   }
 }
 
