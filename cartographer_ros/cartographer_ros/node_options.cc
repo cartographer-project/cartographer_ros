@@ -54,8 +54,11 @@ NodeOptions CreateNodeOptions(
       << "Configuration error: 'use_laser_scan', "
          "'use_multi_echo_laser_scan' and 'num_point_clouds' are "
          "mutually exclusive, but one is required.";
-  CHECK_NE(options.map_builder_options.use_trajectory_builder_2d(),
-           options.num_point_clouds > 0);
+
+  if (options.map_builder_options.use_trajectory_builder_2d()) {
+    // Using point clouds is only supported in 3D.
+    CHECK_EQ(options.num_point_clouds, 0);
+  }
   return options;
 }
 
