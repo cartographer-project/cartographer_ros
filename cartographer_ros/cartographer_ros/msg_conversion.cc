@@ -229,24 +229,6 @@ sensor_msgs::PointCloud2 ToPointCloud2Message(
   return proto;
 }
 
-::cartographer::sensor::proto::LaserFan ToCartographer(
-    const pcl::PointCloud<pcl::PointXYZ>& pcl_points) {
-  ::cartographer::sensor::proto::LaserFan proto;
-
-  auto* origin = proto.mutable_origin();
-  origin->set_x(0.);
-  origin->set_y(0.);
-  origin->set_z(0.);
-
-  auto* point_cloud = proto.mutable_point_cloud();
-  for (const auto& point : pcl_points) {
-    point_cloud->add_x(point.x);
-    point_cloud->add_y(point.y);
-    point_cloud->add_z(point.z);
-  }
-  return proto;
-}
-
 Rigid3d ToRigid3d(const geometry_msgs::TransformStamped& transform) {
   return Rigid3d(ToEigen(transform.transform.translation),
                  ToEigen(transform.transform.rotation));
