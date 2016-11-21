@@ -63,10 +63,10 @@ class SensorBridge {
                                 const sensor_msgs::PointCloud2::ConstPtr& msg);
 
  private:
-  void HandleLaserScanProto(
-      const string& topic, const ::cartographer::common::Time time,
-      const string& frame_id,
-      const ::cartographer::sensor::proto::LaserScan& laser_scan);
+  void HandleRangefinder(const string& topic,
+                         const ::cartographer::common::Time time,
+                         const string& frame_id,
+                         const ::cartographer::sensor::PointCloud& ranges);
 
   const SensorBridgeOptions options_;
   const TfBridge* const tf_bridge_;

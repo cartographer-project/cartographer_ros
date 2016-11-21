@@ -64,9 +64,6 @@ geometry_msgs::Pose ToGeometryMsgPose(
 ::cartographer::sensor::proto::LaserScan ToCartographer(
     const sensor_msgs::MultiEchoLaserScan& msg);
 
-::cartographer::sensor::proto::LaserFan ToCartographer(
-    const pcl::PointCloud<pcl::PointXYZ>& pcl_points);
-
 ::cartographer::transform::Rigid3d ToRigid3d(
     const geometry_msgs::TransformStamped& transform);
 
