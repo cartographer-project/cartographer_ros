@@ -55,12 +55,6 @@ use_odometry_data
   If enabled, subscribes to `nav_msgs/Odometry`_ on the topic "odom". Odometry
   must be provided in this case, and the information will be included in SLAM.
 
-sensor_bridge.constant_odometry_translational_variance
-  The variance to use for the translational component of odometry.
-
-sensor_bridge.constant_odometry_rotational_variance
-  The variance to use for the rotational component of odometry.
-
 use_horizontal_laser
   If enabled, the node subscribes to `sensor_msgs/LaserScan`_ on the "scan"
   topic. If 2D SLAM is used, either this or *use_horizontal_multi_echo_laser*

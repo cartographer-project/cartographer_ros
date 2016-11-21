@@ -240,8 +240,7 @@ void Node::Initialize() {
 
   trajectory_id_ = map_builder_.AddTrajectoryBuilder(expected_sensor_ids_);
   sensor_bridge_ = carto::common::make_unique<SensorBridge>(
-      options_.sensor_bridge_options, &tf_bridge_,
-      map_builder_.GetTrajectoryBuilder(trajectory_id_));
+      &tf_bridge_, map_builder_.GetTrajectoryBuilder(trajectory_id_));
 
   submap_list_publisher_ =
       node_handle_.advertise<::cartographer_ros_msgs::SubmapList>(
@@ -315,8 +314,7 @@ bool Node::HandleFinishTrajectory(
   // Start a new trajectory.
   trajectory_id_ = map_builder_.AddTrajectoryBuilder(expected_sensor_ids_);
   sensor_bridge_ = carto::common::make_unique<SensorBridge>(
-      options_.sensor_bridge_options, &tf_bridge_,
-      map_builder_.GetTrajectoryBuilder(trajectory_id_));
+      &tf_bridge_, map_builder_.GetTrajectoryBuilder(trajectory_id_));
   return true;
 }
 
