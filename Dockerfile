@@ -32,15 +32,13 @@ RUN cartographer_ros/scripts/prepare_catkin_workspace.sh && \
 COPY cartographer_ros/package.xml catkin_ws/src/cartographer_ros/cartographer_ros/
 COPY cartographer_ros_msgs/package.xml catkin_ws/src/cartographer_ros/cartographer_ros_msgs/
 COPY cartographer_rviz/package.xml catkin_ws/src/cartographer_ros/cartographer_rviz/
-COPY ceres_solver/package.xml catkin_ws/src/cartographer_ros/ceres_solver/
 COPY scripts/install_debs.sh cartographer_ros/scripts/
 RUN cartographer_ros/scripts/install_debs.sh && rm -rf /var/lib/apt/lists/*
 
 # Build, install, and test all packages individually to allow caching.
 COPY scripts/install.sh cartographer_ros/scripts/
 
-COPY ceres_solver catkin_ws/src/cartographer_ros/
-RUN cartographer_ros/scripts/install.sh --pkg ceres_solver
+RUN cartographer_ros/scripts/install.sh --pkg ceres-solver
 
 RUN cartographer_ros/scripts/install.sh --pkg cartographer && \
     cartographer_ros/scripts/install.sh --pkg cartographer --make-args test
