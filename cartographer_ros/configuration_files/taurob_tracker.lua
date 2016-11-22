@@ -18,19 +18,21 @@ options = {
   map_builder = MAP_BUILDER,
   map_frame = "map",
   tracking_frame = "base_link",
-  published_frame = "base_link",
+  published_frame = "odom",
   odom_frame = "odom",
-  provide_odom_frame = true,
-  use_odometry = false,
-  use_laser_scan = false,
+  provide_odom_frame = false,
+  use_odometry = true,
+  use_laser_scan = true,
   use_multi_echo_laser_scan = false,
-  num_point_clouds = 2,
+  num_point_clouds = 0,
   lookup_transform_timeout_sec = 0.2,
   submap_publish_period_sec = 0.3,
   pose_publish_period_sec = 5e-3,
 }
 
-TRAJECTORY_BUILDER_3D.scans_per_accumulation = 160
+TRAJECTORY_BUILDER_3D.scans_per_accumulation = 90
+TRAJECTORY_BUILDER_3D.laser_min_range = 0.5
+TRAJECTORY_BUILDER_3D.laser_max_range = 20.
 
 MAP_BUILDER.use_trajectory_builder_3d = true
 MAP_BUILDER.num_background_threads = 7

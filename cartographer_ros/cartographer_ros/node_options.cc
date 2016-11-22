@@ -35,14 +35,12 @@ NodeOptions CreateNodeOptions(
   options.odom_frame = lua_parameter_dictionary->GetString("odom_frame");
   options.provide_odom_frame =
       lua_parameter_dictionary->GetBool("provide_odom_frame");
-  options.use_odometry_data =
-      lua_parameter_dictionary->GetBool("use_odometry_data");
-  options.use_horizontal_laser =
-      lua_parameter_dictionary->GetBool("use_horizontal_laser");
-  options.use_horizontal_multi_echo_laser =
-      lua_parameter_dictionary->GetBool("use_horizontal_multi_echo_laser");
-  options.num_lasers_3d =
-      lua_parameter_dictionary->GetNonNegativeInt("num_lasers_3d");
+  options.use_odometry = lua_parameter_dictionary->GetBool("use_odometry");
+  options.use_laser_scan = lua_parameter_dictionary->GetBool("use_laser_scan");
+  options.use_multi_echo_laser_scan =
+      lua_parameter_dictionary->GetBool("use_multi_echo_laser_scan");
+  options.num_point_clouds =
+      lua_parameter_dictionary->GetNonNegativeInt("num_point_clouds");
   options.lookup_transform_timeout_sec =
       lua_parameter_dictionary->GetDouble("lookup_transform_timeout_sec");
   options.submap_publish_period_sec =
@@ -50,18 +48,17 @@ NodeOptions CreateNodeOptions(
   options.pose_publish_period_sec =
       lua_parameter_dictionary->GetDouble("pose_publish_period_sec");
 
-  CHECK_EQ(options.use_horizontal_laser +
-               options.use_horizontal_multi_echo_laser +
-               (options.num_lasers_3d > 0),
+  CHECK_EQ(options.use_laser_scan + options.use_multi_echo_laser_scan +
+               (options.num_point_clouds > 0),
            1)
-      << "Configuration error: 'use_horizontal_laser', "
-         "'use_horizontal_multi_echo_laser' and 'num_lasers_3d' are "
+      << "Configuration error: 'use_laser_scan', "
+         "'use_multi_echo_laser_scan' and 'num_point_clouds' are "
          "mutually exclusive, but one is required.";
-  CHECK_EQ(
-      options.map_builder_options.use_trajectory_builder_2d(),
-      options.use_horizontal_laser || options.use_horizontal_multi_echo_laser);
-  CHECK_EQ(options.map_builder_options.use_trajectory_builder_3d(),
-           options.num_lasers_3d > 0);
+
+  if (options.map_builder_options.use_trajectory_builder_2d()) {
+    // Using point clouds is only supported in 3D.
+    CHECK_EQ(options.num_point_clouds, 0);
+  }
   return options;
 }
 

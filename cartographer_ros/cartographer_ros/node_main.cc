@@ -135,7 +135,7 @@ class Node {
   ::ros::NodeHandle node_handle_;
   ::ros::Subscriber imu_subscriber_;
   ::ros::Subscriber horizontal_laser_scan_subscriber_;
-  std::vector<::ros::Subscriber> laser_subscribers_3d_;
+  std::vector<::ros::Subscriber> point_cloud_subscribers_;
   ::ros::Subscriber odometry_subscriber_;
   ::ros::Publisher submap_list_publisher_;
   ::ros::ServiceServer submap_query_server_;
@@ -176,7 +176,7 @@ void Node::Initialize() {
   carto::common::MutexLocker lock(&mutex_);
 
   // For 2D SLAM, subscribe to exactly one horizontal laser.
-  if (options_.use_horizontal_laser) {
+  if (options_.use_laser_scan) {
     horizontal_laser_scan_subscriber_ = node_handle_.subscribe(
         kLaserScanTopic, kInfiniteSubscriberQueueSize,
         boost::function<void(const sensor_msgs::LaserScan::ConstPtr&)>(
@@ -185,7 +185,7 @@ void Node::Initialize() {
             }));
     expected_sensor_ids_.insert(kLaserScanTopic);
   }
-  if (options_.use_horizontal_multi_echo_laser) {
+  if (options_.use_multi_echo_laser_scan) {
     horizontal_laser_scan_subscriber_ = node_handle_.subscribe(
         kMultiEchoLaserScanTopic, kInfiniteSubscriberQueueSize,
         boost::function<void(const sensor_msgs::MultiEchoLaserScan::ConstPtr&)>(
@@ -196,14 +196,14 @@ void Node::Initialize() {
     expected_sensor_ids_.insert(kMultiEchoLaserScanTopic);
   }
 
-  // For 3D SLAM, subscribe to all 3D lasers.
-  if (options_.num_lasers_3d > 0) {
-    for (int i = 0; i < options_.num_lasers_3d; ++i) {
+  // For 3D SLAM, subscribe to all point clouds topics.
+  if (options_.num_point_clouds > 0) {
+    for (int i = 0; i < options_.num_point_clouds; ++i) {
       string topic = kPointCloud2Topic;
-      if (options_.num_lasers_3d > 1) {
+      if (options_.num_point_clouds > 1) {
         topic += "_" + std::to_string(i + 1);
       }
-      laser_subscribers_3d_.push_back(node_handle_.subscribe(
+      point_cloud_subscribers_.push_back(node_handle_.subscribe(
           topic, kInfiniteSubscriberQueueSize,
           boost::function<void(const sensor_msgs::PointCloud2::ConstPtr&)>(
               [this, topic](const sensor_msgs::PointCloud2::ConstPtr& msg) {
@@ -228,7 +228,7 @@ void Node::Initialize() {
     expected_sensor_ids_.insert(kImuTopic);
   }
 
-  if (options_.use_odometry_data) {
+  if (options_.use_odometry) {
     odometry_subscriber_ = node_handle_.subscribe(
         kOdometryTopic, kInfiniteSubscriberQueueSize,
         boost::function<void(const nav_msgs::Odometry::ConstPtr&)>(

@@ -38,19 +38,20 @@ The following range data topics are mutually exclusive. At least one source of
 range data is required.
 
 scan (`sensor_msgs/LaserScan`_)
-  Only supported in 2D. If *use_horizontal_laser* is enabled in the
-  :doc:`configuration`, this topic will be used as input for SLAM.
+  Supported in 2D and 3D (e.g. using an axially rotating planar laser scanner).
+  If *use_laser_scan* is enabled in the :doc:`configuration`, this topic will
+  be used as input for SLAM.
 
 echoes (`sensor_msgs/MultiEchoLaserScan`_)
-  Only supported in 2D. If *use_horizontal_multi_echo_laser* is enabled in the
-  :doc:`configuration`, this topic will be used as input for SLAM. Only the
-  first echo is used.
+  Supported in 2D and 3D (e.g. using an axially rotating planar laser scanner).
+  If *use_multi_echo_laser_scan* is enabled in the :doc:`configuration`, this
+  topic will be used as input for SLAM. Only the first echo is used.
 
 points2 (`sensor_msgs/PointCloud2`_)
-  Only supported in 3D. If *num_lasers_3d* is set to 1 in the
+  Only supported in 3D. If *num_point_clouds* is set to 1 in the
   :doc:`configuration`, this topic will be used as input for SLAM. If
-  *num_lasers_3d* is greater than 1, multiple numbered points2 topics (i.e.
-  points2_1, points2_2, points2_3, ...  up to and including *num_lasers_3d*)
+  *num_point_clouds* is greater than 1, multiple numbered points2 topics (i.e.
+  points2_1, points2_2, points2_3, ...  up to and including *num_point_clouds*)
   will be used as inputs for SLAM.
 
 The following additional sensor data topics may also be provided.
@@ -60,7 +61,7 @@ imu (`sensor_msgs/Imu`_)
   input for SLAM.
 
 odom (`nav_msgs/Odometry`_)
-  Supported in 2D (optional) and 3D (optional). If *use_odometry_data* is
+  Supported in 2D (optional) and 3D (optional). If *use_odometry* is
   enabled in the :doc:`configuration`, this topic will be used as input for
   SLAM.
 

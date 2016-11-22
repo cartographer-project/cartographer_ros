@@ -51,21 +51,21 @@ provide_odom_frame
   If enabled, the local, non-loop-closed, continuous pose will be published as
   the *odom_frame* in the *map_frame*.
 
-use_odometry_data
+use_odometry
   If enabled, subscribes to `nav_msgs/Odometry`_ on the topic "odom". Odometry
   must be provided in this case, and the information will be included in SLAM.
 
-use_horizontal_laser
+use_laser_scan
   If enabled, the node subscribes to `sensor_msgs/LaserScan`_ on the "scan"
-  topic. If 2D SLAM is used, either this or *use_horizontal_multi_echo_laser*
+  topic. If 2D SLAM is used, either this or *use_multi_echo_laser_scan*
   must be enabled.
 
-use_horizontal_multi_echo_laser
+use_multi_echo_laser_scan
   If enabled, the node subscribes to  `sensor_msgs/MultiEchoLaserScan`_ on the
-  "echoes" topic. If 2D SLAM is used, either this or *use_horizontal_laser*
+  "echoes" topic. If 2D SLAM is used, either this or *use_laser_scan*
   must be enabled.
 
-num_lasers_3d
+num_point_clouds
   Number of 3D lasers to subscribe to. Must be a positive value if and only if
   using 3D SLAM. Subscribes to `sensor_msgs/PointCloud2`_ on the "points2"
   topic for one laser, or topics "points2_1", "points2_2", etc for multiple

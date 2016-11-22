@@ -108,4 +108,10 @@ the demo:
     # Launch the PR2 demo.
     roslaunch cartographer_ros demo_pr2.launch bag_filename:=${HOME}/Downloads/2011-09-15-08-32-46.bag
 
+    # Download the Taurob Tracker example bag.
+    wget -P ~/Downloads https://storage.googleapis.com/cartographer-public-data/bags/taurob_tracker/taurob_tracker_simulation.bag
+
+    # Launch the Taurob Tracker demo.
+    roslaunch cartographer_ros demo_taurob_tracker.launch bag_filename:=${HOME}/Downloads/taurob_tracker_simulation.bag
+
 The launch files will bring up ``roscore`` and ``rviz`` automatically.

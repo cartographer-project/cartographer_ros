@@ -34,10 +34,10 @@ struct NodeOptions {
   string published_frame;
   string odom_frame;
   bool provide_odom_frame;
-  bool use_odometry_data;
-  bool use_horizontal_laser;
-  bool use_horizontal_multi_echo_laser;
-  int num_lasers_3d;
+  bool use_odometry;
+  bool use_laser_scan;
+  bool use_multi_echo_laser_scan;
+  int num_point_clouds;
   double lookup_transform_timeout_sec;
   double submap_publish_period_sec;
   double pose_publish_period_sec;
