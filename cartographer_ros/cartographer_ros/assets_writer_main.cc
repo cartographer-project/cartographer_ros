@@ -44,7 +44,7 @@ DEFINE_string(configuration_basename, "",
               "Basename, i.e. not containing any directory prefix, of the "
               "configuration file.");
 DEFINE_string(
-    urdf, "",
+    urdf_filename, "",
     "URDF file that contains static links for your sensor configuration.");
 DEFINE_string(bag_filename, "", "Bag to process.");
 DEFINE_string(
@@ -182,8 +182,9 @@ int main(int argc, char** argv) {
   CHECK(!FLAGS_bag_filename.empty()) << "-bag_filename is missing.";
   CHECK(!FLAGS_trajectory_filename.empty())
       << "-trajectory_filename is missing.";
+  CHECK(!FLAGS_urdf_filename.empty()) << "-urdf_filename is missing.";
 
   ::cartographer_ros::Run(FLAGS_trajectory_filename, FLAGS_bag_filename,
                           FLAGS_configuration_directory,
-                          FLAGS_configuration_basename, FLAGS_urdf);
+                          FLAGS_configuration_basename, FLAGS_urdf_filename);
 }
