@@ -57,7 +57,7 @@ DEFINE_string(configuration_basename, "",
               "configuration file.");
 
 namespace cartographer_ros {
-namespace  {
+namespace {
 
 void Run() {
   auto file_resolver = cartographer::common::make_unique<
