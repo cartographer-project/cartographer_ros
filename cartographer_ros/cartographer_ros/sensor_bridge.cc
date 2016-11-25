@@ -49,7 +49,8 @@ void SensorBridge::HandleOdometryMessage(
       time, CheckNoLeadingSlash(msg->child_frame_id));
   if (sensor_to_tracking != nullptr) {
     trajectory_builder_->AddOdometerData(
-        sensor_id, time, ToRigid3d(msg->pose.pose) * sensor_to_tracking->inverse());
+        sensor_id, time,
+        ToRigid3d(msg->pose.pose) * sensor_to_tracking->inverse());
   }
 }
 
@@ -79,7 +80,8 @@ void SensorBridge::HandleLaserScanMessage(
 }
 
 void SensorBridge::HandleMultiEchoLaserScanMessage(
-    const string& sensor_id, const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
+    const string& sensor_id,
+    const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
   HandleRangefinder(sensor_id, FromRos(msg->header.stamp), msg->header.frame_id,
                     carto::sensor::ToPointCloud(ToCartographer(*msg)));
 }
