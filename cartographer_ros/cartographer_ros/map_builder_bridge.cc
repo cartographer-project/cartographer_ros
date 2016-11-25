@@ -15,6 +15,7 @@
  */
 
 #include "cartographer_ros/map_builder_bridge.h"
+
 #include "cartographer_ros/assets_writer.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros_msgs/TrajectorySubmapList.h"

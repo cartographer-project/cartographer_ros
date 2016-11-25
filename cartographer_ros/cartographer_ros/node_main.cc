@@ -74,6 +74,7 @@ using carto::transform::Rigid3d;
 
 constexpr int kInfiniteSubscriberQueueSize = 0;
 constexpr int kLatestOnlyPublisherQueueSize = 1;
+constexpr double kTfBufferCacheTimeInSeconds = 1e6;
 
 // Unique default topic names. Expected to be remapped as needed.
 constexpr char kLaserScanTopic[] = "scan";
@@ -120,7 +121,6 @@ class Node {
   tf2_ros::TransformBroadcaster tf_broadcaster_;
 
   carto::common::Mutex mutex_;
-  // TODO(damonkohler): Hold mutex for destructor call???
   std::unique_ptr<MapBuilderBridge> map_builder_bridge_ GUARDED_BY(mutex_);
 
   ::ros::NodeHandle node_handle_;
@@ -146,8 +146,7 @@ class Node {
 
 Node::Node(const NodeOptions& options)
     : options_(options),
-      tf_buffer_(
-          ::ros::Duration(1000)),  // TODO(damonkohler): Infinite? Constant?,
+      tf_buffer_(::ros::Duration(kTfBufferCacheTimeInSeconds)),
       tf_(tf_buffer_) {}
 
 Node::~Node() {
