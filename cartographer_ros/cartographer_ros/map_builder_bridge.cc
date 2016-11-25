@@ -119,9 +119,10 @@ cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
 std::unique_ptr<nav_msgs::OccupancyGrid> MapBuilderBridge::BuildOccupancyGrid() {
   const auto trajectory_nodes =
       map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
-  auto occupancy_grid =
-      cartographer::common::make_unique<nav_msgs::OccupancyGrid>();
+  std::unique_ptr<nav_msgs::OccupancyGrid> occupancy_grid;
   if (!trajectory_nodes.empty()) {
+    occupancy_grid =
+        cartographer::common::make_unique<nav_msgs::OccupancyGrid>();
     cartographer_ros::BuildOccupancyGrid(trajectory_nodes, options_,
                                          occupancy_grid.get());
   }
