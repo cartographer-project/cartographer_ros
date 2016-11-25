@@ -20,6 +20,7 @@ google_library(map_builder_bridge
     assets_writer
     msg_conversion
     node_options
+    occupancy_grid
     sensor_bridge
     tf_bridge
 )
@@ -145,7 +146,6 @@ google_binary(cartographer_node
     map_builder_bridge
     msg_conversion
     node_options
-    occupancy_grid
     ros_log_sink
     sensor_bridge
     tf_bridge
