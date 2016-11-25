@@ -10,6 +10,20 @@ google_library(assets_writer
     occupancy_grid
 )
 
+google_library(map_builder_bridge
+  USES_CARTOGRAPHER
+  SRCS
+    map_builder_bridge.cc
+  HDRS
+    map_builder_bridge.h
+  DEPENDS
+    assets_writer
+    msg_conversion
+    node_options
+    sensor_bridge
+    tf_bridge
+)
+
 google_library(map_writer
   USES_GLOG
   USES_YAMLCPP
@@ -128,7 +142,7 @@ google_binary(cartographer_node
   SRCS
     node_main.cc
   DEPENDS
-    assets_writer
+    map_builder_bridge
     msg_conversion
     node_options
     occupancy_grid
