@@ -42,20 +42,20 @@ class SensorBridge {
   SensorBridge(const SensorBridge&) = delete;
   SensorBridge& operator=(const SensorBridge&) = delete;
 
-  void HandleOdometryMessage(const string& topic,
+  void HandleOdometryMessage(const string& sensor_id,
                              const nav_msgs::Odometry::ConstPtr& msg);
-  void HandleImuMessage(const string& topic,
+  void HandleImuMessage(const string& sensor_id,
                         const sensor_msgs::Imu::ConstPtr& msg);
-  void HandleLaserScanMessage(const string& topic,
+  void HandleLaserScanMessage(const string& sensor_id,
                               const sensor_msgs::LaserScan::ConstPtr& msg);
   void HandleMultiEchoLaserScanMessage(
-      const string& topic,
+      const string& sensor_id,
       const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg);
-  void HandlePointCloud2Message(const string& topic,
+  void HandlePointCloud2Message(const string& sensor_id,
                                 const sensor_msgs::PointCloud2::ConstPtr& msg);
 
  private:
-  void HandleRangefinder(const string& topic,
+  void HandleRangefinder(const string& sensor_id,
                          const ::cartographer::common::Time time,
                          const string& frame_id,
                          const ::cartographer::sensor::PointCloud& ranges);
