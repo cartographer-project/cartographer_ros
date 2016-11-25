@@ -110,8 +110,9 @@ Data
 
 This data was collected using a 3D LIDAR backpack at the
 `Deutsches Museum <https://en.wikipedia.org/wiki/Deutsches_Museum>`_.
-Each bag contains data from an IMU and data from two Velodyne VLP-16 LIDAR,
-one horizontally and one vertically (i.e. push broom) mounted.
+Each bag contains data from an IMU and from two Velodyne VLP-16 LIDARs,
+one mounted horizontally (i.e. spin axis up) and one vertically
+(i.e. push broom).
 
 3D data sets are still being curated and more will be made available soon.
 
