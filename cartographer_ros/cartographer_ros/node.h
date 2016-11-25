@@ -66,7 +66,9 @@ class Node {
   tf2_ros::TransformBroadcaster tf_broadcaster_;
 
   cartographer::common::Mutex mutex_;
-  std::unique_ptr<MapBuilderBridge> map_builder_bridge_ GUARDED_BY(mutex_);
+  MapBuilderBridge map_builder_bridge_ GUARDED_BY(mutex_);
+  int trajectory_id_ = -1;
+  std::unordered_set<string> expected_sensor_ids_;
 
   ::ros::NodeHandle node_handle_;
   ::ros::Subscriber imu_subscriber_;
