@@ -36,7 +36,6 @@
 #include "cartographer_ros/map_builder_bridge.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/node_options.h"
-#include "cartographer_ros/occupancy_grid.h"
 #include "cartographer_ros/ros_log_sink.h"
 #include "cartographer_ros/sensor_bridge.h"
 #include "cartographer_ros/tf_bridge.h"
@@ -48,7 +47,6 @@
 #include "cartographer_ros_msgs/TrajectorySubmapList.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
-#include "nav_msgs/OccupancyGrid.h"
 #include "nav_msgs/Odometry.h"
 #include "ros/ros.h"
 #include "ros/serialization.h"
@@ -362,15 +360,10 @@ void Node::SpinOccupancyGridThreadForever() {
     if (occupancy_grid_publisher_.getNumSubscribers() == 0) {
       continue;
     }
-    const auto trajectory_nodes = map_builder_bridge_->map_builder()
-                                      ->sparse_pose_graph()
-                                      ->GetTrajectoryNodes();
-    if (trajectory_nodes.empty()) {
-      continue;
+    const auto occupancy_grid = map_builder_bridge_->BuildOccupancyGrid();
+    if (occupancy_grid != nullptr) {
+      occupancy_grid_publisher_.publish(*occupancy_grid);
     }
-    ::nav_msgs::OccupancyGrid occupancy_grid;
-    BuildOccupancyGrid(trajectory_nodes, options_, &occupancy_grid);
-    occupancy_grid_publisher_.publish(occupancy_grid);
   }
 }
 

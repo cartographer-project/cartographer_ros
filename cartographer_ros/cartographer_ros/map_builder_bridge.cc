@@ -18,6 +18,7 @@
 
 #include "cartographer_ros/assets_writer.h"
 #include "cartographer_ros/msg_conversion.h"
+#include "cartographer_ros/occupancy_grid.h"
 #include "cartographer_ros_msgs/TrajectorySubmapList.h"
 
 namespace cartographer_ros {
@@ -113,6 +114,19 @@ cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
     submap_list.trajectory.push_back(trajectory_submap_list);
   }
   return submap_list;
+}
+
+std::unique_ptr<nav_msgs::OccupancyGrid> MapBuilderBridge::BuildOccupancyGrid() {
+  const auto trajectory_nodes =
+      map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
+  std::unique_ptr<nav_msgs::OccupancyGrid> occupancy_grid;
+  if (!trajectory_nodes.empty()) {
+    occupancy_grid =
+        cartographer::common::make_unique<nav_msgs::OccupancyGrid>();
+    cartographer_ros::BuildOccupancyGrid(trajectory_nodes, options_,
+                                         occupancy_grid.get());
+  }
+  return occupancy_grid;
 }
 
 }  // namespace cartographer_ros
