@@ -169,7 +169,8 @@ void Node::Initialize() {
         kLaserScanTopic, kInfiniteSubscriberQueueSize,
         boost::function<void(const sensor_msgs::LaserScan::ConstPtr&)>(
             [this](const sensor_msgs::LaserScan::ConstPtr& msg) {
-              map_builder_bridge_->sensor_bridge()->HandleLaserScanMessage(kLaserScanTopic, msg);
+              map_builder_bridge_->sensor_bridge()->HandleLaserScanMessage(
+                  kLaserScanTopic, msg);
             }));
     expected_sensor_ids.insert(kLaserScanTopic);
   }
@@ -178,8 +179,9 @@ void Node::Initialize() {
         kMultiEchoLaserScanTopic, kInfiniteSubscriberQueueSize,
         boost::function<void(const sensor_msgs::MultiEchoLaserScan::ConstPtr&)>(
             [this](const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
-              map_builder_bridge_->sensor_bridge()->HandleMultiEchoLaserScanMessage(
-                  kMultiEchoLaserScanTopic, msg);
+              map_builder_bridge_->sensor_bridge()
+                  ->HandleMultiEchoLaserScanMessage(kMultiEchoLaserScanTopic,
+                                                    msg);
             }));
     expected_sensor_ids.insert(kMultiEchoLaserScanTopic);
   }
@@ -195,7 +197,8 @@ void Node::Initialize() {
           topic, kInfiniteSubscriberQueueSize,
           boost::function<void(const sensor_msgs::PointCloud2::ConstPtr&)>(
               [this, topic](const sensor_msgs::PointCloud2::ConstPtr& msg) {
-                map_builder_bridge_->sensor_bridge()->HandlePointCloud2Message(topic, msg);
+                map_builder_bridge_->sensor_bridge()->HandlePointCloud2Message(
+                    topic, msg);
               })));
       expected_sensor_ids.insert(topic);
     }
@@ -211,7 +214,8 @@ void Node::Initialize() {
         kImuTopic, kInfiniteSubscriberQueueSize,
         boost::function<void(const sensor_msgs::Imu::ConstPtr& msg)>(
             [this](const sensor_msgs::Imu::ConstPtr& msg) {
-              map_builder_bridge_->sensor_bridge()->HandleImuMessage(kImuTopic, msg);
+              map_builder_bridge_->sensor_bridge()->HandleImuMessage(kImuTopic,
+                                                                     msg);
             }));
     expected_sensor_ids.insert(kImuTopic);
   }
@@ -221,7 +225,8 @@ void Node::Initialize() {
         kOdometryTopic, kInfiniteSubscriberQueueSize,
         boost::function<void(const nav_msgs::Odometry::ConstPtr&)>(
             [this](const nav_msgs::Odometry::ConstPtr& msg) {
-              map_builder_bridge_->sensor_bridge()->HandleOdometryMessage(kOdometryTopic, msg);
+              map_builder_bridge_->sensor_bridge()->HandleOdometryMessage(
+                  kOdometryTopic, msg);
             }));
     expected_sensor_ids.insert(kOdometryTopic);
   }
