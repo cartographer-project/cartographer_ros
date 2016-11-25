@@ -14,39 +14,15 @@
  * limitations under the License.
  */
 
-#include <chrono>
-#include <map>
-#include <queue>
 #include <string>
 #include <vector>
 
-#include "Eigen/Core"
 #include "cartographer/common/configuration_file_resolver.h"
 #include "cartographer/common/lua_parameter_dictionary.h"
 #include "cartographer/common/make_unique.h"
-#include "cartographer/common/mutex.h"
 #include "cartographer/common/port.h"
-#include "cartographer/common/time.h"
-#include "cartographer/mapping/proto/submap_visualization.pb.h"
-#include "cartographer/mapping/sparse_pose_graph.h"
-#include "cartographer/sensor/point_cloud.h"
-#include "cartographer/transform/rigid_transform.h"
-#include "cartographer/transform/transform.h"
-#include "cartographer_ros/map_builder_bridge.h"
-#include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/node.h"
-#include "cartographer_ros/node_options.h"
 #include "cartographer_ros/ros_log_sink.h"
-#include "cartographer_ros/sensor_bridge.h"
-#include "cartographer_ros/tf_bridge.h"
-#include "cartographer_ros/time_conversion.h"
-#include "gflags/gflags.h"
-#include "glog/logging.h"
-#include "nav_msgs/Odometry.h"
-#include "ros/ros.h"
-#include "ros/serialization.h"
-#include "sensor_msgs/PointCloud2.h"
-#include "tf2_eigen/tf2_eigen.h"
 
 DEFINE_string(configuration_directory, "",
               "First directory in which configuration files are searched, "
@@ -57,7 +33,7 @@ DEFINE_string(configuration_basename, "",
               "configuration file.");
 
 namespace cartographer_ros {
-namespace {
+namespace  {
 
 void Run() {
   auto file_resolver = cartographer::common::make_unique<

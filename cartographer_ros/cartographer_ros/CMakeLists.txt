@@ -49,7 +49,6 @@ google_library(msg_conversion
 google_library(node
   USES_CARTOGRAPHER
   USES_EIGEN
-  USES_GFLAGS
   USES_GLOG
   SRCS
     node.cc
@@ -59,7 +58,6 @@ google_library(node
     map_builder_bridge
     msg_conversion
     node_options
-    ros_log_sink
     sensor_bridge
     tf_bridge
     time_conversion
@@ -156,20 +154,11 @@ google_binary(cartographer_assets_writer
 
 google_binary(cartographer_node
   USES_CARTOGRAPHER
-  USES_EIGEN
-  USES_GFLAGS
-  USES_GLOG
   SRCS
     node_main.cc
   DEPENDS
-    map_builder_bridge
-    msg_conversion
     node
-    node_options
     ros_log_sink
-    sensor_bridge
-    tf_bridge
-    time_conversion
 )
 
 install(TARGETS cartographer_node

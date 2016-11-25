@@ -21,8 +21,6 @@
 #include <vector>
 
 #include "Eigen/Core"
-#include "cartographer/common/configuration_file_resolver.h"
-#include "cartographer/common/lua_parameter_dictionary.h"
 #include "cartographer/common/make_unique.h"
 #include "cartographer/common/port.h"
 #include "cartographer/common/time.h"
@@ -32,11 +30,9 @@
 #include "cartographer/transform/rigid_transform.h"
 #include "cartographer/transform/transform.h"
 #include "cartographer_ros/msg_conversion.h"
-#include "cartographer_ros/ros_log_sink.h"
 #include "cartographer_ros/sensor_bridge.h"
 #include "cartographer_ros/tf_bridge.h"
 #include "cartographer_ros/time_conversion.h"
-#include "gflags/gflags.h"
 #include "glog/logging.h"
 #include "nav_msgs/Odometry.h"
 #include "ros/serialization.h"
