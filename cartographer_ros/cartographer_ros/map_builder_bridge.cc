@@ -40,32 +40,6 @@ MapBuilderBridge::~MapBuilderBridge() {
   map_builder_.FinishTrajectory(trajectory_id_);
 }
 
-void MapBuilderBridge::HandleOdometryMessage(
-    const string& sensor_id, const nav_msgs::Odometry::ConstPtr& msg) {
-  sensor_bridge_->HandleOdometryMessage(sensor_id, msg);
-}
-
-void MapBuilderBridge::HandleImuMessage(const string& sensor_id,
-                                        const sensor_msgs::Imu::ConstPtr& msg) {
-  sensor_bridge_->HandleImuMessage(sensor_id, msg);
-}
-
-void MapBuilderBridge::HandleLaserScanMessage(
-    const string& sensor_id, const sensor_msgs::LaserScan::ConstPtr& msg) {
-  sensor_bridge_->HandleLaserScanMessage(sensor_id, msg);
-}
-
-void MapBuilderBridge::HandleMultiEchoLaserScanMessage(
-    const string& sensor_id,
-    const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
-  sensor_bridge_->HandleMultiEchoLaserScanMessage(sensor_id, msg);
-}
-
-void MapBuilderBridge::HandlePointCloud2Message(
-    const string& sensor_id, const sensor_msgs::PointCloud2::ConstPtr& msg) {
-  sensor_bridge_->HandlePointCloud2Message(sensor_id, msg);
-}
-
 bool MapBuilderBridge::HandleSubmapQuery(
     cartographer_ros_msgs::SubmapQuery::Request& request,
     cartographer_ros_msgs::SubmapQuery::Response& response) {

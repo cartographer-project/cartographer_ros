@@ -38,17 +38,6 @@ class MapBuilderBridge {
   MapBuilderBridge(const MapBuilderBridge&) = delete;
   MapBuilderBridge& operator=(const MapBuilderBridge&) = delete;
 
-  void HandleOdometryMessage(const string& sensor_id,
-                             const nav_msgs::Odometry::ConstPtr& msg);
-  void HandleImuMessage(const string& sensor_id,
-                        const sensor_msgs::Imu::ConstPtr& msg);
-  void HandleLaserScanMessage(const string& sensor_id,
-                              const sensor_msgs::LaserScan::ConstPtr& msg);
-  void HandleMultiEchoLaserScanMessage(
-      const string& sensor_id,
-      const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg);
-  void HandlePointCloud2Message(const string& sensor_id,
-                                const sensor_msgs::PointCloud2::ConstPtr& msg);
   bool HandleSubmapQuery(
       cartographer_ros_msgs::SubmapQuery::Request& request,
       cartographer_ros_msgs::SubmapQuery::Response& response);
@@ -57,6 +46,8 @@ class MapBuilderBridge {
       cartographer_ros_msgs::FinishTrajectory::Response& response);
 
   cartographer_ros_msgs::SubmapList GetSubmapList();
+
+  SensorBridge* sensor_bridge() { return sensor_bridge_.get(); }
 
   // TODO(damonkohler): Remove these accessors.
   int trajectory_id() const { return trajectory_id_; }
