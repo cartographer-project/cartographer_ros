@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+#ifndef CARTOGRAPHER_ROS_MAP_BUILDER_BRIDGE_H_
+#define CARTOGRAPHER_ROS_MAP_BUILDER_BRIDGE_H_
+
 #include <memory>
 #include <unordered_set>
 
@@ -69,3 +72,5 @@ class MapBuilderBridge {
 };
 
 }  // namespace cartographer_ros
+
+#endif  // CARTOGRAPHER_ROS_MAP_BUILDER_BRIDGE_H_

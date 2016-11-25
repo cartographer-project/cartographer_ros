@@ -46,6 +46,25 @@ google_library(msg_conversion
     time_conversion
 )
 
+google_library(node
+  USES_CARTOGRAPHER
+  USES_EIGEN
+  USES_GFLAGS
+  USES_GLOG
+  SRCS
+    node.cc
+  HDRS
+    node.h
+  DEPENDS
+    map_builder_bridge
+    msg_conversion
+    node_options
+    ros_log_sink
+    sensor_bridge
+    tf_bridge
+    time_conversion
+)
+
 google_library(node_options
   USES_CARTOGRAPHER
   USES_GLOG
@@ -145,6 +164,7 @@ google_binary(cartographer_node
   DEPENDS
     map_builder_bridge
     msg_conversion
+    node
     node_options
     ros_log_sink
     sensor_bridge
