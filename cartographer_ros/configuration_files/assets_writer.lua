@@ -1,6 +1,5 @@
 VOXEL_SIZE = 5e-2
 
-
 options = {
   tracking_frame = "base_link",
   pipeline = {

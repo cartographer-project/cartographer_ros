@@ -51,15 +51,15 @@ void Write3DAssets(const std::vector<::cartographer::mapping::TrajectoryNode>&
   carto::io::XRayPointsProcessor xy_xray_points_processor(
       voxel_size, carto::transform::Rigid3f::Rotation(
                       Eigen::AngleAxisf(-M_PI / 2.f, Eigen::Vector3f::UnitY())),
-      {}, stem + "_xray_xy.png", &null_points_processor);
+      {}, stem + "_xray_xy", &null_points_processor);
   carto::io::XRayPointsProcessor yz_xray_points_processor(
       voxel_size, carto::transform::Rigid3f::Rotation(
                       Eigen::AngleAxisf(M_PI, Eigen::Vector3f::UnitZ())),
-      {}, stem + "_xray_yz.png", &xy_xray_points_processor);
+      {}, stem + "_xray_yz", &xy_xray_points_processor);
   carto::io::XRayPointsProcessor xz_xray_points_processor(
       voxel_size, carto::transform::Rigid3f::Rotation(
                       Eigen::AngleAxisf(-M_PI / 2.f, Eigen::Vector3f::UnitZ())),
-      {}, stem + "_xray_xz.png", &yz_xray_points_processor);
+      {}, stem + "_xray_xz", &yz_xray_points_processor);
   carto::io::PlyWritingPointsProcessor ply_writing_points_processor(
       stem + ".ply", &xz_xray_points_processor);
 

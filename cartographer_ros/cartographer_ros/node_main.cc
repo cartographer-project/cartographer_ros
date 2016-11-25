@@ -299,22 +299,29 @@ bool Node::HandleSubmapQuery(
 bool Node::HandleFinishTrajectory(
     ::cartographer_ros_msgs::FinishTrajectory::Request& request,
     ::cartographer_ros_msgs::FinishTrajectory::Response& response) {
+  LOG(INFO) << "Finishing trajectory...";
+
   carto::common::MutexLocker lock(&mutex_);
-  map_builder_.FinishTrajectory(trajectory_id_);
+  const int previous_trajectory_id = trajectory_id_;
+
+  trajectory_id_ =
+      map_builder_.AddTrajectoryBuilder(expected_sensor_ids_);
+  sensor_bridge_ = carto::common::make_unique<SensorBridge>(
+      &tf_bridge_, map_builder_.GetTrajectoryBuilder(trajectory_id_));
+
+  map_builder_.FinishTrajectory(previous_trajectory_id);
   map_builder_.sparse_pose_graph()->RunFinalOptimization();
 
   const auto trajectory_nodes =
       map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
   if (trajectory_nodes.empty()) {
-    LOG(WARNING) << "Map is empty and will not be saved.";
-    return true;
+    LOG(WARNING) << "No data collected and no assets will be written.";
+  } else {
+    LOG(INFO) << "Writing assets...";
+    WriteAssets(trajectory_nodes, options_, request.stem);
   }
-  WriteAssets(trajectory_nodes, options_, request.stem);
 
-  // Start a new trajectory.
-  trajectory_id_ = map_builder_.AddTrajectoryBuilder(expected_sensor_ids_);
-  sensor_bridge_ = carto::common::make_unique<SensorBridge>(
-      &tf_bridge_, map_builder_.GetTrajectoryBuilder(trajectory_id_));
+  LOG(INFO) << "New trajectory started.";
   return true;
 }
 

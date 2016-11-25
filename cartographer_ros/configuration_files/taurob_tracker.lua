@@ -30,14 +30,15 @@ options = {
   pose_publish_period_sec = 5e-3,
 }
 
-TRAJECTORY_BUILDER_3D.scans_per_accumulation = 90
+TRAJECTORY_BUILDER_3D.scans_per_accumulation = 180
 TRAJECTORY_BUILDER_3D.laser_min_range = 0.5
 TRAJECTORY_BUILDER_3D.laser_max_range = 20.
+TRAJECTORY_BUILDER_3D.submaps.num_laser_fans = 40.
 
 MAP_BUILDER.use_trajectory_builder_3d = true
 MAP_BUILDER.num_background_threads = 7
 MAP_BUILDER.sparse_pose_graph.optimization_problem.huber_scale = 5e2
-MAP_BUILDER.sparse_pose_graph.optimize_every_n_scans = 320
+MAP_BUILDER.sparse_pose_graph.optimize_every_n_scans = 40
 MAP_BUILDER.sparse_pose_graph.constraint_builder.sampling_ratio = 0.03
 MAP_BUILDER.sparse_pose_graph.optimization_problem.ceres_solver_options.max_num_iterations = 10
 -- Reuse the coarser 3D voxel filter to speed up the computation of loop closure
