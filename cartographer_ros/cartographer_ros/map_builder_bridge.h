@@ -25,6 +25,7 @@
 #include "cartographer_ros_msgs/SubmapEntry.h"
 #include "cartographer_ros_msgs/SubmapList.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
+#include "nav_msgs/OccupancyGrid.h"
 
 namespace cartographer_ros {
 
@@ -46,6 +47,7 @@ class MapBuilderBridge {
       cartographer_ros_msgs::FinishTrajectory::Response& response);
 
   cartographer_ros_msgs::SubmapList GetSubmapList();
+  std::unique_ptr<nav_msgs::OccupancyGrid> BuildOccupancyGrid();
 
   SensorBridge* sensor_bridge() { return sensor_bridge_.get(); }
 
