@@ -108,7 +108,45 @@ Data
 3D Cartographer Backpack – Deutsches Museum
 ===========================================
 
-3D data sets are still being curated and will be made available soon.
+This data was collected using a 3D LIDAR backpack at the
+`Deutsches Museum <https://en.wikipedia.org/wiki/Deutsches_Museum>`_.
+Each bag contains data from an IMU and from two Velodyne VLP-16 LIDARs,
+one mounted horizontally (i.e. spin axis up) and one vertically
+(i.e. push broom).
+
+3D data sets are still being curated and more will be made available soon.
+
+License
+-------
+
+Copyright 2016 The Cartographer Authors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Data
+----
+
+=================================================================================================================================== ======== ====== ===============================
+`ROS Bag <http://wiki.ros.org/Bags>`_                                                                                               Duration Size   Known Issues
+=================================================================================================================================== ======== ====== ===============================
+`b3-2016-01-19-13-50-11.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-01-19-13-50-11.bag>`_ 318 s    2.5 GB
+`b3-2016-04-05-13-54-42.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-04-05-13-54-42.bag>`_ 829 s    6.1 GB
+`b3-2016-04-05-14-14-00.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-04-05-14-14-00.bag>`_ 1221s    9.1 GB
+`b3-2016-04-05-15-51-36.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-04-05-15-51-36.bag>`_ 30 s     231 MB
+`b3-2016-04-27-12-56-11.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-04-27-12-56-11.bag>`_ 2905 s   21 GB
+`b3-2016-05-10-12-56-33.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-05-10-12-56-33.bag>`_ 1767 s   13 GB
+`b3-2016-06-07-12-42-49.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-06-07-12-42-49.bag>`_ 596 s    3.9 GB 3 gaps in horizontal laser data
+=================================================================================================================================== ======== ====== ===============================
 
 PR2 – Willow Garage
 ===================
