@@ -315,7 +315,7 @@ bool Node::HandleFinishTrajectory(
   const auto trajectory_nodes =
       map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
   if (trajectory_nodes.empty()) {
-    LOG(WARNING) << "Empty trajectory, no assets will be written.";
+    LOG(WARNING) << "No data collected and no assets will be written.";
   } else {
     LOG(INFO) << "Writing assets...";
     WriteAssets(trajectory_nodes, options_, request.stem);
