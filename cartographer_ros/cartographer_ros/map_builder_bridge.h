@@ -35,13 +35,13 @@ namespace cartographer_ros {
 
 class MapBuilderBridge {
  public:
-  MapBuilderBridge(const NodeOptions& options);
+  MapBuilderBridge(const NodeOptions& options, tf2_ros::Buffer* tf_buffer);
 
   MapBuilderBridge(const MapBuilderBridge&) = delete;
   MapBuilderBridge& operator=(const MapBuilderBridge&) = delete;
 
   int AddTrajectory(const std::unordered_set<string>& expected_sensor_ids,
-                    const string& tracking_frame, tf2_ros::Buffer* tf_buffer);
+                    const string& tracking_frame);
   void FinishTrajectory(int trajectory_id);
   void WriteAssets(const string& stem);
 
@@ -62,6 +62,7 @@ class MapBuilderBridge {
   std::deque<cartographer::mapping::TrajectoryNode::ConstantData>
       constant_data_;
   cartographer::mapping::MapBuilder map_builder_;
+  tf2_ros::Buffer* const tf_buffer_;
   std::unordered_map<int, std::unique_ptr<TfBridge>> tf_bridges_;
   std::unordered_map<int, std::unique_ptr<SensorBridge>> sensor_bridges_;
 };

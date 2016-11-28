@@ -70,9 +70,8 @@ Node::Node(const NodeOptions& options)
 Node::~Node() {
   {
     carto::common::MutexLocker lock(&mutex_);
-    if (trajectory_id_ >= 0) {
-      map_builder_bridge_.FinishTrajectory(trajectory_id_);
-    }
+    CHECK_GE(trajectory_id_, 0);
+    map_builder_bridge_.FinishTrajectory(trajectory_id_);
     terminating_ = true;
   }
   if (occupancy_grid_thread_.joinable()) {

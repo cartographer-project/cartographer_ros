@@ -23,13 +23,15 @@
 
 namespace cartographer_ros {
 
-MapBuilderBridge::MapBuilderBridge(const NodeOptions& options)
+MapBuilderBridge::MapBuilderBridge(const NodeOptions& options,
+                                   tf2_ros::Buffer* const tf_buffer)
     : options_(options),
+      tf_buffer_(tf_buffer),
       map_builder_(options.map_builder_options, &constant_data_) {}
 
 int MapBuilderBridge::AddTrajectory(
     const std::unordered_set<string>& expected_sensor_ids,
-    const string& tracking_frame, tf2_ros::Buffer* const tf_buffer) {
+    const string& tracking_frame) {
   const int trajectory_id =
       map_builder_.AddTrajectoryBuilder(expected_sensor_ids);
   LOG(INFO) << "Added trajectory with ID '" << trajectory_id << "'.";
@@ -37,7 +39,7 @@ int MapBuilderBridge::AddTrajectory(
   CHECK_EQ(tf_bridges_.count(trajectory_id), 0);
   CHECK_EQ(sensor_bridges_.count(trajectory_id), 0);
   tf_bridges_[trajectory_id] = cartographer::common::make_unique<TfBridge>(
-      tracking_frame, options_.lookup_transform_timeout_sec, tf_buffer);
+      tracking_frame, options_.lookup_transform_timeout_sec, tf_buffer_);
   sensor_bridges_[trajectory_id] =
       cartographer::common::make_unique<SensorBridge>(
           tf_bridge(trajectory_id),
