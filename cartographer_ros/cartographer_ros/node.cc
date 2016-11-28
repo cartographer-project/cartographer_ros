@@ -244,8 +244,9 @@ void Node::PublishPoseAndScanMatchedPointCloud(
   }
 
   const auto published_to_tracking =
-      map_builder_bridge_.tf_bridge(trajectory_id_)
-          ->LookupToTracking(last_pose_estimate.time, options_.published_frame);
+      map_builder_bridge_.sensor_bridge(trajectory_id_)
+          ->tf_bridge()
+          .LookupToTracking(last_pose_estimate.time, options_.published_frame);
   if (published_to_tracking != nullptr) {
     if (options_.provide_odom_frame) {
       std::vector<geometry_msgs::TransformStamped> stamped_transforms;
