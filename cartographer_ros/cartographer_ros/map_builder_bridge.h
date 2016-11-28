@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <unordered_set>
+#include <unordered_map>
 
 #include "cartographer/mapping/map_builder.h"
 #include "cartographer_ros/node_options.h"
@@ -34,30 +35,26 @@ namespace cartographer_ros {
 
 class MapBuilderBridge {
  public:
-  MapBuilderBridge(const NodeOptions& options,
-                   const std::unordered_set<string>& expected_sensor_ids,
-                   tf2_ros::Buffer* tf_buffer);
-  ~MapBuilderBridge();
+  MapBuilderBridge(const NodeOptions& options, tf2_ros::Buffer* tf_buffer);
 
   MapBuilderBridge(const MapBuilderBridge&) = delete;
   MapBuilderBridge& operator=(const MapBuilderBridge&) = delete;
 
+  int AddTrajectory(const std::unordered_set<string>& expected_sensor_ids,
+                    const string& tracking_frame);
+  void FinishTrajectory(int trajectory_id);
+  void WriteAssets(const string& stem);
+
   bool HandleSubmapQuery(
       cartographer_ros_msgs::SubmapQuery::Request& request,
       cartographer_ros_msgs::SubmapQuery::Response& response);
-  bool HandleFinishTrajectory(
-      cartographer_ros_msgs::FinishTrajectory::Request& request,
-      cartographer_ros_msgs::FinishTrajectory::Response& response);
 
   cartographer_ros_msgs::SubmapList GetSubmapList();
   std::unique_ptr<nav_msgs::OccupancyGrid> BuildOccupancyGrid();
 
-  SensorBridge* sensor_bridge() { return sensor_bridge_.get(); }
-
-  // TODO(damonkohler): Remove these accessors.
-  int trajectory_id() const { return trajectory_id_; }
-  TfBridge* tf_bridge() { return &tf_bridge_; }
-  cartographer::mapping::MapBuilder* map_builder() { return &map_builder_; }
+  SensorBridge* sensor_bridge(int trajectory_id);
+  TfBridge* tf_bridge(int trajectory_id);
+  cartographer::mapping::MapBuilder* map_builder();
 
  private:
   const NodeOptions options_;
@@ -65,10 +62,9 @@ class MapBuilderBridge {
   std::deque<cartographer::mapping::TrajectoryNode::ConstantData>
       constant_data_;
   cartographer::mapping::MapBuilder map_builder_;
-  std::unordered_set<string> expected_sensor_ids_;
-  int trajectory_id_ = -1;
-  TfBridge tf_bridge_;
-  std::unique_ptr<SensorBridge> sensor_bridge_;
+  tf2_ros::Buffer* const tf_buffer_;
+  std::unordered_map<int, std::unique_ptr<TfBridge>> tf_bridges_;
+  std::unordered_map<int, std::unique_ptr<SensorBridge>> sensor_bridges_;
 };
 
 }  // namespace cartographer_ros

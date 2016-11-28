@@ -23,22 +23,50 @@
 
 namespace cartographer_ros {
 
-MapBuilderBridge::MapBuilderBridge(
-    const NodeOptions& options,
-    const std::unordered_set<string>& expected_sensor_ids,
-    tf2_ros::Buffer* const tf_buffer)
+MapBuilderBridge::MapBuilderBridge(const NodeOptions& options,
+                                   tf2_ros::Buffer* const tf_buffer)
     : options_(options),
       map_builder_(options.map_builder_options, &constant_data_),
-      expected_sensor_ids_(expected_sensor_ids),
-      trajectory_id_(map_builder_.AddTrajectoryBuilder(expected_sensor_ids_)),
-      tf_bridge_(options_.tracking_frame, options_.lookup_transform_timeout_sec,
-                 tf_buffer) {
-  sensor_bridge_ = cartographer::common::make_unique<SensorBridge>(
-      &tf_bridge_, map_builder_.GetTrajectoryBuilder(trajectory_id_));
+      tf_buffer_(tf_buffer) {}
+
+int MapBuilderBridge::AddTrajectory(
+    const std::unordered_set<string>& expected_sensor_ids,
+    const string& tracking_frame) {
+  const int trajectory_id =
+      map_builder_.AddTrajectoryBuilder(expected_sensor_ids);
+  LOG(INFO) << "Added trajectory with ID '" << trajectory_id << "'.";
+
+  CHECK_EQ(tf_bridges_.count(trajectory_id), 0);
+  CHECK_EQ(sensor_bridges_.count(trajectory_id), 0);
+  tf_bridges_[trajectory_id] = cartographer::common::make_unique<TfBridge>(
+      tracking_frame, options_.lookup_transform_timeout_sec, tf_buffer_);
+  sensor_bridges_[trajectory_id] =
+      cartographer::common::make_unique<SensorBridge>(
+          tf_bridge(trajectory_id),
+          map_builder_.GetTrajectoryBuilder(trajectory_id));
+  return trajectory_id;
 }
 
-MapBuilderBridge::~MapBuilderBridge() {
-  map_builder_.FinishTrajectory(trajectory_id_);
+void MapBuilderBridge::FinishTrajectory(const int trajectory_id) {
+  LOG(INFO) << "Finishing trajectory with ID '" << trajectory_id << "'...";
+
+  CHECK_EQ(tf_bridges_.count(trajectory_id), 1);
+  CHECK_EQ(sensor_bridges_.count(trajectory_id), 1);
+  map_builder_.FinishTrajectory(trajectory_id);
+  map_builder_.sparse_pose_graph()->RunFinalOptimization();
+  tf_bridges_.erase(trajectory_id);
+  sensor_bridges_.erase(trajectory_id);
+}
+
+void MapBuilderBridge::WriteAssets(const string& stem) {
+  const auto trajectory_nodes =
+      map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
+  if (trajectory_nodes.empty()) {
+    LOG(WARNING) << "No data was collected and no assets will be written.";
+  } else {
+    LOG(INFO) << "Writing assets to '" << stem << "'...";
+    cartographer_ros::WriteAssets(trajectory_nodes, options_, stem);
+  }
 }
 
 bool MapBuilderBridge::HandleSubmapQuery(
@@ -60,32 +88,6 @@ bool MapBuilderBridge::HandleSubmapQuery(
   response.resolution = response_proto.resolution();
   response.slice_pose = ToGeometryMsgPose(
       cartographer::transform::ToRigid3(response_proto.slice_pose()));
-  return true;
-}
-
-bool MapBuilderBridge::HandleFinishTrajectory(
-    cartographer_ros_msgs::FinishTrajectory::Request& request,
-    cartographer_ros_msgs::FinishTrajectory::Response& response) {
-  LOG(INFO) << "Finishing trajectory...";
-
-  const int previous_trajectory_id = trajectory_id_;
-  trajectory_id_ = map_builder_.AddTrajectoryBuilder(expected_sensor_ids_);
-  sensor_bridge_ = cartographer::common::make_unique<SensorBridge>(
-      &tf_bridge_, map_builder_.GetTrajectoryBuilder(trajectory_id_));
-
-  map_builder_.FinishTrajectory(previous_trajectory_id);
-  map_builder_.sparse_pose_graph()->RunFinalOptimization();
-
-  const auto trajectory_nodes =
-      map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
-  if (trajectory_nodes.empty()) {
-    LOG(WARNING) << "No data collected and no assets will be written.";
-  } else {
-    LOG(INFO) << "Writing assets...";
-    WriteAssets(trajectory_nodes, options_, request.stem);
-  }
-
-  LOG(INFO) << "New trajectory started.";
   return true;
 }
 
@@ -128,6 +130,18 @@ MapBuilderBridge::BuildOccupancyGrid() {
                                          occupancy_grid.get());
   }
   return occupancy_grid;
+}
+
+SensorBridge* MapBuilderBridge::sensor_bridge(const int trajectory_id) {
+  return sensor_bridges_.at(trajectory_id).get();
+}
+
+TfBridge* MapBuilderBridge::tf_bridge(const int trajectory_id) {
+  return tf_bridges_.at(trajectory_id).get();
+}
+
+cartographer::mapping::MapBuilder* MapBuilderBridge::map_builder() {
+  return &map_builder_;
 }
 
 }  // namespace cartographer_ros
