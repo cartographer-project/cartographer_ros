@@ -65,7 +65,7 @@ Node::Node(const NodeOptions& options)
     : options_(options),
       tf_buffer_(::ros::Duration(kTfBufferCacheTimeInSeconds)),
       tf_(tf_buffer_),
-      map_builder_bridge_(options_) {}
+      map_builder_bridge_(options_, &tf_buffer_) {}
 
 Node::~Node() {
   {
@@ -149,8 +149,8 @@ void Node::Initialize() {
     expected_sensor_ids_.insert(kOdometryTopic);
   }
 
-  trajectory_id_ = map_builder_bridge_.AddTrajectory(
-      expected_sensor_ids_, options_.tracking_frame, &tf_buffer_);
+  trajectory_id_ = map_builder_bridge_.AddTrajectory(expected_sensor_ids_,
+                                                     options_.tracking_frame);
 
   submap_list_publisher_ =
       node_handle_.advertise<::cartographer_ros_msgs::SubmapList>(
@@ -194,8 +194,8 @@ bool Node::HandleFinishTrajectory(
     ::cartographer_ros_msgs::FinishTrajectory::Response&) {
   carto::common::MutexLocker lock(&mutex_);
   const int previous_trajectory_id = trajectory_id_;
-  trajectory_id_ = map_builder_bridge_.AddTrajectory(
-      expected_sensor_ids_, options_.tracking_frame, &tf_buffer_);
+  trajectory_id_ = map_builder_bridge_.AddTrajectory(expected_sensor_ids_,
+                                                     options_.tracking_frame);
   map_builder_bridge_.FinishTrajectory(previous_trajectory_id);
   map_builder_bridge_.WriteAssets(request.stem);
   return true;
