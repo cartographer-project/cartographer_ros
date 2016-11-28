@@ -116,7 +116,8 @@ cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
   return submap_list;
 }
 
-std::unique_ptr<nav_msgs::OccupancyGrid> MapBuilderBridge::BuildOccupancyGrid() {
+std::unique_ptr<nav_msgs::OccupancyGrid>
+MapBuilderBridge::BuildOccupancyGrid() {
   const auto trajectory_nodes =
       map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
   std::unique_ptr<nav_msgs::OccupancyGrid> occupancy_grid;
