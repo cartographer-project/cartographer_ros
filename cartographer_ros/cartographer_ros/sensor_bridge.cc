@@ -38,14 +38,16 @@ const string& CheckNoLeadingSlash(const string& frame_id) {
 }  // namespace
 
 SensorBridge::SensorBridge(
-    const TfBridge* const tf_bridge,
+    const string& tracking_frame, const double lookup_transform_timeout_sec,
+    tf2_ros::Buffer* const tf_buffer,
     carto::mapping::TrajectoryBuilder* const trajectory_builder)
-    : tf_bridge_(tf_bridge), trajectory_builder_(trajectory_builder) {}
+    : tf_bridge_(tracking_frame, lookup_transform_timeout_sec, tf_buffer),
+      trajectory_builder_(trajectory_builder) {}
 
 void SensorBridge::HandleOdometryMessage(
     const string& sensor_id, const nav_msgs::Odometry::ConstPtr& msg) {
   const carto::common::Time time = FromRos(msg->header.stamp);
-  const auto sensor_to_tracking = tf_bridge_->LookupToTracking(
+  const auto sensor_to_tracking = tf_bridge_.LookupToTracking(
       time, CheckNoLeadingSlash(msg->child_frame_id));
   if (sensor_to_tracking != nullptr) {
     trajectory_builder_->AddOdometerData(
@@ -59,7 +61,7 @@ void SensorBridge::HandleImuMessage(const string& sensor_id,
   CHECK_NE(msg->linear_acceleration_covariance[0], -1);
   CHECK_NE(msg->angular_velocity_covariance[0], -1);
   const carto::common::Time time = FromRos(msg->header.stamp);
-  const auto sensor_to_tracking = tf_bridge_->LookupToTracking(
+  const auto sensor_to_tracking = tf_bridge_.LookupToTracking(
       time, CheckNoLeadingSlash(msg->header.frame_id));
   if (sensor_to_tracking != nullptr) {
     CHECK(sensor_to_tracking->translation().norm() < 1e-5)
@@ -98,12 +100,14 @@ void SensorBridge::HandlePointCloud2Message(
                     point_cloud);
 }
 
+const TfBridge& SensorBridge::tf_bridge() const { return tf_bridge_; }
+
 void SensorBridge::HandleRangefinder(const string& sensor_id,
                                      const carto::common::Time time,
                                      const string& frame_id,
                                      const carto::sensor::PointCloud& ranges) {
   const auto sensor_to_tracking =
-      tf_bridge_->LookupToTracking(time, CheckNoLeadingSlash(frame_id));
+      tf_bridge_.LookupToTracking(time, CheckNoLeadingSlash(frame_id));
   if (sensor_to_tracking != nullptr) {
     trajectory_builder_->AddRangefinderData(
         sensor_id, time, sensor_to_tracking->translation().cast<float>(),

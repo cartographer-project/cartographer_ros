@@ -53,7 +53,6 @@ class MapBuilderBridge {
   std::unique_ptr<nav_msgs::OccupancyGrid> BuildOccupancyGrid();
 
   SensorBridge* sensor_bridge(int trajectory_id);
-  TfBridge* tf_bridge(int trajectory_id);
   cartographer::mapping::MapBuilder* map_builder();
 
  private:
@@ -63,7 +62,6 @@ class MapBuilderBridge {
       constant_data_;
   cartographer::mapping::MapBuilder map_builder_;
   tf2_ros::Buffer* const tf_buffer_;
-  std::unordered_map<int, std::unique_ptr<TfBridge>> tf_bridges_;
   std::unordered_map<int, std::unique_ptr<SensorBridge>> sensor_bridges_;
 };
 

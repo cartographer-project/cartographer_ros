@@ -36,13 +36,10 @@ int MapBuilderBridge::AddTrajectory(
       map_builder_.AddTrajectoryBuilder(expected_sensor_ids);
   LOG(INFO) << "Added trajectory with ID '" << trajectory_id << "'.";
 
-  CHECK_EQ(tf_bridges_.count(trajectory_id), 0);
   CHECK_EQ(sensor_bridges_.count(trajectory_id), 0);
-  tf_bridges_[trajectory_id] = cartographer::common::make_unique<TfBridge>(
-      tracking_frame, options_.lookup_transform_timeout_sec, tf_buffer_);
   sensor_bridges_[trajectory_id] =
       cartographer::common::make_unique<SensorBridge>(
-          tf_bridge(trajectory_id),
+          tracking_frame, options_.lookup_transform_timeout_sec, tf_buffer_,
           map_builder_.GetTrajectoryBuilder(trajectory_id));
   return trajectory_id;
 }
@@ -50,11 +47,9 @@ int MapBuilderBridge::AddTrajectory(
 void MapBuilderBridge::FinishTrajectory(const int trajectory_id) {
   LOG(INFO) << "Finishing trajectory with ID '" << trajectory_id << "'...";
 
-  CHECK_EQ(tf_bridges_.count(trajectory_id), 1);
   CHECK_EQ(sensor_bridges_.count(trajectory_id), 1);
   map_builder_.FinishTrajectory(trajectory_id);
   map_builder_.sparse_pose_graph()->RunFinalOptimization();
-  tf_bridges_.erase(trajectory_id);
   sensor_bridges_.erase(trajectory_id);
 }
 
@@ -134,10 +129,6 @@ MapBuilderBridge::BuildOccupancyGrid() {
 
 SensorBridge* MapBuilderBridge::sensor_bridge(const int trajectory_id) {
   return sensor_bridges_.at(trajectory_id).get();
-}
-
-TfBridge* MapBuilderBridge::tf_bridge(const int trajectory_id) {
-  return tf_bridges_.at(trajectory_id).get();
 }
 
 cartographer::mapping::MapBuilder* MapBuilderBridge::map_builder() {

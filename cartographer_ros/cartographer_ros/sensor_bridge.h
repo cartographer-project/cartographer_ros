@@ -36,7 +36,8 @@ namespace cartographer_ros {
 class SensorBridge {
  public:
   explicit SensorBridge(
-      const TfBridge* tf_bridge,
+      const string& tracking_frame, double lookup_transform_timeout_sec,
+      tf2_ros::Buffer* tf_buffer,
       ::cartographer::mapping::TrajectoryBuilder* trajectory_builder);
 
   SensorBridge(const SensorBridge&) = delete;
@@ -54,13 +55,15 @@ class SensorBridge {
   void HandlePointCloud2Message(const string& sensor_id,
                                 const sensor_msgs::PointCloud2::ConstPtr& msg);
 
+  const TfBridge& tf_bridge() const;
+
  private:
   void HandleRangefinder(const string& sensor_id,
                          const ::cartographer::common::Time time,
                          const string& frame_id,
                          const ::cartographer::sensor::PointCloud& ranges);
 
-  const TfBridge* const tf_bridge_;
+  const TfBridge tf_bridge_;
   ::cartographer::mapping::TrajectoryBuilder* const trajectory_builder_;
 };
 
