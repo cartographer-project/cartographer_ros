@@ -100,7 +100,7 @@ void SensorBridge::HandlePointCloud2Message(
                     point_cloud);
 }
 
-const TfBridge& SensorBridge::tf_bridge() { return tf_bridge_; }
+const TfBridge& SensorBridge::tf_bridge() const { return tf_bridge_; }
 
 void SensorBridge::HandleRangefinder(const string& sensor_id,
                                      const carto::common::Time time,

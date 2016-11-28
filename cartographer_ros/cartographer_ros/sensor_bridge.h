@@ -55,7 +55,7 @@ class SensorBridge {
   void HandlePointCloud2Message(const string& sensor_id,
                                 const sensor_msgs::PointCloud2::ConstPtr& msg);
 
-  const TfBridge& tf_bridge();
+  const TfBridge& tf_bridge() const;
 
  private:
   void HandleRangefinder(const string& sensor_id,
