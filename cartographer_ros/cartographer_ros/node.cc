@@ -45,7 +45,6 @@ namespace carto = ::cartographer;
 
 using carto::transform::Rigid3d;
 
-constexpr int kInfiniteSubscriberQueueSize = 0;
 constexpr int kLatestOnlyPublisherQueueSize = 1;
 constexpr double kTfBufferCacheTimeInSeconds = 1e6;
 
