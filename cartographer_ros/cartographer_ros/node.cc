@@ -179,7 +179,7 @@ void Node::Initialize() {
       &Node::PublishSubmapList, this));
   wall_timers_.push_back(node_handle_.createWallTimer(
       ::ros::WallDuration(options_.pose_publish_period_sec),
-      &Node::PublishPoseAndScanMatchedPointCloud, this));
+      &Node::PublishTrajectoryStates, this));
 }
 
 bool Node::HandleSubmapQuery(
@@ -206,69 +206,59 @@ void Node::PublishSubmapList(const ::ros::WallTimerEvent& unused_timer_event) {
   submap_list_publisher_.publish(map_builder_bridge_.GetSubmapList());
 }
 
-void Node::PublishPoseAndScanMatchedPointCloud(
-    const ::ros::WallTimerEvent& timer_event) {
+void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
   carto::common::MutexLocker lock(&mutex_);
-  const carto::mapping::TrajectoryBuilder* trajectory_builder =
-      map_builder_bridge_.map_builder()->GetTrajectoryBuilder(trajectory_id_);
-  const carto::mapping::TrajectoryBuilder::PoseEstimate last_pose_estimate =
-      trajectory_builder->pose_estimate();
-  if (carto::common::ToUniversal(last_pose_estimate.time) < 0) {
-    return;
-  }
+  for (const auto& entry : map_builder_bridge_.GetTrajectoryStates()) {
+    const auto& trajectory_state = entry.second;
 
-  const Rigid3d tracking_to_local = last_pose_estimate.pose;
-  const Rigid3d local_to_map =
-      map_builder_bridge_.map_builder()
-          ->sparse_pose_graph()
-          ->GetLocalToGlobalTransform(*trajectory_builder->submaps());
-  const Rigid3d tracking_to_map = local_to_map * tracking_to_local;
+    geometry_msgs::TransformStamped stamped_transform;
+    stamped_transform.header.stamp = ToRos(trajectory_state.pose_estimate.time);
 
-  geometry_msgs::TransformStamped stamped_transform;
-  stamped_transform.header.stamp = ToRos(last_pose_estimate.time);
+    const auto& tracking_to_local = trajectory_state.pose_estimate.pose;
+    const Rigid3d tracking_to_map =
+        trajectory_state.local_to_map * tracking_to_local;
 
-  // We only publish a point cloud if it has changed. It is not needed at high
-  // frequency, and republishing it would be computationally wasteful.
-  if (last_pose_estimate.time != last_scan_matched_point_cloud_time_) {
-    scan_matched_point_cloud_publisher_.publish(ToPointCloud2Message(
-        carto::common::ToUniversal(last_pose_estimate.time),
-        options_.tracking_frame,
-        carto::sensor::TransformPointCloud(
-            last_pose_estimate.point_cloud,
-            tracking_to_local.inverse().cast<float>())));
-    last_scan_matched_point_cloud_time_ = last_pose_estimate.time;
-  } else {
-    // If we do not publish a new point cloud, we still allow time of the
-    // published poses to advance.
-    stamped_transform.header.stamp = ros::Time::now();
-  }
-
-  const auto published_to_tracking =
-      map_builder_bridge_.sensor_bridge(trajectory_id_)
-          ->tf_bridge()
-          .LookupToTracking(last_pose_estimate.time, options_.published_frame);
-  if (published_to_tracking != nullptr) {
-    if (options_.provide_odom_frame) {
-      std::vector<geometry_msgs::TransformStamped> stamped_transforms;
-
-      stamped_transform.header.frame_id = options_.map_frame;
-      stamped_transform.child_frame_id = options_.odom_frame;
-      stamped_transform.transform = ToGeometryMsgTransform(local_to_map);
-      stamped_transforms.push_back(stamped_transform);
-
-      stamped_transform.header.frame_id = options_.odom_frame;
-      stamped_transform.child_frame_id = options_.published_frame;
-      stamped_transform.transform =
-          ToGeometryMsgTransform(tracking_to_local * (*published_to_tracking));
-      stamped_transforms.push_back(stamped_transform);
-
-      tf_broadcaster_.sendTransform(stamped_transforms);
+    // We only publish a point cloud if it has changed. It is not needed at high
+    // frequency, and republishing it would be computationally wasteful.
+    if (trajectory_state.pose_estimate.time != last_scan_matched_point_cloud_time_) {
+      scan_matched_point_cloud_publisher_.publish(ToPointCloud2Message(
+          carto::common::ToUniversal(trajectory_state.pose_estimate.time),
+          options_.tracking_frame,
+          carto::sensor::TransformPointCloud(
+              trajectory_state.pose_estimate.point_cloud,
+              tracking_to_local.inverse().cast<float>())));
+      last_scan_matched_point_cloud_time_ = trajectory_state.pose_estimate.time;
     } else {
-      stamped_transform.header.frame_id = options_.map_frame;
-      stamped_transform.child_frame_id = options_.published_frame;
-      stamped_transform.transform =
-          ToGeometryMsgTransform(tracking_to_map * (*published_to_tracking));
-      tf_broadcaster_.sendTransform(stamped_transform);
+      // If we do not publish a new point cloud, we still allow time of the
+      // published poses to advance.
+      stamped_transform.header.stamp = ros::Time::now();
+    }
+
+    if (trajectory_state.published_to_tracking != nullptr) {
+      if (options_.provide_odom_frame) {
+        std::vector<geometry_msgs::TransformStamped> stamped_transforms;
+
+        stamped_transform.header.frame_id = options_.map_frame;
+        // TODO(damonkohler): 'odom_frame' and 'published_frame' must be
+        // per-trajectory to fully support the multi-robot use case.
+        stamped_transform.child_frame_id = options_.odom_frame;
+        stamped_transform.transform = ToGeometryMsgTransform(trajectory_state.local_to_map);
+        stamped_transforms.push_back(stamped_transform);
+
+        stamped_transform.header.frame_id = options_.odom_frame;
+        stamped_transform.child_frame_id = options_.published_frame;
+        stamped_transform.transform = ToGeometryMsgTransform(
+            tracking_to_local * (*trajectory_state.published_to_tracking));
+        stamped_transforms.push_back(stamped_transform);
+
+        tf_broadcaster_.sendTransform(stamped_transforms);
+      } else {
+        stamped_transform.header.frame_id = options_.map_frame;
+        stamped_transform.child_frame_id = options_.published_frame;
+        stamped_transform.transform = ToGeometryMsgTransform(
+            tracking_to_map * (*trajectory_state.published_to_tracking));
+        tf_broadcaster_.sendTransform(stamped_transform);
+      }
     }
   }
 }

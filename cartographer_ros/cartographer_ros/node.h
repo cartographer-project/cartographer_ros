@@ -55,8 +55,7 @@ class Node {
       cartographer_ros_msgs::FinishTrajectory::Response& response);
 
   void PublishSubmapList(const ::ros::WallTimerEvent& timer_event);
-  void PublishPoseAndScanMatchedPointCloud(
-      const ::ros::WallTimerEvent& timer_event);
+  void PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event);
   void SpinOccupancyGridThreadForever();
 
   const NodeOptions options_;

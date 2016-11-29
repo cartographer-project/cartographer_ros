@@ -127,12 +127,33 @@ MapBuilderBridge::BuildOccupancyGrid() {
   return occupancy_grid;
 }
 
-SensorBridge* MapBuilderBridge::sensor_bridge(const int trajectory_id) {
-  return sensor_bridges_.at(trajectory_id).get();
+std::unordered_map<int, MapBuilderBridge::TrajectoryState>
+MapBuilderBridge::GetTrajectoryStates() {
+  std::unordered_map<int, TrajectoryState> trajectory_states;
+  for (const auto& entry : sensor_bridges_) {
+    const int trajectory_id = entry.first;
+    const SensorBridge& sensor_bridge = *entry.second;
+
+    const cartographer::mapping::TrajectoryBuilder* const trajectory_builder =
+        map_builder_.GetTrajectoryBuilder(trajectory_id);
+    const cartographer::mapping::TrajectoryBuilder::PoseEstimate
+        pose_estimate = trajectory_builder->pose_estimate();
+    if (cartographer::common::ToUniversal(pose_estimate.time) < 0) {
+      continue;
+    }
+
+    trajectory_states[trajectory_id] = {
+        pose_estimate,
+        map_builder_.sparse_pose_graph()->GetLocalToGlobalTransform(
+            *trajectory_builder->submaps()),
+        sensor_bridge.tf_bridge().LookupToTracking(pose_estimate.time,
+                                                   options_.published_frame)};
+  }
+  return trajectory_states;
 }
 
-cartographer::mapping::MapBuilder* MapBuilderBridge::map_builder() {
-  return &map_builder_;
+SensorBridge* MapBuilderBridge::sensor_bridge(const int trajectory_id) {
+  return sensor_bridges_.at(trajectory_id).get();
 }
 
 }  // namespace cartographer_ros
