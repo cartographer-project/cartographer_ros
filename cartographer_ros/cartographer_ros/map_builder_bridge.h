@@ -35,6 +35,12 @@ namespace cartographer_ros {
 
 class MapBuilderBridge {
  public:
+  struct TrajectoryState {
+    cartographer::mapping::TrajectoryBuilder::PoseEstimate pose_estimate;
+    cartographer::transform::Rigid3d local_to_map;
+    std::unique_ptr<cartographer::transform::Rigid3d> published_to_tracking;
+  };
+
   MapBuilderBridge(const NodeOptions& options, tf2_ros::Buffer* tf_buffer);
 
   MapBuilderBridge(const MapBuilderBridge&) = delete;
@@ -51,9 +57,9 @@ class MapBuilderBridge {
 
   cartographer_ros_msgs::SubmapList GetSubmapList();
   std::unique_ptr<nav_msgs::OccupancyGrid> BuildOccupancyGrid();
+  std::unordered_map<int, TrajectoryState> GetTrajectoryStates();
 
   SensorBridge* sensor_bridge(int trajectory_id);
-  cartographer::mapping::MapBuilder* map_builder();
 
  private:
   const NodeOptions options_;
