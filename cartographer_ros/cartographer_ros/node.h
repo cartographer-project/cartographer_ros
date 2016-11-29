@@ -30,14 +30,13 @@
 #include "cartographer_ros_msgs/TrajectorySubmapList.h"
 #include "ros/ros.h"
 #include "tf2_ros/transform_broadcaster.h"
-#include "tf2_ros/transform_listener.h"
 
 namespace cartographer_ros {
 
 // Wires up ROS topics to SLAM.
 class Node {
  public:
-  Node(const NodeOptions& options);
+  Node(const NodeOptions& options, tf2_ros::Buffer* tf_buffer);
   ~Node();
 
   Node(const Node&) = delete;
@@ -60,8 +59,6 @@ class Node {
 
   const NodeOptions options_;
 
-  tf2_ros::Buffer tf_buffer_;
-  tf2_ros::TransformListener tf_;
   tf2_ros::TransformBroadcaster tf_broadcaster_;
 
   cartographer::common::Mutex mutex_;

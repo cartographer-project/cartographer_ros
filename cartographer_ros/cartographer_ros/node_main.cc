@@ -23,6 +23,7 @@
 #include "cartographer/common/port.h"
 #include "cartographer_ros/node.h"
 #include "cartographer_ros/ros_log_sink.h"
+#include "tf2_ros/transform_listener.h"
 
 DEFINE_string(configuration_directory, "",
               "First directory in which configuration files are searched, "
@@ -55,7 +56,10 @@ void Run() {
       code, std::move(file_resolver));
 
   const auto options = CreateNodeOptions(&lua_parameter_dictionary);
-  Node node(options);
+  constexpr double kTfBufferCacheTimeInSeconds = 1e6;
+  tf2_ros::Buffer tf_buffer{::ros::Duration(kTfBufferCacheTimeInSeconds)};
+  tf2_ros::TransformListener tf(tf_buffer);
+  Node node(options, &tf_buffer);
 
   int trajectory_id = -1;
   std::unordered_set<string> expected_sensor_ids;
