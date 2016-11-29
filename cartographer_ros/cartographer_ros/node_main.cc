@@ -159,7 +159,7 @@ void Run() {
               }));
 
   node.Initialize();
-  node.SpinForever();
+  node.Spin();
 
   node.map_builder_bridge()->FinishTrajectory(trajectory_id);
 }

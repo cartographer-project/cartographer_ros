@@ -99,7 +99,7 @@ void Node::Initialize() {
       &Node::PublishTrajectoryStates, this));
 }
 
-void Node::SpinForever() { ::ros::spin(); }
+void Node::Spin() { ::ros::spin(); }
 
 ::ros::NodeHandle* Node::node_handle() { return &node_handle_; }
 
