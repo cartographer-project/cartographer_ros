@@ -43,16 +43,16 @@ class Node {
   Node(const Node&) = delete;
   Node& operator=(const Node&) = delete;
 
-  void SpinForever();
   void Initialize();
+  void Spin();
+
+  ::ros::NodeHandle* node_handle();
+  MapBuilderBridge* map_builder_bridge();
 
  private:
   bool HandleSubmapQuery(
       cartographer_ros_msgs::SubmapQuery::Request& request,
       cartographer_ros_msgs::SubmapQuery::Response& response);
-  bool HandleFinishTrajectory(
-      cartographer_ros_msgs::FinishTrajectory::Request& request,
-      cartographer_ros_msgs::FinishTrajectory::Response& response);
 
   void PublishSubmapList(const ::ros::WallTimerEvent& timer_event);
   void PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event);
@@ -70,16 +70,11 @@ class Node {
   std::unordered_set<string> expected_sensor_ids_;
 
   ::ros::NodeHandle node_handle_;
-  ::ros::Subscriber imu_subscriber_;
-  ::ros::Subscriber horizontal_laser_scan_subscriber_;
-  std::vector<::ros::Subscriber> point_cloud_subscribers_;
-  ::ros::Subscriber odometry_subscriber_;
   ::ros::Publisher submap_list_publisher_;
   ::ros::ServiceServer submap_query_server_;
   ::ros::Publisher scan_matched_point_cloud_publisher_;
   cartographer::common::Time last_scan_matched_point_cloud_time_ =
       cartographer::common::Time::min();
-  ::ros::ServiceServer finish_trajectory_server_;
 
   ::ros::Publisher occupancy_grid_publisher_;
   std::thread occupancy_grid_thread_;
