@@ -239,6 +239,8 @@ void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
         std::vector<geometry_msgs::TransformStamped> stamped_transforms;
 
         stamped_transform.header.frame_id = options_.map_frame;
+        // TODO(damonkohler): 'odom_frame' and 'published_frame' must be
+        // per-trajectory to fully support the multi-robot use case.
         stamped_transform.child_frame_id = options_.odom_frame;
         stamped_transform.transform = ToGeometryMsgTransform(trajectory_state.local_to_map);
         stamped_transforms.push_back(stamped_transform);

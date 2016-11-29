@@ -132,7 +132,7 @@ MapBuilderBridge::GetTrajectoryStates() {
   std::unordered_map<int, TrajectoryState> trajectory_states;
   for (const auto& entry : sensor_bridges_) {
     const int trajectory_id = entry.first;
-    const auto& sensor_bridge = entry.second;
+    const SensorBridge& sensor_bridge = *entry.second;
 
     const cartographer::mapping::TrajectoryBuilder* const trajectory_builder =
         map_builder_.GetTrajectoryBuilder(trajectory_id);
@@ -146,8 +146,8 @@ MapBuilderBridge::GetTrajectoryStates() {
         pose_estimate,
         map_builder_.sparse_pose_graph()->GetLocalToGlobalTransform(
             *trajectory_builder->submaps()),
-        sensor_bridge->tf_bridge().LookupToTracking(pose_estimate.time,
-                                                    options_.published_frame)};
+        sensor_bridge.tf_bridge().LookupToTracking(pose_estimate.time,
+                                                   options_.published_frame)};
   }
   return trajectory_states;
 }
