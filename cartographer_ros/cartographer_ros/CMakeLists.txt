@@ -183,3 +183,12 @@ install(TARGETS cartographer_assets_writer
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
+google_binary(cartographer_offline_node
+  USES_CARTOGRAPHER
+  SRCS
+    offline_node_main.cc
+  DEPENDS
+    node
+    ros_log_sink
+    urdf_reader
+)

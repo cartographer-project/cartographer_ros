@@ -96,8 +96,6 @@ void Node::Initialize() {
       &Node::PublishTrajectoryStates, this));
 }
 
-void Node::Spin() { ::ros::spin(); }
-
 ::ros::NodeHandle* Node::node_handle() { return &node_handle_; }
 
 MapBuilderBridge* Node::map_builder_bridge() { return &map_builder_bridge_; }

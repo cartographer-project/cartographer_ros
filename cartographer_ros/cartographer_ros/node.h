@@ -43,7 +43,6 @@ class Node {
   Node& operator=(const Node&) = delete;
 
   void Initialize();
-  void Spin();
 
   ::ros::NodeHandle* node_handle();
   MapBuilderBridge* map_builder_bridge();

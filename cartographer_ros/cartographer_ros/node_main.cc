@@ -60,6 +60,7 @@ void Run() {
   tf2_ros::Buffer tf_buffer{::ros::Duration(kTfBufferCacheTimeInSeconds)};
   tf2_ros::TransformListener tf(tf_buffer);
   Node node(options, &tf_buffer);
+  node.Initialize();
 
   int trajectory_id = -1;
   std::unordered_set<string> expected_sensor_ids;
@@ -162,8 +163,7 @@ void Run() {
                 return true;
               }));
 
-  node.Initialize();
-  node.Spin();
+  ::ros::spin();
 
   node.map_builder_bridge()->FinishTrajectory(trajectory_id);
 }
