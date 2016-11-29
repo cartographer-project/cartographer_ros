@@ -125,6 +125,16 @@ google_library(time_conversion
     time_conversion.h
 )
 
+google_library(urdf_reader
+  USES_CARTOGRAPHER
+  SRCS
+    urdf_reader.cc
+  HDRS
+    urdf_reader.h
+  DEPENDS
+    msg_conversion
+)
+
 google_test(configuration_files_test
   USES_CARTOGRAPHER
   SRCS
@@ -150,6 +160,7 @@ google_binary(cartographer_assets_writer
   DEPENDS
     msg_conversion
     time_conversion
+    urdf_reader
 )
 
 google_binary(cartographer_node

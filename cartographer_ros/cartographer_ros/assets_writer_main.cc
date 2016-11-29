@@ -26,6 +26,7 @@
 #include "cartographer/transform/transform_interpolation_buffer.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/time_conversion.h"
+#include "cartographer_ros/urdf_reader.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 #include "ros/ros.h"
@@ -55,34 +56,6 @@ namespace cartographer_ros {
 namespace {
 
 namespace carto = ::cartographer;
-
-void ReadStaticTransformsFromUrdf(const string& urdf_filename,
-                                  ::tf2_ros::Buffer* const buffer) {
-  urdf::Model model;
-  CHECK(model.initFile(urdf_filename));
-#if URDFDOM_HEADERS_HAS_SHARED_PTR_DEFS
-  std::vector<urdf::LinkSharedPtr> links;
-#else
-  std::vector<boost::shared_ptr<urdf::Link>> links;
-#endif
-  model.getLinks(links);
-  for (const auto& link : links) {
-    if (!link->getParent() || link->parent_joint->type != urdf::Joint::FIXED) {
-      continue;
-    }
-
-    const urdf::Pose& pose =
-        link->parent_joint->parent_to_joint_origin_transform;
-    geometry_msgs::TransformStamped transform;
-    transform.transform = ToGeometryMsgTransform(carto::transform::Rigid3d(
-        Eigen::Vector3d(pose.position.x, pose.position.y, pose.position.z),
-        Eigen::Quaterniond(pose.rotation.w, pose.rotation.x, pose.rotation.y,
-                           pose.rotation.z)));
-    transform.child_frame_id = link->name;
-    transform.header.frame_id = link->getParent()->name;
-    buffer->setTransform(transform, "urdf", true /* is_static */);
-  }
-}
 
 void Run(const string& trajectory_filename, const string& bag_filename,
          const string& configuration_directory,
