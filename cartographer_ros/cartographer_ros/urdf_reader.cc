@@ -31,7 +31,7 @@ void ReadStaticTransformsFromUrdf(const string& urdf_filename,
 #if URDFDOM_HEADERS_HAS_SHARED_PTR_DEFS
   std::vector<urdf::LinkSharedPtr> links;
 #else
-  std::vector<boost::shared_ptr<urdf::Link>> links;
+  std::vector<boost::shared_ptr<urdf::Link> > links;
 #endif
   model.getLinks(links);
   for (const auto& link : links) {
