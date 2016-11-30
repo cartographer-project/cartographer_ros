@@ -38,14 +38,6 @@ namespace {
 
 constexpr int kInfiniteSubscriberQueueSize = 0;
 
-// Default topic names; expected to be remapped as needed.
-constexpr char kLaserScanTopic[] = "scan";
-constexpr char kMultiEchoLaserScanTopic[] = "echoes";
-constexpr char kPointCloud2Topic[] = "points2";
-constexpr char kImuTopic[] = "imu";
-constexpr char kOdometryTopic[] = "odom";
-constexpr char kFinishTrajectoryServiceName[] = "finish_trajectory";
-
 void Run() {
   auto file_resolver = cartographer::common::make_unique<
       cartographer::common::ConfigurationFileResolver>(

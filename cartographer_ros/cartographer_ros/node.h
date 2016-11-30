@@ -33,6 +33,18 @@
 
 namespace cartographer_ros {
 
+// Default topic names; expected to be remapped as needed.
+constexpr char kLaserScanTopic[] = "scan";
+constexpr char kMultiEchoLaserScanTopic[] = "echoes";
+constexpr char kPointCloud2Topic[] = "points2";
+constexpr char kImuTopic[] = "imu";
+constexpr char kOdometryTopic[] = "odom";
+constexpr char kFinishTrajectoryServiceName[] = "finish_trajectory";
+constexpr char kOccupancyGridTopic[] = "map";
+constexpr char kScanMatchedPointCloudTopic[] = "scan_matched_points2";
+constexpr char kSubmapListTopic[] = "submap_list";
+constexpr char kSubmapQueryServiceName[] = "submap_query";
+
 // Wires up ROS topics to SLAM.
 class Node {
  public:

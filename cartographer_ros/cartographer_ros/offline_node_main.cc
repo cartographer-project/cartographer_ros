@@ -47,17 +47,10 @@ namespace cartographer_ros {
 namespace {
 
 constexpr int kLatestOnlyPublisherQueueSize = 1;
-
-// Default topic names; expected to be remapped as needed.
-constexpr char kLaserScanTopic[] = "scan";
-constexpr char kMultiEchoLaserScanTopic[] = "echoes";
-constexpr char kPointCloud2Topic[] = "points2";
-constexpr char kImuTopic[] = "imu";
-constexpr char kOdometryTopic[] = "odom";
-constexpr char kFinishTrajectoryServiceName[] = "finish_trajectory";
 constexpr char kClockTopic[] = "clock";
 
 void Run() {
+  // TODO(damonkohler): Pull out this common code across binaries.
   auto file_resolver = cartographer::common::make_unique<
       cartographer::common::ConfigurationFileResolver>(
       std::vector<string>{FLAGS_configuration_directory});
@@ -77,10 +70,12 @@ void Run() {
 
   // For 2D SLAM, subscribe to exactly one horizontal laser.
   if (options.use_laser_scan) {
-    expected_sensor_ids.insert(node.node_handle()->resolveName(kLaserScanTopic));
+    expected_sensor_ids.insert(
+        node.node_handle()->resolveName(kLaserScanTopic, false /* remap */));
   }
   if (options.use_multi_echo_laser_scan) {
-    expected_sensor_ids.insert(node.node_handle()->resolveName(kMultiEchoLaserScanTopic));
+    expected_sensor_ids.insert(node.node_handle()->resolveName(
+        kMultiEchoLaserScanTopic, false /* remap */));
   }
 
   // For 3D SLAM, subscribe to all point clouds topics.
@@ -90,7 +85,8 @@ void Run() {
       if (options.num_point_clouds > 1) {
         topic += "_" + std::to_string(i + 1);
       }
-      expected_sensor_ids.insert(node.node_handle()->resolveName(topic));
+      expected_sensor_ids.insert(
+          node.node_handle()->resolveName(topic, false /* remap */));
     }
   }
 
@@ -100,12 +96,14 @@ void Run() {
       (options.map_builder_options.use_trajectory_builder_2d() &&
        options.map_builder_options.trajectory_builder_2d_options()
            .use_imu_data())) {
-    expected_sensor_ids.insert(node.node_handle()->resolveName(kImuTopic));
+    expected_sensor_ids.insert(
+        node.node_handle()->resolveName(kImuTopic, false /* remap */));
   }
 
   // For both 2D and 3D SLAM, odometry is optional.
   if (options.use_odometry) {
-    expected_sensor_ids.insert(node.node_handle()->resolveName(kOdometryTopic));
+    expected_sensor_ids.insert(
+        node.node_handle()->resolveName(kOdometryTopic, false /* remap */));
   }
 
   // TODO(damonkohler): Support multi-trajectory.
