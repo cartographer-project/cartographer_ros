@@ -49,12 +49,11 @@ namespace {
 constexpr int kLatestOnlyPublisherQueueSize = 1;
 constexpr char kClockTopic[] = "clock";
 
-std::vector<string> SplitString(const string& input, const char delimeter) {
-  std::stringstream stream;
-  stream.str(input);
+std::vector<string> SplitString(const string& input, const char delimiter) {
+  std::stringstream stream(input);
   string token;
   std::vector<string> tokens;
-  while (std::getline(stream, token, delimeter)) {
+  while (std::getline(stream, token, delimiter)) {
     tokens.push_back(token);
   }
   return tokens;
@@ -135,9 +134,8 @@ void Run(std::vector<string> bag_filenames) {
         return;
       }
 
-      const string& topic = node.node_handle()->resolveName(msg.getTopic());
-      if (expected_sensor_ids.count(
-              node.node_handle()->resolveName(msg.getTopic())) == 0) {
+      const string topic = node.node_handle()->resolveName(msg.getTopic());
+      if (expected_sensor_ids.count(topic) == 0) {
         continue;
       }
       if (msg.isType<sensor_msgs::LaserScan>()) {
