@@ -46,7 +46,6 @@ namespace carto = ::cartographer;
 using carto::transform::Rigid3d;
 
 constexpr int kLatestOnlyPublisherQueueSize = 1;
-constexpr double kTfBufferCacheTimeInSeconds = 1e6;
 
 // Default topic names; expected to be remapped as needed.
 constexpr char kOccupancyGridTopic[] = "map";
@@ -54,11 +53,9 @@ constexpr char kScanMatchedPointCloudTopic[] = "scan_matched_points2";
 constexpr char kSubmapListTopic[] = "submap_list";
 constexpr char kSubmapQueryServiceName[] = "submap_query";
 
-Node::Node(const NodeOptions& options)
+Node::Node(const NodeOptions& options, tf2_ros::Buffer* const tf_buffer)
     : options_(options),
-      tf_buffer_(::ros::Duration(kTfBufferCacheTimeInSeconds)),
-      tf_(tf_buffer_),
-      map_builder_bridge_(options_, &tf_buffer_) {}
+      map_builder_bridge_(options_, tf_buffer) {}
 
 Node::~Node() {
   {
