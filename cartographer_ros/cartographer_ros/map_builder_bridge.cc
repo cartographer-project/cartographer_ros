@@ -136,8 +136,8 @@ MapBuilderBridge::GetTrajectoryStates() {
 
     const cartographer::mapping::TrajectoryBuilder* const trajectory_builder =
         map_builder_.GetTrajectoryBuilder(trajectory_id);
-    const cartographer::mapping::TrajectoryBuilder::PoseEstimate
-        pose_estimate = trajectory_builder->pose_estimate();
+    const cartographer::mapping::TrajectoryBuilder::PoseEstimate pose_estimate =
+        trajectory_builder->pose_estimate();
     if (cartographer::common::ToUniversal(pose_estimate.time) < 0) {
       continue;
     }

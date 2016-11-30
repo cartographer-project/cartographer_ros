@@ -143,17 +143,16 @@ void Run() {
           kFinishTrajectoryServiceName,
           boost::function<bool(
               ::cartographer_ros_msgs::FinishTrajectory::Request&,
-              ::cartographer_ros_msgs::FinishTrajectory::Response&)>(
-              [&](::cartographer_ros_msgs::FinishTrajectory::Request& request,
-                  ::cartographer_ros_msgs::FinishTrajectory::Response&) {
-                const int previous_trajectory_id = trajectory_id;
-                trajectory_id = node.map_builder_bridge()->AddTrajectory(
-                    expected_sensor_ids, options.tracking_frame);
-                node.map_builder_bridge()->FinishTrajectory(
-                    previous_trajectory_id);
-                node.map_builder_bridge()->WriteAssets(request.stem);
-                return true;
-              }));
+              ::cartographer_ros_msgs::FinishTrajectory::Response&)>([&](
+              ::cartographer_ros_msgs::FinishTrajectory::Request& request,
+              ::cartographer_ros_msgs::FinishTrajectory::Response&) {
+            const int previous_trajectory_id = trajectory_id;
+            trajectory_id = node.map_builder_bridge()->AddTrajectory(
+                expected_sensor_ids, options.tracking_frame);
+            node.map_builder_bridge()->FinishTrajectory(previous_trajectory_id);
+            node.map_builder_bridge()->WriteAssets(request.stem);
+            return true;
+          }));
 
   ::ros::spin();
 

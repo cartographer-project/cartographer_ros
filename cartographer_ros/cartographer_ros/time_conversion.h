@@ -22,9 +22,6 @@
 
 namespace cartographer_ros {
 
-constexpr int64 kUtsEpochOffsetFromUnixEpochInSeconds =
-    (719162ll * 24ll * 60ll * 60ll);
-
 ::ros::Time ToRos(::cartographer::common::Time time);
 
 ::cartographer::common::Time FromRos(const ::ros::Time& time);

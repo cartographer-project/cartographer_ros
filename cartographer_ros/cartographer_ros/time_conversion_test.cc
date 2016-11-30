@@ -34,7 +34,8 @@ TEST(TimeConversion, testToRos) {
     ros_now.fromSec(seconds_since_epoch);
     ::cartographer::common::Time cartographer_now(
         ::cartographer::common::FromSeconds(
-            seconds_since_epoch + kUtsEpochOffsetFromUnixEpochInSeconds));
+            seconds_since_epoch +
+            ::cartographer::common::kUtsEpochOffsetFromUnixEpochInSeconds));
     EXPECT_EQ(cartographer_now, ::cartographer_ros::FromRos(ros_now));
     EXPECT_EQ(ros_now, ::cartographer_ros::ToRos(cartographer_now));
   }

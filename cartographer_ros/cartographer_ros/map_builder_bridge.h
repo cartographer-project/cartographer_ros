@@ -18,8 +18,8 @@
 #define CARTOGRAPHER_ROS_MAP_BUILDER_BRIDGE_H_
 
 #include <memory>
-#include <unordered_set>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "cartographer/mapping/map_builder.h"
 #include "cartographer_ros/node_options.h"
