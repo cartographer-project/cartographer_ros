@@ -191,15 +191,15 @@ int main(int argc, char** argv) {
       << "-configuration_directory is missing.";
   CHECK(!FLAGS_configuration_basename.empty())
       << "-configuration_basename is missing.";
-  CHECK(!FLAGS_bag_filenames.empty())
-      << "-bag_filenames is missing.";
+  CHECK(!FLAGS_bag_filenames.empty()) << "-bag_filenames is missing.";
   CHECK(!FLAGS_urdf_filename.empty()) << "-urdf_filename is missing.";
 
   ::ros::init(argc, argv, "cartographer_offline_node");
   ::ros::start();
 
   cartographer_ros::ScopedRosLogSink ros_log_sink;
-  cartographer_ros::Run(cartographer_ros::SplitString(FLAGS_bag_filenames, ','));
+  cartographer_ros::Run(
+      cartographer_ros::SplitString(FLAGS_bag_filenames, ','));
 
   ::ros::shutdown();
 }
