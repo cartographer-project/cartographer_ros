@@ -47,12 +47,6 @@ using carto::transform::Rigid3d;
 
 constexpr int kLatestOnlyPublisherQueueSize = 1;
 
-// Default topic names; expected to be remapped as needed.
-constexpr char kOccupancyGridTopic[] = "map";
-constexpr char kScanMatchedPointCloudTopic[] = "scan_matched_points2";
-constexpr char kSubmapListTopic[] = "submap_list";
-constexpr char kSubmapQueryServiceName[] = "submap_query";
-
 Node::Node(const NodeOptions& options, tf2_ros::Buffer* const tf_buffer)
     : options_(options),
       map_builder_bridge_(options_, tf_buffer) {}
@@ -95,8 +89,6 @@ void Node::Initialize() {
       ::ros::WallDuration(options_.pose_publish_period_sec),
       &Node::PublishTrajectoryStates, this));
 }
-
-void Node::Spin() { ::ros::spin(); }
 
 ::ros::NodeHandle* Node::node_handle() { return &node_handle_; }
 
