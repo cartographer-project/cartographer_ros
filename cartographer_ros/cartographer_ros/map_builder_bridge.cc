@@ -59,7 +59,7 @@ void MapBuilderBridge::WriteAssets(const string& stem) {
   if (trajectory_nodes.empty()) {
     LOG(WARNING) << "No data was collected and no assets will be written.";
   } else {
-    LOG(INFO) << "Writing assets to '" << stem << "'...";
+    LOG(INFO) << "Writing assets with stem '" << stem << "'...";
     cartographer_ros::WriteAssets(trajectory_nodes, options_, stem);
   }
 }
