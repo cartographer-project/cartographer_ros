@@ -48,8 +48,7 @@ using carto::transform::Rigid3d;
 constexpr int kLatestOnlyPublisherQueueSize = 1;
 
 Node::Node(const NodeOptions& options, tf2_ros::Buffer* const tf_buffer)
-    : options_(options),
-      map_builder_bridge_(options_, tf_buffer) {}
+    : options_(options), map_builder_bridge_(options_, tf_buffer) {}
 
 Node::~Node() {
   {
@@ -120,7 +119,8 @@ void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
 
     // We only publish a point cloud if it has changed. It is not needed at high
     // frequency, and republishing it would be computationally wasteful.
-    if (trajectory_state.pose_estimate.time != last_scan_matched_point_cloud_time_) {
+    if (trajectory_state.pose_estimate.time !=
+        last_scan_matched_point_cloud_time_) {
       scan_matched_point_cloud_publisher_.publish(ToPointCloud2Message(
           carto::common::ToUniversal(trajectory_state.pose_estimate.time),
           options_.tracking_frame,
@@ -142,7 +142,8 @@ void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
         // TODO(damonkohler): 'odom_frame' and 'published_frame' must be
         // per-trajectory to fully support the multi-robot use case.
         stamped_transform.child_frame_id = options_.odom_frame;
-        stamped_transform.transform = ToGeometryMsgTransform(trajectory_state.local_to_map);
+        stamped_transform.transform =
+            ToGeometryMsgTransform(trajectory_state.local_to_map);
         stamped_transforms.push_back(stamped_transform);
 
         stamped_transform.header.frame_id = options_.odom_frame;

@@ -174,8 +174,7 @@ int main(int argc, char** argv) {
       << "-configuration_directory is missing.";
   CHECK(!FLAGS_configuration_basename.empty())
       << "-configuration_basename is missing.";
-  CHECK(!FLAGS_bag_filename.empty())
-      << "-bag_filename is missing.";
+  CHECK(!FLAGS_bag_filename.empty()) << "-bag_filename is missing.";
   CHECK(!FLAGS_urdf_filename.empty()) << "-urdf_filename is missing.";
 
   ::ros::init(argc, argv, "cartographer_offline_node");

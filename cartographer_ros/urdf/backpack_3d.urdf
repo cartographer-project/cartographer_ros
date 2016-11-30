@@ -21,9 +21,6 @@
   <material name="gray">
     <color rgba="0.2 0.2 0.2 1" />
   </material>
-  <material name="green">
-    <color rgba="0.2 0.4 0.2 1" />
-  </material>
 
   <link name="imu_link">
     <visual>
