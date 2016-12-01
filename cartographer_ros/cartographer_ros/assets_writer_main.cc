@@ -127,15 +127,15 @@ void Run(const string& trajectory_filename, const string& bag_filename,
     bag.open(bag_filename, rosbag::bagmode::Read);
     rosbag::View view(bag);
     const ::ros::Time begin_time = view.getBeginTime();
-    const ::ros::Time end_time = view.getEndTime();
+    const double duration_in_seconds = (view.getEndTime() - begin_time).toSec();
 
     for (const rosbag::MessageInstance& msg : view) {
       if (msg.isType<sensor_msgs::PointCloud2>()) {
         handle_point_cloud_2_message(msg.instantiate<sensor_msgs::PointCloud2>());
       }
-      LOG_EVERY_N(INFO, 100000) << "Processed " << (msg.getTime() - begin_time).toSec()
-                              << " of " << (end_time - begin_time).toSec()
-                              << " bag time seconds...";
+      LOG_EVERY_N(INFO, 100000)
+          << "Processed " << (msg.getTime() - begin_time).toSec() << " of "
+          << duration_in_seconds << " bag time seconds...";
     }
     bag.close();
   } while (pipeline.back()->Flush() ==
