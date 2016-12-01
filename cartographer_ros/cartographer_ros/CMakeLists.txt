@@ -10,6 +10,15 @@ google_library(assets_writer
     occupancy_grid
 )
 
+google_library(bag_reader
+  USES_CARTOGRAPHER
+  USES_GLOG
+  SRCS
+    bag_reader.cc
+  HDRS
+    bag_reader.h
+)
+
 google_library(map_builder_bridge
   USES_CARTOGRAPHER
   SRCS
@@ -158,6 +167,7 @@ google_binary(cartographer_assets_writer
   SRCS
     assets_writer_main.cc
   DEPENDS
+    bag_reader
     msg_conversion
     time_conversion
     urdf_reader
@@ -188,6 +198,7 @@ google_binary(cartographer_offline_node
   SRCS
     offline_node_main.cc
   DEPENDS
+    bag_reader
     node
     ros_log_sink
     urdf_reader
