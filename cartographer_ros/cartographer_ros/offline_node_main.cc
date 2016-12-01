@@ -128,8 +128,12 @@ void Run(std::vector<string> bag_filenames) {
         expected_sensor_ids, options.tracking_frame);
     rosbag::Bag bag;
     bag.open(bag_filename, rosbag::bagmode::Read);
+    rosbag::View view(bag);
 
-    for (const rosbag::MessageInstance& msg : rosbag::View(bag)) {
+    const ::ros::Time begin_time = view.getBeginTime();
+    const ::ros::Time end_time = view.getEndTime();
+
+    for (const rosbag::MessageInstance& msg : view) {
       if (!::ros::ok()) {
         return;
       }
@@ -169,6 +173,11 @@ void Run(std::vector<string> bag_filenames) {
       clock_publisher.publish(clock);
 
       ::ros::spinOnce();
+
+      const ::ros::Time time = msg.getTime();
+      LOG_EVERY_N(INFO, 1000) << "Processed " << (time - begin_time).toSec()
+                              << " of " << (end_time - begin_time).toSec()
+                              << " bag time seconds...";
     }
 
     bag.close();
