@@ -126,10 +126,14 @@ void Run(std::vector<string> bag_filenames) {
 
     const int trajectory_id = node.map_builder_bridge()->AddTrajectory(
         expected_sensor_ids, options.tracking_frame);
+
     rosbag::Bag bag;
     bag.open(bag_filename, rosbag::bagmode::Read);
+    rosbag::View view(bag);
+    const ::ros::Time begin_time = view.getBeginTime();
+    const double duration_in_seconds = (view.getEndTime() - begin_time).toSec();
 
-    for (const rosbag::MessageInstance& msg : rosbag::View(bag)) {
+    for (const rosbag::MessageInstance& msg : view) {
       if (!::ros::ok()) {
         return;
       }
@@ -169,6 +173,10 @@ void Run(std::vector<string> bag_filenames) {
       clock_publisher.publish(clock);
 
       ::ros::spinOnce();
+
+      LOG_EVERY_N(INFO, 100000)
+          << "Processed " << (msg.getTime() - begin_time).toSec() << " of "
+          << duration_in_seconds << " bag time seconds...";
     }
 
     bag.close();
