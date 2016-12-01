@@ -133,8 +133,7 @@ void Run(const string& trajectory_filename, const string& bag_filename,
       if (msg.isType<sensor_msgs::PointCloud2>()) {
         handle_point_cloud_2_message(msg.instantiate<sensor_msgs::PointCloud2>());
       }
-      const ::ros::Time time = msg.getTime();
-      LOG_EVERY_N(INFO, 1000) << "Processed " << (time - begin_time).toSec()
+      LOG_EVERY_N(INFO, 100000) << "Processed " << (msg.getTime() - begin_time).toSec()
                               << " of " << (end_time - begin_time).toSec()
                               << " bag time seconds...";
     }
