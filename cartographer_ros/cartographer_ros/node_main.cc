@@ -23,6 +23,7 @@
 #include "cartographer/common/port.h"
 #include "cartographer_ros/node.h"
 #include "cartographer_ros/ros_log_sink.h"
+#include "gflags/gflags.h"
 #include "tf2_ros/transform_listener.h"
 
 DEFINE_string(configuration_directory, "",
