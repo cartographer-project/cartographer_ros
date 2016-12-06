@@ -22,6 +22,7 @@
 #include "cartographer/common/lua_parameter_dictionary.h"
 #include "cartographer/common/make_unique.h"
 #include "cartographer/common/port.h"
+#include "cartographer_ros/bag_reader.h"
 #include "cartographer_ros/node.h"
 #include "cartographer_ros/ros_log_sink.h"
 #include "cartographer_ros/urdf_reader.h"
@@ -29,6 +30,7 @@
 #include "rosbag/bag.h"
 #include "rosbag/view.h"
 #include "rosgraph_msgs/Clock.h"
+#include "tf2_msgs/TFMessage.h"
 #include "urdf/model.h"
 
 DEFINE_string(configuration_directory, "",
@@ -48,6 +50,7 @@ namespace {
 
 constexpr int kLatestOnlyPublisherQueueSize = 1;
 constexpr char kClockTopic[] = "clock";
+constexpr char kTfStaticTopic[] = "/tf_static";
 
 std::vector<string> SplitString(const string& input, const char delimiter) {
   std::stringstream stream(input);
@@ -68,11 +71,23 @@ void Run(std::vector<string> bag_filenames) {
   cartographer::common::LuaParameterDictionary lua_parameter_dictionary(
       code, std::move(file_resolver));
 
-  tf2_ros::Buffer tf_buffer;
-  tf_buffer.setUsingDedicatedThread(true);
-  ReadStaticTransformsFromUrdf(FLAGS_urdf_filename, &tf_buffer);
-  const auto options = CreateNodeOptions(&lua_parameter_dictionary);
-  Node node(options, &tf_buffer);
+  auto tf_buffer = ::cartographer::common::make_unique<tf2_ros::Buffer>();
+  if (!FLAGS_urdf_filename.empty()) {
+    ReadStaticTransformsFromUrdf(FLAGS_urdf_filename, tf_buffer.get());
+  } else {
+    LOG(INFO) << "Pre-loading transforms from bag...";
+    // TODO(damonkohler): Support multi-trajectory.
+    CHECK_EQ(bag_filenames.size(), 1);
+    tf_buffer = ReadTransformsFromBag(bag_filenames.back());
+  }
+  tf_buffer->setUsingDedicatedThread(true);
+
+  auto options = CreateNodeOptions(&lua_parameter_dictionary);
+  // Since we preload the transform buffer, we should never have to wait for a
+  // transform. When we finish processing the bag, we will simply drop any
+  // remaining sensor data that cannot be transformed due to missing transforms.
+  options.lookup_transform_timeout_sec = 0.;
+  Node node(options, tf_buffer.get());
   node.Initialize();
 
   std::unordered_set<string> expected_sensor_ids;
@@ -138,6 +153,7 @@ void Run(std::vector<string> bag_filenames) {
         return;
       }
 
+      // TODO(damonkohler): Republish non-conflicting tf messages.
       const string topic = node.node_handle()->resolveName(msg.getTopic());
       if (expected_sensor_ids.count(topic) == 0) {
         continue;
@@ -147,21 +163,25 @@ void Run(std::vector<string> bag_filenames) {
             ->sensor_bridge(trajectory_id)
             ->HandleLaserScanMessage(topic,
                                      msg.instantiate<sensor_msgs::LaserScan>());
-      } else if (msg.isType<sensor_msgs::MultiEchoLaserScan>()) {
+      }
+      if (msg.isType<sensor_msgs::MultiEchoLaserScan>()) {
         node.map_builder_bridge()
             ->sensor_bridge(trajectory_id)
             ->HandleMultiEchoLaserScanMessage(
                 topic, msg.instantiate<sensor_msgs::MultiEchoLaserScan>());
-      } else if (msg.isType<sensor_msgs::PointCloud2>()) {
+      }
+      if (msg.isType<sensor_msgs::PointCloud2>()) {
         node.map_builder_bridge()
             ->sensor_bridge(trajectory_id)
             ->HandlePointCloud2Message(
                 topic, msg.instantiate<sensor_msgs::PointCloud2>());
-      } else if (msg.isType<sensor_msgs::Imu>()) {
+      }
+      if (msg.isType<sensor_msgs::Imu>()) {
         node.map_builder_bridge()
             ->sensor_bridge(trajectory_id)
             ->HandleImuMessage(topic, msg.instantiate<sensor_msgs::Imu>());
-      } else if (msg.isType<nav_msgs::Odometry>()) {
+      }
+      if (msg.isType<nav_msgs::Odometry>()) {
         node.map_builder_bridge()
             ->sensor_bridge(trajectory_id)
             ->HandleOdometryMessage(topic,
@@ -190,6 +210,7 @@ void Run(std::vector<string> bag_filenames) {
 }  // namespace cartographer_ros
 
 int main(int argc, char** argv) {
+  FLAGS_alsologtostderr = true;
   google::InitGoogleLogging(argv[0]);
   google::ParseCommandLineFlags(&argc, &argv, true);
 
@@ -198,7 +219,6 @@ int main(int argc, char** argv) {
   CHECK(!FLAGS_configuration_basename.empty())
       << "-configuration_basename is missing.";
   CHECK(!FLAGS_bag_filenames.empty()) << "-bag_filenames is missing.";
-  CHECK(!FLAGS_urdf_filename.empty()) << "-urdf_filename is missing.";
 
   ::ros::init(argc, argv, "cartographer_offline_node");
   ::ros::start();
