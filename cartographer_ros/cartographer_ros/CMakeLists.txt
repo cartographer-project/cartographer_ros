@@ -175,6 +175,7 @@ google_binary(cartographer_assets_writer
 
 google_binary(cartographer_node
   USES_CARTOGRAPHER
+  USES_GFLAGS
   SRCS
     node_main.cc
   DEPENDS
@@ -195,6 +196,7 @@ install(TARGETS cartographer_assets_writer
 )
 google_binary(cartographer_offline_node
   USES_CARTOGRAPHER
+  USES_GFLAGS
   SRCS
     offline_node_main.cc
   DEPENDS
