@@ -37,6 +37,7 @@ RUN cartographer_ros/scripts/install_debs.sh && rm -rf /var/lib/apt/lists/*
 
 # Build, install, and test all packages individually to allow caching.
 COPY scripts/install.sh cartographer_ros/scripts/
+COPY scripts/catkin_test_results.sh cartographer_ros/scripts/
 
 RUN cartographer_ros/scripts/install.sh --pkg ceres-solver
 
@@ -44,16 +45,22 @@ RUN cartographer_ros/scripts/install.sh --pkg cartographer && \
     cartographer_ros/scripts/install.sh --pkg cartographer --make-args test
 
 COPY cartographer_ros_msgs catkin_ws/src/cartographer_ros/
-RUN cartographer_ros/scripts/install.sh --pkg cartographer_ros_msgs \
-    --catkin-make-args run_tests
+RUN cartographer_ros/scripts/install.sh --pkg cartographer_ros_msgs && \
+    cartographer_ros/scripts/install.sh --pkg cartographer_ros_msgs \
+        --catkin-make-args run_tests && \
+    cartographer_ros/scripts/catkin_test_results.sh build_isolated/cartographer_ros_msgs
 
 COPY cartographer_ros catkin_ws/src/cartographer_ros/
-RUN cartographer_ros/scripts/install.sh --pkg cartographer_ros \
-    --catkin-make-args run_tests
+RUN cartographer_ros/scripts/install.sh --pkg cartographer_ros && \
+    cartographer_ros/scripts/install.sh --pkg cartographer_ros \
+        --catkin-make-args run_tests && \
+    cartographer_ros/scripts/catkin_test_results.sh build_isolated/cartographer_ros
 
 COPY cartographer_rviz catkin_ws/src/cartographer_ros/
-RUN cartographer_ros/scripts/install.sh --pkg cartographer_rviz \
-    --catkin-make-args run_tests
+RUN cartographer_ros/scripts/install.sh --pkg cartographer_rviz && \
+    cartographer_ros/scripts/install.sh --pkg cartographer_rviz \
+        --catkin-make-args run_tests && \
+    cartographer_ros/scripts/catkin_test_results.sh build_isolated/cartographer_rviz
 
 COPY scripts/ros_entrypoint.sh /
 # A BTRFS bug may prevent us from cleaning up these directories.
