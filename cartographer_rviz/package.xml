@@ -36,7 +36,6 @@
 
   <depend>cartographer</depend>
   <depend>cartographer_ros_msgs</depend>
-
   <depend>eigen_conversions</depend>
   <depend>libqt5-core</depend>
   <depend>libqt5-gui</depend>

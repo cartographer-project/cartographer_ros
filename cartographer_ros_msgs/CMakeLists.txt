@@ -16,11 +16,15 @@ cmake_minimum_required(VERSION 2.8.3)
 
 project(cartographer_ros_msgs)
 
-find_package(Cartographer REQUIRED)
+set(PACKAGE_DEPENDENCIES
+  geometry_msgs
+)
+
+find_package(cartographer REQUIRED)
 include("${CARTOGRAPHER_CMAKE_DIR}/functions.cmake")
 google_initialize_cartographer_project()
 
-find_package(catkin REQUIRED COMPONENTS geometry_msgs message_generation)
+find_package(catkin REQUIRED COMPONENTS message_generation ${PACKAGE_DEPENDENCIES})
 
 add_message_files(
   FILES
@@ -40,4 +44,7 @@ generate_messages(
     geometry_msgs
 )
 
-catkin_package()
+catkin_package(
+  CATKIN_DEPENDS
+    ${PACKAGE_DEPENDENCIES}
+)
