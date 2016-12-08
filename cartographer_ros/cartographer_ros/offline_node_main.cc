@@ -51,7 +51,6 @@ namespace {
 
 constexpr int kLatestOnlyPublisherQueueSize = 1;
 constexpr char kClockTopic[] = "clock";
-constexpr char kTfStaticTopic[] = "/tf_static";
 
 std::vector<string> SplitString(const string& input, const char delimiter) {
   std::stringstream stream(input);
@@ -92,15 +91,17 @@ void Run(std::vector<string> bag_filenames) {
   node.Initialize();
 
   std::unordered_set<string> expected_sensor_ids;
+  const auto check_insert = [&expected_sensor_ids, &node](const string& topic) {
+    CHECK(expected_sensor_ids.insert(node.node_handle()->resolveName(topic))
+              .second);
+  };
 
   // For 2D SLAM, subscribe to exactly one horizontal laser.
   if (options.use_laser_scan) {
-    expected_sensor_ids.insert(
-        node.node_handle()->resolveName(kLaserScanTopic, false /* remap */));
+    check_insert(kLaserScanTopic);
   }
   if (options.use_multi_echo_laser_scan) {
-    expected_sensor_ids.insert(node.node_handle()->resolveName(
-        kMultiEchoLaserScanTopic, false /* remap */));
+    check_insert(kMultiEchoLaserScanTopic);
   }
 
   // For 3D SLAM, subscribe to all point clouds topics.
@@ -110,8 +111,7 @@ void Run(std::vector<string> bag_filenames) {
       if (options.num_point_clouds > 1) {
         topic += "_" + std::to_string(i + 1);
       }
-      expected_sensor_ids.insert(
-          node.node_handle()->resolveName(topic, false /* remap */));
+      check_insert(topic);
     }
   }
 
@@ -121,14 +121,12 @@ void Run(std::vector<string> bag_filenames) {
       (options.map_builder_options.use_trajectory_builder_2d() &&
        options.map_builder_options.trajectory_builder_2d_options()
            .use_imu_data())) {
-    expected_sensor_ids.insert(
-        node.node_handle()->resolveName(kImuTopic, false /* remap */));
+    check_insert(kImuTopic);
   }
 
   // For both 2D and 3D SLAM, odometry is optional.
   if (options.use_odometry) {
-    expected_sensor_ids.insert(
-        node.node_handle()->resolveName(kOdometryTopic, false /* remap */));
+    check_insert(kOdometryTopic);
   }
 
   ::ros::Publisher clock_publisher =
@@ -155,7 +153,8 @@ void Run(std::vector<string> bag_filenames) {
       }
 
       // TODO(damonkohler): Republish non-conflicting tf messages.
-      const string topic = node.node_handle()->resolveName(msg.getTopic());
+      const string topic =
+          node.node_handle()->resolveName(msg.getTopic(), false /* resolve */);
       if (expected_sensor_ids.count(topic) == 0) {
         continue;
       }
