@@ -141,6 +141,11 @@ Data
 =================================================================================================================================== ======== ====== ===============================
 `b3-2016-01-19-13-50-11.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-01-19-13-50-11.bag>`_ 318 s    2.5 GB
 `b3-2016-02-10-08-08-26.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-02-10-08-08-26.bag>`_ 3371 s   25 GB
+`b3-2016-03-01-13-39-41.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-03-01-13-39-41.bag>`_ 382 s    2.9 GB
+`b3-2016-03-01-15-42-37.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-03-01-15-42-37.bag>`_ 3483 s   17 GB  6 large gaps in data
+`b3-2016-03-01-16-42-00.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-03-01-16-42-00.bag>`_ 313 s    2.4 GB
+`b3-2016-03-01-16-48-39.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-03-01-16-48-39.bag>`_ 375 s    2.8 GB
+`b3-2016-03-02-10-09-32.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-03-02-10-09-32.bag>`_ 1150 s   6.6 GB 3 large gaps in data
 `b3-2016-04-05-13-54-42.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-04-05-13-54-42.bag>`_ 829 s    6.1 GB
 `b3-2016-04-05-14-14-00.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-04-05-14-14-00.bag>`_ 1221 s   9.1 GB
 `b3-2016-04-05-15-51-36.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-04-05-15-51-36.bag>`_ 30 s     231 MB
