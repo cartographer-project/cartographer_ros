@@ -23,10 +23,10 @@
   <node name="cartographer_offline_node" pkg="cartographer_ros"
       type="cartographer_offline_node" args="
           -configuration_directory $(find cartographer_ros)/configuration_files
-          -configuration_basename backpack_2d.lua"
+          -configuration_basename backpack_2d.lua
           -urdf_filename $(find cartographer_ros)/urdf/backpack_2d.urdf
           -bag_filenames $(arg bag_filenames)"
       output="screen">
-    <remap from="horizontal_laser_2d" to="echoes" />
+    <remap from="echoes" to="horizontal_laser_2d" />
   </node>
 </launch>
