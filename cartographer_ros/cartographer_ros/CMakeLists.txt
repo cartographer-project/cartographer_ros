@@ -194,6 +194,7 @@ install(TARGETS cartographer_assets_writer
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
+
 google_binary(cartographer_offline_node
   USES_CARTOGRAPHER
   USES_GFLAGS
@@ -204,4 +205,10 @@ google_binary(cartographer_offline_node
     node
     ros_log_sink
     urdf_reader
+)
+
+install(TARGETS cartographer_offline_node
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

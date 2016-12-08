@@ -210,7 +210,6 @@ void Run(std::vector<string> bag_filenames) {
 }  // namespace cartographer_ros
 
 int main(int argc, char** argv) {
-  FLAGS_alsologtostderr = true;
   google::InitGoogleLogging(argv[0]);
   google::ParseCommandLineFlags(&argc, &argv, true);
 
