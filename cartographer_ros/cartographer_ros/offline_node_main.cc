@@ -91,7 +91,7 @@ void Run(std::vector<string> bag_filenames) {
   node.Initialize();
 
   std::unordered_set<string> expected_sensor_ids;
-  const auto check_insert = [&](const string& topic) {
+  const auto check_insert = [&expected_sensor_ids, &node](const string& topic) {
     CHECK(expected_sensor_ids.insert(node.node_handle()->resolveName(topic))
               .second);
   };
