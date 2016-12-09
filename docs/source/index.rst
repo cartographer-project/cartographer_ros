@@ -38,7 +38,8 @@ See Cartographer's :ref:`system requirements <cartographer:system-requirements>`
 
 The following `ROS distributions`_ are currently supported:
 
-* ROS Indigo
+* Indigo
+* Kinetic
 
 .. _ROS distributions: http://wiki.ros.org/Distributions
 
