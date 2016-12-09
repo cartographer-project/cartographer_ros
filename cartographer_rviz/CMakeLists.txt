@@ -19,11 +19,13 @@ project(cartographer_rviz)
 set(PACKAGE_DEPENDENCIES
   cartographer_ros_msgs
   eigen_conversions
+  message_runtime
   roscpp
+  roslib
   rviz
 )
 
-find_package(Cartographer REQUIRED)
+find_package(cartographer REQUIRED)
 include("${CARTOGRAPHER_CMAKE_DIR}/functions.cmake")
 google_initialize_cartographer_project()
 

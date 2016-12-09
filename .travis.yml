@@ -20,12 +20,15 @@ services: docker
 cache:
   directories:
     - /home/travis/docker/
+
 env:
-  global:
-    - DOCKER_CACHE_FILE=/home/travis/docker/cache.tar.gz
+  matrix:
+    - ROS_RELEASE=indigo DOCKER_CACHE_FILE=/home/travis/docker/indigo-cache.tar.gz
+    - ROS_RELEASE=kinetic DOCKER_CACHE_FILE=/home/travis/docker/kinetic-cache.tar.gz
+
 before_install: scripts/load_docker_cache.sh
 
 install: true
 script:
-  - docker build ${TRAVIS_BUILD_DIR} -t cartographer_ros
+  - docker build ${TRAVIS_BUILD_DIR} -t cartographer_ros:${ROS_RELEASE} -f Dockerfile.${ROS_RELEASE}
   - scripts/save_docker_cache.sh
