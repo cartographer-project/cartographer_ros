@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.3)
 
 project(cartographer_ros)
 
@@ -64,7 +64,6 @@ catkin_package(
   CATKIN_DEPENDS
     ${PACKAGE_DEPENDENCIES}
   DEPENDS
-    CARTOGRAPHER
     YAMLCPP
     PCL
     EIGEN3
