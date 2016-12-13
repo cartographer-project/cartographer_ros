@@ -139,6 +139,11 @@ Data
 =================================================================================================================================== ======== ====== ===============================
 `ROS Bag <http://wiki.ros.org/Bags>`_                                                                                               Duration Size   Known Issues
 =================================================================================================================================== ======== ====== ===============================
+`b3-2015-12-10-12-41-07.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2015-12-10-12-41-07.bag>`_ 1466 s   7.3 GB 1 large gap in data
+`b3-2015-12-10-13-10-17.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2015-12-10-13-10-17.bag>`_ 718 s    5.5 GB 1 gap in data
+`b3-2015-12-10-13-31-28.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2015-12-10-13-31-28.bag>`_ 720 s    5.2 GB 2 large gaps in data
+`b3-2015-12-10-13-55-20.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2015-12-10-13-55-20.bag>`_ 429 s    3.3 GB
+`b3-2015-12-14-15-13-53.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2015-12-14-15-13-53.bag>`_ 916 s    7.1 GB
 `b3-2016-01-19-13-50-11.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-01-19-13-50-11.bag>`_ 318 s    2.5 GB
 `b3-2016-02-02-13-32-01.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-02-02-13-32-01.bag>`_ 47 s     366 MB
 `b3-2016-02-02-13-33-30.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-02-02-13-33-30.bag>`_ 1176 s   9.0 GB

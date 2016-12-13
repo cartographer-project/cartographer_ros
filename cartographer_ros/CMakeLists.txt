@@ -34,7 +34,6 @@ set(PACKAGE_DEPENDENCIES
   urdf
 )
 
-
 find_package(cartographer REQUIRED)
 include("${CARTOGRAPHER_CMAKE_DIR}/functions.cmake")
 google_initialize_cartographer_project()
