@@ -5,8 +5,8 @@ sure to provide:
 
 1. A link to a Git repository containing a branch of `cartographer_ros` with
    your configuration files checked in. This allows us to understand what you
-   changed and the exact steps you took to get to the point were you are stuck.
-2. A link to download the bag file you are testing agains.
+   changed and the exact steps you took to get to the point where you are stuck.
+2. A link to download the bag file you are testing against.
 
 We will be unable to help you without both.
 
