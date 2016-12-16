@@ -1,13 +1,11 @@
-Thank you for filing an issue to make our software better.
+Thank you for filing an issue!
 
-If you have trouble getting things to run or have tuning issues, please make
-sure to provide:
+It would help us tremendously if you provid the following so that we can easily reproduce your issue:
 
-1. A link to a Git repository containing a branch of `cartographer_ros` with
-   your configuration files checked in. This allows us to understand what you
-   changed and the exact steps you took to get to the point where you are stuck.
-2. A link to download the bag file you are testing against.
+1. A link to a Git repository containing a branch of `cartographer_ros` containing all
+   the configuration, launch, and URDF files required to reproduce your issue.
+2. A link to a bag file we can use to reproduce your issue.
 
-We will be unable to help you without both.
+We will likely be unable to help you without both.
 
-Please delete this boilerplate text before submitting the issue.
+Please remove this boilerplate text before submitting your issue.
