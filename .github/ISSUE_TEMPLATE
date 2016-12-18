@@ -1,0 +1,13 @@
+Thank you for filing an issue!
+
+It would help us tremendously if you provid the following so that we can easily
+reproduce your issue:
+
+1. A link to a Git repository containing a branch of `cartographer_ros`
+   containing all the configuration, launch, and URDF files required to
+   reproduce your issue.
+2. A link to a bag file we can use to reproduce your issue.
+
+We will likely be unable to help you without both.
+
+Please remove this boilerplate text before submitting your issue.
