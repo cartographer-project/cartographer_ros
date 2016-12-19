@@ -18,7 +18,7 @@
   <param name="/use_sim_time" value="true" />
 
   <node name="rviz" pkg="rviz" type="rviz" required="true"
-      args="-d $(find cartographer_ros)/configuration_files/demo_2d.rviz" />
+      args="-d $(find cartographer_ros)/configuration_files/demo_3d.rviz" />
 
   <node name="cartographer_offline_node" pkg="cartographer_ros"
       type="cartographer_offline_node" args="
