@@ -149,6 +149,7 @@ void Run(std::vector<string> bag_filenames) {
 
     for (const rosbag::MessageInstance& msg : view) {
       if (!::ros::ok()) {
+        node.map_builder_bridge()->FinishTrajectory(trajectory_id);
         return;
       }
 
