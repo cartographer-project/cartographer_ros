@@ -16,7 +16,7 @@
 Cartographer ROS Integration
 ============================
 
-|build| |docs|
+|build| |docs| |license|
 
 Purpose
 =======
@@ -53,3 +53,8 @@ at `our Contribution page`_.
     :alt: Documentation Status
     :scale: 100%
     :target: https://google-cartographer-ros.readthedocs.io/en/latest/?badge=latest
+.. |license| image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
+     :alt: Apache 2 license.
+     :scale: 100%
+     :target: https://github.com/googlecartographer/cartographer_ros/blob/master/LICENSE
+
