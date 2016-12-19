@@ -114,8 +114,6 @@ Each bag contains data from an IMU and from two Velodyne VLP-16 LIDARs,
 one mounted horizontally (i.e. spin axis up) and one vertically
 (i.e. push broom).
 
-3D data sets are still being curated and more will be made available soon.
-
 License
 -------
 
@@ -144,6 +142,7 @@ Data
 `b3-2015-12-10-13-31-28.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2015-12-10-13-31-28.bag>`_ 720 s    5.2 GB 2 large gaps in data
 `b3-2015-12-10-13-55-20.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2015-12-10-13-55-20.bag>`_ 429 s    3.3 GB
 `b3-2015-12-14-15-13-53.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2015-12-14-15-13-53.bag>`_ 916 s    7.1 GB
+`b3-2016-01-19-13-26-24.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-01-19-13-26-24.bag>`_ 1098 s   8.1 GB
 `b3-2016-01-19-13-50-11.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-01-19-13-50-11.bag>`_ 318 s    2.5 GB
 `b3-2016-02-02-13-32-01.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-02-02-13-32-01.bag>`_ 47 s     366 MB
 `b3-2016-02-02-13-33-30.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-02-02-13-33-30.bag>`_ 1176 s   9.0 GB
