@@ -60,8 +60,7 @@ namespace {
 namespace carto = ::cartographer;
 
 void HandlePointCloud2Message(
-    const sensor_msgs::PointCloud2::ConstPtr& msg,
-    const string& tracking_frame,
+    const sensor_msgs::PointCloud2::ConstPtr& msg, const string& tracking_frame,
     const tf2_ros::Buffer& tf_buffer,
     const carto::transform::TransformInterpolationBuffer&
         transform_interpolation_buffer,

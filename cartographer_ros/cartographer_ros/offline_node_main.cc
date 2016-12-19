@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <csignal>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -51,6 +52,10 @@ namespace {
 
 constexpr int kLatestOnlyPublisherQueueSize = 1;
 constexpr char kClockTopic[] = "clock";
+
+volatile std::sig_atomic_t sigint_triggered = 0;
+
+void SigintHandler(int) { sigint_triggered = 1; }
 
 std::vector<string> SplitString(const string& input, const char delimiter) {
   std::stringstream stream(input);
@@ -134,8 +139,8 @@ void Run(std::vector<string> bag_filenames) {
           kClockTopic, kLatestOnlyPublisherQueueSize);
 
   for (const string& bag_filename : bag_filenames) {
-    if (!::ros::ok()) {
-      return;
+    if (sigint_triggered) {
+      break;
     }
 
     const int trajectory_id = node.map_builder_bridge()->AddTrajectory(
@@ -148,8 +153,8 @@ void Run(std::vector<string> bag_filenames) {
     const double duration_in_seconds = (view.getEndTime() - begin_time).toSec();
 
     for (const rosbag::MessageInstance& msg : view) {
-      if (!::ros::ok()) {
-        return;
+      if (sigint_triggered) {
+        break;
       }
 
       // TODO(damonkohler): Republish non-conflicting tf messages.
@@ -219,7 +224,9 @@ int main(int argc, char** argv) {
       << "-configuration_basename is missing.";
   CHECK(!FLAGS_bag_filenames.empty()) << "-bag_filenames is missing.";
 
-  ::ros::init(argc, argv, "cartographer_offline_node");
+  std::signal(SIGINT, &::cartographer_ros::SigintHandler);
+  ::ros::init(argc, argv, "cartographer_offline_node",
+              ::ros::init_options::NoSigintHandler);
   ::ros::start();
 
   cartographer_ros::ScopedRosLogSink ros_log_sink;
