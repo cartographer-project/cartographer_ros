@@ -63,9 +63,9 @@ namespace {
 namespace carto = ::cartographer;
 
 carto::sensor::PointCloudWithIntensities ToPointCloudWithIntensities(
-    const sensor_msgs::PointCloud2::ConstPtr& msg) {
+    const sensor_msgs::PointCloud2::ConstPtr& message) {
   pcl::PointCloud<pcl::PointXYZ> pcl_point_cloud;
-  pcl::fromROSMsg(*msg, pcl_point_cloud);
+  pcl::fromROSMsg(*message, pcl_point_cloud);
   carto::sensor::PointCloudWithIntensities point_cloud;
 
   // TODO(hrapp): How to get reflectivities from PCL?
@@ -77,23 +77,23 @@ carto::sensor::PointCloudWithIntensities ToPointCloudWithIntensities(
 }
 
 carto::sensor::PointCloudWithIntensities ToPointCloudWithIntensities(
-    const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
-  return carto::sensor::ToPointCloudWithIntensities(ToCartographer(*msg));
+    const sensor_msgs::MultiEchoLaserScan::ConstPtr& message) {
+  return carto::sensor::ToPointCloudWithIntensities(ToCartographer(*message));
 }
 
 carto::sensor::PointCloudWithIntensities ToPointCloudWithIntensities(
-    const sensor_msgs::LaserScan::ConstPtr& msg) {
-  return carto::sensor::ToPointCloudWithIntensities(ToCartographer(*msg));
+    const sensor_msgs::LaserScan::ConstPtr& message) {
+  return carto::sensor::ToPointCloudWithIntensities(ToCartographer(*message));
 }
 
 template <typename T>
 void HandleMessage(
-    const T& msg, const string& tracking_frame,
+    const T& message, const string& tracking_frame,
     const tf2_ros::Buffer& tf_buffer,
     const carto::transform::TransformInterpolationBuffer&
         transform_interpolation_buffer,
     const std::vector<std::unique_ptr<carto::io::PointsProcessor>>& pipeline) {
-  const carto::common::Time time = FromRos(msg->header.stamp);
+  const carto::common::Time time = FromRos(message->header.stamp);
   if (!transform_interpolation_buffer.Has(time)) {
     return;
   }
@@ -101,18 +101,18 @@ void HandleMessage(
   const carto::transform::Rigid3d tracking_to_map =
       transform_interpolation_buffer.Lookup(time);
   const carto::transform::Rigid3d sensor_to_tracking =
-      ToRigid3d(tf_buffer.lookupTransform(tracking_frame, msg->header.frame_id,
-                                          msg->header.stamp));
+      ToRigid3d(tf_buffer.lookupTransform(tracking_frame, message->header.frame_id,
+                                          message->header.stamp));
   const carto::transform::Rigid3f sensor_to_map =
       (tracking_to_map * sensor_to_tracking).cast<float>();
 
   auto batch = carto::common::make_unique<carto::io::PointsBatch>();
   batch->time = time;
   batch->origin = sensor_to_map * Eigen::Vector3f::Zero();
-  batch->frame_id = msg->header.frame_id;
+  batch->frame_id = message->header.frame_id;
 
   carto::sensor::PointCloudWithIntensities point_cloud =
-      ToPointCloudWithIntensities(msg);
+      ToPointCloudWithIntensities(message);
   CHECK(point_cloud.intensities.size() == point_cloud.points.size());
 
   const auto min_max = std::minmax_element(point_cloud.intensities.begin(),
@@ -173,23 +173,23 @@ void Run(const string& trajectory_filename, const string& bag_filename,
     const ::ros::Time begin_time = view.getBeginTime();
     const double duration_in_seconds = (view.getEndTime() - begin_time).toSec();
 
-    for (const rosbag::MessageInstance& msg : view) {
-      if (msg.isType<sensor_msgs::PointCloud2>()) {
-        HandleMessage(msg.instantiate<sensor_msgs::PointCloud2>(),
+    for (const rosbag::MessageInstance& message : view) {
+      if (message.isType<sensor_msgs::PointCloud2>()) {
+        HandleMessage(message.instantiate<sensor_msgs::PointCloud2>(),
                       tracking_frame, *tf_buffer,
                       *transform_interpolation_buffer, pipeline);
       }
-      if (msg.isType<sensor_msgs::MultiEchoLaserScan>()) {
-        HandleMessage(msg.instantiate<sensor_msgs::MultiEchoLaserScan>(),
+      if (message.isType<sensor_msgs::MultiEchoLaserScan>()) {
+        HandleMessage(message.instantiate<sensor_msgs::MultiEchoLaserScan>(),
                       tracking_frame, *tf_buffer,
                       *transform_interpolation_buffer, pipeline);
       }
-      if (msg.isType<sensor_msgs::LaserScan>()) {
-        HandleMessage(msg.instantiate<sensor_msgs::LaserScan>(), tracking_frame,
+      if (message.isType<sensor_msgs::LaserScan>()) {
+        HandleMessage(message.instantiate<sensor_msgs::LaserScan>(), tracking_frame,
                       *tf_buffer, *transform_interpolation_buffer, pipeline);
       }
       LOG_EVERY_N(INFO, 100000)
-          << "Processed " << (msg.getTime() - begin_time).toSec() << " of "
+          << "Processed " << (message.getTime() - begin_time).toSec() << " of "
           << duration_in_seconds << " bag time seconds...";
     }
     bag.close();
