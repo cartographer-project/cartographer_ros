@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 2.8.12)  # Ships with Ubuntu 14.04 (Trusty)
 
 project(cartographer_ros)
 
@@ -44,6 +44,7 @@ find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
 include(FindPkgConfig)
 pkg_search_module(YAMLCPP REQUIRED yaml-cpp>=0.5.1)
 
+find_package(LuaGoogle REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common io)
 find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system iostreams)
@@ -59,10 +60,18 @@ include_directories(
   ${urdfdom_headers_INCLUDE_DIRS}
 )
 
+# Override Catkin's GTest configuration to use GMock.
+set(GTEST_FOUND TRUE)
+set(GTEST_INCLUDE_DIRS ${GMOCK_INCLUDE_DIRS})
+set(GTEST_LIBRARIES ${GMOCK_LIBRARIES})
+
 catkin_package(
   CATKIN_DEPENDS
     ${PACKAGE_DEPENDENCIES}
   DEPENDS
+    # TODO(damonkohler): This should be here but causes Catkin to abort because
+    # protobuf specifies a library '-lpthread' instead of just 'pthread'.
+    # CARTOGRAPHER
     YAMLCPP
     PCL
     EIGEN3
@@ -72,13 +81,85 @@ catkin_package(
   LIBRARIES ${PROJECT_NAME}
 )
 
-SET(ALL_LIBRARIES "" CACHE INTERNAL "ALL_LIBRARIES")
-
+file(GLOB_RECURSE ALL_SRCS "*.cc" "*.h")
+file(GLOB_RECURSE ALL_TESTS "*_test.cc")
+file(GLOB_RECURSE ALL_EXECUTABLES "*_main.cc")
+list(REMOVE_ITEM ALL_SRCS ${ALL_TESTS})
+list(REMOVE_ITEM ALL_SRCS ${ALL_EXECUTABLES})
+add_library(${PROJECT_NAME} ${ALL_SRCS})
 add_subdirectory("cartographer_ros")
 
-google_combined_library(${PROJECT_NAME}
-  SRCS "${ALL_LIBRARIES}"
+target_include_directories(${PROJECT_NAME} PUBLIC ${CARTOGRAPHER_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${CARTOGRAPHER_LIBRARIES})
+
+# YAML
+target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC "${YAMLCPP_INCLUDE_DIRS}")
+target_link_libraries(${PROJECT_NAME} PUBLIC ${YAMLCPP_LIBRARIES})
+
+# Lua
+target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${LUA_INCLUDE_DIR})
+
+# PCL
+target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
+  "${PCL_INCLUDE_DIRS}")
+target_link_libraries(${PROJECT_NAME} PUBLIC ${PCL_LIBRARIES})
+foreach(DEFINITION ${PCL_DEFINITIONS})
+  set(TARGET_COMPILE_FLAGS "${TARGET_COMPILE_FLAGS} ${DEFINITION}")
+endforeach()
+
+# Eigen
+target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
+  "${EIGEN3_INCLUDE_DIR}")
+
+# Boost
+target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
+  "${Boost_INCLUDE_DIRS}")
+target_link_libraries(${PROJECT_NAME} PUBLIC ${Boost_LIBRARIES})
+
+# Catkin
+target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${catkin_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${catkin_LIBRARIES})
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
+
+# Add the binary directory first, so that port.h is included after it has
+# been generated.
+target_include_directories(${PROJECT_NAME} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
+
+set(TARGET_COMPILE_FLAGS "${TARGET_COMPILE_FLAGS} ${GOOG_CXX_FLAGS}")
+set_target_properties(${PROJECT_NAME} PROPERTIES
+  COMPILE_FLAGS ${TARGET_COMPILE_FLAGS})
+
+if (CATKIN_ENABLE_TESTING)
+  catkin_add_gtest(configuration_files_test "cartographer_ros/configuration_files_test.cc")
+  # catkin_add_gtest uses a plain (i.e. no PUBLIC/PRIVATE/INTERFACE) call to
+  # target_link_libraries. That forces us to do the same.
+  target_include_directories(configuration_files_test SYSTEM PUBLIC ${LUA_INCLUDE_DIR})
+  target_link_libraries(configuration_files_test ${LUA_LIBRARIES})
+  target_include_directories(configuration_files_test SYSTEM PUBLIC ${catkin_INCLUDE_DIRS})
+  target_link_libraries(configuration_files_test ${catkin_LIBRARIES})
+  add_dependencies(configuration_files_test ${catkin_EXPORTED_TARGETS})
+  target_include_directories(configuration_files_test SYSTEM PUBLIC ${CARTOGRAPHER_INCLUDE_DIRS})
+  target_link_libraries(configuration_files_test ${CARTOGRAPHER_LIBRARIES})
+  target_link_libraries(configuration_files_test ${PROJECT_NAME})
+  set_target_properties(configuration_files_test PROPERTIES COMPILE_FLAGS ${TARGET_COMPILE_FLAGS})
+
+  catkin_add_gtest(time_conversion_test "cartographer_ros/time_conversion_test.cc")
+  # catkin_add_gtest uses a plain (i.e. no PUBLIC/PRIVATE/INTERFACE) call to
+  # target_link_libraries. That forces us to do the same.
+  target_include_directories(time_conversion_test SYSTEM PUBLIC ${LUA_INCLUDE_DIR})
+  target_link_libraries(time_conversion_test ${LUA_LIBRARIES})
+  target_include_directories(time_conversion_test SYSTEM PUBLIC ${catkin_INCLUDE_DIRS})
+  target_link_libraries(time_conversion_test ${catkin_LIBRARIES})
+  add_dependencies(time_conversion_test ${catkin_EXPORTED_TARGETS})
+  target_include_directories(time_conversion_test SYSTEM PUBLIC ${CARTOGRAPHER_INCLUDE_DIRS})
+  target_link_libraries(time_conversion_test ${CARTOGRAPHER_LIBRARIES})
+  target_link_libraries(time_conversion_test ${PROJECT_NAME})
+  set_target_properties(time_conversion_test PROPERTIES COMPILE_FLAGS ${TARGET_COMPILE_FLAGS})
+endif()
 
 install(DIRECTORY launch urdf configuration_files
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
@@ -93,3 +174,16 @@ install(TARGETS ${PROJECT_NAME}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
+
+# Install source headers.
+file(GLOB_RECURSE hdrs "*.h")
+foreach(HDR ${hdrs})
+  file(RELATIVE_PATH REL_FIL ${CMAKE_SOURCE_DIR} ${HDR})
+  get_filename_component(INSTALL_DIR ${REL_FIL} DIRECTORY)
+  install(
+    FILES
+      ${HDR}
+    DESTINATION
+      include/${INSTALL_DIR}
+  )
+endforeach()

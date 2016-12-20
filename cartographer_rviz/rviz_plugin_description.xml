@@ -14,7 +14,7 @@
   limitations under the License.
 -->
 
-<library path="lib/libcartographer_rviz_submaps_visualization">
+<library path="lib/libcartographer_rviz">
   <class name="Submaps"
          type="cartographer_rviz::SubmapsDisplay"
          base_class_type="rviz::Display">
