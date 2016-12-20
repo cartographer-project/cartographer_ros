@@ -12,19 +12,13 @@ options = {
       min_range = 1.,
       max_range = 60.,
     },
-    -- {
-      -- action = "voxel_filter_and_remove_moving_objects",
-      -- voxel_size = VOXEL_SIZE,
-    -- },
-    -- {
-      -- action = "dump_num_points",
-    -- },
-    -- {
-      -- action = "color_with_panos",
-      -- run_ids = {
-        -- "20120119_193543_L19220",
-      -- },
-    -- },
+    {
+      action = "voxel_filter_and_remove_moving_objects",
+      voxel_size = VOXEL_SIZE,
+    },
+    {
+      action = "dump_num_points",
+    },
     {
       action = "write_xray_image",
       voxel_size = VOXEL_SIZE,

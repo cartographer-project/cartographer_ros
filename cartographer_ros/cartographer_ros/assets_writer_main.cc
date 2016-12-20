@@ -22,6 +22,7 @@
 
 #include "cartographer/common/configuration_file_resolver.h"
 #include "cartographer/common/make_unique.h"
+#include "cartographer/common/math.h"
 #include "cartographer/io/points_processor.h"
 #include "cartographer/io/points_processor_pipeline_builder.h"
 #include "cartographer/sensor/laser.h"
@@ -49,6 +50,14 @@ DEFINE_string(configuration_directory, "",
 DEFINE_string(configuration_basename, "",
               "Basename, i.e. not containing any directory prefix, of the "
               "configuration file.");
+DEFINE_int32(laser_intensity_min, 0,
+             "Laser intensities are device specific. Some assets require a "
+             "useful normalized value for it though, which has to be specified "
+             "manually.");
+DEFINE_int32(laser_intensity_max, 255, "See 'laser_intensity_min'.");
+DEFINE_int32(fake_intensity, 0,
+             "If non-zero, ignore intensities in the laser scan and use this "
+             "value for all. Ignores 'laser_intensity_*'");
 DEFINE_string(
     urdf_filename, "",
     "URDF file that contains static links for your sensor configuration.");
@@ -115,17 +124,18 @@ void HandleMessage(
       ToPointCloudWithIntensities(message);
   CHECK(point_cloud.intensities.size() == point_cloud.points.size());
 
-  const auto min_max = std::minmax_element(point_cloud.intensities.begin(),
-                                           point_cloud.intensities.end());
-  const float min = *min_max.first;
-  const float max = *min_max.second;
-  const bool fake_intensities = min == max;
-
   for (int i = 0; i < point_cloud.points.size(); ++i) {
     batch->points.push_back(sensor_to_map * point_cloud.points[i]);
-    uint8_t gray = fake_intensities
-                       ? 200.
-                       : (point_cloud.intensities[i] - min) / (max - min);
+    uint8_t gray;
+    if (FLAGS_fake_intensity) {
+            gray = FLAGS_fake_intensity;
+    } else {
+      gray = cartographer::common::Clamp(
+                 (point_cloud.intensities[i] - FLAGS_laser_intensity_min) /
+                     (FLAGS_laser_intensity_max - FLAGS_laser_intensity_min),
+                 0.f, 1.f) *
+             255;
+    }
     batch->colors.push_back({{gray, gray, gray}});
   }
   pipeline.back()->Process(std::move(batch));

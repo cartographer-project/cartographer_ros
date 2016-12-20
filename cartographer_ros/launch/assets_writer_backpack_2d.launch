@@ -20,6 +20,7 @@
           -configuration_directory $(find cartographer_ros)/configuration_files
           -configuration_basename assets_writer.lua
           -urdf_filename $(find cartographer_ros)/urdf/backpack_2d.urdf
+          -laser_intensity_max=4095
           -bag_filename $(arg bag_filenames)
           -trajectory_filename $(arg trajectory_filename)"
       output="screen">
