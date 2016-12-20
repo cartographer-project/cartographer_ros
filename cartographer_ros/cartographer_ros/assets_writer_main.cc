@@ -24,19 +24,19 @@
 #include "cartographer/common/make_unique.h"
 #include "cartographer/io/points_processor.h"
 #include "cartographer/io/points_processor_pipeline_builder.h"
+#include "cartographer/sensor/laser.h"
+#include "cartographer/sensor/point_cloud.h"
+#include "cartographer/transform/transform_interpolation_buffer.h"
 #include "cartographer_ros/bag_reader.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/time_conversion.h"
 #include "cartographer_ros/urdf_reader.h"
-#include "cartographer/sensor/laser.h"
-#include "cartographer/sensor/point_cloud.h"
-#include "cartographer/transform/transform_interpolation_buffer.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
-#include "rosbag/bag.h"
-#include "rosbag/view.h"
 #include "ros/ros.h"
 #include "ros/time.h"
+#include "rosbag/bag.h"
+#include "rosbag/view.h"
 #include "tf2_eigen/tf2_eigen.h"
 #include "tf2_msgs/TFMessage.h"
 #include "tf2_ros/buffer.h"
@@ -111,11 +111,12 @@ void HandleMessage(
   batch->origin = sensor_to_map * Eigen::Vector3f::Zero();
   batch->frame_id = msg->header.frame_id;
 
-  carto::sensor::PointCloudWithIntensities point_cloud = ToPointCloudWithIntensities(msg);
+  carto::sensor::PointCloudWithIntensities point_cloud =
+      ToPointCloudWithIntensities(msg);
   CHECK(point_cloud.intensities.size() == point_cloud.points.size());
 
   const auto min_max = std::minmax_element(point_cloud.intensities.begin(),
-                                     point_cloud.intensities.end());
+                                           point_cloud.intensities.end());
   const float min = *min_max.first;
   const float max = *min_max.second;
   const bool fake_intensities = min == max;
@@ -174,17 +175,18 @@ void Run(const string& trajectory_filename, const string& bag_filename,
 
     for (const rosbag::MessageInstance& msg : view) {
       if (msg.isType<sensor_msgs::PointCloud2>()) {
-        HandleMessage(msg.instantiate<sensor_msgs::PointCloud2>(), tracking_frame,
-               *tf_buffer, *transform_interpolation_buffer, pipeline);
+        HandleMessage(msg.instantiate<sensor_msgs::PointCloud2>(),
+                      tracking_frame, *tf_buffer,
+                      *transform_interpolation_buffer, pipeline);
       }
       if (msg.isType<sensor_msgs::MultiEchoLaserScan>()) {
-        HandleMessage(
-            msg.instantiate<sensor_msgs::MultiEchoLaserScan>(), tracking_frame,
-            *tf_buffer, *transform_interpolation_buffer, pipeline);
+        HandleMessage(msg.instantiate<sensor_msgs::MultiEchoLaserScan>(),
+                      tracking_frame, *tf_buffer,
+                      *transform_interpolation_buffer, pipeline);
       }
       if (msg.isType<sensor_msgs::LaserScan>()) {
         HandleMessage(msg.instantiate<sensor_msgs::LaserScan>(), tracking_frame,
-                  *tf_buffer, *transform_interpolation_buffer, pipeline);
+                      *tf_buffer, *transform_interpolation_buffer, pipeline);
       }
       LOG_EVERY_N(INFO, 100000)
           << "Processed " << (msg.getTime() - begin_time).toSec() << " of "
