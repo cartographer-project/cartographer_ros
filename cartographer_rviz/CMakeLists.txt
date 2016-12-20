@@ -40,8 +40,9 @@ catkin_package(
   INCLUDE_DIRS "."
 )
 
-file(GLOB_RECURSE source_list "*.cc" "*.h")
-add_library(${PROJECT_NAME} ${source_list})
+file(GLOB_RECURSE ALL_SRCS "*.cc" "*.h")
+message(${ALL_SRCS})
+add_library(${PROJECT_NAME} ${ALL_SRCS})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${QT_LIBRARIES})
 
 set(CMAKE_AUTOMOC ON)

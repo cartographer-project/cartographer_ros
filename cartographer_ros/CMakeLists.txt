@@ -81,8 +81,12 @@ catkin_package(
   LIBRARIES ${PROJECT_NAME}
 )
 
-file(GLOB_RECURSE source_list "*.cc" "*.h")
-add_library(${PROJECT_NAME} ${source_list})
+file(GLOB_RECURSE ALL_SRCS "*.cc" "*.h")
+file(GLOB_RECURSE ALL_TESTS "*_test.cc")
+file(GLOB_RECURSE ALL_EXECUTABLES "*_main.cc")
+list(REMOVE_ITEM ALL_SRCS ${ALL_TESTS})
+list(REMOVE_ITEM ALL_SRCS ${ALL_EXECUTABLES})
+add_library(${PROJECT_NAME} ${ALL_SRCS})
 add_subdirectory("cartographer_ros")
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CARTOGRAPHER_INCLUDE_DIRS})
@@ -92,7 +96,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${CARTOGRAPHER_LIBRARIES})
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC "${YAMLCPP_INCLUDE_DIRS}")
 target_link_libraries(${PROJECT_NAME} PUBLIC ${YAMLCPP_LIBRARIES})
 
-# lua
+# Lua
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${LUA_INCLUDE_DIR})
 
 # PCL
