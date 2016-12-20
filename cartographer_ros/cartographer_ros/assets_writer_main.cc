@@ -110,8 +110,8 @@ void HandleMessage(
   const carto::transform::Rigid3d tracking_to_map =
       transform_interpolation_buffer.Lookup(time);
   const carto::transform::Rigid3d sensor_to_tracking =
-      ToRigid3d(tf_buffer.lookupTransform(tracking_frame, message->header.frame_id,
-                                          message->header.stamp));
+      ToRigid3d(tf_buffer.lookupTransform(
+          tracking_frame, message->header.frame_id, message->header.stamp));
   const carto::transform::Rigid3f sensor_to_map =
       (tracking_to_map * sensor_to_tracking).cast<float>();
 
@@ -128,7 +128,7 @@ void HandleMessage(
     batch->points.push_back(sensor_to_map * point_cloud.points[i]);
     uint8_t gray;
     if (FLAGS_fake_intensity) {
-            gray = FLAGS_fake_intensity;
+      gray = FLAGS_fake_intensity;
     } else {
       gray = cartographer::common::Clamp(
                  (point_cloud.intensities[i] - FLAGS_laser_intensity_min) /
@@ -195,8 +195,9 @@ void Run(const string& trajectory_filename, const string& bag_filename,
                       *transform_interpolation_buffer, pipeline);
       }
       if (message.isType<sensor_msgs::LaserScan>()) {
-        HandleMessage(message.instantiate<sensor_msgs::LaserScan>(), tracking_frame,
-                      *tf_buffer, *transform_interpolation_buffer, pipeline);
+        HandleMessage(message.instantiate<sensor_msgs::LaserScan>(),
+                      tracking_frame, *tf_buffer,
+                      *transform_interpolation_buffer, pipeline);
       }
       LOG_EVERY_N(INFO, 100000)
           << "Processed " << (message.getTime() - begin_time).toSec() << " of "
