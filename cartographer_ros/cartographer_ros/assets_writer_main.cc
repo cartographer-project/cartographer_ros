@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -61,30 +62,32 @@ namespace {
 
 namespace carto = ::cartographer;
 
-carto::sensor::LaserFan ConvertMessage(
+carto::sensor::PointCloudWithIntensities ToPointCloudWithIntensities(
     const sensor_msgs::PointCloud2::ConstPtr& msg) {
   pcl::PointCloud<pcl::PointXYZ> pcl_point_cloud;
   pcl::fromROSMsg(*msg, pcl_point_cloud);
-  carto::sensor::LaserFan laser_fan{Eigen::Vector3f::Zero(), {}, {}, {}};
+  carto::sensor::PointCloudWithIntensities point_cloud;
+
   // TODO(hrapp): How to get reflectivities from PCL?
   for (const auto& point : pcl_point_cloud) {
-    laser_fan.returns.emplace_back(point.x, point.y, point.z);
+    point_cloud.points.emplace_back(point.x, point.y, point.z);
+    point_cloud.intensities.push_back(1.);
   }
-  return laser_fan;
+  return point_cloud;
 }
 
-carto::sensor::LaserFan ConvertMessage(
+carto::sensor::PointCloudWithIntensities ToPointCloudWithIntensities(
     const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
-  return carto::sensor::ToLaserFan(ToCartographer(*msg));
+  return carto::sensor::ToPointCloudWithIntensities(ToCartographer(*msg));
 }
 
-carto::sensor::LaserFan ConvertMessage(
+carto::sensor::PointCloudWithIntensities ToPointCloudWithIntensities(
     const sensor_msgs::LaserScan::ConstPtr& msg) {
-  return carto::sensor::ToLaserFan(ToCartographer(*msg));
+  return carto::sensor::ToPointCloudWithIntensities(ToCartographer(*msg));
 }
 
 template <typename T>
-void HandleMsg(
+void HandleMessage(
     const T& msg, const string& tracking_frame,
     const tf2_ros::Buffer& tf_buffer,
     const carto::transform::TransformInterpolationBuffer&
@@ -108,15 +111,21 @@ void HandleMsg(
   batch->origin = sensor_to_map * Eigen::Vector3f::Zero();
   batch->frame_id = msg->header.frame_id;
 
-  carto::sensor::LaserFan laser_fan = ConvertMessage(msg);
-  CHECK(laser_fan.reflectivities.empty() ||
-        laser_fan.reflectivities.size() == laser_fan.returns.size());
-  for (int i = 0; i < laser_fan.returns.size(); ++i) {
-    batch->points.push_back(sensor_to_map * laser_fan.returns[i]);
-    if (!laser_fan.reflectivities.empty()) {
-      uint8_t gray = laser_fan.reflectivities[i];
-      batch->colors.push_back({{gray, gray, gray}});
-    }
+  carto::sensor::PointCloudWithIntensities point_cloud = ToPointCloudWithIntensities(msg);
+  CHECK(point_cloud.intensities.size() == point_cloud.points.size());
+
+  const auto min_max = std::minmax_element(point_cloud.intensities.begin(),
+                                     point_cloud.intensities.end());
+  const float min = *min_max.first;
+  const float max = *min_max.second;
+  const bool fake_intensities = min == max;
+
+  for (int i = 0; i < point_cloud.points.size(); ++i) {
+    batch->points.push_back(sensor_to_map * point_cloud.points[i]);
+    uint8_t gray = fake_intensities
+                       ? 200.
+                       : (point_cloud.intensities[i] - min) / (max - min);
+    batch->colors.push_back({{gray, gray, gray}});
   }
   pipeline.back()->Process(std::move(batch));
 }
@@ -165,16 +174,16 @@ void Run(const string& trajectory_filename, const string& bag_filename,
 
     for (const rosbag::MessageInstance& msg : view) {
       if (msg.isType<sensor_msgs::PointCloud2>()) {
-        HandleMsg(msg.instantiate<sensor_msgs::PointCloud2>(), tracking_frame,
+        HandleMessage(msg.instantiate<sensor_msgs::PointCloud2>(), tracking_frame,
                *tf_buffer, *transform_interpolation_buffer, pipeline);
       }
       if (msg.isType<sensor_msgs::MultiEchoLaserScan>()) {
-        HandleMsg(
+        HandleMessage(
             msg.instantiate<sensor_msgs::MultiEchoLaserScan>(), tracking_frame,
             *tf_buffer, *transform_interpolation_buffer, pipeline);
       }
       if (msg.isType<sensor_msgs::LaserScan>()) {
-        HandleMsg(msg.instantiate<sensor_msgs::LaserScan>(), tracking_frame,
+        HandleMessage(msg.instantiate<sensor_msgs::LaserScan>(), tracking_frame,
                   *tf_buffer, *transform_interpolation_buffer, pipeline);
       }
       LOG_EVERY_N(INFO, 100000)
