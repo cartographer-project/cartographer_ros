@@ -7,11 +7,11 @@ options = {
       -- action = "fixed_ratio_sampler",
       -- sampling_ratio = 1.,
     -- },
-    -- {
-      -- action = "min_max_range_filter",
-      -- min_range = 1.,
-      -- max_range = 150.,
-    -- },
+    {
+      action = "min_max_range_filter",
+      min_range = 1.,
+      max_range = 60.,
+    },
     -- {
       -- action = "voxel_filter_and_remove_moving_objects",
       -- voxel_size = VOXEL_SIZE,
@@ -86,14 +86,10 @@ options = {
       -- action = "write_xyz",
       -- filename = "points.xyz",
     -- },
-    -- {
-      -- action = "write_octree",
-      -- directory = "octree",
-    -- },
-    -- {
-      -- action = "write_ply",
-      -- filename = "points.ply",
-    -- },
+    {
+      action = "write_ply",
+      filename = "points.ply",
+    },
   }
 }
 

@@ -23,17 +23,19 @@
 #include "cartographer/common/make_unique.h"
 #include "cartographer/io/points_processor.h"
 #include "cartographer/io/points_processor_pipeline_builder.h"
-#include "cartographer/transform/transform_interpolation_buffer.h"
 #include "cartographer_ros/bag_reader.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/time_conversion.h"
 #include "cartographer_ros/urdf_reader.h"
+#include "cartographer/sensor/laser.h"
+#include "cartographer/sensor/point_cloud.h"
+#include "cartographer/transform/transform_interpolation_buffer.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
-#include "ros/ros.h"
-#include "ros/time.h"
 #include "rosbag/bag.h"
 #include "rosbag/view.h"
+#include "ros/ros.h"
+#include "ros/time.h"
 #include "tf2_eigen/tf2_eigen.h"
 #include "tf2_msgs/TFMessage.h"
 #include "tf2_ros/buffer.h"
@@ -59,8 +61,31 @@ namespace {
 
 namespace carto = ::cartographer;
 
-void HandlePointCloud2Message(
-    const sensor_msgs::PointCloud2::ConstPtr& msg, const string& tracking_frame,
+carto::sensor::LaserFan ConvertMessage(
+    const sensor_msgs::PointCloud2::ConstPtr& msg) {
+  pcl::PointCloud<pcl::PointXYZ> pcl_point_cloud;
+  pcl::fromROSMsg(*msg, pcl_point_cloud);
+  carto::sensor::LaserFan laser_fan{Eigen::Vector3f::Zero(), {}, {}, {}};
+  // TODO(hrapp): How to get reflectivities from PCL?
+  for (const auto& point : pcl_point_cloud) {
+    laser_fan.returns.emplace_back(point.x, point.y, point.z);
+  }
+  return laser_fan;
+}
+
+carto::sensor::LaserFan ConvertMessage(
+    const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
+  return carto::sensor::ToLaserFan(ToCartographer(*msg));
+}
+
+carto::sensor::LaserFan ConvertMessage(
+    const sensor_msgs::LaserScan::ConstPtr& msg) {
+  return carto::sensor::ToLaserFan(ToCartographer(*msg));
+}
+
+template <typename T>
+void HandleMsg(
+    const T& msg, const string& tracking_frame,
     const tf2_ros::Buffer& tf_buffer,
     const carto::transform::TransformInterpolationBuffer&
         transform_interpolation_buffer,
@@ -83,11 +108,15 @@ void HandlePointCloud2Message(
   batch->origin = sensor_to_map * Eigen::Vector3f::Zero();
   batch->frame_id = msg->header.frame_id;
 
-  pcl::PointCloud<pcl::PointXYZ> pcl_point_cloud;
-  pcl::fromROSMsg(*msg, pcl_point_cloud);
-  for (const auto& point : pcl_point_cloud) {
-    batch->points.push_back(sensor_to_map *
-                            Eigen::Vector3f(point.x, point.y, point.z));
+  carto::sensor::LaserFan laser_fan = ConvertMessage(msg);
+  CHECK(laser_fan.reflectivities.empty() ||
+        laser_fan.reflectivities.size() == laser_fan.returns.size());
+  for (int i = 0; i < laser_fan.returns.size(); ++i) {
+    batch->points.push_back(sensor_to_map * laser_fan.returns[i]);
+    if (!laser_fan.reflectivities.empty()) {
+      uint8_t gray = laser_fan.reflectivities[i];
+      batch->colors.push_back({{gray, gray, gray}});
+    }
   }
   pipeline.back()->Process(std::move(batch));
 }
@@ -136,9 +165,17 @@ void Run(const string& trajectory_filename, const string& bag_filename,
 
     for (const rosbag::MessageInstance& msg : view) {
       if (msg.isType<sensor_msgs::PointCloud2>()) {
-        HandlePointCloud2Message(msg.instantiate<sensor_msgs::PointCloud2>(),
-                                 tracking_frame, *tf_buffer,
-                                 *transform_interpolation_buffer, pipeline);
+        HandleMsg(msg.instantiate<sensor_msgs::PointCloud2>(), tracking_frame,
+               *tf_buffer, *transform_interpolation_buffer, pipeline);
+      }
+      if (msg.isType<sensor_msgs::MultiEchoLaserScan>()) {
+        HandleMsg(
+            msg.instantiate<sensor_msgs::MultiEchoLaserScan>(), tracking_frame,
+            *tf_buffer, *transform_interpolation_buffer, pipeline);
+      }
+      if (msg.isType<sensor_msgs::LaserScan>()) {
+        HandleMsg(msg.instantiate<sensor_msgs::LaserScan>(), tracking_frame,
+                  *tf_buffer, *transform_interpolation_buffer, pipeline);
       }
       LOG_EVERY_N(INFO, 100000)
           << "Processed " << (msg.getTime() - begin_time).toSec() << " of "
