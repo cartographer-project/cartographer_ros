@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.12)  # Ships with Ubuntu 14.04 (Trusty)
 
 project(cartographer_rviz)
 
@@ -29,6 +29,7 @@ find_package(cartographer REQUIRED)
 include("${CARTOGRAPHER_CMAKE_DIR}/functions.cmake")
 google_initialize_cartographer_project()
 
+find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system iostreams)
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
 
@@ -38,6 +39,11 @@ catkin_package(
     ${PACKAGE_DEPENDENCIES}
   INCLUDE_DIRS "."
 )
+
+file(GLOB_RECURSE ALL_SRCS "*.cc" "*.h")
+message(${ALL_SRCS})
+add_library(${PROJECT_NAME} ${ALL_SRCS})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${QT_LIBRARIES})
 
 set(CMAKE_AUTOMOC ON)
 if(rviz_QT_VERSION VERSION_LESS "5")
@@ -55,26 +61,31 @@ else()
 endif()
 add_definitions(-DQT_NO_KEYWORDS)
 
-SET(ALL_LIBRARIES "" CACHE INTERNAL "ALL_LIBRARIES")
-
-add_subdirectory("cartographer_rviz")
-
-# Create an empty file for the shared library we require for RViz.
-set(DUMMY_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/empty.cc)
-add_custom_command(
-  OUTPUT  ${DUMMY_SOURCE}
-  COMMAND cmake -E touch ${DUMMY_SOURCE}
-  DEPENDS ${ARG_SRCS}
-)
-add_library(cartographer_rviz_submaps_visualization ${DUMMY_SOURCE})
-target_link_libraries(cartographer_rviz_submaps_visualization
-  ${QT_LIBRARIES}
-  "-Wl,--whole-archive"
-  ${ALL_LIBRARIES}
-  "-Wl,--no-whole-archive"
+# Add the binary directory first, so that port.h is included after it has
+# been generated.
+target_include_directories(${PROJECT_NAME} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 
-install(TARGETS cartographer_rviz_submaps_visualization
+target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
+  "${EIGEN3_INCLUDE_DIR}")
+target_link_libraries(${PROJECT_NAME} PUBLIC ${EIGEN3_LIBRARIES})
+
+target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
+  "${Boost_INCLUDE_DIRS}")
+target_link_libraries(${PROJECT_NAME} PUBLIC ${Boost_LIBRARIES})
+
+target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${catkin_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${catkin_LIBRARIES})
+add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
+
+set(TARGET_COMPILE_FLAGS "${TARGET_COMPILE_FLAGS} ${GOOG_CXX_FLAGS}")
+set_target_properties(${PROJECT_NAME} PROPERTIES
+  COMPILE_FLAGS ${TARGET_COMPILE_FLAGS})
+
+install(TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
