@@ -12,10 +12,10 @@ options = {
       min_range = 1.,
       max_range = 60.,
     },
-    {
-      action = "voxel_filter_and_remove_moving_objects",
-      voxel_size = VOXEL_SIZE,
-    },
+    -- {
+      -- action = "voxel_filter_and_remove_moving_objects",
+      -- voxel_size = VOXEL_SIZE,
+    -- },
     {
       action = "dump_num_points",
     },
