@@ -90,8 +90,9 @@ submap_query (`cartographer_ros_msgs/SubmapQuery`_)
 
 finish_trajectory (`cartographer_ros_msgs/FinishTrajectory`_)
   Finishes the current trajectory by flushing all queued sensor data, running a
-  final optimization, and writing the map to disk. Currently, this also
-  triggers shutdown.
+  final optimization, and writing artifacts (e.g. the map) to disk. The `stem`
+  argument is used as a prefix for the various files which are written. Files
+  will usually end up in `~/.ros` or `ROS_HOME` if it is set.
 
 Required tf Transforms
 ======================
