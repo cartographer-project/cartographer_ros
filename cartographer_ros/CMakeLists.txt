@@ -89,6 +89,11 @@ list(REMOVE_ITEM ALL_SRCS ${ALL_EXECUTABLES})
 add_library(${PROJECT_NAME} ${ALL_SRCS})
 add_subdirectory("cartographer_ros")
 
+# We expect find_package(Ceres) to have located these for us.
+find_package(Ceres REQUIRED)
+target_link_libraries(${PROJECT_NAME} PUBLIC glog)
+target_link_libraries(${PROJECT_NAME} PUBLIC gflags)
+
 target_include_directories(${PROJECT_NAME} PUBLIC ${CARTOGRAPHER_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${CARTOGRAPHER_LIBRARIES})
 
