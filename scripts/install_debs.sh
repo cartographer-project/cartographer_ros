@@ -22,8 +22,8 @@ set -o verbose
 cd catkin_ws
 
 # Install Ninja.
-sudo apt-get update
-sudo apt-get install -y ninja-build
+apt-get update
+apt-get install -y ninja-build
 
 # Install rosdep dependencies.
 rosdep update

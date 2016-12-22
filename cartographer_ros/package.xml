@@ -47,8 +47,10 @@
   <depend>message_runtime</depend>
   <depend>nav_msgs</depend>
   <depend>pcl_conversions</depend>
+  <depend>robot_state_publisher</depend>
   <depend>rosbag</depend>
   <depend>roscpp</depend>
+  <depend>roslaunch</depend>
   <depend>roslib</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
