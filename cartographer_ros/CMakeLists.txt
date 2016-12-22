@@ -176,8 +176,8 @@ install(TARGETS ${PROJECT_NAME}
 )
 
 # Install source headers.
-file(GLOB_RECURSE hdrs "*.h")
-foreach(HDR ${hdrs})
+file(GLOB_RECURSE HDRS "*.h")
+foreach(HDR ${HDRS})
   file(RELATIVE_PATH REL_FIL ${CMAKE_SOURCE_DIR} ${HDR})
   get_filename_component(INSTALL_DIR ${REL_FIL} DIRECTORY)
   install(
