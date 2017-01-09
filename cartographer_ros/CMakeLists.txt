@@ -89,19 +89,17 @@ list(REMOVE_ITEM ALL_SRCS ${ALL_EXECUTABLES})
 add_library(${PROJECT_NAME} ${ALL_SRCS})
 add_subdirectory("cartographer_ros")
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${CARTOGRAPHER_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${CARTOGRAPHER_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC cartographer)
 
 # YAML
-target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC "${YAMLCPP_INCLUDE_DIRS}")
+target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${YAMLCPP_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${YAMLCPP_LIBRARIES})
 
 # Lua
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${LUA_INCLUDE_DIR})
 
 # PCL
-target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
-  "${PCL_INCLUDE_DIRS}")
+target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${PCL_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${PCL_LIBRARIES})
 foreach(DEFINITION ${PCL_DEFINITIONS})
   set(TARGET_COMPILE_FLAGS "${TARGET_COMPILE_FLAGS} ${DEFINITION}")
@@ -142,8 +140,7 @@ if (CATKIN_ENABLE_TESTING)
   target_include_directories(configuration_files_test SYSTEM PUBLIC ${catkin_INCLUDE_DIRS})
   target_link_libraries(configuration_files_test ${catkin_LIBRARIES})
   add_dependencies(configuration_files_test ${catkin_EXPORTED_TARGETS})
-  target_include_directories(configuration_files_test SYSTEM PUBLIC ${CARTOGRAPHER_INCLUDE_DIRS})
-  target_link_libraries(configuration_files_test ${CARTOGRAPHER_LIBRARIES})
+  target_link_libraries(configuration_files_test cartographer)
   target_link_libraries(configuration_files_test ${PROJECT_NAME})
   set_target_properties(configuration_files_test PROPERTIES COMPILE_FLAGS ${TARGET_COMPILE_FLAGS})
 
@@ -155,8 +152,7 @@ if (CATKIN_ENABLE_TESTING)
   target_include_directories(time_conversion_test SYSTEM PUBLIC ${catkin_INCLUDE_DIRS})
   target_link_libraries(time_conversion_test ${catkin_LIBRARIES})
   add_dependencies(time_conversion_test ${catkin_EXPORTED_TARGETS})
-  target_include_directories(time_conversion_test SYSTEM PUBLIC ${CARTOGRAPHER_INCLUDE_DIRS})
-  target_link_libraries(time_conversion_test ${CARTOGRAPHER_LIBRARIES})
+  target_link_libraries(time_conversion_test cartographer)
   target_link_libraries(time_conversion_test ${PROJECT_NAME})
   set_target_properties(time_conversion_test PROPERTIES COMPILE_FLAGS ${TARGET_COMPILE_FLAGS})
 endif()

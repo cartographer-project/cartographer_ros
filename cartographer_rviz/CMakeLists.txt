@@ -68,8 +68,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${CARTOGRAPHER_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${CARTOGRAPHER_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC cartographer)
 
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
   "${EIGEN3_INCLUDE_DIR}")
