@@ -23,7 +23,7 @@
 #include "cartographer/common/configuration_file_resolver.h"
 #include "cartographer/common/make_unique.h"
 #include "cartographer/common/math.h"
-#include "cartographer/io/file.h"
+#include "cartographer/io/file_writer.h"
 #include "cartographer/io/points_processor.h"
 #include "cartographer/io/points_processor_pipeline_builder.h"
 #include "cartographer/sensor/laser.h"
@@ -157,12 +157,12 @@ void Run(const string& trajectory_filename, const string& bag_filename,
   carto::mapping::proto::Trajectory trajectory_proto;
   CHECK(trajectory_proto.ParseFromIstream(&stream));
 
-  const auto file_factory = [](const string& filename) {
-    return carto::common::make_unique<carto::io::IoStreamFile>(filename);
+  const auto file_writer_factory = [](const string& filename) {
+    return carto::common::make_unique<carto::io::StreamFileWriter>(filename);
   };
 
   carto::io::PointsProcessorPipelineBuilder builder;
-  carto::io::RegisterBuiltInPointsProcessors(trajectory_proto, file_factory,
+  carto::io::RegisterBuiltInPointsProcessors(trajectory_proto, file_writer_factory,
                                              &builder);
   std::vector<std::unique_ptr<carto::io::PointsProcessor>> pipeline =
       builder.CreatePipeline(
