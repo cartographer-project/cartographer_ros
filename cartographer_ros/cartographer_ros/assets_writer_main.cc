@@ -51,14 +51,6 @@ DEFINE_string(configuration_directory, "",
 DEFINE_string(configuration_basename, "",
               "Basename, i.e. not containing any directory prefix, of the "
               "configuration file.");
-DEFINE_int32(laser_intensity_min, 0,
-             "Laser intensities are device specific. Some assets require a "
-             "useful normalized value for it though, which has to be specified "
-             "manually.");
-DEFINE_int32(laser_intensity_max, 255, "See 'laser_intensity_min'.");
-DEFINE_int32(fake_intensity, 0,
-             "If non-zero, ignore intensities in the laser scan and use this "
-             "value for all. Ignores 'laser_intensity_*'");
 DEFINE_string(
     urdf_filename, "",
     "URDF file that contains static links for your sensor configuration.");
@@ -127,17 +119,7 @@ void HandleMessage(
 
   for (int i = 0; i < point_cloud.points.size(); ++i) {
     batch->points.push_back(sensor_to_map * point_cloud.points[i]);
-    uint8_t gray;
-    if (FLAGS_fake_intensity) {
-      gray = FLAGS_fake_intensity;
-    } else {
-      gray = cartographer::common::Clamp(
-                 (point_cloud.intensities[i] - FLAGS_laser_intensity_min) /
-                     (FLAGS_laser_intensity_max - FLAGS_laser_intensity_min),
-                 0.f, 1.f) *
-             255;
-    }
-    batch->colors.push_back({{gray, gray, gray}});
+    batch->intensities.push_back(point_cloud.intensities[i]);
   }
   pipeline.back()->Process(std::move(batch));
 }
@@ -162,8 +144,8 @@ void Run(const string& trajectory_filename, const string& bag_filename,
   };
 
   carto::io::PointsProcessorPipelineBuilder builder;
-  carto::io::RegisterBuiltInPointsProcessors(trajectory_proto, file_writer_factory,
-                                             &builder);
+  carto::io::RegisterBuiltInPointsProcessors(trajectory_proto,
+                                             file_writer_factory, &builder);
   std::vector<std::unique_ptr<carto::io::PointsProcessor>> pipeline =
       builder.CreatePipeline(
           lua_parameter_dictionary.GetDictionary("pipeline").get());
