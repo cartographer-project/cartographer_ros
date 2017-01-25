@@ -52,9 +52,9 @@ std::unique_ptr<tf2_ros::Buffer> ReadTransformsFromBag(
         }
       }
     }
-    LOG_EVERY_N(INFO, 100000) << "Processed "
-                              << (msg.getTime() - begin_time).toSec() << " of "
-                              << duration_in_seconds << " bag time seconds...";
+    LOG_EVERY_N(INFO, 100000)
+        << "Processed " << (msg.getTime() - begin_time).toSec() << " of "
+        << duration_in_seconds << " bag time seconds...";
   }
 
   bag.close();

@@ -79,7 +79,7 @@ NodeOptions LoadOptions() {
   return CreateNodeOptions(&lua_parameter_dictionary);
 }
 
-void Run(std::vector<string> bag_filenames) {
+void Run(const std::vector<string>& bag_filenames) {
   auto options = LoadOptions();
 
   auto tf_buffer = ::cartographer::common::make_unique<tf2_ros::Buffer>();
