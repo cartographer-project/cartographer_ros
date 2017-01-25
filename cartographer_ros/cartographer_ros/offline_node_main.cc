@@ -67,7 +67,7 @@ std::vector<string> SplitString(const string& input, const char delimiter) {
   return tokens;
 }
 
-void Run(std::vector<string> bag_filenames) {
+NodeOptions LoadOptions() {
   auto file_resolver = cartographer::common::make_unique<
       cartographer::common::ConfigurationFileResolver>(
       std::vector<string>{FLAGS_configuration_directory});
@@ -75,6 +75,12 @@ void Run(std::vector<string> bag_filenames) {
       file_resolver->GetFileContentOrDie(FLAGS_configuration_basename);
   cartographer::common::LuaParameterDictionary lua_parameter_dictionary(
       code, std::move(file_resolver));
+
+  return CreateNodeOptions(&lua_parameter_dictionary);
+}
+
+void Run(const std::vector<string>& bag_filenames) {
+  auto options = LoadOptions();
 
   auto tf_buffer = ::cartographer::common::make_unique<tf2_ros::Buffer>();
   if (!FLAGS_urdf_filename.empty()) {
@@ -87,7 +93,6 @@ void Run(std::vector<string> bag_filenames) {
   }
   tf_buffer->setUsingDedicatedThread(true);
 
-  auto options = CreateNodeOptions(&lua_parameter_dictionary);
   // Since we preload the transform buffer, we should never have to wait for a
   // transform. When we finish processing the bag, we will simply drop any
   // remaining sensor data that cannot be transformed due to missing transforms.
