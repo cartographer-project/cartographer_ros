@@ -117,7 +117,7 @@ void HandleMessage(
       ToPointCloudWithIntensities(message);
   CHECK(point_cloud.intensities.size() == point_cloud.points.size());
 
-  for (int i = 0; i < point_cloud.points.size(); ++i) {
+  for (size_t i = 0; i < point_cloud.points.size(); ++i) {
     batch->points.push_back(sensor_to_map * point_cloud.points[i]);
     batch->intensities.push_back(point_cloud.intensities[i]);
   }
