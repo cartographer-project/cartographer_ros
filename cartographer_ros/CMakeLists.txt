@@ -122,8 +122,8 @@ add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 # Add the binary directory first, so that port.h is included after it has
 # been generated.
 target_include_directories(${PROJECT_NAME} PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
     $<INSTALL_INTERFACE:include>
 )
 
@@ -174,7 +174,7 @@ install(TARGETS ${PROJECT_NAME}
 # Install source headers.
 file(GLOB_RECURSE HDRS "*.h")
 foreach(HDR ${HDRS})
-  file(RELATIVE_PATH REL_FIL ${CMAKE_SOURCE_DIR} ${HDR})
+  file(RELATIVE_PATH REL_FIL ${PROJECT_SOURCE_DIR} ${HDR})
   get_filename_component(INSTALL_DIR ${REL_FIL} DIRECTORY)
   install(
     FILES
