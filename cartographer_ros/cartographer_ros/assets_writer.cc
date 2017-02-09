@@ -34,7 +34,7 @@ namespace {
 
 namespace carto = ::cartographer;
 
-// Writes an occupany grid.
+// Writes an occupancy grid.
 void Write2DAssets(const std::vector<::cartographer::mapping::TrajectoryNode>&
                        trajectory_nodes,
                    const NodeOptions& options, const std::string& stem) {
