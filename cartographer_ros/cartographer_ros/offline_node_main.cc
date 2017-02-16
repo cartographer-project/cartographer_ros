@@ -33,6 +33,7 @@
 #include "rosbag/view.h"
 #include "rosgraph_msgs/Clock.h"
 #include "tf2_msgs/TFMessage.h"
+#include "tf2_ros/static_transform_broadcaster.h"
 #include "urdf/model.h"
 
 DEFINE_string(configuration_directory, "",
@@ -52,6 +53,7 @@ namespace {
 
 constexpr int kLatestOnlyPublisherQueueSize = 1;
 constexpr char kClockTopic[] = "clock";
+constexpr char kTfTopic [] = "tf";
 
 volatile std::sig_atomic_t sigint_triggered = 0;
 
@@ -84,14 +86,17 @@ void Run(const std::vector<string>& bag_filenames) {
 
   auto tf_buffer =
       ::cartographer::common::make_unique<tf2_ros::Buffer>(::ros::DURATION_MAX);
+
+  LOG(INFO) << "Pre-loading transforms from bag...";
+  // TODO(damonkohler): Support multi-trajectory.
+  CHECK_EQ(bag_filenames.size(), 1);
+  ReadTransformsFromBag(bag_filenames.back(), tf_buffer.get());
+
+  std::vector<geometry_msgs::TransformStamped> urdf_transforms;
   if (!FLAGS_urdf_filename.empty()) {
-    ReadStaticTransformsFromUrdf(FLAGS_urdf_filename, tf_buffer.get());
-  } else {
-    LOG(INFO) << "Pre-loading transforms from bag...";
-    // TODO(damonkohler): Support multi-trajectory.
-    CHECK_EQ(bag_filenames.size(), 1);
-    tf_buffer = ReadTransformsFromBag(bag_filenames.back(), tf_buffer.get());
+    urdf_transforms = ReadStaticTransformsFromUrdf(FLAGS_urdf_filename, tf_buffer.get());
   }
+
   tf_buffer->setUsingDedicatedThread(true);
 
   // Since we preload the transform buffer, we should never have to wait for a
@@ -140,9 +145,19 @@ void Run(const std::vector<string>& bag_filenames) {
     check_insert(kOdometryTopic);
   }
 
+  ::ros::Publisher tf_publisher =
+      node.node_handle()->advertise<tf2_msgs::TFMessage>(
+          kTfTopic, kLatestOnlyPublisherQueueSize);
+
+  ::tf2_ros::StaticTransformBroadcaster static_tf_broadcaster;
+
   ::ros::Publisher clock_publisher =
       node.node_handle()->advertise<rosgraph_msgs::Clock>(
           kClockTopic, kLatestOnlyPublisherQueueSize);
+
+  if (urdf_transforms.size() > 0) {
+    static_tf_broadcaster.sendTransform(urdf_transforms);
+  }
 
   for (const string& bag_filename : bag_filenames) {
     if (sigint_triggered) {
@@ -163,7 +178,12 @@ void Run(const std::vector<string>& bag_filenames) {
         break;
       }
 
-      // TODO(damonkohler): Republish non-conflicting tf messages.
+      // TODO(damonkohler): Check if republished tf messages are in conflict
+      if (msg.isType<tf2_msgs::TFMessage>()) {
+        auto tf_message = msg.instantiate<tf2_msgs::TFMessage>();
+        tf_publisher.publish(tf_message);
+      }
+
       const string topic =
           node.node_handle()->resolveName(msg.getTopic(), false /* resolve */);
       if (expected_sensor_ids.count(topic) == 0) {

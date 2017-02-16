@@ -152,11 +152,12 @@ void Run(const string& trajectory_filename, const string& bag_filename,
 
   auto tf_buffer =
       ::cartographer::common::make_unique<tf2_ros::Buffer>(::ros::DURATION_MAX);
+
+  LOG(INFO) << "Pre-loading transforms from bag...";
+  ReadTransformsFromBag(bag_filename, tf_buffer.get());
+
   if (!urdf_filename.empty()) {
     ReadStaticTransformsFromUrdf(urdf_filename, tf_buffer.get());
-  } else {
-    LOG(INFO) << "Pre-loading transforms from bag...";
-    ReadTransformsFromBag(bag_filename, tf_buffer.get());
   }
 
   const string tracking_frame =
