@@ -47,6 +47,9 @@ DEFINE_string(bag_filenames, "", "Comma-separated list of bags to process.");
 DEFINE_string(
     urdf_filename, "",
     "URDF file that contains static links for your sensor configuration.");
+DEFINE_bool(
+    publish_bag_transforms, true,
+    "Whether to publish all transforms from the bag.");
 
 namespace cartographer_ros {
 namespace {
@@ -94,7 +97,8 @@ void Run(const std::vector<string>& bag_filenames) {
 
   std::vector<geometry_msgs::TransformStamped> urdf_transforms;
   if (!FLAGS_urdf_filename.empty()) {
-    urdf_transforms = ReadStaticTransformsFromUrdf(FLAGS_urdf_filename, tf_buffer.get());
+    urdf_transforms =
+        ReadStaticTransformsFromUrdf(FLAGS_urdf_filename, tf_buffer.get());
   }
 
   tf_buffer->setUsingDedicatedThread(true);
@@ -178,8 +182,7 @@ void Run(const std::vector<string>& bag_filenames) {
         break;
       }
 
-      // TODO(damonkohler): Check if republished tf messages are in conflict
-      if (msg.isType<tf2_msgs::TFMessage>()) {
+      if (FLAGS_publish_bag_transforms && msg.isType<tf2_msgs::TFMessage>()) {
         auto tf_message = msg.instantiate<tf2_msgs::TFMessage>();
         tf_publisher.publish(tf_message);
       }
