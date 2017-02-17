@@ -150,12 +150,13 @@ void Run(const string& trajectory_filename, const string& bag_filename,
       builder.CreatePipeline(
           lua_parameter_dictionary.GetDictionary("pipeline").get());
 
-  auto tf_buffer = ::cartographer::common::make_unique<tf2_ros::Buffer>();
+  auto tf_buffer =
+      ::cartographer::common::make_unique<tf2_ros::Buffer>(::ros::DURATION_MAX);
   if (!urdf_filename.empty()) {
     ReadStaticTransformsFromUrdf(urdf_filename, tf_buffer.get());
   } else {
     LOG(INFO) << "Pre-loading transforms from bag...";
-    tf_buffer = ReadTransformsFromBag(bag_filename);
+    ReadTransformsFromBag(bag_filename, tf_buffer.get());
   }
 
   const string tracking_frame =

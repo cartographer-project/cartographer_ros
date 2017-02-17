@@ -82,14 +82,15 @@ NodeOptions LoadOptions() {
 void Run(const std::vector<string>& bag_filenames) {
   auto options = LoadOptions();
 
-  auto tf_buffer = ::cartographer::common::make_unique<tf2_ros::Buffer>();
+  auto tf_buffer =
+      ::cartographer::common::make_unique<tf2_ros::Buffer>(::ros::DURATION_MAX);
   if (!FLAGS_urdf_filename.empty()) {
     ReadStaticTransformsFromUrdf(FLAGS_urdf_filename, tf_buffer.get());
   } else {
     LOG(INFO) << "Pre-loading transforms from bag...";
     // TODO(damonkohler): Support multi-trajectory.
     CHECK_EQ(bag_filenames.size(), 1);
-    tf_buffer = ReadTransformsFromBag(bag_filenames.back());
+    tf_buffer = ReadTransformsFromBag(bag_filenames.back(), tf_buffer.get());
   }
   tf_buffer->setUsingDedicatedThread(true);
 

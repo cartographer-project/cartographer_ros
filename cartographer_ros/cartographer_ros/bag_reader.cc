@@ -29,14 +29,12 @@ namespace cartographer_ros {
 
 constexpr char kTfStaticTopic[] = "/tf_static";
 
-std::unique_ptr<tf2_ros::Buffer> ReadTransformsFromBag(
-    const string& bag_filename) {
+void ReadTransformsFromBag(
+    const string& bag_filename, tf2_ros::Buffer* const buffer) {
   rosbag::Bag bag;
   bag.open(bag_filename, rosbag::bagmode::Read);
   rosbag::View view(bag);
 
-  auto tf_buffer =
-      ::cartographer::common::make_unique<tf2_ros::Buffer>(::ros::DURATION_MAX);
   const ::ros::Time begin_time = view.getBeginTime();
   const double duration_in_seconds = (view.getEndTime() - begin_time).toSec();
   for (const rosbag::MessageInstance& msg : view) {
@@ -45,7 +43,7 @@ std::unique_ptr<tf2_ros::Buffer> ReadTransformsFromBag(
       for (const auto& transform : tf_msg->transforms) {
         try {
           // TODO(damonkohler): Handle topic remapping.
-          tf_buffer->setTransform(transform, "unused_authority",
+          buffer->setTransform(transform, "unused_authority",
                                   msg.getTopic() == kTfStaticTopic);
         } catch (const tf2::TransformException& ex) {
           LOG(WARNING) << ex.what();
@@ -58,7 +56,6 @@ std::unique_ptr<tf2_ros::Buffer> ReadTransformsFromBag(
   }
 
   bag.close();
-  return tf_buffer;
 }
 
 }  // namespace cartographer_ros
