@@ -30,7 +30,7 @@ namespace cartographer_ros {
 constexpr char kTfStaticTopic[] = "/tf_static";
 
 void ReadTransformsFromBag(
-    const string& bag_filename, tf2_ros::Buffer* const buffer) {
+    const string& bag_filename, tf2_ros::Buffer* const tf_buffer) {
   rosbag::Bag bag;
   bag.open(bag_filename, rosbag::bagmode::Read);
   rosbag::View view(bag);
@@ -43,7 +43,7 @@ void ReadTransformsFromBag(
       for (const auto& transform : tf_msg->transforms) {
         try {
           // TODO(damonkohler): Handle topic remapping.
-          buffer->setTransform(transform, "unused_authority",
+          tf_buffer->setTransform(transform, "unused_authority",
                                   msg.getTopic() == kTfStaticTopic);
         } catch (const tf2::TransformException& ex) {
           LOG(WARNING) << ex.what();

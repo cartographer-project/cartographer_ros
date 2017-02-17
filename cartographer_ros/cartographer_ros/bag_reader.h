@@ -23,7 +23,7 @@
 namespace cartographer_ros {
 
 void ReadTransformsFromBag(
-    const string& bag_filename, tf2_ros::Buffer* const buffer);
+    const string& bag_filename, tf2_ros::Buffer* const tf_buffer);
 
 }  // namespace cartographer_ros
 

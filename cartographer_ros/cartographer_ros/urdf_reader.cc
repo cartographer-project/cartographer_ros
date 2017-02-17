@@ -25,7 +25,7 @@
 namespace cartographer_ros {
 
 std::vector<geometry_msgs::TransformStamped> ReadStaticTransformsFromUrdf(
-    const string& urdf_filename, tf2_ros::Buffer* const buffer) {
+    const string& urdf_filename, tf2_ros::Buffer* const tf_buffer) {
   urdf::Model model;
   CHECK(model.initFile(urdf_filename));
 #if URDFDOM_HEADERS_HAS_SHARED_PTR_DEFS
@@ -50,7 +50,7 @@ std::vector<geometry_msgs::TransformStamped> ReadStaticTransformsFromUrdf(
                                pose.rotation.y, pose.rotation.z)));
     transform.child_frame_id = link->name;
     transform.header.frame_id = link->getParent()->name;
-    buffer->setTransform(transform, "urdf", true /* is_static */);
+    tf_buffer->setTransform(transform, "urdf", true /* is_static */);
     transforms.push_back(transform);
   }
   return transforms;
