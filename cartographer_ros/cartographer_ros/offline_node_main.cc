@@ -48,8 +48,8 @@ DEFINE_string(
     urdf_filename, "",
     "URDF file that contains static links for your sensor configuration.");
 DEFINE_bool(
-    publish_bag_transforms, true,
-    "Whether to publish all transforms from the bag.");
+    use_bag_transforms, true,
+    "Whether to read, use and republish the transforms from the bag.");
 
 namespace cartographer_ros {
 namespace {
@@ -90,10 +90,12 @@ void Run(const std::vector<string>& bag_filenames) {
   auto tf_buffer =
       ::cartographer::common::make_unique<tf2_ros::Buffer>(::ros::DURATION_MAX);
 
-  LOG(INFO) << "Pre-loading transforms from bag...";
-  // TODO(damonkohler): Support multi-trajectory.
-  CHECK_EQ(bag_filenames.size(), 1);
-  ReadTransformsFromBag(bag_filenames.back(), tf_buffer.get());
+  if (FLAGS_use_bag_transforms) {
+    LOG(INFO) << "Pre-loading transforms from bag...";
+    // TODO(damonkohler): Support multi-trajectory.
+    CHECK_EQ(bag_filenames.size(), 1);
+    ReadTransformsFromBag(bag_filenames.back(), tf_buffer.get());
+  }
 
   std::vector<geometry_msgs::TransformStamped> urdf_transforms;
   if (!FLAGS_urdf_filename.empty()) {
@@ -182,7 +184,7 @@ void Run(const std::vector<string>& bag_filenames) {
         break;
       }
 
-      if (FLAGS_publish_bag_transforms && msg.isType<tf2_msgs::TFMessage>()) {
+      if (FLAGS_use_bag_transforms && msg.isType<tf2_msgs::TFMessage>()) {
         auto tf_message = msg.instantiate<tf2_msgs::TFMessage>();
         tf_publisher.publish(tf_message);
       }
