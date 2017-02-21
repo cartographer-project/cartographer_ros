@@ -22,8 +22,8 @@
 
 namespace cartographer_ros {
 
-std::unique_ptr<tf2_ros::Buffer> ReadTransformsFromBag(
-    const string& bag_filename);
+void ReadTransformsFromBag(
+    const string& bag_filename, tf2_ros::Buffer* const tf_buffer);
 
 }  // namespace cartographer_ros
 
