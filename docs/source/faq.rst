@@ -23,13 +23,11 @@ The VLP-16 in the example bags is configured to rotate at 20 Hz. This has no inf
 
 __ http://www.ros.org/doc/api/sensor_msgs/html/msg/PointCloud2.html
 
-In the `corresponding Cartographer configuration file`__ you see `TRAJECTORY_BUILDER_3D.scans_per_accumulation = 160` which means we accumulate 160 of these to a point cloud for matching. Since
-there are two VLP-16s this number is data from slightly more than one
-revolution.
-
-Your platform moves during the time you require to accumulate the point cloud,
-and you would like to give your SLAM a chance of figuring out this movement.
-Doing this accumulation during SLAM allows for unwarping the point cloud:
-based on rotation velocities from the IMU and a constant velocity model. 
+In the `corresponding Cartographer configuration file`__ you see
+`TRAJECTORY_BUILDER_3D.scans_per_accumulation = 160` which means we accumulate
+160 per-UDP-packet point clouds into one larger point cloud, which
+incorporates motion estimation by combining constant velocity and IMU
+measurements, for matching. Since there are two VLP-16s, 160 UDP packets is
+enough for roughly 2 revolutions, one per VLP-16.
 
 __ https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros/configuration_files/backpack_3d.lua
