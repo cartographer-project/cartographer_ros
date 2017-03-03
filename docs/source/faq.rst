@@ -19,7 +19,10 @@ Frequently asked questions
 The laser data in the 3D bags is much higher than the maximum reported 20 Hz rotation speed that the VLP-16 can do. Why?
 ----------------------------------------------------------------------------------------------------------------------
 
-The VLP-16 in the example bags is configured to rotate at 20 Hz. This has no influence though on the frequency of UDP packets the VLP-16 sends which is much higher. The example bags contain a `sensor_msgs/PointCloud2`__ per UDP packet, not one per revolution.
+The VLP-16 in the example bags is configured to rotate at 20 Hz. However, the
+frequency of UDP packets the VLP-16 sends is much higher and independent of
+the rotation frequency. The example bags contain a `sensor_msgs/PointCloud2`__
+per UDP packet, not one per revolution.
 
 __ http://www.ros.org/doc/api/sensor_msgs/html/msg/PointCloud2.html
 
