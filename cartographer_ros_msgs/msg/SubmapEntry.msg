@@ -12,5 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-uint32 submap_version
+int32 submap_version
 geometry_msgs/Pose pose
