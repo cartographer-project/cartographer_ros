@@ -39,7 +39,7 @@ void BuildOccupancyGrid(
   carto::mapping_2d::LaserFanInserter laser_fan_inserter(
       submaps_options.laser_fan_inserter_options());
   for (const auto& node : trajectory_nodes) {
-    CHECK(node.constant_data->laser_fan_3d.returns.empty());  // No 3D yet.
+    CHECK(node.constant_data->range_data_3d.returns.empty());  // No 3D yet.
     laser_fan_inserter.Insert(
         carto::sensor::TransformLaserFan(node.constant_data->laser_fan_2d,
                                          node.pose.cast<float>()),

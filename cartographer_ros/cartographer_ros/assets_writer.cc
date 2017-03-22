@@ -54,30 +54,33 @@ void Write3DAssets(const std::vector<::cartographer::mapping::TrajectoryNode>&
 
   carto::io::NullPointsProcessor null_points_processor;
   carto::io::XRayPointsProcessor xy_xray_points_processor(
-      voxel_size, carto::transform::Rigid3f::Rotation(
-                      Eigen::AngleAxisf(-M_PI / 2.f, Eigen::Vector3f::UnitY())),
+      voxel_size,
+      carto::transform::Rigid3f::Rotation(
+          Eigen::AngleAxisf(-M_PI / 2.f, Eigen::Vector3f::UnitY())),
       {}, stem + "_xray_xy", file_writer_factory, &null_points_processor);
   carto::io::XRayPointsProcessor yz_xray_points_processor(
-      voxel_size, carto::transform::Rigid3f::Rotation(
-                      Eigen::AngleAxisf(M_PI, Eigen::Vector3f::UnitZ())),
+      voxel_size,
+      carto::transform::Rigid3f::Rotation(
+          Eigen::AngleAxisf(M_PI, Eigen::Vector3f::UnitZ())),
       {}, stem + "_xray_yz", file_writer_factory, &xy_xray_points_processor);
   carto::io::XRayPointsProcessor xz_xray_points_processor(
-      voxel_size, carto::transform::Rigid3f::Rotation(
-                      Eigen::AngleAxisf(-M_PI / 2.f, Eigen::Vector3f::UnitZ())),
+      voxel_size,
+      carto::transform::Rigid3f::Rotation(
+          Eigen::AngleAxisf(-M_PI / 2.f, Eigen::Vector3f::UnitZ())),
       {}, stem + "_xray_xz", file_writer_factory, &yz_xray_points_processor);
   carto::io::PlyWritingPointsProcessor ply_writing_points_processor(
       file_writer_factory(stem + ".ply"), &xz_xray_points_processor);
 
   for (const auto& node : trajectory_nodes) {
     const carto::sensor::LaserFan laser_fan = carto::sensor::TransformLaserFan(
-        carto::sensor::Decompress(node.constant_data->laser_fan_3d),
+        carto::sensor::Decompress(node.constant_data->range_data_3d),
         node.pose.cast<float>());
 
     auto points_batch = carto::common::make_unique<carto::io::PointsBatch>();
     points_batch->origin = laser_fan.origin;
     points_batch->points = laser_fan.returns;
     for (const uint8 reflectivity :
-         node.constant_data->laser_fan_3d.reflectivities) {
+         node.constant_data->range_data_3d.reflectivities) {
       points_batch->colors.push_back(
           carto::io::Color{{reflectivity, reflectivity, reflectivity}});
     }

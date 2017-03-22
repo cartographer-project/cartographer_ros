@@ -47,16 +47,15 @@ DEFINE_string(bag_filenames, "", "Comma-separated list of bags to process.");
 DEFINE_string(
     urdf_filename, "",
     "URDF file that contains static links for your sensor configuration.");
-DEFINE_bool(
-    use_bag_transforms, true,
-    "Whether to read, use and republish the transforms from the bag.");
+DEFINE_bool(use_bag_transforms, true,
+            "Whether to read, use and republish the transforms from the bag.");
 
 namespace cartographer_ros {
 namespace {
 
 constexpr int kLatestOnlyPublisherQueueSize = 1;
 constexpr char kClockTopic[] = "clock";
-constexpr char kTfTopic [] = "tf";
+constexpr char kTfTopic[] = "tf";
 
 volatile std::sig_atomic_t sigint_triggered = 0;
 

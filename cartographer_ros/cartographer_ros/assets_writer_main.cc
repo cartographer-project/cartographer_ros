@@ -58,9 +58,8 @@ DEFINE_string(bag_filename, "", "Bag to process.");
 DEFINE_string(
     trajectory_filename, "",
     "Proto containing the trajectory written by /finish_trajectory service.");
-DEFINE_bool(
-    use_bag_transforms, true,
-    "Whether to read and use the transforms from the bag.");
+DEFINE_bool(use_bag_transforms, true,
+            "Whether to read and use the transforms from the bag.");
 
 namespace cartographer_ros {
 namespace {
