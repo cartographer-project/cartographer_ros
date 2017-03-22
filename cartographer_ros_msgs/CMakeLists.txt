@@ -20,10 +20,6 @@ set(PACKAGE_DEPENDENCIES
   geometry_msgs
 )
 
-find_package(cartographer REQUIRED)
-include("${CARTOGRAPHER_CMAKE_DIR}/functions.cmake")
-google_initialize_cartographer_project()
-
 find_package(catkin REQUIRED COMPONENTS message_generation ${PACKAGE_DEPENDENCIES})
 
 add_message_files(
