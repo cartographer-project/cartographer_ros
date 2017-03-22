@@ -17,14 +17,15 @@
 #ifndef CARTOGRAPHER_ROS_URDF_READER_H_
 #define CARTOGRAPHER_ROS_URDF_READER_H_
 
+#include <vector>
+
 #include "cartographer/common/port.h"
 #include "tf2_ros/buffer.h"
-#include <vector>
 
 namespace cartographer_ros {
 
 std::vector<geometry_msgs::TransformStamped> ReadStaticTransformsFromUrdf(
-  const string& urdf_filename, tf2_ros::Buffer* tf_buffer);
+    const string& urdf_filename, tf2_ros::Buffer* tf_buffer);
 
 }  // namespace cartographer_ros
 

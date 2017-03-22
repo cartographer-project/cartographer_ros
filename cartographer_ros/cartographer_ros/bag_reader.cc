@@ -29,8 +29,8 @@ namespace cartographer_ros {
 
 constexpr char kTfStaticTopic[] = "/tf_static";
 
-void ReadTransformsFromBag(
-    const string& bag_filename, tf2_ros::Buffer* const tf_buffer) {
+void ReadTransformsFromBag(const string& bag_filename,
+                           tf2_ros::Buffer* const tf_buffer) {
   rosbag::Bag bag;
   bag.open(bag_filename, rosbag::bagmode::Read);
   rosbag::View view(bag);
