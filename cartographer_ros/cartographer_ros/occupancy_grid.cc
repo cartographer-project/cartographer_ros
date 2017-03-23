@@ -36,13 +36,13 @@ void BuildOccupancyGrid(
       carto::mapping_2d::MapLimits::ComputeMapLimits(
           submaps_options.resolution(), trajectory_nodes);
   carto::mapping_2d::ProbabilityGrid probability_grid(map_limits);
-  carto::mapping_2d::LaserFanInserter laser_fan_inserter(
-      submaps_options.laser_fan_inserter_options());
+  carto::mapping_2d::RangeDataInserter range_data_inserter(
+      submaps_options.range_data_inserter_options());
   for (const auto& node : trajectory_nodes) {
     CHECK(node.constant_data->range_data_3d.returns.empty());  // No 3D yet.
-    laser_fan_inserter.Insert(
-        carto::sensor::TransformLaserFan(node.constant_data->laser_fan_2d,
-                                         node.pose.cast<float>()),
+    range_data_inserter.Insert(
+        carto::sensor::TransformRangeData(node.constant_data->range_data_2d,
+                                          node.pose.cast<float>()),
         &probability_grid);
   }
 
