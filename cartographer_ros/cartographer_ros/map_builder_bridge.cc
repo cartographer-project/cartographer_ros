@@ -104,7 +104,7 @@ cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
          ++submap_index) {
       cartographer_ros_msgs::SubmapEntry submap_entry;
       submap_entry.submap_version =
-          submaps->Get(submap_index)->end_laser_fan_index;
+          submaps->Get(submap_index)->end_range_data_index;
       submap_entry.pose = ToGeometryMsgPose(submap_transforms[submap_index]);
       trajectory_submap_list.submap.push_back(submap_entry);
     }

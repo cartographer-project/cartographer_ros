@@ -50,7 +50,7 @@ sensor_msgs::PointCloud2 ToPointCloud2Message(
 
 sensor_msgs::PointCloud2 ToPointCloud2Message(
     int64 timestamp, const string& frame_id,
-    const ::cartographer::sensor::proto::LaserFan& laser_fan);
+    const ::cartographer::sensor::proto::RangeData& range_data);
 
 geometry_msgs::Transform ToGeometryMsgTransform(
     const ::cartographer::transform::Rigid3d& rigid3d);
