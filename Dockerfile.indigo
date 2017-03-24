@@ -41,16 +41,16 @@ RUN cartographer_ros/scripts/install_debs.sh && rm -rf /var/lib/apt/lists/*
 COPY scripts/install.sh cartographer_ros/scripts/
 COPY scripts/catkin_test_results.sh cartographer_ros/scripts/
 
-RUN cartographer_ros/scripts/install.sh --pkg ceres-solver
-
-RUN cartographer_ros/scripts/install.sh --pkg cartographer && \
-    cartographer_ros/scripts/install.sh --pkg cartographer --make-args test
-
 COPY cartographer_ros_msgs catkin_ws/src/cartographer_ros/cartographer_ros_msgs/
 RUN cartographer_ros/scripts/install.sh --pkg cartographer_ros_msgs && \
     cartographer_ros/scripts/install.sh --pkg cartographer_ros_msgs \
         --catkin-make-args run_tests && \
     cartographer_ros/scripts/catkin_test_results.sh build_isolated/cartographer_ros_msgs
+
+RUN cartographer_ros/scripts/install.sh --pkg ceres-solver
+
+RUN cartographer_ros/scripts/install.sh --pkg cartographer && \
+    cartographer_ros/scripts/install.sh --pkg cartographer --make-args test
 
 COPY cartographer_ros catkin_ws/src/cartographer_ros/cartographer_ros/
 RUN cartographer_ros/scripts/install.sh --pkg cartographer_ros && \
