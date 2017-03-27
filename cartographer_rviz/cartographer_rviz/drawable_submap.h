@@ -34,6 +34,7 @@
 #include "ros/ros.h"
 #include "rviz/display_context.h"
 #include "rviz/frame_manager.h"
+#include "rviz/properties/bool_property.h"
 
 namespace cartographer_rviz {
 
@@ -46,7 +47,9 @@ class DrawableSubmap : public QObject {
   // Each submap is identified by a 'trajectory_id' plus a 'submap_index'.
   // 'scene_manager' is the Ogre scene manager to which to add a node.
   DrawableSubmap(int trajectory_id, int submap_index,
-                 Ogre::SceneManager* scene_manager);
+                 Ogre::SceneManager* scene_manager,
+                 ::rviz::Property* submap_category,
+                 const bool initial_visibility);
   ~DrawableSubmap() override;
   DrawableSubmap(const DrawableSubmap&) = delete;
   DrawableSubmap& operator=(const DrawableSubmap&) = delete;
@@ -68,13 +71,22 @@ class DrawableSubmap : public QObject {
   // 'current_tracking_z'.
   void SetAlpha(double current_tracking_z);
 
+  int submap_index() const { return submap_index_; }
+  int trajectory_id() { return trajectory_id_; }
+  bool visibility() { return visibility_->getBool(); }
+  void set_visibility(const bool visibility) {
+    visibility_->setBool(visibility);
+  }
+
  Q_SIGNALS:
   // RPC request succeeded.
   void RequestSucceeded();
+  void VisibilityChanged(DrawableSubmap*);
 
  private Q_SLOTS:
   // Callback when an rpc request succeeded.
   void UpdateSceneNode();
+  void ChangeVisibility();
 
  private:
   void UpdateTransform();
@@ -95,11 +107,13 @@ class DrawableSubmap : public QObject {
   Eigen::Affine3d slice_pose_ GUARDED_BY(mutex_);
   std::chrono::milliseconds last_query_timestamp_ GUARDED_BY(mutex_);
   bool query_in_progress_ = false GUARDED_BY(mutex_);
+  bool render_in_progress_ = false GUARDED_BY(mutex_);
   int metadata_version_ = -1 GUARDED_BY(mutex_);
   int texture_version_ = -1 GUARDED_BY(mutex_);
   std::future<void> rpc_request_future_;
   ::cartographer_ros_msgs::SubmapQuery::Response response_ GUARDED_BY(mutex_);
   float current_alpha_ = 0.f;
+  std::unique_ptr<::rviz::BoolProperty> visibility_;
 };
 
 }  // namespace cartographer_rviz
