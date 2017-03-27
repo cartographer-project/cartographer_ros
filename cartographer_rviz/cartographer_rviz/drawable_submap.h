@@ -34,6 +34,7 @@
 #include "ros/ros.h"
 #include "rviz/display_context.h"
 #include "rviz/frame_manager.h"
+#include "rviz/properties/bool_property.h"
 
 namespace cartographer_rviz {
 
@@ -46,7 +47,9 @@ class DrawableSubmap : public QObject {
   // Each submap is identified by a 'trajectory_id' plus a 'submap_index'.
   // 'scene_manager' is the Ogre scene manager to which to add a node.
   DrawableSubmap(int trajectory_id, int submap_index,
-                 Ogre::SceneManager* scene_manager);
+                 Ogre::SceneManager* scene_manager,
+                 ::rviz::Property* submap_category,
+                 bool initial_visibility = true);
   ~DrawableSubmap() override;
   DrawableSubmap(const DrawableSubmap&) = delete;
   DrawableSubmap& operator=(const DrawableSubmap&) = delete;
@@ -67,14 +70,20 @@ class DrawableSubmap : public QObject {
   // Sets the alpha of the submap taking into account its slice height and the
   // 'current_tracking_z'.
   void SetAlpha(double current_tracking_z);
+  const int& GetSubmapIndex();
+  const int& GetTrajectoryId();
+  bool GetVisibility();
+  void SetVisibility(bool visibility);
 
  Q_SIGNALS:
   // RPC request succeeded.
   void RequestSucceeded();
+  void VisibilityChanged(DrawableSubmap*);
 
  private Q_SLOTS:
   // Callback when an rpc request succeeded.
   void UpdateSceneNode();
+  void ChangeVisibility();
 
  private:
   void UpdateTransform();
@@ -100,6 +109,7 @@ class DrawableSubmap : public QObject {
   std::future<void> rpc_request_future_;
   ::cartographer_ros_msgs::SubmapQuery::Response response_ GUARDED_BY(mutex_);
   float current_alpha_ = 0.f;
+  std::unique_ptr<::rviz::BoolProperty> visibility_;
 };
 
 }  // namespace cartographer_rviz

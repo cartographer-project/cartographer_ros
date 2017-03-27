@@ -23,10 +23,12 @@
 #include "cartographer_ros_msgs/SubmapQuery.h"
 #include "geometry_msgs/TransformStamped.h"
 #include "pluginlib/class_list_macros.h"
+#include "qt5/QtGui/QGuiApplication"
 #include "ros/package.h"
 #include "ros/ros.h"
 #include "rviz/display_context.h"
 #include "rviz/frame_manager.h"
+#include "rviz/properties/bool_property.h"
 #include "rviz/properties/string_property.h"
 
 namespace cartographer_rviz {
@@ -54,6 +56,12 @@ SubmapsDisplay::SubmapsDisplay() : tf_listener_(tf_buffer_) {
       "Tracking frame", kDefaultTrackingFrame,
       "Tracking frame, used for fading out submaps.", this);
   client_ = update_nh_.serviceClient<::cartographer_ros_msgs::SubmapQuery>("");
+  submaps_category_ = new ::rviz::Property(
+      "Submaps", QVariant(), "The list of all submaps.", this);
+  visibility_all_enabled_ = new ::rviz::BoolProperty(
+      "All Enabled", true,
+      "Whether all the submaps should be displayed or not.",
+      submaps_category_, SLOT( AllEnabledChanged() ), this);
   const std::string package_path = ::ros::package::getPath(ROS_PACKAGE_NAME);
   Ogre::ResourceGroupManager::getSingleton().addResourceLocation(
       package_path + kMaterialsDirectory, "FileSystem", ROS_PACKAGE_NAME);
@@ -104,11 +112,16 @@ void SubmapsDisplay::processMessage(
       if (submap_index >= trajectory.size()) {
         trajectory.push_back(
             ::cartographer::common::make_unique<DrawableSubmap>(
-                trajectory_id, submap_index, context_->getSceneManager()));
+                trajectory_id, submap_index, context_->getSceneManager(),
+                submaps_category_, visibility_all_enabled_->getBool()));
+        ConnectVisibilityChange(trajectory.back());
       }
       trajectory[submap_index]->Update(msg->header,
                                        submap_entries[submap_index],
                                        context_->getFrameManager());
+    }
+    if (submap_entries.size() < trajectory.size()) {
+      trajectory.resize(submap_entries.size());
     }
   }
 }
@@ -147,6 +160,53 @@ void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
       }
     }
   }
+}
+
+void SubmapsDisplay::AllEnabledChanged() {
+  ::cartographer::common::MutexLocker locker(&mutex_);
+  bool visibility = visibility_all_enabled_->getBool();
+  for (auto &trajectory : trajectories_) {
+    for (auto &submap : trajectory) {
+      DisconnectVisibilityChange(submap);
+      submap->SetVisibility(visibility);
+      ConnectVisibilityChange(submap);
+    }
+  }
+}
+
+void SubmapsDisplay::VisibilityChanged(DrawableSubmap* submap) {
+  ::cartographer::common::MutexLocker locker(&mutex_);
+  // Handle the case when the user was holding Ctrl,
+  // in which case the neighbouring submaps should also be toggled
+  auto modifiers = QGuiApplication::keyboardModifiers();
+  if (modifiers.testFlag(Qt::ControlModifier)) {
+    bool visibility = submap->GetVisibility();
+    for (int i = -1; i < 2; i += 2) {
+      try {
+        auto &neighbour_submap =
+            trajectories_[submap->GetTrajectoryId()].at(
+                static_cast<size_t>(submap->GetSubmapIndex() + i));
+        DisconnectVisibilityChange(neighbour_submap);
+        neighbour_submap->SetVisibility(visibility);
+        ConnectVisibilityChange(neighbour_submap);
+      }
+      catch (std::out_of_range &err) { }
+    }
+  }
+}
+
+void SubmapsDisplay::DisconnectVisibilityChange(
+    const std::unique_ptr<DrawableSubmap>& submap) {
+  QObject::disconnect(
+      submap.get(), SIGNAL(VisibilityChanged(DrawableSubmap*)),
+      this, SLOT(VisibilityChanged(DrawableSubmap*)));
+}
+
+void SubmapsDisplay::ConnectVisibilityChange(
+    const std::unique_ptr<DrawableSubmap>& submap) {
+  QObject::connect(
+      submap.get(), SIGNAL(VisibilityChanged(DrawableSubmap*)),
+      this, SLOT(VisibilityChanged(DrawableSubmap*)));
 }
 
 }  // namespace cartographer_rviz

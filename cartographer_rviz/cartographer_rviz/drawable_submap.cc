@@ -25,6 +25,7 @@
 #include "Eigen/Geometry"
 #include "OgreGpuProgramParams.h"
 #include "OgreImage.h"
+#include "cartographer/common/make_unique.h"
 #include "cartographer/common/port.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
 #include "eigen_conversions/eigen_msg.h"
@@ -54,7 +55,9 @@ std::string GetSubmapIdentifier(const int trajectory_id,
 }  // namespace
 
 DrawableSubmap::DrawableSubmap(const int trajectory_id, const int submap_index,
-                               Ogre::SceneManager* const scene_manager)
+                               Ogre::SceneManager* const scene_manager,
+                               ::rviz::Property* submap_category,
+                               bool initial_visibility)
     : trajectory_id_(trajectory_id),
       submap_index_(submap_index),
       scene_manager_(scene_manager),
@@ -73,7 +76,12 @@ DrawableSubmap::DrawableSubmap(const int trajectory_id, const int submap_index,
   material_->setCullingMode(Ogre::CULL_NONE);
   material_->setDepthBias(-1.f, 0.f);
   material_->setDepthWriteEnabled(false);
-  scene_node_->attachObject(manual_object_);
+  visibility_ = cartographer::common::make_unique<::rviz::BoolProperty>(
+      "", initial_visibility, "", submap_category,
+      SLOT(ChangeVisibility()), this);
+  if (initial_visibility) {
+    scene_node_->attachObject(manual_object_);
+  }
   connect(this, SIGNAL(RequestSucceeded()), this, SLOT(UpdateSceneNode()));
 }
 
@@ -107,6 +115,15 @@ void DrawableSubmap::Update(
     // for this submap.
     UpdateTransform();
   }
+  visibility_->setName(
+      QStringLiteral("%1-%2.%3").arg(trajectory_id_)
+      .arg(submap_index_).arg(metadata_version_));
+  visibility_->setDescription(
+      QStringLiteral(
+          "Toggle visibility of this individual submap. Hold Ctrl to "
+           "also toggle two neighbouring submaps.<br><br>"
+           "Trajectory %1, submap %2, submap version %3").arg(trajectory_id_)
+          .arg(submap_index_).arg(metadata_version_));
 }
 
 bool DrawableSubmap::MaybeFetchTexture(ros::ServiceClient* const client) {
@@ -239,6 +256,35 @@ float DrawableSubmap::UpdateAlpha(const float target_alpha) {
     current_alpha_ = target_alpha;
   }
   return current_alpha_;
+}
+
+void DrawableSubmap::ChangeVisibility() {
+  if (visibility_->getBool()) {
+    if (scene_node_->numAttachedObjects() == 0) {
+      scene_node_->attachObject(manual_object_);
+    }
+  } else {
+    if (scene_node_->numAttachedObjects() > 0) {
+      scene_node_->detachObject(manual_object_);
+    }
+  }
+  Q_EMIT VisibilityChanged(this);
+}
+
+const int& DrawableSubmap::GetSubmapIndex() {
+  return submap_index_;
+}
+
+const int& DrawableSubmap::GetTrajectoryId() {
+  return trajectory_id_;
+}
+
+bool DrawableSubmap::GetVisibility() {
+  return visibility_->getBool();
+}
+
+void DrawableSubmap::SetVisibility(bool visibility) {
+  visibility_->setBool(visibility);
 }
 
 }  // namespace cartographer_rviz
