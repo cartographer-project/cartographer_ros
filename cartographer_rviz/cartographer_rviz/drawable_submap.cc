@@ -31,6 +31,10 @@
 #include "eigen_conversions/eigen_msg.h"
 #include "ros/ros.h"
 
+#if (QT_VERSION < QT_VERSION_CHECK(5, 0, 0))
+#define QStringLiteral(str) QString::fromUtf8("" str "", sizeof(str) - 1)
+#endif
+
 namespace cartographer_rviz {
 
 namespace {
