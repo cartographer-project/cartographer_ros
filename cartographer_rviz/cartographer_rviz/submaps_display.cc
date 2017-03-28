@@ -114,13 +114,13 @@ void SubmapsDisplay::processMessage(
 }
 
 void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
+  ::cartographer::common::MutexLocker locker(&mutex_);
   // Update the fading by z distance.
   try {
     const ::geometry_msgs::TransformStamped transform_stamped =
         tf_buffer_.lookupTransform(map_frame_property_->getStdString(),
                                    tracking_frame_property_->getStdString(),
                                    ros::Time(0) /* latest */);
-    ::cartographer::common::MutexLocker locker(&mutex_);
     for (auto& trajectory : trajectories_) {
       for (auto& submap : trajectory) {
         submap->SetAlpha(transform_stamped.transform.translation.z);
@@ -138,7 +138,7 @@ void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
         ++num_ongoing_requests;
       }
     }
-    for (int submap_index = trajectory.size() - 1;
+    for (int submap_index = static_cast<int>(trajectory.size()) - 1;
          submap_index >= 0 &&
          num_ongoing_requests < kMaxOnGoingRequestsPerTrajectory;
          --submap_index) {
