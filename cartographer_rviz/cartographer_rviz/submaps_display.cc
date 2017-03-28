@@ -23,7 +23,7 @@
 #include "cartographer_ros_msgs/SubmapQuery.h"
 #include "geometry_msgs/TransformStamped.h"
 #include "pluginlib/class_list_macros.h"
-#include "qt5/QtGui/QGuiApplication"
+#include "QApplication"
 #include "ros/package.h"
 #include "ros/ros.h"
 #include "rviz/display_context.h"
@@ -178,7 +178,7 @@ void SubmapsDisplay::VisibilityChanged(DrawableSubmap* submap) {
   ::cartographer::common::MutexLocker locker(&mutex_);
   // Handle the case when the user was holding Ctrl,
   // in which case the neighbouring submaps should also be toggled
-  auto modifiers = QGuiApplication::keyboardModifiers();
+  auto modifiers = QApplication::keyboardModifiers();
   if (modifiers.testFlag(Qt::ControlModifier)) {
     bool visibility = submap->GetVisibility();
     for (int i = -1; i < 2; i += 2) {
