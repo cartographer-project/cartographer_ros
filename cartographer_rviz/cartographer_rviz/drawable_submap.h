@@ -65,7 +65,7 @@ class DrawableSubmap : public QObject {
   bool MaybeFetchTexture(ros::ServiceClient* client);
 
   // Returns whether an RPC is in progress.
-  bool QueryInProgress();
+  bool QueryOrRenderInProgress();
 
   // Sets the alpha of the submap taking into account its slice height and the
   // 'current_tracking_z'.
@@ -104,6 +104,8 @@ class DrawableSubmap : public QObject {
   Eigen::Affine3d slice_pose_ GUARDED_BY(mutex_);
   std::chrono::milliseconds last_query_timestamp_ GUARDED_BY(mutex_);
   bool query_in_progress_ = false GUARDED_BY(mutex_);
+  bool render_in_progress_ = false GUARDED_BY(mutex_);
+  bool quitting_ = false GUARDED_BY(mutex_);
   int metadata_version_ = -1 GUARDED_BY(mutex_);
   int texture_version_ = -1 GUARDED_BY(mutex_);
   std::future<void> rpc_request_future_;

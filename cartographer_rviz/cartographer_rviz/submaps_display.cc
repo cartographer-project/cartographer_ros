@@ -147,7 +147,7 @@ void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
   for (const auto& trajectory : trajectories_) {
     int num_ongoing_requests = 0;
     for (const auto& submap : trajectory) {
-      if (submap->QueryInProgress()) {
+      if (submap->QueryOrRenderInProgress()) {
         ++num_ongoing_requests;
       }
     }

@@ -83,9 +83,14 @@ DrawableSubmap::DrawableSubmap(const int trajectory_id, const int submap_index,
     scene_node_->attachObject(manual_object_);
   }
   connect(this, SIGNAL(RequestSucceeded()), this, SLOT(UpdateSceneNode()));
+  connect(this, SIGNAL(VisibilityChanged(DrawableSubmap*)),
+          this, SLOT(UpdateSceneNode()));
 }
 
 DrawableSubmap::~DrawableSubmap() {
+  ::cartographer::common::MutexLocker locker(&mutex_);
+  quitting_ = true;
+  locker.Await([this]() REQUIRES(mutex_) { return !query_in_progress_; });
   Ogre::MaterialManager::getSingleton().remove(material_->getHandle());
   if (!texture_.isNull()) {
     Ogre::TextureManager::getSingleton().remove(texture_->getHandle());
@@ -128,13 +133,15 @@ void DrawableSubmap::Update(
 
 bool DrawableSubmap::MaybeFetchTexture(ros::ServiceClient* const client) {
   ::cartographer::common::MutexLocker locker(&mutex_);
-  const bool newer_version_available = texture_version_ < metadata_version_;
+  const bool newer_version_available =
+      response_.submap_version < metadata_version_;
   const std::chrono::milliseconds now =
       std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::system_clock::now().time_since_epoch());
   const bool recently_queried =
       last_query_timestamp_ + kMinQueryDelayInMs > now;
-  if (!newer_version_available || recently_queried || query_in_progress_) {
+  if (!newer_version_available || recently_queried
+      || query_in_progress_ || render_in_progress_ || quitting_) {
     return false;
   }
   query_in_progress_ = true;
@@ -148,7 +155,11 @@ bool DrawableSubmap::MaybeFetchTexture(ros::ServiceClient* const client) {
       // 'response_' member to simplify the signal-slot connection slightly.
       ::cartographer::common::MutexLocker locker(&mutex_);
       response_ = srv.response;
-      Q_EMIT RequestSucceeded();
+      query_in_progress_ = false;
+      if (!quitting_) {
+        render_in_progress_ = true;
+        Q_EMIT RequestSucceeded();
+      }
     } else {
       ::cartographer::common::MutexLocker locker(&mutex_);
       query_in_progress_ = false;
@@ -157,9 +168,9 @@ bool DrawableSubmap::MaybeFetchTexture(ros::ServiceClient* const client) {
   return true;
 }
 
-bool DrawableSubmap::QueryInProgress() {
+bool DrawableSubmap::QueryOrRenderInProgress() {
   ::cartographer::common::MutexLocker locker(&mutex_);
-  return query_in_progress_;
+  return query_in_progress_ || render_in_progress_;
 }
 
 void DrawableSubmap::SetAlpha(const double current_tracking_z) {
@@ -176,13 +187,18 @@ void DrawableSubmap::SetAlpha(const double current_tracking_z) {
 
 void DrawableSubmap::UpdateSceneNode() {
   ::cartographer::common::MutexLocker locker(&mutex_);
+  render_in_progress_ = false;
+  if (!GetVisibility()
+      || texture_version_ == response_.submap_version
+      || quitting_) {
+    return;
+  }
   texture_version_ = response_.submap_version;
   std::string compressed_cells(response_.cells.begin(), response_.cells.end());
   std::string cells;
   ::cartographer::common::FastGunzipString(compressed_cells, &cells);
   tf::poseMsgToEigen(response_.slice_pose, slice_pose_);
   UpdateTransform();
-  query_in_progress_ = false;
   // The call to Ogre's loadRawData below does not work with an RG texture,
   // therefore we create an RGB one whose blue channel is always 0.
   std::vector<char> rgb;
