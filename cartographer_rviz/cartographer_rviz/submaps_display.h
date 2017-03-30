@@ -49,9 +49,15 @@ class SubmapsDisplay
 
  private Q_SLOTS:
   void Reset();
+  void AllEnabledChanged();
+  void VisibilityChanged(DrawableSubmap*);
 
  private:
   void CreateClient();
+  void ConnectVisibilityChange(
+      const std::unique_ptr<DrawableSubmap>& submap);
+  void DisconnectVisibilityChange(
+      const std::unique_ptr<DrawableSubmap>& submap);
 
   // These are called by RViz and therefore do not adhere to the style guide.
   void onInitialize() override;
@@ -69,6 +75,8 @@ class SubmapsDisplay
   using Trajectory = std::vector<std::unique_ptr<DrawableSubmap>>;
   std::vector<Trajectory> trajectories_ GUARDED_BY(mutex_);
   ::cartographer::common::Mutex mutex_;
+  ::rviz::Property* submaps_category_;
+  ::rviz::BoolProperty* visibility_all_enabled_;
 };
 
 }  // namespace cartographer_rviz

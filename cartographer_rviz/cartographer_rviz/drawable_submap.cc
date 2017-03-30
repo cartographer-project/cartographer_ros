@@ -25,10 +25,15 @@
 #include "Eigen/Geometry"
 #include "OgreGpuProgramParams.h"
 #include "OgreImage.h"
+#include "cartographer/common/make_unique.h"
 #include "cartographer/common/port.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
 #include "eigen_conversions/eigen_msg.h"
 #include "ros/ros.h"
+
+#if (QT_VERSION < QT_VERSION_CHECK(5 ,0 ,0))
+#define QStringLiteral(str) QString::fromUtf8("" str "", sizeof(str) - 1)
+#endif
 
 namespace cartographer_rviz {
 
@@ -54,7 +59,9 @@ std::string GetSubmapIdentifier(const int trajectory_id,
 }  // namespace
 
 DrawableSubmap::DrawableSubmap(const int trajectory_id, const int submap_index,
-                               Ogre::SceneManager* const scene_manager)
+                               Ogre::SceneManager* const scene_manager,
+                               ::rviz::Property* submap_category,
+                               bool initial_visibility)
     : trajectory_id_(trajectory_id),
       submap_index_(submap_index),
       scene_manager_(scene_manager),
@@ -73,11 +80,21 @@ DrawableSubmap::DrawableSubmap(const int trajectory_id, const int submap_index,
   material_->setCullingMode(Ogre::CULL_NONE);
   material_->setDepthBias(-1.f, 0.f);
   material_->setDepthWriteEnabled(false);
-  scene_node_->attachObject(manual_object_);
+  visibility_ = cartographer::common::make_unique<::rviz::BoolProperty>(
+      "", initial_visibility, "", submap_category,
+      SLOT(ChangeVisibility()), this);
+  if (initial_visibility) {
+    scene_node_->attachObject(manual_object_);
+  }
   connect(this, SIGNAL(RequestSucceeded()), this, SLOT(UpdateSceneNode()));
+  connect(this, SIGNAL(VisibilityChanged(DrawableSubmap*)),
+          this, SLOT(UpdateSceneNode()));
 }
 
 DrawableSubmap::~DrawableSubmap() {
+  ::cartographer::common::MutexLocker locker(&mutex_);
+  quitting_ = true;
+  locker.Await([this]() REQUIRES(mutex_) { return !query_in_progress_; });
   Ogre::MaterialManager::getSingleton().remove(material_->getHandle());
   if (!texture_.isNull()) {
     Ogre::TextureManager::getSingleton().remove(texture_->getHandle());
@@ -107,17 +124,28 @@ void DrawableSubmap::Update(
     // for this submap.
     UpdateTransform();
   }
+  visibility_->setName(
+      QStringLiteral("%1-%2.%3").arg(trajectory_id_)
+      .arg(submap_index_).arg(metadata_version_));
+  visibility_->setDescription(
+      QStringLiteral(
+          "Toggle visibility of this individual submap. Hold Ctrl to "
+           "also toggle two neighbouring submaps.<br><br>"
+           "Trajectory %1, submap %2, submap version %3").arg(trajectory_id_)
+          .arg(submap_index_).arg(metadata_version_));
 }
 
 bool DrawableSubmap::MaybeFetchTexture(ros::ServiceClient* const client) {
   ::cartographer::common::MutexLocker locker(&mutex_);
-  const bool newer_version_available = texture_version_ < metadata_version_;
+  const bool newer_version_available =
+      response_.submap_version < metadata_version_;
   const std::chrono::milliseconds now =
       std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::system_clock::now().time_since_epoch());
   const bool recently_queried =
       last_query_timestamp_ + kMinQueryDelayInMs > now;
-  if (!newer_version_available || recently_queried || query_in_progress_) {
+  if (!newer_version_available || recently_queried
+      || query_in_progress_ || render_in_progress_ || quitting_) {
     return false;
   }
   query_in_progress_ = true;
@@ -131,7 +159,11 @@ bool DrawableSubmap::MaybeFetchTexture(ros::ServiceClient* const client) {
       // 'response_' member to simplify the signal-slot connection slightly.
       ::cartographer::common::MutexLocker locker(&mutex_);
       response_ = srv.response;
-      Q_EMIT RequestSucceeded();
+      query_in_progress_ = false;
+      if (!quitting_) {
+        render_in_progress_ = true;
+        Q_EMIT RequestSucceeded();
+      }
     } else {
       ::cartographer::common::MutexLocker locker(&mutex_);
       query_in_progress_ = false;
@@ -140,9 +172,9 @@ bool DrawableSubmap::MaybeFetchTexture(ros::ServiceClient* const client) {
   return true;
 }
 
-bool DrawableSubmap::QueryInProgress() {
+bool DrawableSubmap::QueryOrRenderInProgress() {
   ::cartographer::common::MutexLocker locker(&mutex_);
-  return query_in_progress_;
+  return query_in_progress_ || render_in_progress_;
 }
 
 void DrawableSubmap::SetAlpha(const double current_tracking_z) {
@@ -159,13 +191,18 @@ void DrawableSubmap::SetAlpha(const double current_tracking_z) {
 
 void DrawableSubmap::UpdateSceneNode() {
   ::cartographer::common::MutexLocker locker(&mutex_);
+  render_in_progress_ = false;
+  if (!GetVisibility()
+      || texture_version_ == response_.submap_version
+      || quitting_) {
+    return;
+  }
   texture_version_ = response_.submap_version;
   std::string compressed_cells(response_.cells.begin(), response_.cells.end());
   std::string cells;
   ::cartographer::common::FastGunzipString(compressed_cells, &cells);
   tf::poseMsgToEigen(response_.slice_pose, slice_pose_);
   UpdateTransform();
-  query_in_progress_ = false;
   // The call to Ogre's loadRawData below does not work with an RG texture,
   // therefore we create an RGB one whose blue channel is always 0.
   std::vector<char> rgb;
@@ -239,6 +276,35 @@ float DrawableSubmap::UpdateAlpha(const float target_alpha) {
     current_alpha_ = target_alpha;
   }
   return current_alpha_;
+}
+
+void DrawableSubmap::ChangeVisibility() {
+  if (visibility_->getBool()) {
+    if (scene_node_->numAttachedObjects() == 0) {
+      scene_node_->attachObject(manual_object_);
+    }
+  } else {
+    if (scene_node_->numAttachedObjects() > 0) {
+      scene_node_->detachObject(manual_object_);
+    }
+  }
+  Q_EMIT VisibilityChanged(this);
+}
+
+const int& DrawableSubmap::GetSubmapIndex() {
+  return submap_index_;
+}
+
+const int& DrawableSubmap::GetTrajectoryId() {
+  return trajectory_id_;
+}
+
+bool DrawableSubmap::GetVisibility() {
+  return visibility_->getBool();
+}
+
+void DrawableSubmap::SetVisibility(bool visibility) {
+  visibility_->setBool(visibility);
 }
 
 }  // namespace cartographer_rviz
