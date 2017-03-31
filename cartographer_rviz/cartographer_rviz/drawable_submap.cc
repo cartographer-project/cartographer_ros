@@ -78,6 +78,9 @@ DrawableSubmap::DrawableSubmap(const int trajectory_id, const int submap_index,
 }
 
 DrawableSubmap::~DrawableSubmap() {
+  if (QueryInProgress()) {
+    rpc_request_future_.wait();
+  }
   Ogre::MaterialManager::getSingleton().remove(material_->getHandle());
   if (!texture_.isNull()) {
     Ogre::TextureManager::getSingleton().remove(texture_->getHandle());
