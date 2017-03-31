@@ -163,8 +163,6 @@ install(DIRECTORY launch urdf configuration_files
 )
 
 install(PROGRAMS scripts/tf_remove_frames.py
-                 scripts/submap_pose_publisher.py
-                 scripts/submap_visualization.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
