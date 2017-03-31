@@ -85,6 +85,8 @@ class Node {
       cartographer::common::Time::min();
 
   ::ros::Publisher occupancy_grid_publisher_;
+  ::ros::Publisher debug_publisher_;
+  ::ros::Publisher debug_publisher2_;
   std::thread occupancy_grid_thread_;
   bool terminating_ = false GUARDED_BY(mutex_);
 

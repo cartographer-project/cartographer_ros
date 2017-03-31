@@ -37,6 +37,7 @@
 #include "nav_msgs/Odometry.h"
 #include "ros/serialization.h"
 #include "sensor_msgs/PointCloud2.h"
+#include "geometry_msgs/PoseStamped.h"
 #include "tf2_eigen/tf2_eigen.h"
 
 namespace cartographer_ros {
@@ -80,6 +81,12 @@ void Node::Initialize() {
   scan_matched_point_cloud_publisher_ =
       node_handle_.advertise<sensor_msgs::PointCloud2>(
           kScanMatchedPointCloudTopic, kLatestOnlyPublisherQueueSize);
+
+  debug_publisher_ = node_handle_.advertise<geometry_msgs::PoseStamped>(
+          "debug_pose", kLatestOnlyPublisherQueueSize);
+  debug_publisher2_ = node_handle_.advertise<geometry_msgs::PoseStamped>(
+          "debug_pose2", kLatestOnlyPublisherQueueSize);
+
 
   wall_timers_.push_back(node_handle_.createWallTimer(
       ::ros::WallDuration(options_.submap_publish_period_sec),
@@ -159,6 +166,19 @@ void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
         stamped_transform.transform = ToGeometryMsgTransform(
             tracking_to_map * (*trajectory_state.published_to_tracking));
         tf_broadcaster_.sendTransform(stamped_transform);
+
+        geometry_msgs::PoseStamped p;
+        p.pose = ToGeometryMsgPose(tracking_to_local);
+        p.header.stamp = ros::Time::now();
+        p.header.frame_id = options_.map_frame;
+        debug_publisher_.publish(p);
+
+        geometry_msgs::PoseStamped p2;
+        p2.pose = ToGeometryMsgPose(trajectory_state.local_to_map);
+        p2.header.stamp = ros::Time::now();
+        p2.header.frame_id = options_.map_frame;
+        debug_publisher2_.publish(p2);
+
       }
     }
   }

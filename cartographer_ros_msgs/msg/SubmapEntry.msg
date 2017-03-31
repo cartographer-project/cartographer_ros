@@ -14,3 +14,4 @@
 
 int32 submap_version
 geometry_msgs/Pose pose
+geometry_msgs/Pose local_pose
