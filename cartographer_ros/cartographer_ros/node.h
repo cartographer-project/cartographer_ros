@@ -27,6 +27,7 @@
 #include "cartographer_ros_msgs/SubmapEntry.h"
 #include "cartographer_ros_msgs/SubmapList.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
+#include "cartographer_ros_msgs/TrajectoryNodesList.h"
 #include "cartographer_ros_msgs/TrajectorySubmapList.h"
 #include "ros/ros.h"
 #include "tf2_ros/transform_broadcaster.h"
@@ -44,6 +45,7 @@ constexpr char kOccupancyGridTopic[] = "map";
 constexpr char kScanMatchedPointCloudTopic[] = "scan_matched_points2";
 constexpr char kSubmapListTopic[] = "submap_list";
 constexpr char kSubmapQueryServiceName[] = "submap_query";
+constexpr char kTrajectoryNodesListTopic[] = "trajectory_nodes_list";
 
 // Wires up ROS topics to SLAM.
 class Node {
@@ -65,6 +67,7 @@ class Node {
       cartographer_ros_msgs::SubmapQuery::Response& response);
 
   void PublishSubmapList(const ::ros::WallTimerEvent& timer_event);
+  void PublishTrajectoryNodesList(const ::ros::WallTimerEvent& timer_event);
   void PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event);
   void SpinOccupancyGridThreadForever();
 
@@ -79,6 +82,7 @@ class Node {
 
   ::ros::NodeHandle node_handle_;
   ::ros::Publisher submap_list_publisher_;
+  ::ros::Publisher trajectory_nodes_list_publisher_;
   ::ros::ServiceServer submap_query_server_;
   ::ros::Publisher scan_matched_point_cloud_publisher_;
   cartographer::common::Time last_scan_matched_point_cloud_time_ =
