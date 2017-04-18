@@ -12,38 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 2.8.3)
-
-project(cartographer_ros_msgs)
-
-set(PACKAGE_DEPENDENCIES
-  geometry_msgs
-  visualization_msgs
-)
-
-find_package(catkin REQUIRED COMPONENTS message_generation ${PACKAGE_DEPENDENCIES})
-
-add_message_files(
-  FILES
-    ConstraintVisualization.msg
-    SubmapList.msg
-    TrajectorySubmapList.msg
-    SubmapEntry.msg
-)
-
-add_service_files(
-  FILES
-    SubmapQuery.srv
-    FinishTrajectory.srv
-)
-
-generate_messages(
-  DEPENDENCIES
-    geometry_msgs
-    visualization_msgs
-)
-
-catkin_package(
-  CATKIN_DEPENDS
-    ${PACKAGE_DEPENDENCIES}
-)
+visualization_msgs/MarkerArray constraints
+visualization_msgs/MarkerArray residual_errors

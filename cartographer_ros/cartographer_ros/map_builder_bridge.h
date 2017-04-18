@@ -25,6 +25,7 @@
 #include "cartographer_ros/node_options.h"
 #include "cartographer_ros/sensor_bridge.h"
 #include "cartographer_ros/tf_bridge.h"
+#include "cartographer_ros_msgs/ConstraintVisualization.h"
 #include "cartographer_ros_msgs/SubmapEntry.h"
 #include "cartographer_ros_msgs/SubmapList.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
@@ -58,6 +59,7 @@ class MapBuilderBridge {
 
   cartographer_ros_msgs::SubmapList GetSubmapList();
   visualization_msgs::MarkerArray GetTrajectoryNodesList();
+  cartographer_ros_msgs::ConstraintVisualization GetConstraintsList();
   std::unique_ptr<nav_msgs::OccupancyGrid> BuildOccupancyGrid();
   std::unordered_map<int, TrajectoryState> GetTrajectoryStates();
 
