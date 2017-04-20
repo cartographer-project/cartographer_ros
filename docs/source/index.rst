@@ -67,7 +67,9 @@ We recommend using `wstool <http://wiki.ros.org/wstool>`_ and `rosdep
     wstool update -t src
 
     # Install deb dependencies.
-    rosdep init
+    # The command 'sudo rosdep init' will print an error if you have already
+    # executed it since installing ROS. This error can be ignored.
+    sudo rosdep init
     rosdep update
     rosdep install --from-paths src --ignore-src --rosdistro=${ROS_DISTRO} -y
 
