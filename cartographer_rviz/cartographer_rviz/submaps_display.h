@@ -49,14 +49,13 @@ class SubmapsDisplay
 
  private Q_SLOTS:
   void Reset();
-  void AllEnabledChanged();
-  void VisibilityChanged(DrawableSubmap*);
+  void AllEnabledToggled();
+  void VisibilityToggled(DrawableSubmap*);
 
  private:
   void CreateClient();
-  void ConnectVisibilityChange(const std::unique_ptr<DrawableSubmap>& submap);
-  void DisconnectVisibilityChange(
-      const std::unique_ptr<DrawableSubmap>& submap);
+  void ConnectVisibilityToggle(const DrawableSubmap* const submap);
+  void DisconnectVisibilityToggle(const DrawableSubmap* const submap);
 
   // These are called by RViz and therefore do not adhere to the style guide.
   void onInitialize() override;
@@ -71,7 +70,8 @@ class SubmapsDisplay
   ::rviz::StringProperty* submap_query_service_property_;
   ::rviz::StringProperty* map_frame_property_;
   ::rviz::StringProperty* tracking_frame_property_;
-  using Trajectory = std::vector<std::unique_ptr<DrawableSubmap>>;
+  using Trajectory = std::pair<std::unique_ptr<::rviz::Property>,
+                               std::vector<std::unique_ptr<DrawableSubmap>>>;
   std::vector<Trajectory> trajectories_ GUARDED_BY(mutex_);
   ::cartographer::common::Mutex mutex_;
   ::rviz::Property* submaps_category_;

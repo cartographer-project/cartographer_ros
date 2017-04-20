@@ -48,8 +48,7 @@ class DrawableSubmap : public QObject {
   // 'scene_manager' is the Ogre scene manager to which to add a node.
   DrawableSubmap(int trajectory_id, int submap_index,
                  Ogre::SceneManager* scene_manager,
-                 ::rviz::Property* submap_category,
-                 const bool initial_visibility);
+                 ::rviz::Property* submap_category, const bool visible);
   ~DrawableSubmap() override;
   DrawableSubmap(const DrawableSubmap&) = delete;
   DrawableSubmap& operator=(const DrawableSubmap&) = delete;
@@ -72,8 +71,8 @@ class DrawableSubmap : public QObject {
   void SetAlpha(double current_tracking_z);
 
   int submap_index() const { return submap_index_; }
-  int trajectory_id() { return trajectory_id_; }
-  bool visibility() { return visibility_->getBool(); }
+  int trajectory_id() const { return trajectory_id_; }
+  bool visibility() const { return visibility_->getBool(); }
   void set_visibility(const bool visibility) {
     visibility_->setBool(visibility);
   }
@@ -81,12 +80,12 @@ class DrawableSubmap : public QObject {
  Q_SIGNALS:
   // RPC request succeeded.
   void RequestSucceeded();
-  void VisibilityChanged(DrawableSubmap*);
+  void VisibilityToggled(DrawableSubmap*);
 
  private Q_SLOTS:
   // Callback when an rpc request succeeded.
   void UpdateSceneNode();
-  void ChangeVisibility();
+  void ToggleVisibility();
 
  private:
   void UpdateTransform();
@@ -107,7 +106,6 @@ class DrawableSubmap : public QObject {
   Eigen::Affine3d slice_pose_ GUARDED_BY(mutex_);
   std::chrono::milliseconds last_query_timestamp_ GUARDED_BY(mutex_);
   bool query_in_progress_ = false GUARDED_BY(mutex_);
-  bool render_in_progress_ = false GUARDED_BY(mutex_);
   int metadata_version_ = -1 GUARDED_BY(mutex_);
   int texture_version_ = -1 GUARDED_BY(mutex_);
   std::future<void> rpc_request_future_;
