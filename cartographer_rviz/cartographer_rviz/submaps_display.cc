@@ -17,7 +17,6 @@
 #include "cartographer_rviz/submaps_display.h"
 
 #include "OgreResourceGroupManager.h"
-#include "QApplication"
 #include "cartographer/common/make_unique.h"
 #include "cartographer/common/mutex.h"
 #include "cartographer_ros_msgs/SubmapList.h"
@@ -134,7 +133,6 @@ void SubmapsDisplay::processMessage(
             ::cartographer::common::make_unique<DrawableSubmap>(
                 trajectory_id, submap_index, context_->getSceneManager(),
                 trajectory_category.get(), visibility_all_enabled_->getBool()));
-        ConnectVisibilityToggle(trajectory.back().get());
       }
       trajectory[submap_index]->Update(msg->header,
                                        submap_entries[submap_index],
@@ -184,44 +182,9 @@ void SubmapsDisplay::AllEnabledToggled() {
   const bool visibility = visibility_all_enabled_->getBool();
   for (auto& trajectory : trajectories_) {
     for (auto& submap : trajectory.second) {
-      DisconnectVisibilityToggle(submap.get());
       submap->set_visibility(visibility);
-      ConnectVisibilityToggle(submap.get());
     }
   }
-}
-
-void SubmapsDisplay::VisibilityToggled(DrawableSubmap* const submap) {
-  ::cartographer::common::MutexLocker locker(&mutex_);
-  // Handle the case when the user was holding Ctrl,
-  // when we also toggle the visibility of neighbouring submaps
-  auto modifiers = ::QApplication::keyboardModifiers();
-  if (modifiers.testFlag(::Qt::ControlModifier)) {
-    const bool visibility = submap->visibility();
-    for (int i = -1; i < 2; i += 2) {
-      try {
-        auto& neighbour_submap =
-            trajectories_[submap->trajectory_id()].second.at(
-                static_cast<size_t>(submap->submap_index() + i));
-        DisconnectVisibilityToggle(neighbour_submap.get());
-        neighbour_submap->set_visibility(visibility);
-        ConnectVisibilityToggle(neighbour_submap.get());
-      } catch (std::out_of_range& err) {
-      }
-    }
-  }
-}
-
-void SubmapsDisplay::DisconnectVisibilityToggle(
-    const DrawableSubmap* const submap) {
-  ::QObject::disconnect(submap, SIGNAL(VisibilityToggled(DrawableSubmap*)),
-                        this, SLOT(VisibilityToggled(DrawableSubmap*)));
-}
-
-void SubmapsDisplay::ConnectVisibilityToggle(
-    const DrawableSubmap* const submap) {
-  ::QObject::connect(submap, SIGNAL(VisibilityToggled(DrawableSubmap*)), this,
-                     SLOT(VisibilityToggled(DrawableSubmap*)));
 }
 
 }  // namespace cartographer_rviz
