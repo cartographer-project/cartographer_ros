@@ -162,7 +162,7 @@ install(DIRECTORY launch urdf configuration_files
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
-install(PROGRAMS scripts/tf_remove_frames.py
+install(PROGRAMS scripts/tf_remove_frames.py scripts/submap_pose_publisher.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
