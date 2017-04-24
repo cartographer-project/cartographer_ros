@@ -58,8 +58,17 @@ void SensorBridge::HandleOdometryMessage(
 
 void SensorBridge::HandleImuMessage(const string& sensor_id,
                                     const sensor_msgs::Imu::ConstPtr& msg) {
-  CHECK_NE(msg->linear_acceleration_covariance[0], -1);
-  CHECK_NE(msg->angular_velocity_covariance[0], -1);
+  CHECK_NE(msg->linear_acceleration_covariance[0], -1)
+      << "Your IMU data claims to not contain linear acceleration measurements "
+         "by setting linear_acceleration_covariance[0] to -1. Cartographer "
+         "requires this data to work. See "
+         "http://docs.ros.org/api/sensor_msgs/html/msg/Imu.html.";
+  CHECK_NE(msg->angular_velocity_covariance[0], -1)
+      << "Your IMU data claims to not contain angular velocity measurements "
+         "by setting angular_velocity_covariance[0] to -1. Cartographer "
+         "requires this data to work. See "
+         "http://docs.ros.org/api/sensor_msgs/html/msg/Imu.html.";
+
   const carto::common::Time time = FromRos(msg->header.stamp);
   const auto sensor_to_tracking = tf_bridge_.LookupToTracking(
       time, CheckNoLeadingSlash(msg->header.frame_id));
