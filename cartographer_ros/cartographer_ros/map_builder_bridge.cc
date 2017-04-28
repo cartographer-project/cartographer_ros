@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+#include "cartographer/mapping/sparse_pose_graph.h"
 #include "cartographer_ros/map_builder_bridge.h"
-
 #include "cartographer_ros/assets_writer.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/occupancy_grid.h"
@@ -153,16 +153,13 @@ cartographer_ros_msgs::ConstraintVisualization MapBuilderBridge::GetConstraintsL
   int i = 0;
   for (const auto &constraint : constraints) {
 
-    // add constraint only if INTRA_SUBMAP
-
-    visualization_msgs::Marker constraint_marker, residual_error_marker;
+	visualization_msgs::Marker constraint_marker, residual_error_marker;
 
     // creating constraint line strip marker (green)
     constraint_marker.id = i++;
     constraint_marker.type = visualization_msgs::Marker::LINE_STRIP;
     constraint_marker.header.stamp = ::ros::Time::now();
-    constraint_marker.header.frame_id = options_.map_frame;
-    constraint_marker.color.g = 1.0;
+    constraint_marker.header.frame_id = options_.map_frame;   
     constraint_marker.color.a = 1.0;
     constraint_marker.scale.x = 0.02;
 
@@ -171,7 +168,6 @@ cartographer_ros_msgs::ConstraintVisualization MapBuilderBridge::GetConstraintsL
     residual_error_marker.type = visualization_msgs::Marker::LINE_STRIP;
     residual_error_marker.header.stamp = ::ros::Time::now();
     residual_error_marker.header.frame_id = options_.map_frame;
-    residual_error_marker.color.b = 1.0;
     residual_error_marker.color.a = 1.0;
     residual_error_marker.scale.x = 0.02;
 
@@ -193,11 +189,27 @@ cartographer_ros_msgs::ConstraintVisualization MapBuilderBridge::GetConstraintsL
 
     constraint_marker.points.push_back(submap_point);
     constraint_marker.points.push_back(submap_pose_point);
-    constraint_visualization.constraints.markers.push_back(constraint_marker);
-
     residual_error_marker.points.push_back(submap_pose_point);
     residual_error_marker.points.push_back(trajectory_node_point);
-    constraint_visualization.residual_errors.markers.push_back(residual_error_marker);
+
+    // color the markers according to the constraint and put the markers in corresponding list
+    if (constraint.tag == cartographer::mapping::SparsePoseGraph::Constraint::INTRA_SUBMAP) {
+    	constraint_marker.color.g = 1.0; // green
+    	residual_error_marker.color.b = 1.0; // blue
+
+    	constraint_visualization.constraints_intra.markers.push_back(constraint_marker);
+    	constraint_visualization.residual_errors_intra.markers.push_back(residual_error_marker);
+    }
+    else {
+    	constraint_marker.color.r = 1.0; // yellow
+    	constraint_marker.color.g = 1.0;
+
+    	residual_error_marker.color.b = 1.0; // cyan
+    	residual_error_marker.color.g = 1.0;
+
+    	constraint_visualization.constraints_inter.markers.push_back(constraint_marker);
+    	constraint_visualization.residual_errors_inter.markers.push_back(residual_error_marker);
+    }
   }
   return constraint_visualization;
 }

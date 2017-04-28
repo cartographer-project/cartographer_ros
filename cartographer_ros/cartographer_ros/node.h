@@ -46,8 +46,10 @@ constexpr char kScanMatchedPointCloudTopic[] = "scan_matched_points2";
 constexpr char kSubmapListTopic[] = "submap_list";
 constexpr char kSubmapQueryServiceName[] = "submap_query";
 constexpr char kTrajectoryNodesListTopic[] = "trajectory_nodes_list";
-constexpr char kConstraintsListTopic[] = "constraints_list";
-constexpr char kResidualErrorsListTopic[] = "residual_errors_list";
+constexpr char kConstraintsListInterTopic[] = "constraints_inter_list";
+constexpr char kConstraintsListIntraTopic[] = "constraints_intra_list";
+constexpr char kResidualErrorsInterListTopic[] = "residual_errors_inter_list";
+constexpr char kResidualErrorsIntraListTopic[] = "residual_errors_intra_list";
 
 // Wires up ROS topics to SLAM.
 class Node {
@@ -84,8 +86,10 @@ class Node {
   std::unordered_set<string> expected_sensor_ids_;
 
   ::ros::NodeHandle node_handle_;
-  ::ros::Publisher constraints_list_publisher_;
-  ::ros::Publisher residual_errors_list_publisher_;
+  ::ros::Publisher constraints_inter_list_publisher_;
+  ::ros::Publisher constraints_intra_list_publisher_;
+  ::ros::Publisher residual_errors_inter_list_publisher_;
+  ::ros::Publisher residual_errors_intra_list_publisher_;
   ::ros::Publisher submap_list_publisher_;
   ::ros::Publisher trajectory_nodes_list_publisher_;
   ::ros::ServiceServer submap_query_server_;

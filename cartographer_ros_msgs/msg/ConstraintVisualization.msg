@@ -12,5 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-visualization_msgs/MarkerArray constraints
-visualization_msgs/MarkerArray residual_errors
+visualization_msgs/MarkerArray constraints_inter
+visualization_msgs/MarkerArray constraints_intra
+visualization_msgs/MarkerArray residual_errors_inter
+visualization_msgs/MarkerArray residual_errors_intra

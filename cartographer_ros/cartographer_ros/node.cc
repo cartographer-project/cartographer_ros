@@ -73,13 +73,21 @@ void Node::Initialize() {
       node_handle_.advertise<::visualization_msgs::MarkerArray>(
           kTrajectoryNodesListTopic, kLatestOnlyPublisherQueueSize);
 
-  constraints_list_publisher_ =
+  constraints_inter_list_publisher_ =
       node_handle_.advertise<::visualization_msgs::MarkerArray>(
-          kConstraintsListTopic, kLatestOnlyPublisherQueueSize);
+          kConstraintsListInterTopic, kLatestOnlyPublisherQueueSize);
 
-  residual_errors_list_publisher_ =
+  constraints_intra_list_publisher_ =
       node_handle_.advertise<::visualization_msgs::MarkerArray>(
-          kResidualErrorsListTopic, kLatestOnlyPublisherQueueSize);
+          kConstraintsListIntraTopic, kLatestOnlyPublisherQueueSize);
+
+  residual_errors_inter_list_publisher_ =
+      node_handle_.advertise<::visualization_msgs::MarkerArray>(
+          kResidualErrorsInterListTopic, kLatestOnlyPublisherQueueSize);
+
+  residual_errors_intra_list_publisher_ =
+      node_handle_.advertise<::visualization_msgs::MarkerArray>(
+          kResidualErrorsIntraListTopic, kLatestOnlyPublisherQueueSize);
 
   if (options_.map_builder_options.use_trajectory_builder_2d()) {
     occupancy_grid_publisher_ =
@@ -139,8 +147,10 @@ void Node::PublishTrajectoryNodesList(const ::ros::WallTimerEvent& unused_timer_
 void Node::PublishConstraintsList(const ::ros::WallTimerEvent& unused_timer_event) {
   carto::common::MutexLocker lock(&mutex_);
   cartographer_ros_msgs::ConstraintVisualization constraint_visualization = map_builder_bridge_.GetConstraintsList();
-  constraints_list_publisher_.publish(constraint_visualization.constraints);
-  residual_errors_list_publisher_.publish(constraint_visualization.residual_errors);
+  constraints_inter_list_publisher_.publish(constraint_visualization.constraints_inter);
+  constraints_intra_list_publisher_.publish(constraint_visualization.constraints_intra);
+  residual_errors_inter_list_publisher_.publish(constraint_visualization.residual_errors_inter);
+  residual_errors_intra_list_publisher_.publish(constraint_visualization.residual_errors_intra);
 }
 
 void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
