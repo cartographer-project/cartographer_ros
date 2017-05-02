@@ -31,16 +31,18 @@ MapBuilderBridge::MapBuilderBridge(const NodeOptions& options,
 
 int MapBuilderBridge::AddTrajectory(
     const std::unordered_set<string>& expected_sensor_ids,
-    const string& tracking_frame) {
+    const RobotOptions& robot_options) {
   const int trajectory_id =
-      map_builder_.AddTrajectoryBuilder(expected_sensor_ids);
+      map_builder_.AddTrajectoryBuilder(expected_sensor_ids, robot_options.map_builder_options);
   LOG(INFO) << "Added trajectory with ID '" << trajectory_id << "'.";
 
   CHECK_EQ(sensor_bridges_.count(trajectory_id), 0);
   sensor_bridges_[trajectory_id] =
       cartographer::common::make_unique<SensorBridge>(
-          tracking_frame, options_.lookup_transform_timeout_sec, tf_buffer_,
+          robot_options.tracking_frame, options_.lookup_transform_timeout_sec, tf_buffer_,
           map_builder_.GetTrajectoryBuilder(trajectory_id));
+  CHECK_EQ(robot_options_.count(trajectory_id), 0);
+  robot_options_[trajectory_id] = robot_options;
   return trajectory_id;
 }
 
@@ -141,12 +143,14 @@ MapBuilderBridge::GetTrajectoryStates() {
       continue;
     }
 
+    CHECK_EQ(robot_options_.count(trajectory_id), 1);
     trajectory_states[trajectory_id] = {
         pose_estimate,
         map_builder_.sparse_pose_graph()->GetLocalToGlobalTransform(
             *trajectory_builder->submaps()),
         sensor_bridge.tf_bridge().LookupToTracking(pose_estimate.time,
-                                                   options_.published_frame)};
+                                                   robot_options_[trajectory_id].published_frame),
+        robot_options_[trajectory_id]};
   }
   return trajectory_states;
 }

@@ -140,8 +140,9 @@ void Run() {
     expected_sensor_ids.insert(kOdometryTopic);
   }
 
+  RobotOptions robot_options = CreateRobotOptionsFromNodeOptions(options);
   trajectory_id = node.map_builder_bridge()->AddTrajectory(
-      expected_sensor_ids, options.tracking_frame);
+      expected_sensor_ids, robot_options);
 
   ::ros::ServiceServer finish_trajectory_server =
       node.node_handle()->advertiseService(
@@ -152,8 +153,9 @@ void Run() {
               [&](::cartographer_ros_msgs::FinishTrajectory::Request& request,
                   ::cartographer_ros_msgs::FinishTrajectory::Response&) {
                 const int previous_trajectory_id = trajectory_id;
+                RobotOptions robot_options = CreateRobotOptionsFromNodeOptions(options);
                 trajectory_id = node.map_builder_bridge()->AddTrajectory(
-                    expected_sensor_ids, options.tracking_frame);
+                    expected_sensor_ids, robot_options);
                 node.map_builder_bridge()->FinishTrajectory(
                     previous_trajectory_id);
                 node.map_builder_bridge()->WriteAssets(request.stem);

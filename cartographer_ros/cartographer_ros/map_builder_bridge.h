@@ -23,6 +23,7 @@
 
 #include "cartographer/mapping/map_builder.h"
 #include "cartographer_ros/node_options.h"
+#include "cartographer_ros/robot_options.h"
 #include "cartographer_ros/sensor_bridge.h"
 #include "cartographer_ros/tf_bridge.h"
 #include "cartographer_ros_msgs/SubmapEntry.h"
@@ -38,6 +39,7 @@ class MapBuilderBridge {
     cartographer::mapping::TrajectoryBuilder::PoseEstimate pose_estimate;
     cartographer::transform::Rigid3d local_to_map;
     std::unique_ptr<cartographer::transform::Rigid3d> published_to_tracking;
+    RobotOptions robot_options;
   };
 
   MapBuilderBridge(const NodeOptions& options, tf2_ros::Buffer* tf_buffer);
@@ -46,7 +48,7 @@ class MapBuilderBridge {
   MapBuilderBridge& operator=(const MapBuilderBridge&) = delete;
 
   int AddTrajectory(const std::unordered_set<string>& expected_sensor_ids,
-                    const string& tracking_frame);
+                    const RobotOptions& robot_options);
   void FinishTrajectory(int trajectory_id);
   void WriteAssets(const string& stem);
 
@@ -68,6 +70,7 @@ class MapBuilderBridge {
   cartographer::mapping::MapBuilder map_builder_;
   tf2_ros::Buffer* const tf_buffer_;
   std::unordered_map<int, std::unique_ptr<SensorBridge>> sensor_bridges_;
+  std::unordered_map<int, RobotOptions> robot_options_;
 };
 
 }  // namespace cartographer_ros
