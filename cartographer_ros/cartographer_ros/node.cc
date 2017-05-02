@@ -138,24 +138,30 @@ void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
       if (trajectory_state.robot_options.provide_odom_frame) {
         std::vector<geometry_msgs::TransformStamped> stamped_transforms;
 
-        stamped_transform.header.frame_id = trajectory_state.robot_options.map_frame;
+        stamped_transform.header.frame_id =
+            trajectory_state.robot_options.map_frame;
         // TODO(damonkohler): 'odom_frame' and 'published_frame' must be
         // per-trajectory to fully support the multi-robot use case.
-        stamped_transform.child_frame_id = trajectory_state.robot_options.odom_frame;
+        stamped_transform.child_frame_id =
+            trajectory_state.robot_options.odom_frame;
         stamped_transform.transform =
             ToGeometryMsgTransform(trajectory_state.local_to_map);
         stamped_transforms.push_back(stamped_transform);
 
-        stamped_transform.header.frame_id = trajectory_state.robot_options.odom_frame;
-        stamped_transform.child_frame_id = trajectory_state.robot_options.published_frame;
+        stamped_transform.header.frame_id =
+            trajectory_state.robot_options.odom_frame;
+        stamped_transform.child_frame_id =
+            trajectory_state.robot_options.published_frame;
         stamped_transform.transform = ToGeometryMsgTransform(
             tracking_to_local * (*trajectory_state.published_to_tracking));
         stamped_transforms.push_back(stamped_transform);
 
         tf_broadcaster_.sendTransform(stamped_transforms);
       } else {
-        stamped_transform.header.frame_id = trajectory_state.robot_options.map_frame;
-        stamped_transform.child_frame_id = trajectory_state.robot_options.published_frame;
+        stamped_transform.header.frame_id =
+            trajectory_state.robot_options.map_frame;
+        stamped_transform.child_frame_id =
+            trajectory_state.robot_options.published_frame;
         stamped_transform.transform = ToGeometryMsgTransform(
             tracking_to_map * (*trajectory_state.published_to_tracking));
         tf_broadcaster_.sendTransform(stamped_transform);

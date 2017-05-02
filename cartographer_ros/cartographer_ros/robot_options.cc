@@ -33,8 +33,9 @@ RobotOptions CreateRobotOptionsFromNodeOptions(NodeOptions options) {
   robot_options.use_multi_echo_laser_scan = options.use_multi_echo_laser_scan;
   robot_options.num_point_clouds = options.num_point_clouds;
 
-  CHECK_EQ(robot_options.use_laser_scan + robot_options.use_multi_echo_laser_scan +
-               (robot_options.num_point_clouds > 0),
+  CHECK_EQ(robot_options.use_laser_scan +
+           robot_options.use_multi_echo_laser_scan +
+           (robot_options.num_point_clouds > 0),
            1)
       << "Configuration error: 'use_laser_scan', "
          "'use_multi_echo_laser_scan' and 'num_point_clouds' are "

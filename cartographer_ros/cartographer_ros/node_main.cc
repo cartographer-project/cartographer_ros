@@ -153,7 +153,8 @@ void Run() {
               [&](::cartographer_ros_msgs::FinishTrajectory::Request& request,
                   ::cartographer_ros_msgs::FinishTrajectory::Response&) {
                 const int previous_trajectory_id = trajectory_id;
-                RobotOptions robot_options = CreateRobotOptionsFromNodeOptions(options);
+                RobotOptions robot_options =
+                CreateRobotOptionsFromNodeOptions(options);
                 trajectory_id = node.map_builder_bridge()->AddTrajectory(
                     expected_sensor_ids, robot_options);
                 node.map_builder_bridge()->FinishTrajectory(
