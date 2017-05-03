@@ -66,30 +66,6 @@ namespace {
 
 namespace carto = ::cartographer;
 
-carto::sensor::PointCloudWithIntensities ToPointCloudWithIntensities(
-    const sensor_msgs::PointCloud2::ConstPtr& message) {
-  pcl::PointCloud<pcl::PointXYZ> pcl_point_cloud;
-  pcl::fromROSMsg(*message, pcl_point_cloud);
-  carto::sensor::PointCloudWithIntensities point_cloud;
-
-  // TODO(hrapp): How to get reflectivities from PCL?
-  for (const auto& point : pcl_point_cloud) {
-    point_cloud.points.emplace_back(point.x, point.y, point.z);
-    point_cloud.intensities.push_back(1.);
-  }
-  return point_cloud;
-}
-
-carto::sensor::PointCloudWithIntensities ToPointCloudWithIntensities(
-    const sensor_msgs::MultiEchoLaserScan::ConstPtr& message) {
-  return carto::sensor::ToPointCloudWithIntensities(ToCartographer(*message));
-}
-
-carto::sensor::PointCloudWithIntensities ToPointCloudWithIntensities(
-    const sensor_msgs::LaserScan::ConstPtr& message) {
-  return carto::sensor::ToPointCloudWithIntensities(ToCartographer(*message));
-}
-
 template <typename T>
 void HandleMessage(
     const T& message, const string& tracking_frame,
@@ -97,7 +73,7 @@ void HandleMessage(
     const carto::transform::TransformInterpolationBuffer&
         transform_interpolation_buffer,
     const std::vector<std::unique_ptr<carto::io::PointsProcessor>>& pipeline) {
-  const carto::common::Time time = FromRos(message->header.stamp);
+  const carto::common::Time time = FromRos(message.header.stamp);
   if (!transform_interpolation_buffer.Has(time)) {
     return;
   }
@@ -106,14 +82,14 @@ void HandleMessage(
       transform_interpolation_buffer.Lookup(time);
   const carto::transform::Rigid3d sensor_to_tracking =
       ToRigid3d(tf_buffer.lookupTransform(
-          tracking_frame, message->header.frame_id, message->header.stamp));
+          tracking_frame, message.header.frame_id, message.header.stamp));
   const carto::transform::Rigid3f sensor_to_map =
       (tracking_to_map * sensor_to_tracking).cast<float>();
 
   auto batch = carto::common::make_unique<carto::io::PointsBatch>();
   batch->time = time;
   batch->origin = sensor_to_map * Eigen::Vector3f::Zero();
-  batch->frame_id = message->header.frame_id;
+  batch->frame_id = message.header.frame_id;
 
   carto::sensor::PointCloudWithIntensities point_cloud =
       ToPointCloudWithIntensities(message);
@@ -179,17 +155,17 @@ void Run(const string& trajectory_filename, const string& bag_filename,
 
     for (const rosbag::MessageInstance& message : view) {
       if (message.isType<sensor_msgs::PointCloud2>()) {
-        HandleMessage(message.instantiate<sensor_msgs::PointCloud2>(),
+        HandleMessage(*message.instantiate<sensor_msgs::PointCloud2>(),
                       tracking_frame, *tf_buffer,
                       *transform_interpolation_buffer, pipeline);
       }
       if (message.isType<sensor_msgs::MultiEchoLaserScan>()) {
-        HandleMessage(message.instantiate<sensor_msgs::MultiEchoLaserScan>(),
+        HandleMessage(*message.instantiate<sensor_msgs::MultiEchoLaserScan>(),
                       tracking_frame, *tf_buffer,
                       *transform_interpolation_buffer, pipeline);
       }
       if (message.isType<sensor_msgs::LaserScan>()) {
-        HandleMessage(message.instantiate<sensor_msgs::LaserScan>(),
+        HandleMessage(*message.instantiate<sensor_msgs::LaserScan>(),
                       tracking_frame, *tf_buffer,
                       *transform_interpolation_buffer, pipeline);
       }
