@@ -18,7 +18,6 @@
 
 #include "cartographer/common/port.h"
 #include "cartographer/common/time.h"
-#include "cartographer/sensor/proto/sensor.pb.h"
 #include "cartographer/transform/proto/transform.pb.h"
 #include "cartographer/transform/transform.h"
 #include "cartographer_ros/time_conversion.h"
@@ -46,6 +45,7 @@ constexpr float kPointCloudComponentFourMagic = 1.;
 
 using ::cartographer::transform::Rigid3d;
 using ::cartographer::kalman_filter::PoseCovariance;
+using ::cartographer::sensor::PointCloudWithIntensities;
 
 sensor_msgs::PointCloud2 PreparePointCloud2Message(const int64 timestamp,
                                                    const string& frame_id,
@@ -76,75 +76,57 @@ sensor_msgs::PointCloud2 PreparePointCloud2Message(const int64 timestamp,
   return msg;
 }
 
+// For sensor_msgs::LaserScan.
+bool HasEcho(float) { return true; }
+
+float GetFirstEcho(float range) { return range; }
+
+// For sensor_msgs::MultiEchoLaserScan.
+bool HasEcho(const sensor_msgs::LaserEcho& echo) {
+  return !echo.echoes.empty();
+}
+
+float GetFirstEcho(const sensor_msgs::LaserEcho& echo) {
+  return echo.echoes[0];
+}
+
+// For sensor_msgs::LaserScan and sensor_msgs::MultiEchoLaserScan.
+template <typename LaserMessageType>
+PointCloudWithIntensities LaserScanToPointCloudWithIntensities(
+    const LaserMessageType& msg) {
+  CHECK_GE(msg.range_min, 0.f);
+  CHECK_GE(msg.range_max, msg.range_min);
+  if (msg.angle_increment > 0.f) {
+    CHECK_GT(msg.angle_max, msg.angle_min);
+  } else {
+    CHECK_GT(msg.angle_min, msg.angle_max);
+  }
+  PointCloudWithIntensities point_cloud;
+  float angle = msg.angle_min;
+  for (size_t i = 0; i < msg.ranges.size(); ++i) {
+    const auto& echoes = msg.ranges[i];
+    if (HasEcho(echoes)) {
+      const float first_echo = GetFirstEcho(echoes);
+      if (msg.range_min <= first_echo && first_echo <= msg.range_max) {
+        const Eigen::AngleAxisf rotation(angle, Eigen::Vector3f::UnitZ());
+        point_cloud.points.push_back(rotation *
+                                     (first_echo * Eigen::Vector3f::UnitX()));
+        if (msg.intensities.size() > 0) {
+          CHECK_EQ(msg.intensities.size(), msg.ranges.size());
+          const auto& echo_intensities = msg.intensities[i];
+          CHECK(HasEcho(echo_intensities));
+          point_cloud.intensities.push_back(GetFirstEcho(echo_intensities));
+        } else {
+          point_cloud.intensities.push_back(0.f);
+        }
+      }
+    }
+    angle += msg.angle_increment;
+  }
+  return point_cloud;
+}
+
 }  // namespace
-
-sensor_msgs::MultiEchoLaserScan ToMultiEchoLaserScanMessage(
-    const int64 timestamp, const string& frame_id,
-    const ::cartographer::sensor::proto::LaserScan& laser_scan) {
-  sensor_msgs::MultiEchoLaserScan msg;
-  msg.header.stamp = ToRos(::cartographer::common::FromUniversal(timestamp));
-  msg.header.frame_id = frame_id;
-
-  msg.angle_min = laser_scan.angle_min();
-  msg.angle_max = laser_scan.angle_max();
-  msg.angle_increment = laser_scan.angle_increment();
-  msg.time_increment = laser_scan.time_increment();
-  msg.scan_time = laser_scan.scan_time();
-  msg.range_min = laser_scan.range_min();
-  msg.range_max = laser_scan.range_max();
-
-  for (const auto& echoes : laser_scan.range()) {
-    msg.ranges.emplace_back();
-    std::copy(echoes.value().begin(), echoes.value().end(),
-              std::back_inserter(msg.ranges.back().echoes));
-  }
-
-  for (const auto& echoes : laser_scan.intensity()) {
-    msg.intensities.emplace_back();
-    std::copy(echoes.value().begin(), echoes.value().end(),
-              std::back_inserter(msg.intensities.back().echoes));
-  }
-  return msg;
-}
-
-sensor_msgs::LaserScan ToLaserScan(
-    const int64 timestamp, const string& frame_id,
-    const ::cartographer::sensor::proto::LaserScan& laser_scan) {
-  sensor_msgs::LaserScan msg;
-  msg.header.stamp = ToRos(::cartographer::common::FromUniversal(timestamp));
-  msg.header.frame_id = frame_id;
-
-  msg.angle_min = laser_scan.angle_min();
-  msg.angle_max = laser_scan.angle_max();
-  msg.angle_increment = laser_scan.angle_increment();
-  msg.time_increment = laser_scan.time_increment();
-  msg.scan_time = laser_scan.scan_time();
-  msg.range_min = laser_scan.range_min();
-  msg.range_max = laser_scan.range_max();
-
-  for (const auto& echoes : laser_scan.range()) {
-    if (echoes.value_size() > 0) {
-      msg.ranges.push_back(echoes.value(0));
-    } else {
-      msg.ranges.push_back(0.);
-    }
-  }
-
-  bool has_intensities = false;
-  for (const auto& echoes : laser_scan.intensity()) {
-    if (echoes.value_size() > 0) {
-      msg.intensities.push_back(echoes.value(0));
-      has_intensities = true;
-    } else {
-      msg.intensities.push_back(0);
-    }
-  }
-  if (!has_intensities) {
-    msg.intensities.clear();
-  }
-
-  return msg;
-}
 
 sensor_msgs::PointCloud2 ToPointCloud2Message(
     const int64 timestamp, const string& frame_id,
@@ -160,73 +142,28 @@ sensor_msgs::PointCloud2 ToPointCloud2Message(
   return msg;
 }
 
-sensor_msgs::PointCloud2 ToPointCloud2Message(
-    const int64 timestamp, const string& frame_id,
-    const ::cartographer::sensor::proto::RangeData& range_data) {
-  CHECK(::cartographer::transform::ToEigen(range_data.origin()).norm() == 0)
-      << "Trying to convert a range_data that is not at the origin.";
-
-  const auto& point_cloud = range_data.point_cloud();
-  CHECK_EQ(point_cloud.x_size(), point_cloud.y_size());
-  CHECK_EQ(point_cloud.x_size(), point_cloud.z_size());
-  const auto num_points = point_cloud.x_size();
-
-  auto msg = PreparePointCloud2Message(timestamp, frame_id, num_points);
-  ::ros::serialization::OStream stream(msg.data.data(), msg.data.size());
-  for (int i = 0; i < num_points; ++i) {
-    stream.next(point_cloud.x(i));
-    stream.next(point_cloud.y(i));
-    stream.next(point_cloud.z(i));
-    stream.next(kPointCloudComponentFourMagic);
-  }
-  return msg;
-}
-
-::cartographer::sensor::proto::LaserScan ToCartographer(
+PointCloudWithIntensities ToPointCloudWithIntensities(
     const sensor_msgs::LaserScan& msg) {
-  ::cartographer::sensor::proto::LaserScan proto;
-  proto.set_angle_min(msg.angle_min);
-  proto.set_angle_max(msg.angle_max);
-  proto.set_angle_increment(msg.angle_increment);
-  proto.set_time_increment(msg.time_increment);
-  proto.set_scan_time(msg.scan_time);
-  proto.set_range_min(msg.range_min);
-  proto.set_range_max(msg.range_max);
-
-  for (const auto& range : msg.ranges) {
-    proto.add_range()->mutable_value()->Add(range);
-  }
-
-  for (const auto& intensity : msg.intensities) {
-    proto.add_intensity()->mutable_value()->Add(intensity);
-  }
-  return proto;
+  return LaserScanToPointCloudWithIntensities(msg);
 }
 
-::cartographer::sensor::proto::LaserScan ToCartographer(
+PointCloudWithIntensities ToPointCloudWithIntensities(
     const sensor_msgs::MultiEchoLaserScan& msg) {
-  ::cartographer::sensor::proto::LaserScan proto;
-  proto.set_angle_min(msg.angle_min);
-  proto.set_angle_max(msg.angle_max);
-  proto.set_angle_increment(msg.angle_increment);
-  proto.set_time_increment(msg.time_increment);
-  proto.set_scan_time(msg.scan_time);
-  proto.set_range_min(msg.range_min);
-  proto.set_range_max(msg.range_max);
+  return LaserScanToPointCloudWithIntensities(msg);
+}
 
-  for (const auto& range : msg.ranges) {
-    auto* proto_echoes = proto.add_range()->mutable_value();
-    for (const auto& echo : range.echoes) {
-      proto_echoes->Add(echo);
-    }
+PointCloudWithIntensities ToPointCloudWithIntensities(
+    const sensor_msgs::PointCloud2& message) {
+  pcl::PointCloud<pcl::PointXYZ> pcl_point_cloud;
+  pcl::fromROSMsg(message, pcl_point_cloud);
+  PointCloudWithIntensities point_cloud;
+
+  // TODO(hrapp): How to get reflectivities from PCL?
+  for (const auto& point : pcl_point_cloud) {
+    point_cloud.points.emplace_back(point.x, point.y, point.z);
+    point_cloud.intensities.push_back(1.);
   }
-  for (const auto& intensity : msg.intensities) {
-    auto* proto_echoes = proto.add_intensity()->mutable_value();
-    for (const auto& echo : intensity.echoes) {
-      proto_echoes->Add(echo);
-    }
-  }
-  return proto;
+  return point_cloud;
 }
 
 Rigid3d ToRigid3d(const geometry_msgs::TransformStamped& transform) {

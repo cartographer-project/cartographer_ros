@@ -132,29 +132,20 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
   COMPILE_FLAGS ${TARGET_COMPILE_FLAGS})
 
 if (CATKIN_ENABLE_TESTING)
-  catkin_add_gtest(configuration_files_test "cartographer_ros/configuration_files_test.cc")
-  # catkin_add_gtest uses a plain (i.e. no PUBLIC/PRIVATE/INTERFACE) call to
-  # target_link_libraries. That forces us to do the same.
-  target_include_directories(configuration_files_test SYSTEM PUBLIC ${LUA_INCLUDE_DIR})
-  target_link_libraries(configuration_files_test ${LUA_LIBRARIES})
-  target_include_directories(configuration_files_test SYSTEM PUBLIC ${catkin_INCLUDE_DIRS})
-  target_link_libraries(configuration_files_test ${catkin_LIBRARIES})
-  add_dependencies(configuration_files_test ${catkin_EXPORTED_TARGETS})
-  target_link_libraries(configuration_files_test cartographer)
-  target_link_libraries(configuration_files_test ${PROJECT_NAME})
-  set_target_properties(configuration_files_test PROPERTIES COMPILE_FLAGS ${TARGET_COMPILE_FLAGS})
-
-  catkin_add_gtest(time_conversion_test "cartographer_ros/time_conversion_test.cc")
-  # catkin_add_gtest uses a plain (i.e. no PUBLIC/PRIVATE/INTERFACE) call to
-  # target_link_libraries. That forces us to do the same.
-  target_include_directories(time_conversion_test SYSTEM PUBLIC ${LUA_INCLUDE_DIR})
-  target_link_libraries(time_conversion_test ${LUA_LIBRARIES})
-  target_include_directories(time_conversion_test SYSTEM PUBLIC ${catkin_INCLUDE_DIRS})
-  target_link_libraries(time_conversion_test ${catkin_LIBRARIES})
-  add_dependencies(time_conversion_test ${catkin_EXPORTED_TARGETS})
-  target_link_libraries(time_conversion_test cartographer)
-  target_link_libraries(time_conversion_test ${PROJECT_NAME})
-  set_target_properties(time_conversion_test PROPERTIES COMPILE_FLAGS ${TARGET_COMPILE_FLAGS})
+  foreach(TEST_SOURCE_FILENAME ${ALL_TESTS})
+    get_filename_component(TEST_NAME ${TEST_SOURCE_FILENAME} NAME_WE)
+    catkin_add_gtest(${TEST_NAME} ${TEST_SOURCE_FILENAME})
+    # catkin_add_gtest uses a plain (i.e. no PUBLIC/PRIVATE/INTERFACE) call to
+    # target_link_libraries. That forces us to do the same.
+    target_include_directories(${TEST_NAME} SYSTEM PUBLIC ${LUA_INCLUDE_DIR})
+    target_link_libraries(${TEST_NAME} ${LUA_LIBRARIES})
+    target_include_directories(${TEST_NAME} SYSTEM PUBLIC ${catkin_INCLUDE_DIRS})
+    target_link_libraries(${TEST_NAME} ${catkin_LIBRARIES})
+    add_dependencies(${TEST_NAME} ${catkin_EXPORTED_TARGETS})
+    target_link_libraries(${TEST_NAME} cartographer)
+    target_link_libraries(${TEST_NAME} ${PROJECT_NAME})
+    set_target_properties(${TEST_NAME} PROPERTIES COMPILE_FLAGS ${TARGET_COMPILE_FLAGS})
+  endforeach()
 endif()
 
 install(DIRECTORY launch urdf configuration_files
