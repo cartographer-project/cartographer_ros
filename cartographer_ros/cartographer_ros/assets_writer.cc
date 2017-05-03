@@ -78,11 +78,6 @@ void Write3DAssets(const std::vector<::cartographer::mapping::TrajectoryNode>&
     auto points_batch = carto::common::make_unique<carto::io::PointsBatch>();
     points_batch->origin = range_data.origin;
     points_batch->points = range_data.returns;
-    for (const uint8 reflectivity :
-         node.constant_data->range_data_3d.reflectivities) {
-      points_batch->colors.push_back(
-          carto::io::Color{{reflectivity, reflectivity, reflectivity}});
-    }
     ply_writing_points_processor.Process(std::move(points_batch));
   }
   ply_writing_points_processor.Flush();
