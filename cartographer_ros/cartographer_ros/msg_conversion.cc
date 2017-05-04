@@ -154,15 +154,28 @@ PointCloudWithIntensities ToPointCloudWithIntensities(
 
 PointCloudWithIntensities ToPointCloudWithIntensities(
     const sensor_msgs::PointCloud2& message) {
-  pcl::PointCloud<pcl::PointXYZ> pcl_point_cloud;
-  pcl::fromROSMsg(message, pcl_point_cloud);
-  PointCloudWithIntensities point_cloud;
 
-  // TODO(hrapp): How to get reflectivities from PCL?
-  for (const auto& point : pcl_point_cloud) {
-    point_cloud.points.emplace_back(point.x, point.y, point.z);
-    point_cloud.intensities.push_back(1.);
+  PointCloudWithIntensities point_cloud;
+  //We check for intensity field here to avoid run-time warnings if we pass in a PointCloud2 without intensity.
+  if (PointCloud2HasField(message,"intensity")){
+    pcl::PointCloud<pcl::PointXYZI> pcl_point_cloud;
+    pcl::fromROSMsg(message, pcl_point_cloud);
+
+    for (const auto& point : pcl_point_cloud) {
+      point_cloud.points.emplace_back(point.x, point.y, point.z);
+      point_cloud.intensities.push_back(point.intensity);
+    }
   }
+  else{ //If we don't have an intensity field, just copy XYZ and fill in 1.0.
+    pcl::PointCloud<pcl::PointXYZ> pcl_point_cloud;
+    pcl::fromROSMsg(message, pcl_point_cloud);
+
+    for (const auto& point : pcl_point_cloud) {
+      point_cloud.points.emplace_back(point.x, point.y, point.z);
+      point_cloud.intensities.push_back(1.0);
+    }
+  }
+ 
   return point_cloud;
 }
 
@@ -183,6 +196,14 @@ Eigen::Vector3d ToEigen(const geometry_msgs::Vector3& vector3) {
 Eigen::Quaterniond ToEigen(const geometry_msgs::Quaternion& quaternion) {
   return Eigen::Quaterniond(quaternion.w, quaternion.x, quaternion.y,
                             quaternion.z);
+}
+
+bool PointCloud2HasField (const sensor_msgs::PointCloud2 &pc2, const std::string field_name)
+{
+  for (size_t cf = 0; cf < pc2.fields.size (); ++cf)
+    if (pc2.fields[cf].name == field_name)
+      return true;
+    return false;
 }
 
 PoseCovariance ToPoseCovariance(const boost::array<double, 36>& covariance) {

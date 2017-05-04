@@ -62,6 +62,8 @@ Eigen::Vector3d ToEigen(const geometry_msgs::Vector3& vector3);
 
 Eigen::Quaterniond ToEigen(const geometry_msgs::Quaternion& quaternion);
 
+bool PointCloud2HasField (const sensor_msgs::PointCloud2 &pc2, const std::string field_name);
+
 ::cartographer::kalman_filter::PoseCovariance ToPoseCovariance(
     const boost::array<double, 36>& covariance);
 
