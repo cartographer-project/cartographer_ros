@@ -154,10 +154,10 @@ PointCloudWithIntensities ToPointCloudWithIntensities(
 
 PointCloudWithIntensities ToPointCloudWithIntensities(
     const sensor_msgs::PointCloud2& message) {
-
   PointCloudWithIntensities point_cloud;
-  //We check for intensity field here to avoid run-time warnings if we pass in a PointCloud2 without intensity.
-  if (PointCloud2HasField(message,"intensity")){
+  // We check for intensity field here to avoid run-time warnings if we pass in
+  // a PointCloud2 without intensity.
+  if (PointCloud2HasField(message, "intensity")) {
     pcl::PointCloud<pcl::PointXYZI> pcl_point_cloud;
     pcl::fromROSMsg(message, pcl_point_cloud);
 
@@ -165,8 +165,8 @@ PointCloudWithIntensities ToPointCloudWithIntensities(
       point_cloud.points.emplace_back(point.x, point.y, point.z);
       point_cloud.intensities.push_back(point.intensity);
     }
-  }
-  else{ //If we don't have an intensity field, just copy XYZ and fill in 1.0.
+  } else {  // If we don't have an intensity field, just copy XYZ and fill in
+            // 1.0.
     pcl::PointCloud<pcl::PointXYZ> pcl_point_cloud;
     pcl::fromROSMsg(message, pcl_point_cloud);
 
@@ -175,7 +175,7 @@ PointCloudWithIntensities ToPointCloudWithIntensities(
       point_cloud.intensities.push_back(1.0);
     }
   }
- 
+
   return point_cloud;
 }
 
@@ -198,11 +198,10 @@ Eigen::Quaterniond ToEigen(const geometry_msgs::Quaternion& quaternion) {
                             quaternion.z);
 }
 
-bool PointCloud2HasField (const sensor_msgs::PointCloud2 &pc2, const std::string field_name)
-{
-  for (size_t cf = 0; cf < pc2.fields.size (); ++cf)
-    if (pc2.fields[cf].name == field_name)
-      return true;
+bool PointCloud2HasField(const sensor_msgs::PointCloud2& pc2,
+                         const std::string field_name) {
+  for (size_t cf = 0; cf < pc2.fields.size(); ++cf)
+    if (pc2.fields[cf].name == field_name) return true;
   return false;
 }
 
