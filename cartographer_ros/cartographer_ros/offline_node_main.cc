@@ -169,8 +169,9 @@ void Run(const std::vector<string>& bag_filenames) {
       break;
     }
 
+    RobotOptions robot_options = CreateRobotOptionsFromNodeOptions(options);
     const int trajectory_id = node.map_builder_bridge()->AddTrajectory(
-        expected_sensor_ids, options.tracking_frame);
+        expected_sensor_ids, robot_options);
 
     rosbag::Bag bag;
     bag.open(bag_filename, rosbag::bagmode::Read);
