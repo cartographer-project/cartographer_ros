@@ -128,8 +128,8 @@ PointCloudWithIntensities LaserScanToPointCloudWithIntensities(
 
 bool PointCloud2HasField(const sensor_msgs::PointCloud2& pc2,
                          const std::string& field_name) {
-  for (size_t cf = 0; cf < pc2.fields.size(); ++cf) {
-    if (pc2.fields[cf].name == field_name) {
+  for (const auto& field : pc2.fields) {
+    if (field.name == field_name) {
       return true;
     }
   }
