@@ -203,7 +203,7 @@ bool PointCloud2HasField (const sensor_msgs::PointCloud2 &pc2, const std::string
   for (size_t cf = 0; cf < pc2.fields.size (); ++cf)
     if (pc2.fields[cf].name == field_name)
       return true;
-    return false;
+  return false;
 }
 
 PoseCovariance ToPoseCovariance(const boost::array<double, 36>& covariance) {
