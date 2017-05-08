@@ -69,7 +69,7 @@ void Write2DAssets(
 
   ::nav_msgs::OccupancyGrid occupancy_grid;
   BuildOccupancyGrid2D(trajectory_nodes, map_frame, submaps_options,
-                     &occupancy_grid);
+                       &occupancy_grid);
   WriteOccupancyGridToPgmAndYaml(occupancy_grid, stem);
 }
 
