@@ -26,7 +26,7 @@ namespace cartographer_ros {
 MapBuilderBridge::MapBuilderBridge(const NodeOptions& options,
                                    tf2_ros::Buffer* const tf_buffer)
     : options_(options),
-      map_builder_(options.map_builder_options, &constant_data_),
+      map_builder_(options.map_builder_options),
       tf_buffer_(tf_buffer) {}
 
 int MapBuilderBridge::AddTrajectory(
