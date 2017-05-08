@@ -20,15 +20,17 @@
 #include <vector>
 
 #include "cartographer/mapping/trajectory_node.h"
-#include "cartographer_ros/node_options.h"
+#include "cartographer/mapping_2d/proto/submaps_options.pb.h"
 #include "nav_msgs/OccupancyGrid.h"
 
 namespace cartographer_ros {
 
-void BuildOccupancyGrid(
+void BuildOccupancyGrid2D(
     const std::vector<::cartographer::mapping::TrajectoryNode>&
         trajectory_nodes,
-    const NodeOptions& options, ::nav_msgs::OccupancyGrid* occupancy_grid);
+    const string& map_frame,
+    const ::cartographer::mapping_2d::proto::SubmapsOptions& submaps_options,
+    ::nav_msgs::OccupancyGrid* const occupancy_grid);
 
 }  // namespace cartographer_ros
 
