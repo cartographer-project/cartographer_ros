@@ -33,7 +33,7 @@ int MapBuilderBridge::AddTrajectory(
     const std::unordered_set<string>& expected_sensor_ids,
     const string& tracking_frame) {
   const int trajectory_id =
-      map_builder_.AddTrajectoryBuilder(expected_sensor_ids);
+      map_builder_.AddTrajectoryBuilder(expected_sensor_ids, options_.trajectory_builder_options);
   LOG(INFO) << "Added trajectory with ID '" << trajectory_id << "'.";
 
   CHECK_EQ(sensor_bridges_.count(trajectory_id), 0);
@@ -60,7 +60,22 @@ void MapBuilderBridge::WriteAssets(const string& stem) {
     LOG(WARNING) << "No data was collected and no assets will be written.";
   } else {
     LOG(INFO) << "Writing assets with stem '" << stem << "'...";
-    cartographer_ros::WriteAssets(trajectory_nodes, options_, stem);
+    if (options_.map_builder_options.use_trajectory_builder_2d()) {
+      Write2DAssets(
+          trajectory_nodes, options_.map_frame,
+          options_.trajectory_builder_options.trajectory_builder_2d_options()
+              .submaps_options(),
+          stem);
+    }
+
+    if (options_.map_builder_options.use_trajectory_builder_3d()) {
+      Write3DAssets(
+          trajectory_nodes,
+          options_.trajectory_builder_options.trajectory_builder_3d_options()
+              .submaps_options()
+              .high_resolution(),
+          stem);
+    }
   }
 }
 
@@ -120,8 +135,11 @@ MapBuilderBridge::BuildOccupancyGrid() {
   if (!trajectory_nodes.empty()) {
     occupancy_grid =
         cartographer::common::make_unique<nav_msgs::OccupancyGrid>();
-    cartographer_ros::BuildOccupancyGrid(trajectory_nodes, options_,
-                                         occupancy_grid.get());
+    cartographer_ros::BuildOccupancyGrid(
+        trajectory_nodes, options_.map_frame,
+        options_.trajectory_builder_options.trajectory_builder_2d_options()
+            .submaps_options(),
+        occupancy_grid.get());
   }
   return occupancy_grid;
 }
