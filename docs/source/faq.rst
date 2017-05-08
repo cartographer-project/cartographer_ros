@@ -46,7 +46,7 @@ so there is an implicit knowledge which way is up.
 
 In 3D, an IMU is required mainly for measuring gravity. Gravity is an
 attractive quantity to measure, since it does not drift and is a very strong
-signal. Gravity is needed for two reasons
+signal. Gravity is needed for two reasons:
 
 1. There are no assumptions about the world in 3D, so to properly world align the
 resulting trajectory and map, gravity is used to define the z-direction. This
