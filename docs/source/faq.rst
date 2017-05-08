@@ -40,15 +40,15 @@ Why is IMU data required for 3D SLAM, but not for 2D?
 
 In 2D, Cartographer supports running the correlative scan matcher that is used for finding loop closure constraints also for local SLAM.
 It is computationally much more expensive than not using it, but it can often render odometry data unnecessary.
-2D has the benefit of assuming a flat world, so there is an implicit knowledge which way is up.
+2D also has the benefit of assuming a flat world, so there is an implicit knowledge which way is up.
 
 In 3D, an IMU is required mainly for measuring gravity.
-Gravity is an attractive quantity to measure, since it does not drift and is a very strong
+Gravity is an attractive quantity to measure since it does not drift and is a very strong
 signal.
 Gravity is needed for two reasons:
 
-1. there are no assumptions about the world in 3D, so to properly world align the resulting trajectory and map, gravity is used to define the z-direction.
-This aligns with human expectation: up is the inverse direction of gravity.
+1. there are no assumptions about the world in 3D.
+To properly world align the resulting trajectory and map, gravity is used to define the z-direction.
 
-2. roll and pitch can be derived quite well from IMU readings, once the direction of gravity has been established.
-This allows to do less work in the scan matcher for these two quantities.
+2. roll and pitch can be derived quite well from IMU readings once the direction of gravity has been established.
+This saves work for the scan matcher by reducing the search window in these dimensions.
