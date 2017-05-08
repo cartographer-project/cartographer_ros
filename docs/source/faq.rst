@@ -34,3 +34,25 @@ measurements, for matching. Since there are two VLP-16s, 160 UDP packets is
 enough for roughly 2 revolutions, one per VLP-16.
 
 __ https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros/configuration_files/backpack_3d.lua
+
+Why is IMU data required for 3D SLAM, but not for 2D?
+-----------------------------------------------------
+
+In 2D, Cartographer supports running the correlative scan matcher that is used
+for finding loop closure constraints also for local SLAM. It is
+computationally much more expensive than not using it, but it can often offset
+replace odometry data. 2D has the benefit of assuming a flat world, so there
+is an implicit knowledge which was is up.
+
+In 3D, an IMU is required mainly for measuring gravity. Gravity is an
+attractive quantity to measure, since it is drift free and a very strong
+signal vs accelerations of usual SLAM platforms. Gravity is needed for two
+reasons
+
+1) There are no assumptions about the world in 3D, so to properly world align the
+resulting trajectory and map, gravity is used to define the z-direction. This
+aligns with human expectation: up is the inverse direction of gravity.
+
+2) Roll and Pitch can be derived quite well from IMU readings, once the
+direction of gravity has been established. This allows to do less work in the
+scan matcher for these two quantities.
