@@ -36,8 +36,8 @@ namespace {
 namespace carto = ::cartographer;
 
 void WriteTrajectory(const std::vector<::cartographer::mapping::TrajectoryNode>&
-                     trajectory_nodes, const std::string& stem
-                 ) {
+                         trajectory_nodes,
+                     const std::string& stem) {
   carto::mapping::proto::Trajectory trajectory;
   for (const auto& node : trajectory_nodes) {
     const auto& data = *node.constant_data;
@@ -68,7 +68,8 @@ void Write2DAssets(
   WriteTrajectory(trajectory_nodes, stem);
 
   ::nav_msgs::OccupancyGrid occupancy_grid;
-  BuildOccupancyGrid(trajectory_nodes, map_frame, submaps_options, &occupancy_grid);
+  BuildOccupancyGrid(trajectory_nodes, map_frame, submaps_options,
+                     &occupancy_grid);
   WriteOccupancyGridToPgmAndYaml(occupancy_grid, stem);
 }
 
@@ -115,6 +116,5 @@ void Write3DAssets(const std::vector<::cartographer::mapping::TrajectoryNode>&
   }
   ply_writing_points_processor.Flush();
 }
-
 
 }  // namespace cartographer_ros

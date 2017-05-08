@@ -27,8 +27,8 @@ namespace cartographer_ros {
 void BuildOccupancyGrid(
     const std::vector<::cartographer::mapping::TrajectoryNode>&
         trajectory_nodes,
-        const string& map_frame,
-        const ::cartographer::mapping_2d::proto::SubmapsOptions& submaps_options,
+    const string& map_frame,
+    const ::cartographer::mapping_2d::proto::SubmapsOptions& submaps_options,
     ::nav_msgs::OccupancyGrid* const occupancy_grid) {
   namespace carto = ::cartographer;
   const carto::mapping_2d::MapLimits map_limits =

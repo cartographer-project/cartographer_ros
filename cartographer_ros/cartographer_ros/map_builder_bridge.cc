@@ -32,8 +32,8 @@ MapBuilderBridge::MapBuilderBridge(const NodeOptions& options,
 int MapBuilderBridge::AddTrajectory(
     const std::unordered_set<string>& expected_sensor_ids,
     const string& tracking_frame) {
-  const int trajectory_id =
-      map_builder_.AddTrajectoryBuilder(expected_sensor_ids, options_.trajectory_builder_options);
+  const int trajectory_id = map_builder_.AddTrajectoryBuilder(
+      expected_sensor_ids, options_.trajectory_builder_options);
   LOG(INFO) << "Added trajectory with ID '" << trajectory_id << "'.";
 
   CHECK_EQ(sensor_bridges_.count(trajectory_id), 0);
