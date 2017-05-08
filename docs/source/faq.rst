@@ -49,10 +49,10 @@ attractive quantity to measure, since it is drift free and a very strong
 signal vs accelerations of usual SLAM platforms. Gravity is needed for two
 reasons
 
-1) There are no assumptions about the world in 3D, so to properly world align the
+1. There are no assumptions about the world in 3D, so to properly world align the
 resulting trajectory and map, gravity is used to define the z-direction. This
 aligns with human expectation: up is the inverse direction of gravity.
 
-2) Roll and Pitch can be derived quite well from IMU readings, once the
+2. Roll and Pitch can be derived quite well from IMU readings, once the
 direction of gravity has been established. This allows to do less work in the
 scan matcher for these two quantities.
