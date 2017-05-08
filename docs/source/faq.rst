@@ -42,7 +42,7 @@ In 2D, Cartographer supports running the correlative scan matcher that is used
 for finding loop closure constraints also for local SLAM. It is
 computationally much more expensive than not using it, but it can often
 render odometry data unnecessary. 2D has the benefit of assuming a flat world,
-so there is an implicit knowledge which was is up.
+so there is an implicit knowledge which way is up.
 
 In 3D, an IMU is required mainly for measuring gravity. Gravity is an
 attractive quantity to measure, since it is drift free and a very strong
