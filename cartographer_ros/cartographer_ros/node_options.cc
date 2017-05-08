@@ -27,6 +27,9 @@ NodeOptions CreateNodeOptions(
   options.map_builder_options =
       ::cartographer::mapping::CreateMapBuilderOptions(
           lua_parameter_dictionary->GetDictionary("map_builder").get());
+  options.trajectory_builder_options =
+      ::cartographer::mapping::CreateTrajectoryBuilderOptions(
+          lua_parameter_dictionary->GetDictionary("trajectory_builder").get());
   options.map_frame = lua_parameter_dictionary->GetString("map_frame");
   options.tracking_frame =
       lua_parameter_dictionary->GetString("tracking_frame");
