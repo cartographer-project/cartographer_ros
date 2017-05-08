@@ -129,13 +129,15 @@ cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
 
 std::unique_ptr<nav_msgs::OccupancyGrid>
 MapBuilderBridge::BuildOccupancyGrid() {
+  CHECK(options_.map_builder_options.use_trajectory_builder_2d())
+      << "Publishing OccupancyGrids for 3D data is not yet supported";
   const auto trajectory_nodes =
       map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
   std::unique_ptr<nav_msgs::OccupancyGrid> occupancy_grid;
   if (!trajectory_nodes.empty()) {
     occupancy_grid =
         cartographer::common::make_unique<nav_msgs::OccupancyGrid>();
-    cartographer_ros::BuildOccupancyGrid(
+    BuildOccupancyGrid2D(
         trajectory_nodes, options_.map_frame,
         options_.trajectory_builder_options.trajectory_builder_2d_options()
             .submaps_options(),

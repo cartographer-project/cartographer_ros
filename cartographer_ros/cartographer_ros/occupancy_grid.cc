@@ -24,7 +24,7 @@
 
 namespace cartographer_ros {
 
-void BuildOccupancyGrid(
+void BuildOccupancyGrid2D(
     const std::vector<::cartographer::mapping::TrajectoryNode>&
         trajectory_nodes,
     const string& map_frame,
