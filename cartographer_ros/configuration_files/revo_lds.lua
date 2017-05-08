@@ -13,9 +13,11 @@
 -- limitations under the License.
 
 include "map_builder.lua"
+include "trajectory_builder.lua"
 
 options = {
   map_builder = MAP_BUILDER,
+  trajectory_builder = TRAJECTORY_BUILDER,
   map_frame = "map",
   tracking_frame = "horizontal_laser_link",
   published_frame = "horizontal_laser_link",
