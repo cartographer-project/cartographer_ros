@@ -140,7 +140,7 @@ void Run(const std::vector<string>& bag_filenames) {
   // required.
   if (options.map_builder_options.use_trajectory_builder_3d() ||
       (options.map_builder_options.use_trajectory_builder_2d() &&
-       options.map_builder_options.trajectory_builder_2d_options()
+       options.trajectory_builder_options.trajectory_builder_2d_options()
            .use_imu_data())) {
     check_insert(kImuTopic);
   }

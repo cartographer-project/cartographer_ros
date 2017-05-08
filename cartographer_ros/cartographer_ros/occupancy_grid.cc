@@ -16,22 +16,21 @@
 
 #include "cartographer_ros/occupancy_grid.h"
 
+#include "cartographer/mapping_2d/map_limits.h"
+#include "cartographer/mapping_2d/probability_grid.h"
+#include "cartographer/mapping_2d/range_data_inserter.h"
 #include "cartographer_ros/time_conversion.h"
 #include "glog/logging.h"
 
 namespace cartographer_ros {
 
-void BuildOccupancyGrid(
+void BuildOccupancyGrid2D(
     const std::vector<::cartographer::mapping::TrajectoryNode>&
         trajectory_nodes,
-    const NodeOptions& options,
+    const string& map_frame,
+    const ::cartographer::mapping_2d::proto::SubmapsOptions& submaps_options,
     ::nav_msgs::OccupancyGrid* const occupancy_grid) {
   namespace carto = ::cartographer;
-  CHECK(options.map_builder_options.use_trajectory_builder_2d())
-      << "Publishing OccupancyGrids for 3D data is not yet supported";
-  const auto& submaps_options =
-      options.map_builder_options.trajectory_builder_2d_options()
-          .submaps_options();
   const carto::mapping_2d::MapLimits map_limits =
       carto::mapping_2d::MapLimits::ComputeMapLimits(
           submaps_options.resolution(), trajectory_nodes);
@@ -47,7 +46,7 @@ void BuildOccupancyGrid(
   }
 
   occupancy_grid->header.stamp = ToRos(trajectory_nodes.back().time());
-  occupancy_grid->header.frame_id = options.map_frame;
+  occupancy_grid->header.frame_id = map_frame;
   occupancy_grid->info.map_load_time = occupancy_grid->header.stamp;
 
   Eigen::Array2i offset;
