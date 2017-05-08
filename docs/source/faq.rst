@@ -45,9 +45,8 @@ render odometry data unnecessary. 2D has the benefit of assuming a flat world,
 so there is an implicit knowledge which way is up.
 
 In 3D, an IMU is required mainly for measuring gravity. Gravity is an
-attractive quantity to measure, since it is drift free and a very strong
-signal vs accelerations of usual SLAM platforms. Gravity is needed for two
-reasons
+attractive quantity to measure, since it does not drift and is a very strong
+signal. Gravity is needed for two reasons
 
 1. There are no assumptions about the world in 3D, so to properly world align the
 resulting trajectory and map, gravity is used to define the z-direction. This
