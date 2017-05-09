@@ -64,8 +64,6 @@ class MapBuilderBridge {
  private:
   const NodeOptions options_;
 
-  std::deque<cartographer::mapping::TrajectoryNode::ConstantData>
-      constant_data_;
   cartographer::mapping::MapBuilder map_builder_;
   tf2_ros::Buffer* const tf_buffer_;
   std::unordered_map<int, std::unique_ptr<SensorBridge>> sensor_bridges_;
