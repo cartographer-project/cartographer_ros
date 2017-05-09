@@ -26,14 +26,14 @@ namespace cartographer_ros {
 MapBuilderBridge::MapBuilderBridge(const NodeOptions& options,
                                    tf2_ros::Buffer* const tf_buffer)
     : options_(options),
-      map_builder_(options.map_builder_options, &constant_data_),
+      map_builder_(options.map_builder_options),
       tf_buffer_(tf_buffer) {}
 
 int MapBuilderBridge::AddTrajectory(
     const std::unordered_set<string>& expected_sensor_ids,
     const string& tracking_frame) {
-  const int trajectory_id =
-      map_builder_.AddTrajectoryBuilder(expected_sensor_ids);
+  const int trajectory_id = map_builder_.AddTrajectoryBuilder(
+      expected_sensor_ids, options_.trajectory_builder_options);
   LOG(INFO) << "Added trajectory with ID '" << trajectory_id << "'.";
 
   CHECK_EQ(sensor_bridges_.count(trajectory_id), 0);
@@ -60,7 +60,22 @@ void MapBuilderBridge::WriteAssets(const string& stem) {
     LOG(WARNING) << "No data was collected and no assets will be written.";
   } else {
     LOG(INFO) << "Writing assets with stem '" << stem << "'...";
-    cartographer_ros::WriteAssets(trajectory_nodes, options_, stem);
+    if (options_.map_builder_options.use_trajectory_builder_2d()) {
+      Write2DAssets(
+          trajectory_nodes, options_.map_frame,
+          options_.trajectory_builder_options.trajectory_builder_2d_options()
+              .submaps_options(),
+          stem);
+    }
+
+    if (options_.map_builder_options.use_trajectory_builder_3d()) {
+      Write3DAssets(
+          trajectory_nodes,
+          options_.trajectory_builder_options.trajectory_builder_3d_options()
+              .submaps_options()
+              .high_resolution(),
+          stem);
+    }
   }
 }
 
@@ -96,11 +111,11 @@ cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
     const cartographer::mapping::Submaps* submaps =
         map_builder_.GetTrajectoryBuilder(trajectory_id)->submaps();
     const std::vector<cartographer::transform::Rigid3d> submap_transforms =
-        map_builder_.sparse_pose_graph()->GetSubmapTransforms(*submaps);
-    CHECK_EQ(submap_transforms.size(), submaps->size());
+        map_builder_.sparse_pose_graph()->GetSubmapTransforms(submaps);
+    CHECK_LE(submap_transforms.size(), submaps->size());
 
     cartographer_ros_msgs::TrajectorySubmapList trajectory_submap_list;
-    for (int submap_index = 0; submap_index != submaps->size();
+    for (size_t submap_index = 0; submap_index != submap_transforms.size();
          ++submap_index) {
       cartographer_ros_msgs::SubmapEntry submap_entry;
       submap_entry.submap_version = submaps->Get(submap_index)->num_range_data;
@@ -216,14 +231,19 @@ cartographer_ros_msgs::ConstraintVisualization MapBuilderBridge::GetConstraintsL
 
 std::unique_ptr<nav_msgs::OccupancyGrid>
 MapBuilderBridge::BuildOccupancyGrid() {
+  CHECK(options_.map_builder_options.use_trajectory_builder_2d())
+      << "Publishing OccupancyGrids for 3D data is not yet supported";
   const auto trajectory_nodes =
       map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
   std::unique_ptr<nav_msgs::OccupancyGrid> occupancy_grid;
   if (!trajectory_nodes.empty()) {
     occupancy_grid =
         cartographer::common::make_unique<nav_msgs::OccupancyGrid>();
-    cartographer_ros::BuildOccupancyGrid(trajectory_nodes, options_,
-                                         occupancy_grid.get());
+    BuildOccupancyGrid2D(
+        trajectory_nodes, options_.map_frame,
+        options_.trajectory_builder_options.trajectory_builder_2d_options()
+            .submaps_options(),
+        occupancy_grid.get());
   }
   return occupancy_grid;
 }
@@ -246,7 +266,7 @@ MapBuilderBridge::GetTrajectoryStates() {
     trajectory_states[trajectory_id] = {
         pose_estimate,
         map_builder_.sparse_pose_graph()->GetLocalToGlobalTransform(
-            *trajectory_builder->submaps()),
+            trajectory_builder->submaps()),
         sensor_bridge.tf_bridge().LookupToTracking(pose_estimate.time,
                                                    options_.published_frame)};
   }

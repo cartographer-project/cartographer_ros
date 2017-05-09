@@ -29,6 +29,8 @@ namespace cartographer_ros {
 // Top-level options of Cartographer's ROS integration.
 struct NodeOptions {
   ::cartographer::mapping::proto::MapBuilderOptions map_builder_options;
+  ::cartographer::mapping::proto::TrajectoryBuilderOptions
+      trajectory_builder_options;
   string map_frame;
   string tracking_frame;
   string published_frame;

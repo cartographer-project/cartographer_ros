@@ -87,14 +87,14 @@ void SensorBridge::HandleImuMessage(const string& sensor_id,
 void SensorBridge::HandleLaserScanMessage(
     const string& sensor_id, const sensor_msgs::LaserScan::ConstPtr& msg) {
   HandleRangefinder(sensor_id, FromRos(msg->header.stamp), msg->header.frame_id,
-                    carto::sensor::ToPointCloud(ToCartographer(*msg)));
+                    ToPointCloudWithIntensities(*msg).points);
 }
 
 void SensorBridge::HandleMultiEchoLaserScanMessage(
     const string& sensor_id,
     const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
   HandleRangefinder(sensor_id, FromRos(msg->header.stamp), msg->header.frame_id,
-                    carto::sensor::ToPointCloud(ToCartographer(*msg)));
+                    ToPointCloudWithIntensities(*msg).points);
 }
 
 void SensorBridge::HandlePointCloud2Message(

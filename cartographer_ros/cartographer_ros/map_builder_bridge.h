@@ -22,6 +22,7 @@
 #include <unordered_set>
 
 #include "cartographer/mapping/map_builder.h"
+#include "cartographer/mapping/proto/trajectory_builder_options.pb.h"
 #include "cartographer_ros/node_options.h"
 #include "cartographer_ros/sensor_bridge.h"
 #include "cartographer_ros/tf_bridge.h"
@@ -68,8 +69,6 @@ class MapBuilderBridge {
  private:
   const NodeOptions options_;
 
-  std::deque<cartographer::mapping::TrajectoryNode::ConstantData>
-      constant_data_;
   cartographer::mapping::MapBuilder map_builder_;
   tf2_ros::Buffer* const tf_buffer_;
   std::unordered_map<int, std::unique_ptr<SensorBridge>> sensor_bridges_;
