@@ -111,11 +111,11 @@ cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
     const cartographer::mapping::Submaps* submaps =
         map_builder_.GetTrajectoryBuilder(trajectory_id)->submaps();
     const std::vector<cartographer::transform::Rigid3d> submap_transforms =
-        map_builder_.sparse_pose_graph()->GetSubmapTransforms(*submaps);
-    CHECK_EQ(submap_transforms.size(), submaps->size());
+        map_builder_.sparse_pose_graph()->GetSubmapTransforms(submaps);
+    CHECK_LE(submap_transforms.size(), submaps->size());
 
     cartographer_ros_msgs::TrajectorySubmapList trajectory_submap_list;
-    for (int submap_index = 0; submap_index != submaps->size();
+    for (size_t submap_index = 0; submap_index != submap_transforms.size();
          ++submap_index) {
       cartographer_ros_msgs::SubmapEntry submap_entry;
       submap_entry.submap_version = submaps->Get(submap_index)->num_range_data;
@@ -164,7 +164,7 @@ MapBuilderBridge::GetTrajectoryStates() {
     trajectory_states[trajectory_id] = {
         pose_estimate,
         map_builder_.sparse_pose_graph()->GetLocalToGlobalTransform(
-            *trajectory_builder->submaps()),
+            trajectory_builder->submaps()),
         sensor_bridge.tf_bridge().LookupToTracking(pose_estimate.time,
                                                    options_.published_frame)};
   }
