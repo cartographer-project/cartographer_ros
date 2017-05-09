@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include "cartographer/mapping/sparse_pose_graph.h"
 #include "cartographer_ros/map_builder_bridge.h"
+#include "cartographer/mapping/sparse_pose_graph.h"
 #include "cartographer_ros/assets_writer.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/occupancy_grid.h"
@@ -69,12 +69,11 @@ void MapBuilderBridge::WriteAssets(const string& stem) {
     }
 
     if (options_.map_builder_options.use_trajectory_builder_3d()) {
-      Write3DAssets(
-          trajectory_nodes,
-          options_.trajectory_builder_options.trajectory_builder_3d_options()
-              .submaps_options()
-              .high_resolution(),
-          stem);
+      Write3DAssets(trajectory_nodes, options_.trajectory_builder_options
+                                          .trajectory_builder_3d_options()
+                                          .submaps_options()
+                                          .high_resolution(),
+                    stem);
     }
   }
 }
@@ -120,7 +119,8 @@ cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
       cartographer_ros_msgs::SubmapEntry submap_entry;
       submap_entry.submap_version = submaps->Get(submap_index)->num_range_data;
       submap_entry.pose = ToGeometryMsgPose(submap_transforms[submap_index]);
-      submap_entry.local_pose = ToGeometryMsgPose(submaps->Get(submap_index)->local_pose());
+      submap_entry.local_pose =
+          ToGeometryMsgPose(submaps->Get(submap_index)->local_pose());
       trajectory_submap_list.submap.push_back(submap_entry);
     }
     submap_list.trajectory.push_back(trajectory_submap_list);
@@ -132,12 +132,13 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
   visualization_msgs::MarkerArray trajectory_nodes_list;
 
   for (int trajectory_id = 0;
-      trajectory_id < map_builder_.num_trajectory_builders();
-      ++trajectory_id) {
-    const auto trajectory_nodes = map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
+       trajectory_id < map_builder_.num_trajectory_builders();
+       ++trajectory_id) {
+    const auto trajectory_nodes =
+        map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
 
     int i = 0;
-    for (const auto& node : trajectory_nodes){
+    for (const auto& node : trajectory_nodes) {
       visualization_msgs::Marker marker;
       marker.id = i++;
       marker.type = visualization_msgs::Marker::ARROW;
@@ -156,15 +157,17 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
   return trajectory_nodes_list;
 }
 
-cartographer_ros_msgs::ConstraintVisualization MapBuilderBridge::GetConstraintsList() {
+cartographer_ros_msgs::ConstraintVisualization
+MapBuilderBridge::GetConstraintsList() {
   cartographer_ros_msgs::ConstraintVisualization constraint_visualization;
 
-  const auto trajectory_nodes = map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
+  const auto trajectory_nodes =
+      map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
   const auto constraints = map_builder_.sparse_pose_graph()->constraints();
 
   std::vector<cartographer::transform::Rigid3d> submap_transforms;
 
-  for(auto& trajectory : trajectory_nodes) {
+  for (auto& trajectory : trajectory_nodes) {
     auto current_trajectory_transforms =
         map_builder_.sparse_pose_graph()->GetSubmapTransforms(
             trajectory.constant_data->trajectory);
@@ -174,15 +177,14 @@ cartographer_ros_msgs::ConstraintVisualization MapBuilderBridge::GetConstraintsL
   }
 
   int i = 0;
-  for (const auto &constraint : constraints) {
-
-	visualization_msgs::Marker constraint_marker, residual_error_marker;
+  for (const auto& constraint : constraints) {
+    visualization_msgs::Marker constraint_marker, residual_error_marker;
 
     // creating constraint line strip marker (green)
     constraint_marker.id = i++;
     constraint_marker.type = visualization_msgs::Marker::LINE_STRIP;
     constraint_marker.header.stamp = ::ros::Time::now();
-    constraint_marker.header.frame_id = options_.map_frame;   
+    constraint_marker.header.frame_id = options_.map_frame;
     constraint_marker.color.a = 1.0;
     constraint_marker.scale.x = 0.02;
 
@@ -201,11 +203,15 @@ cartographer_ros_msgs::ConstraintVisualization MapBuilderBridge::GetConstraintsL
     submap_point.y = submap_transforms[constraint.i].translation().y();
     submap_point.z = submap_transforms[constraint.i].translation().z();
 
-    trajectory_node_point.x = trajectory_nodes[constraint.j].pose.translation().x();
-    trajectory_node_point.y = trajectory_nodes[constraint.j].pose.translation().y();
-    trajectory_node_point.z = trajectory_nodes[constraint.j].pose.translation().z();
+    trajectory_node_point.x =
+        trajectory_nodes[constraint.j].pose.translation().x();
+    trajectory_node_point.y =
+        trajectory_nodes[constraint.j].pose.translation().y();
+    trajectory_node_point.z =
+        trajectory_nodes[constraint.j].pose.translation().z();
 
-    cartographer::transform::Rigid3d residual = submap_transforms[constraint.i] * constraint.pose.zbar_ij;
+    cartographer::transform::Rigid3d residual =
+        submap_transforms[constraint.i] * constraint.pose.zbar_ij;
     submap_pose_point.x = residual.translation().x();
     submap_pose_point.y = residual.translation().y();
     submap_pose_point.z = residual.translation().z();
@@ -215,23 +221,28 @@ cartographer_ros_msgs::ConstraintVisualization MapBuilderBridge::GetConstraintsL
     residual_error_marker.points.push_back(submap_pose_point);
     residual_error_marker.points.push_back(trajectory_node_point);
 
-    // color the markers according to the constraint and put the markers in corresponding list
-    if (constraint.tag == cartographer::mapping::SparsePoseGraph::Constraint::INTRA_SUBMAP) {
-    	constraint_marker.color.g = 1.0; // green
-    	residual_error_marker.color.b = 1.0; // blue
+    // color the markers according to the constraint and put the markers in
+    // corresponding list
+    if (constraint.tag ==
+        cartographer::mapping::SparsePoseGraph::Constraint::INTRA_SUBMAP) {
+      constraint_marker.color.g = 1.0;      // green
+      residual_error_marker.color.b = 1.0;  // blue
 
-    	constraint_visualization.constraints_intra.markers.push_back(constraint_marker);
-    	constraint_visualization.residual_errors_intra.markers.push_back(residual_error_marker);
-    }
-    else {
-    	constraint_marker.color.r = 1.0; // yellow
-    	constraint_marker.color.g = 1.0;
+      constraint_visualization.constraints_intra.markers.push_back(
+          constraint_marker);
+      constraint_visualization.residual_errors_intra.markers.push_back(
+          residual_error_marker);
+    } else {
+      constraint_marker.color.r = 1.0;  // yellow
+      constraint_marker.color.g = 1.0;
 
-    	residual_error_marker.color.b = 1.0; // cyan
-    	residual_error_marker.color.g = 1.0;
+      residual_error_marker.color.b = 1.0;  // cyan
+      residual_error_marker.color.g = 1.0;
 
-    	constraint_visualization.constraints_inter.markers.push_back(constraint_marker);
-    	constraint_visualization.residual_errors_inter.markers.push_back(residual_error_marker);
+      constraint_visualization.constraints_inter.markers.push_back(
+          constraint_marker);
+      constraint_visualization.residual_errors_inter.markers.push_back(
+          residual_error_marker);
     }
   }
   return constraint_visualization;
