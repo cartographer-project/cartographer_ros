@@ -159,11 +159,19 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
 cartographer_ros_msgs::ConstraintVisualization MapBuilderBridge::GetConstraintsList() {
   cartographer_ros_msgs::ConstraintVisualization constraint_visualization;
 
-  const std::vector<cartographer::transform::Rigid3d> submap_transforms =
-      map_builder_.sparse_pose_graph()->GetSubmapTransforms();
-
   const auto trajectory_nodes = map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
   const auto constraints = map_builder_.sparse_pose_graph()->constraints();
+
+  std::vector<cartographer::transform::Rigid3d> submap_transforms;
+
+  for(auto& trajectory : trajectory_nodes) {
+    auto current_trajectory_transforms =
+        map_builder_.sparse_pose_graph()->GetSubmapTransforms(
+            trajectory.constant_data->trajectory);
+    std::move(current_trajectory_transforms.begin(),
+              current_trajectory_transforms.end(),
+              std::back_inserter(submap_transforms));
+  }
 
   int i = 0;
   for (const auto &constraint : constraints) {
