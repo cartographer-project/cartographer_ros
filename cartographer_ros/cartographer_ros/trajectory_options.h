@@ -45,6 +45,9 @@ struct TrajectoryOptions {
 TrajectoryOptions CreateTrajectoryOptions(
     ::cartographer::common::LuaParameterDictionary* lua_parameter_dictionary);
 
+TrajectoryOptions CreateTrajectoryOptionsWithTopics(
+    ::cartographer::common::LuaParameterDictionary* lua_parameter_dictionary);
+
 }  // namespace cartographer_ros
 
 #endif  // CARTOGRAPHER_ROS_TRAJECTORY_OPTIONS_H_
