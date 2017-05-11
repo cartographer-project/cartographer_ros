@@ -25,6 +25,7 @@
 #include "cartographer/common/port.h"
 #include "cartographer_ros/bag_reader.h"
 #include "cartographer_ros/node.h"
+#include "cartographer_ros/node_options.h"
 #include "cartographer_ros/ros_log_sink.h"
 #include "cartographer_ros/urdf_reader.h"
 #include "gflags/gflags.h"
@@ -107,8 +108,8 @@ void Run(const std::vector<string>& bag_filenames) {
   // Since we preload the transform buffer, we should never have to wait for a
   // transform. When we finish processing the bag, we will simply drop any
   // remaining sensor data that cannot be transformed due to missing transforms.
-  options.lookup_transform_timeout_sec = 0.;
-  Node node(options, tf_buffer.get());
+  options.map_options.lookup_transform_timeout_sec = 0.;
+  Node node(options.map_options, tf_buffer.get());
   node.Initialize();
 
   std::unordered_set<string> expected_sensor_ids;
@@ -118,18 +119,18 @@ void Run(const std::vector<string>& bag_filenames) {
   };
 
   // For 2D SLAM, subscribe to exactly one horizontal laser.
-  if (options.use_laser_scan) {
+  if (options.trajectory_options.use_laser_scan) {
     check_insert(kLaserScanTopic);
   }
-  if (options.use_multi_echo_laser_scan) {
+  if (options.trajectory_options.use_multi_echo_laser_scan) {
     check_insert(kMultiEchoLaserScanTopic);
   }
 
   // For 3D SLAM, subscribe to all point clouds topics.
-  if (options.num_point_clouds > 0) {
-    for (int i = 0; i < options.num_point_clouds; ++i) {
+  if (options.trajectory_options.num_point_clouds > 0) {
+    for (int i = 0; i < options.trajectory_options.num_point_clouds; ++i) {
       string topic = kPointCloud2Topic;
-      if (options.num_point_clouds > 1) {
+      if (options.trajectory_options.num_point_clouds > 1) {
         topic += "_" + std::to_string(i + 1);
       }
       check_insert(topic);
@@ -138,15 +139,15 @@ void Run(const std::vector<string>& bag_filenames) {
 
   // For 2D SLAM, subscribe to the IMU if we expect it. For 3D SLAM, the IMU is
   // required.
-  if (options.map_builder_options.use_trajectory_builder_3d() ||
-      (options.map_builder_options.use_trajectory_builder_2d() &&
-       options.trajectory_builder_options.trajectory_builder_2d_options()
-           .use_imu_data())) {
+  if (options.map_options.map_builder_options.use_trajectory_builder_3d() ||
+      (options.map_options.map_builder_options.use_trajectory_builder_2d() &&
+       options.trajectory_options.trajectory_builder_options.
+       trajectory_builder_2d_options().use_imu_data())) {
     check_insert(kImuTopic);
   }
 
   // For both 2D and 3D SLAM, odometry is optional.
-  if (options.use_odometry) {
+  if (options.trajectory_options.use_odometry) {
     check_insert(kOdometryTopic);
   }
 
@@ -170,7 +171,7 @@ void Run(const std::vector<string>& bag_filenames) {
     }
 
     const int trajectory_id = node.map_builder_bridge()->AddTrajectory(
-        expected_sensor_ids, options.tracking_frame);
+        expected_sensor_ids, options.trajectory_options);
 
     rosbag::Bag bag;
     bag.open(bag_filename, rosbag::bagmode::Read);

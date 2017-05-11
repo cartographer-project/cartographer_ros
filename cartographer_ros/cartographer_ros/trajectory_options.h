@@ -14,26 +14,37 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_ROS_NODE_OPTIONS_H_
-#define CARTOGRAPHER_ROS_NODE_OPTIONS_H_
+#ifndef CARTOGRAPHER_ROS_TRAJECTORY_OPTIONS_H_
+#define CARTOGRAPHER_ROS_TRAJECTORY_OPTIONS_H_
 
 #include <string>
 
 #include "cartographer/common/lua_parameter_dictionary.h"
-#include "cartographer_ros/map_options.h"
-#include "cartographer_ros/trajectory_options.h"
+#include "cartographer/common/port.h"
+#include "cartographer/mapping/map_builder.h"
+#include "cartographer_ros/sensor_bridge.h"
 
 namespace cartographer_ros {
 
-// Top-level options of Cartographer's ROS integration.
-struct NodeOptions {
-  MapOptions map_options;
-  TrajectoryOptions trajectory_options;
+struct TrajectoryOptions {
+  ::cartographer::mapping::proto::TrajectoryBuilderOptions
+      trajectory_builder_options;
+  string tracking_frame;
+  string published_frame;
+  string odom_frame;
+  bool provide_odom_frame;
+  bool use_odometry;
+  bool use_laser_scan;
+  bool use_multi_echo_laser_scan;
+  int num_point_clouds;
+  string scan_topic;
+  string imu_topic;
+  string odom_topic;
 };
 
-NodeOptions CreateNodeOptions(
+TrajectoryOptions CreateTrajectoryOptions(
     ::cartographer::common::LuaParameterDictionary* lua_parameter_dictionary);
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAPHER_ROS_NODE_OPTIONS_H_
+#endif  // CARTOGRAPHER_ROS_TRAJECTORY_OPTIONS_H_

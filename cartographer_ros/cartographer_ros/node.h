@@ -22,7 +22,8 @@
 
 #include "cartographer/common/mutex.h"
 #include "cartographer_ros/map_builder_bridge.h"
-#include "cartographer_ros/node_options.h"
+#include "cartographer_ros/map_options.h"
+#include "cartographer_ros/trajectory_options.h"
 #include "cartographer_ros_msgs/FinishTrajectory.h"
 #include "cartographer_ros_msgs/SubmapEntry.h"
 #include "cartographer_ros_msgs/SubmapList.h"
@@ -48,7 +49,7 @@ constexpr char kSubmapQueryServiceName[] = "submap_query";
 // Wires up ROS topics to SLAM.
 class Node {
  public:
-  Node(const NodeOptions& options, tf2_ros::Buffer* tf_buffer);
+  Node(const MapOptions& map_options, tf2_ros::Buffer* tf_buffer);
   ~Node();
 
   Node(const Node&) = delete;
@@ -68,7 +69,7 @@ class Node {
   void PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event);
   void SpinOccupancyGridThreadForever();
 
-  const NodeOptions options_;
+  const MapOptions map_options_;
 
   tf2_ros::TransformBroadcaster tf_broadcaster_;
 

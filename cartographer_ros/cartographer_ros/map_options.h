@@ -14,26 +14,29 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_ROS_NODE_OPTIONS_H_
-#define CARTOGRAPHER_ROS_NODE_OPTIONS_H_
+#ifndef CARTOGRAPHER_ROS_MAP_OPTIONS_H_
+#define CARTOGRAPHER_ROS_MAP_OPTIONS_H_
 
 #include <string>
 
 #include "cartographer/common/lua_parameter_dictionary.h"
-#include "cartographer_ros/map_options.h"
-#include "cartographer_ros/trajectory_options.h"
+#include "cartographer/common/port.h"
+#include "cartographer/mapping/map_builder.h"
+#include "cartographer_ros/sensor_bridge.h"
 
 namespace cartographer_ros {
 
-// Top-level options of Cartographer's ROS integration.
-struct NodeOptions {
-  MapOptions map_options;
-  TrajectoryOptions trajectory_options;
+struct MapOptions {
+  ::cartographer::mapping::proto::MapBuilderOptions map_builder_options;
+  string map_frame;
+  double lookup_transform_timeout_sec;
+  double submap_publish_period_sec;
+  double pose_publish_period_sec;
 };
 
-NodeOptions CreateNodeOptions(
+MapOptions CreateMapOptions(
     ::cartographer::common::LuaParameterDictionary* lua_parameter_dictionary);
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAPHER_ROS_NODE_OPTIONS_H_
+#endif  // CARTOGRAPHER_ROS_MAP_OPTIONS_H_

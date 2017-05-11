@@ -22,6 +22,7 @@
 #include "cartographer/common/make_unique.h"
 #include "cartographer/common/port.h"
 #include "cartographer_ros/node.h"
+#include "cartographer_ros/node_options.h"
 #include "cartographer_ros/ros_log_sink.h"
 #include "gflags/gflags.h"
 #include "tf2_ros/transform_listener.h"
@@ -56,7 +57,7 @@ void Run() {
   constexpr double kTfBufferCacheTimeInSeconds = 1e6;
   tf2_ros::Buffer tf_buffer{::ros::Duration(kTfBufferCacheTimeInSeconds)};
   tf2_ros::TransformListener tf(tf_buffer);
-  Node node(options, &tf_buffer);
+  Node node(options.map_options, &tf_buffer);
   node.Initialize();
 
   int trajectory_id = -1;
@@ -64,7 +65,7 @@ void Run() {
 
   // For 2D SLAM, subscribe to exactly one horizontal laser.
   ::ros::Subscriber laser_scan_subscriber;
-  if (options.use_laser_scan) {
+  if (options.trajectory_options.use_laser_scan) {
     laser_scan_subscriber = node.node_handle()->subscribe(
         kLaserScanTopic, kInfiniteSubscriberQueueSize,
         boost::function<void(const sensor_msgs::LaserScan::ConstPtr&)>(
@@ -75,7 +76,7 @@ void Run() {
             }));
     expected_sensor_ids.insert(kLaserScanTopic);
   }
-  if (options.use_multi_echo_laser_scan) {
+  if (options.trajectory_options.use_multi_echo_laser_scan) {
     laser_scan_subscriber = node.node_handle()->subscribe(
         kMultiEchoLaserScanTopic, kInfiniteSubscriberQueueSize,
         boost::function<void(const sensor_msgs::MultiEchoLaserScan::ConstPtr&)>(
@@ -90,10 +91,10 @@ void Run() {
 
   // For 3D SLAM, subscribe to all point clouds topics.
   std::vector<::ros::Subscriber> point_cloud_subscribers;
-  if (options.num_point_clouds > 0) {
-    for (int i = 0; i < options.num_point_clouds; ++i) {
+  if (options.trajectory_options.num_point_clouds > 0) {
+    for (int i = 0; i < options.trajectory_options.num_point_clouds; ++i) {
       string topic = kPointCloud2Topic;
-      if (options.num_point_clouds > 1) {
+      if (options.trajectory_options.num_point_clouds > 1) {
         topic += "_" + std::to_string(i + 1);
       }
       point_cloud_subscribers.push_back(node.node_handle()->subscribe(
@@ -111,9 +112,10 @@ void Run() {
   // For 2D SLAM, subscribe to the IMU if we expect it. For 3D SLAM, the IMU is
   // required.
   ::ros::Subscriber imu_subscriber;
-  if (options.map_builder_options.use_trajectory_builder_3d() ||
-      (options.map_builder_options.use_trajectory_builder_2d() &&
-       options.trajectory_builder_options.trajectory_builder_2d_options()
+  if (options.map_options.map_builder_options.use_trajectory_builder_3d() ||
+      (options.map_options.map_builder_options.use_trajectory_builder_2d() &&
+       options.trajectory_options.trajectory_builder_options.
+       trajectory_builder_2d_options()
            .use_imu_data())) {
     imu_subscriber = node.node_handle()->subscribe(
         kImuTopic, kInfiniteSubscriberQueueSize,
@@ -128,7 +130,7 @@ void Run() {
 
   // For both 2D and 3D SLAM, odometry is optional.
   ::ros::Subscriber odometry_subscriber;
-  if (options.use_odometry) {
+  if (options.trajectory_options.use_odometry) {
     odometry_subscriber = node.node_handle()->subscribe(
         kOdometryTopic, kInfiniteSubscriberQueueSize,
         boost::function<void(const nav_msgs::Odometry::ConstPtr&)>(
@@ -141,7 +143,7 @@ void Run() {
   }
 
   trajectory_id = node.map_builder_bridge()->AddTrajectory(
-      expected_sensor_ids, options.tracking_frame);
+      expected_sensor_ids, options.trajectory_options);
 
   ::ros::ServiceServer finish_trajectory_server =
       node.node_handle()->advertiseService(
@@ -153,7 +155,7 @@ void Run() {
                   ::cartographer_ros_msgs::FinishTrajectory::Response&) {
                 const int previous_trajectory_id = trajectory_id;
                 trajectory_id = node.map_builder_bridge()->AddTrajectory(
-                    expected_sensor_ids, options.tracking_frame);
+                    expected_sensor_ids, options.trajectory_options);
                 node.map_builder_bridge()->FinishTrajectory(
                     previous_trajectory_id);
                 node.map_builder_bridge()->WriteAssets(request.stem);
