@@ -235,4 +235,12 @@ geometry_msgs::Pose ToGeometryMsgPose(const Rigid3d& rigid3d) {
   return pose;
 }
 
+geometry_msgs::Point ToGeometryMsgPoint(const Rigid3d& rigid3d) {
+  geometry_msgs::Point point;
+  point.x = rigid3d.translation().x();
+  point.y = rigid3d.translation().y();
+  point.z = rigid3d.translation().z();
+  return point;
+}
+
 }  // namespace cartographer_ros

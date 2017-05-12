@@ -58,6 +58,7 @@
   <depend>tf2_eigen</depend>
   <depend>tf2_ros</depend>
   <depend>urdf</depend>
+  <depend>visualization_msgs</depend>
   <depend>yaml-cpp</depend>
 
   <test_depend>rosunit</test_depend>
