@@ -113,7 +113,7 @@ void Run() {
   ::ros::Subscriber imu_subscriber;
   if (options.map_builder_options.use_trajectory_builder_3d() ||
       (options.map_builder_options.use_trajectory_builder_2d() &&
-       options.map_builder_options.trajectory_builder_2d_options()
+       options.trajectory_builder_options.trajectory_builder_2d_options()
            .use_imu_data())) {
     imu_subscriber = node.node_handle()->subscribe(
         kImuTopic, kInfiniteSubscriberQueueSize,

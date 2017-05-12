@@ -13,9 +13,11 @@
 -- limitations under the License.
 
 include "map_builder.lua"
+include "trajectory_builder.lua"
 
 options = {
   map_builder = MAP_BUILDER,
+  trajectory_builder = TRAJECTORY_BUILDER,
   map_frame = "map",
   tracking_frame = "base_link",
   published_frame = "odom",
@@ -31,8 +33,8 @@ options = {
 }
 
 TRAJECTORY_BUILDER_3D.scans_per_accumulation = 180
-TRAJECTORY_BUILDER_3D.laser_min_range = 0.5
-TRAJECTORY_BUILDER_3D.laser_max_range = 20.
+TRAJECTORY_BUILDER_3D.min_range = 0.5
+TRAJECTORY_BUILDER_3D.max_range = 20.
 TRAJECTORY_BUILDER_3D.submaps.num_range_data = 40.
 
 MAP_BUILDER.use_trajectory_builder_3d = true
