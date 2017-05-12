@@ -68,6 +68,18 @@ void Node::Initialize() {
   submap_query_server_ = node_handle_.advertiseService(
       kSubmapQueryServiceName, &Node::HandleSubmapQuery, this);
 
+  trajectory_nodes_list_publisher_ =
+      node_handle_.advertise<::visualization_msgs::MarkerArray>(
+          kTrajectoryNodesListTopic, kLatestOnlyPublisherQueueSize);
+
+  constraints_intra_list_publisher_ =
+      node_handle_.advertise<::visualization_msgs::MarkerArray>(
+          kConstraintsListIntraTopic, kLatestOnlyPublisherQueueSize);
+
+  constraints_inter_list_publisher_ =
+      node_handle_.advertise<::visualization_msgs::MarkerArray>(
+          kConstraintsListInterTopic, kLatestOnlyPublisherQueueSize);
+
   if (options_.map_builder_options.use_trajectory_builder_2d()) {
     occupancy_grid_publisher_ =
         node_handle_.advertise<::nav_msgs::OccupancyGrid>(
@@ -87,6 +99,13 @@ void Node::Initialize() {
   wall_timers_.push_back(node_handle_.createWallTimer(
       ::ros::WallDuration(options_.pose_publish_period_sec),
       &Node::PublishTrajectoryStates, this));
+
+  wall_timers_.push_back(node_handle_.createWallTimer(
+      ::ros::WallDuration(options_.submap_publish_period_sec),
+      &Node::PublishTrajectoryNodesList, this));
+  wall_timers_.push_back(node_handle_.createWallTimer(
+      ::ros::WallDuration(options_.submap_publish_period_sec),
+      &Node::PublishConstraintsList, this));
 }
 
 ::ros::NodeHandle* Node::node_handle() { return &node_handle_; }
@@ -162,6 +181,26 @@ void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
       }
     }
   }
+}
+
+void Node::PublishTrajectoryNodesList(
+    const ::ros::WallTimerEvent& unused_timer_event) {
+  carto::common::MutexLocker lock(&mutex_);
+  trajectory_nodes_list_publisher_.publish(
+      map_builder_bridge_.GetTrajectoryNodesList());
+}
+
+void Node::PublishConstraintsList(
+    const ::ros::WallTimerEvent& unused_timer_event) {
+  carto::common::MutexLocker lock(&mutex_);
+  /*
+  cartographer_ros_msgs::ConstraintVisualization constraint_visualization =
+      map_builder_bridge_.GetConstraintsList();
+  constraints_inter_list_publisher_.publish(
+      constraint_visualization.constraints_inter);
+  constraints_intra_list_publisher_.publish(
+      constraint_visualization.constraints_intra);
+      */
 }
 
 void Node::SpinOccupancyGridThreadForever() {
