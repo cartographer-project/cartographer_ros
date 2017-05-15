@@ -33,10 +33,11 @@
 #include "visualization_msgs/Marker.h"
 #include "visualization_msgs/MarkerArray.h"
 
-
 namespace cartographer_ros {
 
-visualization_msgs::Marker createVisualizationMarker(const int id, const int type, const std::string ns, const ros::Time time, const std::string frame);
+visualization_msgs::Marker createVisualizationMarker(
+    const int id, const int type, const std::string ns, const ros::Time time,
+    const std::string frame_id);
 
 class MapBuilderBridge {
  public:
@@ -68,7 +69,7 @@ class MapBuilderBridge {
 
   visualization_msgs::MarkerArray GetTrajectoryNodesList();
   std::unordered_map<std::string, visualization_msgs::MarkerArray>
-      GetConstraintsList();
+  GetConstraintsList();
 
  private:
   const NodeOptions options_;

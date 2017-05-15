@@ -193,14 +193,9 @@ void Node::PublishTrajectoryNodesList(
 void Node::PublishConstraintsList(
     const ::ros::WallTimerEvent& unused_timer_event) {
   carto::common::MutexLocker lock(&mutex_);
-  /*
-  cartographer_ros_msgs::ConstraintVisualization constraint_visualization =
-      map_builder_bridge_.GetConstraintsList();
-  constraints_inter_list_publisher_.publish(
-      constraint_visualization.constraints_inter);
-  constraints_intra_list_publisher_.publish(
-      constraint_visualization.constraints_intra);
-      */
+  auto constraints_viz = map_builder_bridge_.GetConstraintsList();
+  constraints_inter_list_publisher_.publish(constraints_viz["inter"]);
+  constraints_intra_list_publisher_.publish(constraints_viz["intra"]);
 }
 
 void Node::SpinOccupancyGridThreadForever() {
