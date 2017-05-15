@@ -74,12 +74,11 @@ void MapBuilderBridge::WriteAssets(const string& stem) {
     }
 
     if (options_.map_builder_options.use_trajectory_builder_3d()) {
-      Write3DAssets(
-          trajectory_nodes,
-          options_.trajectory_builder_options.trajectory_builder_3d_options()
-              .submaps_options()
-              .high_resolution(),
-          stem);
+      Write3DAssets(trajectory_nodes, options_.trajectory_builder_options
+                                          .trajectory_builder_3d_options()
+                                          .submaps_options()
+                                          .high_resolution(),
+                    stem);
     }
   }
 }
@@ -214,82 +213,94 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
 
 std::unordered_map<std::string, visualization_msgs::MarkerArray>
 MapBuilderBridge::GetConstraintsList() {
-  std::unordered_map<std::string, visualization_msgs::MarkerArray> constratins_viz;
+  std::unordered_map<std::string, visualization_msgs::MarkerArray>
+      constratins_viz;
 
   const auto trajectory_nodes =
-     map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
+      map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
   const auto constraints = map_builder_.sparse_pose_graph()->constraints();
   std::vector<cartographer::transform::Rigid3d> submap_transforms;
   for (auto& trajectory : trajectory_nodes) {
     auto current_trajectory_transforms =
-    map_builder_.sparse_pose_graph()->GetSubmapTransforms(trajectory.constant_data->trajectory);
+        map_builder_.sparse_pose_graph()->GetSubmapTransforms(
+            trajectory.constant_data->trajectory);
     std::move(current_trajectory_transforms.begin(),
               current_trajectory_transforms.end(),
               std::back_inserter(submap_transforms));
-   }
+  }
 
   int id_inter = 0;
   std::string ns_inter = "inter";
   int id_intra = 0;
   std::string ns_intra = "intra";
   ros::Time now = ros::Time::now();
-  for(const auto &constraint : constraints) {
-      visualization_msgs::Marker constraint_marker, residual_error_marker;
-      int* id_cnt;
-      std::string* tag;
-      std_msgs::ColorRGBA color_constraint, color_error;
+  for (const auto& constraint : constraints) {
+    visualization_msgs::Marker constraint_marker, residual_error_marker;
+    int* id_cnt;
+    std::string* tag;
+    std_msgs::ColorRGBA color_constraint, color_error;
 
-      if(constraint.tag == cartographer::mapping::SparsePoseGraph::Constraint::INTER_SUBMAP) {
-          id_cnt = &id_inter;
-          tag = &ns_inter;
+    if (constraint.tag ==
+        cartographer::mapping::SparsePoseGraph::Constraint::INTER_SUBMAP) {
+      id_cnt = &id_inter;
+      tag = &ns_inter;
 
-          // yellow
-          color_constraint.a = 1.0;
-          color_constraint.r = color_constraint.g = 1.0;
+      // yellow
+      color_constraint.a = 1.0;
+      color_constraint.r = color_constraint.g = 1.0;
 
-          // cyan
-          color_error.a = 1.0;
-          color_error.b = color_error.g = 1.0;
-      }
-      else {
-          id_cnt = &id_intra;
-          tag = &ns_intra;
-          color_constraint.a = color_error.a = 1.0;
-          color_constraint.g = 1.0;
-          color_error.b = 1.0;
-      }
+      // cyan
+      color_error.a = 1.0;
+      color_error.b = color_error.g = 1.0;
+    } else {
+      id_cnt = &id_intra;
+      tag = &ns_intra;
+      color_constraint.a = color_error.a = 1.0;
+      color_constraint.g = 1.0;
+      color_error.b = 1.0;
+    }
 
-      constraint_marker = createVisualizationMarker((*id_cnt)++, visualization_msgs::Marker::LINE_STRIP, *tag, now, options_.map_frame);
-      constraint_marker.color = color_constraint;
-      residual_error_marker = createVisualizationMarker((*id_cnt)++, visualization_msgs::Marker::LINE_STRIP, *tag, now, options_.map_frame);
-      residual_error_marker.color = color_error;
+    constraint_marker = createVisualizationMarker(
+        (*id_cnt)++, visualization_msgs::Marker::LINE_STRIP, "constraint", now,
+        options_.map_frame);
+    constraint_marker.color = color_constraint;
+    residual_error_marker = createVisualizationMarker(
+        (*id_cnt)++, visualization_msgs::Marker::LINE_STRIP, "residual error",
+        now, options_.map_frame);
+    residual_error_marker.color = color_error;
 
-      geometry_msgs::Point submap_point, submap_pose_point, trajectory_node_point;
+    geometry_msgs::Point submap_point, submap_pose_point, trajectory_node_point;
 
-      submap_point = ToGeometryMsgPoint(submap_transforms[constraint.submap_id.trajectory_id]);
-      submap_pose_point = ToGeometryMsgPoint(submap_transforms[constraint.submap_id.trajectory_id] * constraint.pose.zbar_ij);
-      trajectory_node_point = ToGeometryMsgPoint(trajectory_nodes[constraint.node_id.trajectory_id].pose);
+    submap_point = ToGeometryMsgPoint(
+        submap_transforms[constraint.submap_id.submap_index]);
+    submap_pose_point = ToGeometryMsgPoint(
+        submap_transforms[constraint.submap_id.submap_index] *
+        constraint.pose.zbar_ij);
+    trajectory_node_point = ToGeometryMsgPoint(
+        trajectory_nodes[constraint.node_id.node_index].pose);
 
-      constraint_marker.points.push_back(submap_point);
-      constraint_marker.points.push_back(submap_pose_point);
-      residual_error_marker.points.push_back(submap_pose_point);
-      residual_error_marker.points.push_back(trajectory_node_point);
-      constratins_viz[*tag].markers.push_back(constraint_marker);
-      constratins_viz[*tag].markers.push_back(residual_error_marker);
+    constraint_marker.points.push_back(submap_point);
+    constraint_marker.points.push_back(submap_pose_point);
+    residual_error_marker.points.push_back(submap_pose_point);
+    residual_error_marker.points.push_back(trajectory_node_point);
+    constratins_viz[*tag].markers.push_back(constraint_marker);
+    constratins_viz[*tag].markers.push_back(residual_error_marker);
   }
   return constratins_viz;
 }
 
-visualization_msgs::Marker createVisualizationMarker(const int id, const int type, const std::string ns, const ros::Time time, const std::string frame)
-{
-    visualization_msgs::Marker m;
-    m.id = id;
-    m.type = type;
-    m.ns = ns;
-    m.header.stamp = time;
-    m.color.a = 1.0;
-    m.scale.x = 0.02;
-    return m;
+visualization_msgs::Marker createVisualizationMarker(
+    const int id, const int type, const std::string ns, const ros::Time time,
+    const std::string frame_id) {
+  visualization_msgs::Marker m;
+  m.id = id;
+  m.type = type;
+  m.ns = ns;
+  m.header.stamp = time;
+  m.header.frame_id = frame_id;
+  m.color.a = 1.0;
+  m.scale.x = 0.02;
+  return m;
 }
 
 }  // namespace cartographer_ros
