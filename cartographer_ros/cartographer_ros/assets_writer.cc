@@ -39,6 +39,7 @@ void WriteTrajectory(const std::vector<::cartographer::mapping::TrajectoryNode>&
                          trajectory_nodes,
                      const std::string& stem) {
   carto::mapping::proto::Trajectory trajectory;
+  // TODO(whess): Add multi-trajectory support.
   for (const auto& node : trajectory_nodes) {
     const auto& data = *node.constant_data;
     auto* node_proto = trajectory.add_node();
