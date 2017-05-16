@@ -25,6 +25,7 @@ namespace cartographer_ros {
 namespace {
 
 TEST(OccupancyGridTest, ComputeMapLimits) {
+  constexpr int kTrajectoryId = 0;
   const ::cartographer::mapping::TrajectoryNode::ConstantData constant_data{
       ::cartographer::common::FromUniversal(52),
       ::cartographer::sensor::RangeData{
@@ -33,7 +34,7 @@ TEST(OccupancyGridTest, ComputeMapLimits) {
           {}},
       ::cartographer::sensor::Compress(
           ::cartographer::sensor::RangeData{Eigen::Vector3f::Zero(), {}, {}}),
-      nullptr, ::cartographer::transform::Rigid3d::Identity()};
+      kTrajectoryId, ::cartographer::transform::Rigid3d::Identity()};
   const ::cartographer::mapping::TrajectoryNode trajectory_node{
       &constant_data, ::cartographer::transform::Rigid3d::Identity()};
   constexpr double kResolution = 0.05;
