@@ -42,7 +42,9 @@ int MapBuilderBridge::AddTrajectory(
           trajectory_options.tracking_frame,
           map_options_.lookup_transform_timeout_sec, tf_buffer_,
           map_builder_.GetTrajectoryBuilder(trajectory_id));
-  trajectory_options_[trajectory_id] = trajectory_options;
+  auto emplace_result = trajectory_options_.emplace(
+      trajectory_id, trajectory_options);
+  CHECK(emplace_result.second == true);
   return trajectory_id;
 }
 
@@ -66,6 +68,7 @@ void MapBuilderBridge::WriteAssets(const string& stem) {
     LOG(WARNING) << "No data was collected and no assets will be written.";
   } else {
     LOG(INFO) << "Writing assets with stem '" << stem << "'...";
+    // TODO(yutakaoka): Add multi-trajectory support.
     CHECK_EQ(trajectory_options_.count(0), 1);
     if (map_options_.map_builder_options.use_trajectory_builder_2d()) {
       Write2DAssets(

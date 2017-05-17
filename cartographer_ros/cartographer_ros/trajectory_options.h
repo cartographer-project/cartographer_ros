@@ -37,9 +37,6 @@ struct TrajectoryOptions {
   bool use_laser_scan;
   bool use_multi_echo_laser_scan;
   int num_point_clouds;
-  string scan_topic;
-  string imu_topic;
-  string odom_topic;
 };
 
 TrajectoryOptions CreateTrajectoryOptions(

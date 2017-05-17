@@ -50,17 +50,4 @@ TrajectoryOptions CreateTrajectoryOptions(
 
   return options;
 }
-
-TrajectoryOptions CreateTrajectoryOptionsWithTopics(
-    ::cartographer::common::LuaParameterDictionary* const
-        lua_parameter_dictionary) {
-  TrajectoryOptions options;
-  options = CreateTrajectoryOptions(lua_parameter_dictionary);
-  options.scan_topic = lua_parameter_dictionary->GetString("scan_topic");
-  options.imu_topic = lua_parameter_dictionary->GetString("imu_topic");
-  options.odom_topic = lua_parameter_dictionary->GetString("odom_topic");
-
-  return options;
-}
-
 }  // namespace cartographer_ros
