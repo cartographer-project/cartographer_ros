@@ -19,7 +19,10 @@
 
 #include <vector>
 
+#include "Eigen/Core"
+#include "Eigen/Geometry"
 #include "cartographer/mapping/trajectory_node.h"
+#include "cartographer/mapping_2d/map_limits.h"
 #include "cartographer/mapping_2d/proto/submaps_options.pb.h"
 #include "nav_msgs/OccupancyGrid.h"
 
@@ -31,6 +34,13 @@ void BuildOccupancyGrid2D(
     const string& map_frame,
     const ::cartographer::mapping_2d::proto::SubmapsOptions& submaps_options,
     ::nav_msgs::OccupancyGrid* const occupancy_grid);
+
+// Computes MapLimits that contain the origin, and all rays (both returns and
+// misses) in the 'trajectory_nodes'.
+::cartographer::mapping_2d::MapLimits ComputeMapLimits(
+    double resolution,
+    const std::vector<::cartographer::mapping::TrajectoryNode>&
+        trajectory_nodes);
 
 }  // namespace cartographer_ros
 
