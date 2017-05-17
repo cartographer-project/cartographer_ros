@@ -70,17 +70,19 @@ void MapBuilderBridge::WriteAssets(const string& stem) {
     if (map_options_.map_builder_options.use_trajectory_builder_2d()) {
       Write2DAssets(
           trajectory_nodes, map_options_.map_frame,
-          trajectory_options_[0].trajectory_builder_options
-              .trajectory_builder_2d_options().submaps_options(),
+          trajectory_options_[0]
+              .trajectory_builder_options.trajectory_builder_2d_options()
+              .submaps_options(),
           stem);
     }
 
     if (map_options_.map_builder_options.use_trajectory_builder_3d()) {
       Write3DAssets(
           trajectory_nodes,
-          trajectory_options_[0].trajectory_builder_options
-              .trajectory_builder_3d_options()
-              .submaps_options().high_resolution(),
+          trajectory_options_[0]
+              .trajectory_builder_options.trajectory_builder_3d_options()
+              .submaps_options()
+              .high_resolution(),
           stem);
     }
   }
@@ -151,8 +153,9 @@ MapBuilderBridge::BuildOccupancyGrid() {
     CHECK_EQ(trajectory_options_.count(0), 1);
     BuildOccupancyGrid2D(
         trajectory_nodes, map_options_.map_frame,
-        trajectory_options_[0].trajectory_builder_options
-            .trajectory_builder_2d_options().submaps_options(),
+        trajectory_options_[0]
+            .trajectory_builder_options.trajectory_builder_2d_options()
+            .submaps_options(),
         occupancy_grid.get());
   }
   return occupancy_grid;
@@ -178,8 +181,9 @@ MapBuilderBridge::GetTrajectoryStates() {
         pose_estimate,
         map_builder_.sparse_pose_graph()->GetLocalToGlobalTransform(
             trajectory_id),
-        sensor_bridge.tf_bridge().LookupToTracking(pose_estimate.time,
-              trajectory_options_[trajectory_id].published_frame),
+        sensor_bridge.tf_bridge().LookupToTracking(
+            pose_estimate.time,
+            trajectory_options_[trajectory_id].published_frame),
         trajectory_options_[trajectory_id]};
   }
   return trajectory_states;

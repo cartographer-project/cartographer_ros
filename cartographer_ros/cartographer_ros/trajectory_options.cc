@@ -40,7 +40,7 @@ TrajectoryOptions CreateTrajectoryOptions(
       lua_parameter_dictionary->GetBool("use_multi_echo_laser_scan");
   options.num_point_clouds =
       lua_parameter_dictionary->GetNonNegativeInt("num_point_clouds");
- 
+
   CHECK_EQ(options.use_laser_scan + options.use_multi_echo_laser_scan +
                (options.num_point_clouds > 0),
            1)
@@ -56,12 +56,9 @@ TrajectoryOptions CreateTrajectoryOptionsWithTopics(
         lua_parameter_dictionary) {
   TrajectoryOptions options;
   options = CreateTrajectoryOptions(lua_parameter_dictionary);
-  options.scan_topic =
-      lua_parameter_dictionary->GetString("scan_topic");
-  options.imu_topic =
-      lua_parameter_dictionary->GetString("imu_topic");
-  options.odom_topic =
-      lua_parameter_dictionary->GetString("odom_topic");
+  options.scan_topic = lua_parameter_dictionary->GetString("scan_topic");
+  options.imu_topic = lua_parameter_dictionary->GetString("imu_topic");
+  options.odom_topic = lua_parameter_dictionary->GetString("odom_topic");
 
   return options;
 }
