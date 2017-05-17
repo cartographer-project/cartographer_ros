@@ -86,21 +86,21 @@ NodeOptions LoadOptions() {
 void Run(const std::vector<string>& bag_filenames) {
   auto options = LoadOptions();
 
-  auto tf_buffer = ::cartographer::common::make_unique<tf2_ros::Buffer>();
+  tf2_ros::Buffer tf_buffer;
 
   std::vector<geometry_msgs::TransformStamped> urdf_transforms;
   if (!FLAGS_urdf_filename.empty()) {
     urdf_transforms =
-        ReadStaticTransformsFromUrdf(FLAGS_urdf_filename, tf_buffer.get());
+        ReadStaticTransformsFromUrdf(FLAGS_urdf_filename, &tf_buffer);
   }
 
-  tf_buffer->setUsingDedicatedThread(true);
+  tf_buffer.setUsingDedicatedThread(true);
 
   // Since we preload the transform buffer, we should never have to wait for a
   // transform. When we finish processing the bag, we will simply drop any
   // remaining sensor data that cannot be transformed due to missing transforms.
   options.lookup_transform_timeout_sec = 0.;
-  Node node(options, tf_buffer.get());
+  Node node(options, &tf_buffer);
   node.Initialize();
 
   std::unordered_set<string> expected_sensor_ids;
@@ -186,7 +186,7 @@ void Run(const std::vector<string>& bag_filenames) {
         if (FLAGS_use_bag_transforms) {
           for (const auto& transform : tf_message->transforms) {
             try {
-              tf_buffer->setTransform(transform, "unused_authority",
+              tf_buffer.setTransform(transform, "unused_authority",
                                       msg.getTopic() == kTfStaticTopic);
             } catch (const tf2::TransformException& ex) {
               LOG(WARNING) << ex.what();
