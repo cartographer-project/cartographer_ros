@@ -29,7 +29,6 @@
 #include "cartographer/sensor/point_cloud.h"
 #include "cartographer/sensor/range_data.h"
 #include "cartographer/transform/transform_interpolation_buffer.h"
-#include "cartographer_ros/bag_reader.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/time_conversion.h"
 #include "cartographer_ros/urdf_reader.h"
@@ -161,16 +160,15 @@ void Run(const string& trajectory_filename, const string& bag_filename,
       builder.CreatePipeline(
           lua_parameter_dictionary.GetDictionary("pipeline").get());
 
-  auto tf_buffer =
-      ::cartographer::common::make_unique<tf2_ros::Buffer>(::ros::DURATION_MAX);
+  tf2_ros::Buffer tf_buffer(::ros::DURATION_MAX);
 
   if (FLAGS_use_bag_transforms) {
     LOG(INFO) << "Pre-loading transforms from bag...";
-    ReadTransformsFromBag(bag_filename, tf_buffer.get());
+    ReadTransformsFromBag(bag_filename, &tf_buffer);
   }
 
   if (!urdf_filename.empty()) {
-    ReadStaticTransformsFromUrdf(urdf_filename, tf_buffer.get());
+    ReadStaticTransformsFromUrdf(urdf_filename, &tf_buffer);
   }
 
   const string tracking_frame =
@@ -189,17 +187,17 @@ void Run(const string& trajectory_filename, const string& bag_filename,
     for (const rosbag::MessageInstance& message : view) {
       if (message.isType<sensor_msgs::PointCloud2>()) {
         HandleMessage(*message.instantiate<sensor_msgs::PointCloud2>(),
-                      tracking_frame, *tf_buffer,
+                      tracking_frame, tf_buffer,
                       *transform_interpolation_buffer, pipeline);
       }
       if (message.isType<sensor_msgs::MultiEchoLaserScan>()) {
         HandleMessage(*message.instantiate<sensor_msgs::MultiEchoLaserScan>(),
-                      tracking_frame, *tf_buffer,
+                      tracking_frame, tf_buffer,
                       *transform_interpolation_buffer, pipeline);
       }
       if (message.isType<sensor_msgs::LaserScan>()) {
         HandleMessage(*message.instantiate<sensor_msgs::LaserScan>(),
-                      tracking_frame, *tf_buffer,
+                      tracking_frame, tf_buffer,
                       *transform_interpolation_buffer, pipeline);
       }
       LOG_EVERY_N(INFO, 100000)
