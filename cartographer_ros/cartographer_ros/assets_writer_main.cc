@@ -64,7 +64,40 @@ DEFINE_bool(use_bag_transforms, true,
 namespace cartographer_ros {
 namespace {
 
+constexpr char kTfStaticTopic[] = "/tf_static";
 namespace carto = ::cartographer;
+
+// TODO(hrapp): We discovered that using tf_buffer with a large CACHE
+// is very inefficient. Switch asset writer to use our own
+// TransformInterpolationBuffer.
+void ReadTransformsFromBag(const string& bag_filename,
+                           tf2_ros::Buffer* const tf_buffer) {
+  rosbag::Bag bag;
+  bag.open(bag_filename, rosbag::bagmode::Read);
+  rosbag::View view(bag);
+
+  const ::ros::Time begin_time = view.getBeginTime();
+  const double duration_in_seconds = (view.getEndTime() - begin_time).toSec();
+  for (const rosbag::MessageInstance& msg : view) {
+    if (msg.isType<tf2_msgs::TFMessage>()) {
+      const auto tf_msg = msg.instantiate<tf2_msgs::TFMessage>();
+      for (const auto& transform : tf_msg->transforms) {
+        try {
+          // TODO(damonkohler): Handle topic remapping.
+          tf_buffer->setTransform(transform, "unused_authority",
+                                  msg.getTopic() == kTfStaticTopic);
+        } catch (const tf2::TransformException& ex) {
+          LOG(WARNING) << ex.what();
+        }
+      }
+    }
+    LOG_EVERY_N(INFO, 100000)
+        << "Processed " << (msg.getTime() - begin_time).toSec() << " of "
+        << duration_in_seconds << " bag time seconds...";
+  }
+
+  bag.close();
+}
 
 template <typename T>
 void HandleMessage(
