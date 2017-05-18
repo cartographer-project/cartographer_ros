@@ -206,7 +206,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
 std::unordered_map<std::string, visualization_msgs::MarkerArray>
 MapBuilderBridge::GetConstraintsList() {
   std::unordered_map<std::string, visualization_msgs::MarkerArray>
-      constratins_viz;
+      constraints_viz;
 
   const auto trajectory_nodes =
       map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
@@ -275,10 +275,10 @@ MapBuilderBridge::GetConstraintsList() {
     constraint_marker.points.push_back(submap_pose_point);
     residual_error_marker.points.push_back(submap_pose_point);
     residual_error_marker.points.push_back(trajectory_node_point);
-    constratins_viz[*tag].markers.push_back(constraint_marker);
-    constratins_viz[*tag].markers.push_back(residual_error_marker);
+    constraints_viz[*tag].markers.push_back(constraint_marker);
+    constraints_viz[*tag].markers.push_back(residual_error_marker);
   }
-  return constratins_viz;
+  return constraints_viz;
 }
 
 visualization_msgs::Marker createVisualizationMarker(
