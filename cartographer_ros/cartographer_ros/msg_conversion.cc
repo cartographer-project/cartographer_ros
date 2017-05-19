@@ -58,15 +58,15 @@ sensor_msgs::PointCloud2 PreparePointCloud2Message(const int64 timestamp,
   msg.fields.resize(3);
   msg.fields[0].name = "x";
   msg.fields[0].offset = 0;
-  msg.fields[0].datatype = 7;
+  msg.fields[0].datatype = sensor_msgs::PointField::FLOAT32;
   msg.fields[0].count = 1;
   msg.fields[1].name = "y";
   msg.fields[1].offset = 4;
-  msg.fields[1].datatype = 7;
+  msg.fields[1].datatype = sensor_msgs::PointField::FLOAT32;
   msg.fields[1].count = 1;
   msg.fields[2].name = "z";
   msg.fields[2].offset = 8;
-  msg.fields[2].datatype = 7;
+  msg.fields[2].datatype = sensor_msgs::PointField::FLOAT32;
   msg.fields[2].count = 1;
   msg.is_bigendian = false;
   msg.point_step = 16;
