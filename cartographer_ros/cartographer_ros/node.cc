@@ -47,8 +47,8 @@ using carto::transform::Rigid3d;
 
 constexpr int kLatestOnlyPublisherQueueSize = 1;
 
-Node::Node(const NodeOptions& options, tf2_ros::Buffer* const tf_buffer)
-    : options_(options), map_builder_bridge_(options_, tf_buffer) {}
+Node::Node(const MapOptions& map_options, tf2_ros::Buffer* const tf_buffer)
+    : map_options_(map_options), map_builder_bridge_(map_options_, tf_buffer) {}
 
 Node::~Node() {
   {
@@ -68,7 +68,7 @@ void Node::Initialize() {
   submap_query_server_ = node_handle_.advertiseService(
       kSubmapQueryServiceName, &Node::HandleSubmapQuery, this);
 
-  if (options_.map_builder_options.use_trajectory_builder_2d()) {
+  if (map_options_.map_builder_options.use_trajectory_builder_2d()) {
     occupancy_grid_publisher_ =
         node_handle_.advertise<::nav_msgs::OccupancyGrid>(
             kOccupancyGridTopic, kLatestOnlyPublisherQueueSize,
@@ -82,10 +82,10 @@ void Node::Initialize() {
           kScanMatchedPointCloudTopic, kLatestOnlyPublisherQueueSize);
 
   wall_timers_.push_back(node_handle_.createWallTimer(
-      ::ros::WallDuration(options_.submap_publish_period_sec),
+      ::ros::WallDuration(map_options_.submap_publish_period_sec),
       &Node::PublishSubmapList, this));
   wall_timers_.push_back(node_handle_.createWallTimer(
-      ::ros::WallDuration(options_.pose_publish_period_sec),
+      ::ros::WallDuration(map_options_.pose_publish_period_sec),
       &Node::PublishTrajectoryStates, this));
 }
 
@@ -123,7 +123,7 @@ void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
         last_scan_matched_point_cloud_time_) {
       scan_matched_point_cloud_publisher_.publish(ToPointCloud2Message(
           carto::common::ToUniversal(trajectory_state.pose_estimate.time),
-          options_.tracking_frame,
+          trajectory_state.trajectory_options.tracking_frame,
           carto::sensor::TransformPointCloud(
               trajectory_state.pose_estimate.point_cloud,
               tracking_to_local.inverse().cast<float>())));
@@ -135,27 +135,29 @@ void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
     }
 
     if (trajectory_state.published_to_tracking != nullptr) {
-      if (options_.provide_odom_frame) {
+      if (trajectory_state.trajectory_options.provide_odom_frame) {
         std::vector<geometry_msgs::TransformStamped> stamped_transforms;
 
-        stamped_transform.header.frame_id = options_.map_frame;
-        // TODO(damonkohler): 'odom_frame' and 'published_frame' must be
-        // per-trajectory to fully support the multi-robot use case.
-        stamped_transform.child_frame_id = options_.odom_frame;
+        stamped_transform.header.frame_id = map_options_.map_frame;
+        stamped_transform.child_frame_id =
+            trajectory_state.trajectory_options.odom_frame;
         stamped_transform.transform =
             ToGeometryMsgTransform(trajectory_state.local_to_map);
         stamped_transforms.push_back(stamped_transform);
 
-        stamped_transform.header.frame_id = options_.odom_frame;
-        stamped_transform.child_frame_id = options_.published_frame;
+        stamped_transform.header.frame_id =
+            trajectory_state.trajectory_options.odom_frame;
+        stamped_transform.child_frame_id =
+            trajectory_state.trajectory_options.published_frame;
         stamped_transform.transform = ToGeometryMsgTransform(
             tracking_to_local * (*trajectory_state.published_to_tracking));
         stamped_transforms.push_back(stamped_transform);
 
         tf_broadcaster_.sendTransform(stamped_transforms);
       } else {
-        stamped_transform.header.frame_id = options_.map_frame;
-        stamped_transform.child_frame_id = options_.published_frame;
+        stamped_transform.header.frame_id = map_options_.map_frame;
+        stamped_transform.child_frame_id =
+            trajectory_state.trajectory_options.published_frame;
         stamped_transform.transform = ToGeometryMsgTransform(
             tracking_to_map * (*trajectory_state.published_to_tracking));
         tf_broadcaster_.sendTransform(stamped_transform);
