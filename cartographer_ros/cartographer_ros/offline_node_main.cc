@@ -102,7 +102,6 @@ void Run(const std::vector<string>& bag_filenames) {
   // remaining sensor data that cannot be transformed due to missing transforms.
   options.map_options.lookup_transform_timeout_sec = 0.;
   Node node(options.map_options, &tf_buffer);
-  node.Initialize();
 
   std::unordered_set<string> expected_sensor_ids;
   const auto check_insert = [&expected_sensor_ids, &node](const string& topic) {
