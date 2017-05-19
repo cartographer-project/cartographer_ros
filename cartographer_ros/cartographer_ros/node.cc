@@ -21,11 +21,11 @@
 #include <vector>
 
 #include "Eigen/Core"
+#include "cartographer/common/configuration_file_resolver.h"
+#include "cartographer/common/lua_parameter_dictionary.h"
 #include "cartographer/common/make_unique.h"
 #include "cartographer/common/port.h"
 #include "cartographer/common/time.h"
-#include "cartographer/common/configuration_file_resolver.h"
-#include "cartographer/common/lua_parameter_dictionary.h"
 #include "cartographer/mapping/proto/submap_visualization.pb.h"
 #include "cartographer/mapping/sparse_pose_graph.h"
 #include "cartographer/sensor/point_cloud.h"
@@ -48,24 +48,23 @@ namespace carto = ::cartographer;
 using carto::transform::Rigid3d;
 
 namespace {
+
 constexpr int kInfiniteSubscriberQueueSize = 0;
-constexpr double kTfBufferCacheTimeInSeconds = 1e6;
 constexpr int kLatestOnlyPublisherQueueSize = 1;
 
 TrajectoryOptions LoadTrajectoryOptions(const string& code) {
   auto file_resolver = cartographer::common::make_unique<
-      cartographer::common::ConfigurationFileResolver>(
-      std::vector<string>{""});
+      cartographer::common::ConfigurationFileResolver>(std::vector<string>{""});
   cartographer::common::LuaParameterDictionary lua_parameter_dictionary(
       code, std::move(file_resolver));
 
   return CreateTrajectoryOptions(&lua_parameter_dictionary);
 }
+
 }  // namespace
 
 Node::Node(const MapOptions& map_options, tf2_ros::Buffer* const tf_buffer)
     : map_options_(map_options), map_builder_bridge_(map_options_, tf_buffer) {
-
   carto::common::MutexLocker lock(&mutex_);
   submap_list_publisher_ =
       node_handle_.advertise<::cartographer_ros_msgs::SubmapList>(
@@ -96,19 +95,16 @@ Node::Node(const MapOptions& map_options, tf2_ros::Buffer* const tf_buffer)
   start_trajectory_server_ = node_handle_.advertiseService(
       kStartTrajectoryServiceName, &Node::HandleStartTrajectory, this);
   finish_trajectory_server_ = node_handle_.advertiseService(
-      kFinishTrajectoryServiceName,
-      &Node::HandleFinishTrajectory, this);
+      kFinishTrajectoryServiceName, &Node::HandleFinishTrajectory, this);
   write_assets_server_ = node_handle_.advertiseService(
       kWriteAssetsServiceName,
-      boost::function<bool(
-          ::cartographer_ros_msgs::WriteAssets::Request&,
-          ::cartographer_ros_msgs::WriteAssets::Response&)>(
-               [&](::cartographer_ros_msgs::WriteAssets::Request&
-                   request,
-                   ::cartographer_ros_msgs::WriteAssets::Response&) {
-                 map_builder_bridge_.WriteAssets(request.stem);
-                 return true;
-               }));
+      boost::function<bool(::cartographer_ros_msgs::WriteAssets::Request&,
+                           ::cartographer_ros_msgs::WriteAssets::Response&)>(
+          [&](::cartographer_ros_msgs::WriteAssets::Request& request,
+              ::cartographer_ros_msgs::WriteAssets::Response&) {
+            map_builder_bridge_.WriteAssets(request.stem);
+            return true;
+          }));
 }
 
 Node::~Node() {
@@ -217,9 +213,8 @@ void Node::SpinOccupancyGridThreadForever() {
   }
 }
 
-int Node::AddTrajectory(
-    const TrajectoryOptions& options,
-    const cartographer_ros_msgs::SensorTopics& topics) {
+int Node::AddTrajectory(const TrajectoryOptions& options,
+                        const cartographer_ros_msgs::SensorTopics& topics) {
   std::unordered_set<string> expected_sensor_ids;
 
   if (options.use_laser_scan) {
@@ -237,24 +232,23 @@ int Node::AddTrajectory(
       expected_sensor_ids.insert(topic);
     }
   }
-  if (options.trajectory_builder_options.
-      trajectory_builder_2d_options().use_imu_data()) {
+  if (options.trajectory_builder_options.trajectory_builder_2d_options()
+          .use_imu_data()) {
     expected_sensor_ids.insert(topics.imu_topic);
   }
   if (options.use_odometry) {
     expected_sensor_ids.insert(topics.odometry_topic);
   }
 
-  int trajectory_id = map_builder_bridge_.AddTrajectory(
-      expected_sensor_ids, options);
+  int trajectory_id =
+      map_builder_bridge_.AddTrajectory(expected_sensor_ids, options);
 
   return trajectory_id;
 }
 
-void Node::LaunchSubscribers(
-    const TrajectoryOptions& options,
-    const cartographer_ros_msgs::SensorTopics& topics,
-    int trajectory_id) {
+void Node::LaunchSubscribers(const TrajectoryOptions& options,
+                             const cartographer_ros_msgs::SensorTopics& topics,
+                             const int trajectory_id) {
   carto::common::MutexLocker lock(&mutex_);
   if (options.use_laser_scan) {
     string topic = topics.laser_scan_topic;
@@ -262,10 +256,10 @@ void Node::LaunchSubscribers(
         node_handle_.subscribe<sensor_msgs::LaserScan>(
             topic, kInfiniteSubscriberQueueSize,
             boost::function<void(const sensor_msgs::LaserScan::ConstPtr&)>(
-                [&, trajectory_id, topic]
-                (const sensor_msgs::LaserScan::ConstPtr& msg) {
+                [this, trajectory_id,
+                 topic](const sensor_msgs::LaserScan::ConstPtr& msg) {
                   map_builder_bridge_.sensor_bridge(trajectory_id)
-                  ->HandleLaserScanMessage(topic, msg);
+                      ->HandleLaserScanMessage(topic, msg);
                 }));
   }
 
@@ -276,11 +270,11 @@ void Node::LaunchSubscribers(
             topic, kInfiniteSubscriberQueueSize,
             boost::function<void(
                 const sensor_msgs::MultiEchoLaserScan::ConstPtr&)>(
-                    [&, trajectory_id, topic]
-                    (const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
-                      map_builder_bridge_.sensor_bridge(trajectory_id)
+                [this, trajectory_id,
+                 topic](const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
+                  map_builder_bridge_.sensor_bridge(trajectory_id)
                       ->HandleMultiEchoLaserScanMessage(topic, msg);
-                    }));
+                }));
   }
 
   std::vector<::ros::Subscriber> grouped_point_cloud_subscribers;
@@ -293,8 +287,8 @@ void Node::LaunchSubscribers(
       grouped_point_cloud_subscribers.push_back(node_handle_.subscribe(
           topic, kInfiniteSubscriberQueueSize,
           boost::function<void(const sensor_msgs::PointCloud2::ConstPtr&)>(
-              [&, trajectory_id, topic](
-                  const sensor_msgs::PointCloud2::ConstPtr& msg) {
+              [this, trajectory_id,
+               topic](const sensor_msgs::PointCloud2::ConstPtr& msg) {
                 map_builder_bridge_.sensor_bridge(trajectory_id)
                     ->HandlePointCloud2Message(topic, msg);
               })));
@@ -302,19 +296,17 @@ void Node::LaunchSubscribers(
     point_cloud_subscribers_[trajectory_id] = grouped_point_cloud_subscribers;
   }
 
-
-  if (options.trajectory_builder_options.
-      trajectory_builder_2d_options().use_imu_data()) {
+  if (options.trajectory_builder_options.trajectory_builder_2d_options()
+          .use_imu_data()) {
     string topic = topics.imu_topic;
-    imu_subscribers_[trajectory_id] =
-        node_handle_.subscribe<sensor_msgs::Imu>(
-            topic, kInfiniteSubscriberQueueSize,
-            boost::function<void(const sensor_msgs::Imu::ConstPtr&)>(
-                [&, trajectory_id, topic]
-                (const sensor_msgs::Imu::ConstPtr& msg) {
-                  map_builder_bridge_.sensor_bridge(trajectory_id)
+    imu_subscribers_[trajectory_id] = node_handle_.subscribe<sensor_msgs::Imu>(
+        topic, kInfiniteSubscriberQueueSize,
+        boost::function<void(const sensor_msgs::Imu::ConstPtr&)>(
+            [this, trajectory_id,
+             topic](const sensor_msgs::Imu::ConstPtr& msg) {
+              map_builder_bridge_.sensor_bridge(trajectory_id)
                   ->HandleImuMessage(topic, msg);
-                }));
+            }));
   }
 
   if (options.use_odometry) {
@@ -323,8 +315,8 @@ void Node::LaunchSubscribers(
         node_handle_.subscribe<nav_msgs::Odometry>(
             topic, kInfiniteSubscriberQueueSize,
             boost::function<void(const nav_msgs::Odometry::ConstPtr&)>(
-                [&, trajectory_id, topic]
-                (const nav_msgs::Odometry::ConstPtr& msg) {
+                [this, trajectory_id,
+                 topic](const nav_msgs::Odometry::ConstPtr& msg) {
                   map_builder_bridge_.sensor_bridge(trajectory_id)
                       ->HandleOdometryMessage(topic, msg);
                 }));
@@ -340,15 +332,14 @@ bool Node::HandleStartTrajectory(
   std::unordered_set<string> expected_sensor_ids;
   const auto options = LoadTrajectoryOptions(request.lua_config_stream);
 
-  int trajectory_id = AddTrajectory(options, request.topics);
+  const int trajectory_id = AddTrajectory(options, request.topics);
   LaunchSubscribers(options, request.topics, trajectory_id);
 
   is_active_trajectory_[trajectory_id] = true;
   return true;
 }
 
-void Node::StartTrajectoryWithDefaultTopics(
-    const TrajectoryOptions& options) {
+void Node::StartTrajectoryWithDefaultTopics(const TrajectoryOptions& options) {
   carto::common::MutexLocker lock(&mutex_);
   cartographer_ros_msgs::SensorTopics topics;
   topics.laser_scan_topic = kLaserScanTopic;
@@ -357,7 +348,7 @@ void Node::StartTrajectoryWithDefaultTopics(
   topics.imu_topic = kImuTopic;
   topics.odometry_topic = kOdometryTopic;
 
-  int trajectory_id = AddTrajectory(options, topics);
+  const int trajectory_id = AddTrajectory(options, topics);
   LaunchSubscribers(options, topics, trajectory_id);
 }
 
@@ -366,43 +357,42 @@ bool Node::HandleFinishTrajectory(
     ::cartographer_ros_msgs::FinishTrajectory::Response& response) {
   carto::common::MutexLocker lock(&mutex_);
   if (is_active_trajectory_.count(request.trajectory_id) == 0) {
-    ROS_INFO_STREAM("Trajectory_id "
-                    << request.trajectory_id << " is not created yet.");
+    ROS_INFO_STREAM("Trajectory_id " << request.trajectory_id
+                                     << " is not created yet.");
     return false;
   }
   if (!is_active_trajectory_[request.trajectory_id]) {
-    ROS_INFO_STREAM("Trajectory_id "
-                    << request.trajectory_id << " has already been finished.");
+    ROS_INFO_STREAM("Trajectory_id " << request.trajectory_id
+                                     << " has already been finished.");
     return false;
   }
 
   if (laser_scan_subscribers_.count(request.trajectory_id) != 0) {
     laser_scan_subscribers_[request.trajectory_id].shutdown();
-    ROS_INFO_STREAM(
-        "Shutdown laser_scan_subscribers_[" << request.trajectory_id <<"]");
+    ROS_INFO_STREAM("Shutdown laser_scan_subscribers_[" << request.trajectory_id
+                                                        << "]");
   }
   if (multi_echo_laser_scan_subscribers_.count(request.trajectory_id) != 0) {
     multi_echo_laser_scan_subscribers_[request.trajectory_id].shutdown();
-    ROS_INFO_STREAM(
-        "Shutdown multi_echo_laser_scan_subscribers_["
-        << request.trajectory_id <<"]");
+    ROS_INFO_STREAM("Shutdown multi_echo_laser_scan_subscribers_["
+                    << request.trajectory_id << "]");
   }
   if (odom_subscribers_.count(request.trajectory_id) != 0) {
     odom_subscribers_[request.trajectory_id].shutdown();
-    ROS_INFO_STREAM(
-        "Shutdown odom_subscribers_[" << request.trajectory_id <<"]");
+    ROS_INFO_STREAM("Shutdown odom_subscribers_[" << request.trajectory_id
+                                                  << "]");
   }
   if (imu_subscribers_.count(request.trajectory_id) != 0) {
     imu_subscribers_[request.trajectory_id].shutdown();
-    ROS_INFO_STREAM(
-        "Shutdown imu_subscribers_[" << request.trajectory_id <<"]");
+    ROS_INFO_STREAM("Shutdown imu_subscribers_[" << request.trajectory_id
+                                                 << "]");
   }
   if (point_cloud_subscribers_.count(request.trajectory_id) != 0) {
     for (auto& entry : point_cloud_subscribers_[request.trajectory_id]) {
       entry.shutdown();
     }
-    ROS_INFO_STREAM(
-        "Shutdown point_cloud_subscribers_[" << request.trajectory_id <<"]");
+    ROS_INFO_STREAM("Shutdown point_cloud_subscribers_["
+                    << request.trajectory_id << "]");
   }
   map_builder_bridge_.FinishTrajectory(request.trajectory_id);
   is_active_trajectory_[request.trajectory_id] = false;
@@ -412,12 +402,11 @@ bool Node::HandleFinishTrajectory(
 void Node::FinishAllTrajectories() {
   carto::common::MutexLocker lock(&mutex_);
   for (const auto& entry : is_active_trajectory_) {
-    int trajectory_id = entry.first;
+    const int trajectory_id = entry.first;
     if (entry.second) {
       map_builder_bridge_.FinishTrajectory(trajectory_id);
     }
   }
 }
-
 
 }  // namespace cartographer_ros

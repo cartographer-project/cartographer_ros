@@ -21,7 +21,6 @@
 
 #include "cartographer/common/lua_parameter_dictionary.h"
 #include "cartographer/common/port.h"
-#include "cartographer/mapping/map_builder.h"
 #include "cartographer_ros/sensor_bridge.h"
 
 namespace cartographer_ros {
@@ -41,6 +40,7 @@ struct TrajectoryOptions {
 
 TrajectoryOptions CreateTrajectoryOptions(
     ::cartographer::common::LuaParameterDictionary* lua_parameter_dictionary);
+
 }  // namespace cartographer_ros
 
 #endif  // CARTOGRAPHER_ROS_TRAJECTORY_OPTIONS_H_

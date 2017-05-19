@@ -42,8 +42,8 @@ int MapBuilderBridge::AddTrajectory(
           trajectory_options.tracking_frame,
           map_options_.lookup_transform_timeout_sec, tf_buffer_,
           map_builder_.GetTrajectoryBuilder(trajectory_id));
-  auto emplace_result = trajectory_options_.emplace(
-      trajectory_id, trajectory_options);
+  auto emplace_result =
+      trajectory_options_.emplace(trajectory_id, trajectory_options);
   CHECK(emplace_result.second == true);
   return trajectory_id;
 }

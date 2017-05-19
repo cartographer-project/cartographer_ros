@@ -25,13 +25,13 @@
 #include "cartographer_ros/map_options.h"
 #include "cartographer_ros/trajectory_options.h"
 #include "cartographer_ros_msgs/FinishTrajectory.h"
+#include "cartographer_ros_msgs/SensorTopics.h"
+#include "cartographer_ros_msgs/StartTrajectory.h"
 #include "cartographer_ros_msgs/SubmapEntry.h"
 #include "cartographer_ros_msgs/SubmapList.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
 #include "cartographer_ros_msgs/TrajectorySubmapList.h"
-#include "cartographer_ros_msgs/StartTrajectory.h"
 #include "cartographer_ros_msgs/WriteAssets.h"
-#include "cartographer_ros_msgs/SensorTopics.h"
 #include "ros/ros.h"
 #include "tf2_ros/transform_broadcaster.h"
 
@@ -48,10 +48,8 @@ constexpr char kOccupancyGridTopic[] = "map";
 constexpr char kScanMatchedPointCloudTopic[] = "scan_matched_points2";
 constexpr char kSubmapListTopic[] = "submap_list";
 constexpr char kSubmapQueryServiceName[] = "submap_query";
-constexpr char kStartTrajectoryServiceName[] =
-    "start_trajectory";
-constexpr char kWriteAssetsServiceName[] =
-    "write_assets";
+constexpr char kStartTrajectoryServiceName[] = "start_trajectory";
+constexpr char kWriteAssetsServiceName[] = "write_assets";
 
 // Wires up ROS topics to SLAM.
 class Node {
@@ -62,7 +60,10 @@ class Node {
   Node(const Node&) = delete;
   Node& operator=(const Node&) = delete;
 
+  // Finishes all yet active trajectories.
   void FinishAllTrajectories();
+
+  // Starts the first trajectory with the default topics.
   void StartTrajectoryWithDefaultTopics(const TrajectoryOptions& options);
 
   ::ros::NodeHandle* node_handle();
@@ -78,13 +79,11 @@ class Node {
   bool HandleFinishTrajectory(
       cartographer_ros_msgs::FinishTrajectory::Request& request,
       cartographer_ros_msgs::FinishTrajectory::Response& response);
-  int AddTrajectory(
-      const TrajectoryOptions& options,
-      const cartographer_ros_msgs::SensorTopics& topics);
-  void LaunchSubscribers(
-      const TrajectoryOptions& options,
-      const cartographer_ros_msgs::SensorTopics& topics,
-      int trajectory_id);
+  int AddTrajectory(const TrajectoryOptions& options,
+                    const cartographer_ros_msgs::SensorTopics& topics);
+  void LaunchSubscribers(const TrajectoryOptions& options,
+                         const cartographer_ros_msgs::SensorTopics& topics,
+                         int trajectory_id);
   void PublishSubmapList(const ::ros::WallTimerEvent& timer_event);
   void PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event);
   void SpinOccupancyGridThreadForever();
@@ -105,6 +104,8 @@ class Node {
   ::ros::ServiceServer start_trajectory_server_;
   ::ros::ServiceServer finish_trajectory_server_;
   ::ros::ServiceServer write_assets_server_;
+
+  // These are keyed with 'trajectory_id'.
   std::unordered_map<int, ::ros::Subscriber> laser_scan_subscribers_;
   std::unordered_map<int, ::ros::Subscriber> multi_echo_laser_scan_subscribers_;
   std::unordered_map<int, ::ros::Subscriber> odom_subscribers_;
