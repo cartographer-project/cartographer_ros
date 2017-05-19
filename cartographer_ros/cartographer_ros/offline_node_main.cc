@@ -183,14 +183,12 @@ void Run(const std::vector<string>& bag_filenames) {
         auto tf_message = msg.instantiate<tf2_msgs::TFMessage>();
         tf_publisher.publish(tf_message);
 
-        if (FLAGS_use_bag_transforms) {
-          for (const auto& transform : tf_message->transforms) {
-            try {
-              tf_buffer.setTransform(transform, "unused_authority",
-                                      msg.getTopic() == kTfStaticTopic);
-            } catch (const tf2::TransformException& ex) {
-              LOG(WARNING) << ex.what();
-            }
+        for (const auto& transform : tf_message->transforms) {
+          try {
+            tf_buffer.setTransform(transform, "unused_authority",
+                                   msg.getTopic() == kTfStaticTopic);
+          } catch (const tf2::TransformException& ex) {
+            LOG(WARNING) << ex.what();
           }
         }
       }
