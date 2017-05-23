@@ -23,10 +23,10 @@
 
 namespace cartographer_ros {
 
-MapBuilderBridge::MapBuilderBridge(const MapOptions& map_options,
+MapBuilderBridge::MapBuilderBridge(const NodeOptions& node_options,
                                    tf2_ros::Buffer* const tf_buffer)
-    : map_options_(map_options),
-      map_builder_(map_options.map_builder_options),
+    : node_options_(node_options),
+      map_builder_(node_options.map_builder_options),
       tf_buffer_(tf_buffer) {}
 
 int MapBuilderBridge::AddTrajectory(
@@ -40,7 +40,7 @@ int MapBuilderBridge::AddTrajectory(
   sensor_bridges_[trajectory_id] =
       cartographer::common::make_unique<SensorBridge>(
           trajectory_options.tracking_frame,
-          map_options_.lookup_transform_timeout_sec, tf_buffer_,
+          node_options_.lookup_transform_timeout_sec, tf_buffer_,
           map_builder_.GetTrajectoryBuilder(trajectory_id));
   auto emplace_result =
       trajectory_options_.emplace(trajectory_id, trajectory_options);
@@ -70,16 +70,16 @@ void MapBuilderBridge::WriteAssets(const string& stem) {
     LOG(INFO) << "Writing assets with stem '" << stem << "'...";
     // TODO(yutakaoka): Add multi-trajectory support.
     CHECK_EQ(trajectory_options_.count(0), 1);
-    if (map_options_.map_builder_options.use_trajectory_builder_2d()) {
+    if (node_options_.map_builder_options.use_trajectory_builder_2d()) {
       Write2DAssets(
-          trajectory_nodes, map_options_.map_frame,
+          trajectory_nodes, node_options_.map_frame,
           trajectory_options_[0]
               .trajectory_builder_options.trajectory_builder_2d_options()
               .submaps_options(),
           stem);
     }
 
-    if (map_options_.map_builder_options.use_trajectory_builder_3d()) {
+    if (node_options_.map_builder_options.use_trajectory_builder_3d()) {
       Write3DAssets(
           trajectory_nodes,
           trajectory_options_[0]
@@ -116,7 +116,7 @@ bool MapBuilderBridge::HandleSubmapQuery(
 cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
   cartographer_ros_msgs::SubmapList submap_list;
   submap_list.header.stamp = ::ros::Time::now();
-  submap_list.header.frame_id = map_options_.map_frame;
+  submap_list.header.frame_id = node_options_.map_frame;
   for (int trajectory_id = 0;
        trajectory_id < map_builder_.num_trajectory_builders();
        ++trajectory_id) {
@@ -141,7 +141,7 @@ cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
 
 std::unique_ptr<nav_msgs::OccupancyGrid>
 MapBuilderBridge::BuildOccupancyGrid() {
-  CHECK(map_options_.map_builder_options.use_trajectory_builder_2d())
+  CHECK(node_options_.map_builder_options.use_trajectory_builder_2d())
       << "Publishing OccupancyGrids for 3D data is not yet supported";
   std::vector<::cartographer::mapping::TrajectoryNode> trajectory_nodes;
   for (const auto& single_trajectory :
@@ -155,7 +155,7 @@ MapBuilderBridge::BuildOccupancyGrid() {
         cartographer::common::make_unique<nav_msgs::OccupancyGrid>();
     CHECK_EQ(trajectory_options_.count(0), 1);
     BuildOccupancyGrid2D(
-        trajectory_nodes, map_options_.map_frame,
+        trajectory_nodes, node_options_.map_frame,
         trajectory_options_[0]
             .trajectory_builder_options.trajectory_builder_2d_options()
             .submaps_options(),

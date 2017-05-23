@@ -23,7 +23,7 @@
 
 #include "cartographer/mapping/map_builder.h"
 #include "cartographer/mapping/proto/trajectory_builder_options.pb.h"
-#include "cartographer_ros/map_options.h"
+#include "cartographer_ros/node_options.h"
 #include "cartographer_ros/sensor_bridge.h"
 #include "cartographer_ros/tf_bridge.h"
 #include "cartographer_ros/trajectory_options.h"
@@ -43,7 +43,7 @@ class MapBuilderBridge {
     TrajectoryOptions trajectory_options;
   };
 
-  MapBuilderBridge(const MapOptions& map_options, tf2_ros::Buffer* tf_buffer);
+  MapBuilderBridge(const NodeOptions& map_options, tf2_ros::Buffer* tf_buffer);
 
   MapBuilderBridge(const MapBuilderBridge&) = delete;
   MapBuilderBridge& operator=(const MapBuilderBridge&) = delete;
@@ -64,7 +64,7 @@ class MapBuilderBridge {
   SensorBridge* sensor_bridge(int trajectory_id);
 
  private:
-  const MapOptions map_options_;
+  const NodeOptions node_options_;
   std::unordered_map<int, TrajectoryOptions> trajectory_options_;
   cartographer::mapping::MapBuilder map_builder_;
   tf2_ros::Buffer* const tf_buffer_;

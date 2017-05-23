@@ -38,7 +38,7 @@ DEFINE_string(configuration_basename, "",
 namespace cartographer_ros {
 namespace {
 
-NodeOptions LoadOptions() {
+std::tuple<NodeOptions, TrajectoryOptions> LoadOptions() {
   auto file_resolver = cartographer::common::make_unique<
       cartographer::common::ConfigurationFileResolver>(
       std::vector<string>{FLAGS_configuration_directory});
@@ -47,16 +47,20 @@ NodeOptions LoadOptions() {
   cartographer::common::LuaParameterDictionary lua_parameter_dictionary(
       code, std::move(file_resolver));
 
-  return CreateNodeOptions(&lua_parameter_dictionary);
+  return std::make_tuple(CreateNodeOptions(&lua_parameter_dictionary),
+                         CreateTrajectoryOptions(&lua_parameter_dictionary));
 }
 
 void Run() {
-  const auto options = LoadOptions();
   constexpr double kTfBufferCacheTimeInSeconds = 1e6;
   tf2_ros::Buffer tf_buffer{::ros::Duration(kTfBufferCacheTimeInSeconds)};
   tf2_ros::TransformListener tf(tf_buffer);
-  Node node(options.map_options, &tf_buffer);
-  node.StartTrajectoryWithDefaultTopics(options.trajectory_options);
+  NodeOptions node_options;
+  TrajectoryOptions trajectory_options;
+  std::tie(node_options, trajectory_options) = LoadOptions();
+
+  Node node(node_options, &tf_buffer);
+  node.StartTrajectoryWithDefaultTopics(trajectory_options);
 
   ::ros::spin();
 

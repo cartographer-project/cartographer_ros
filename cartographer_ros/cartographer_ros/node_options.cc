@@ -24,14 +24,17 @@ NodeOptions CreateNodeOptions(
     ::cartographer::common::LuaParameterDictionary* const
         lua_parameter_dictionary) {
   NodeOptions options;
-  options.map_options = CreateMapOptions(lua_parameter_dictionary);
-  options.trajectory_options =
-      CreateTrajectoryOptions(lua_parameter_dictionary);
+  options.map_builder_options =
+      ::cartographer::mapping::CreateMapBuilderOptions(
+          lua_parameter_dictionary->GetDictionary("map_builder").get());
+  options.map_frame = lua_parameter_dictionary->GetString("map_frame");
+  options.lookup_transform_timeout_sec =
+      lua_parameter_dictionary->GetDouble("lookup_transform_timeout_sec");
+  options.submap_publish_period_sec =
+      lua_parameter_dictionary->GetDouble("submap_publish_period_sec");
+  options.pose_publish_period_sec =
+      lua_parameter_dictionary->GetDouble("pose_publish_period_sec");
 
-  if (options.map_options.map_builder_options.use_trajectory_builder_2d()) {
-    // Using point clouds is only supported in 3D.
-    CHECK_EQ(options.trajectory_options.num_point_clouds, 0);
-  }
   return options;
 }
 

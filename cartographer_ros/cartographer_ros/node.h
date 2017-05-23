@@ -22,7 +22,7 @@
 
 #include "cartographer/common/mutex.h"
 #include "cartographer_ros/map_builder_bridge.h"
-#include "cartographer_ros/map_options.h"
+#include "cartographer_ros/node_options.h"
 #include "cartographer_ros/trajectory_options.h"
 #include "cartographer_ros_msgs/FinishTrajectory.h"
 #include "cartographer_ros_msgs/SensorTopics.h"
@@ -30,6 +30,7 @@
 #include "cartographer_ros_msgs/SubmapEntry.h"
 #include "cartographer_ros_msgs/SubmapList.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
+#include "cartographer_ros_msgs/TrajectoryOptions.h"
 #include "cartographer_ros_msgs/TrajectorySubmapList.h"
 #include "cartographer_ros_msgs/WriteAssets.h"
 #include "ros/ros.h"
@@ -54,7 +55,7 @@ constexpr char kWriteAssetsServiceName[] = "write_assets";
 // Wires up ROS topics to SLAM.
 class Node {
  public:
-  Node(const MapOptions& map_options, tf2_ros::Buffer* tf_buffer);
+  Node(const NodeOptions& node_options, tf2_ros::Buffer* tf_buffer);
   ~Node();
 
   Node(const Node&) = delete;
@@ -79,6 +80,9 @@ class Node {
   bool HandleFinishTrajectory(
       cartographer_ros_msgs::FinishTrajectory::Request& request,
       cartographer_ros_msgs::FinishTrajectory::Response& response);
+  bool HandleWriteAssets(
+      cartographer_ros_msgs::WriteAssets::Request& request,
+      cartographer_ros_msgs::WriteAssets::Response& response);
   int AddTrajectory(const TrajectoryOptions& options,
                     const cartographer_ros_msgs::SensorTopics& topics);
   void LaunchSubscribers(const TrajectoryOptions& options,
@@ -88,7 +92,7 @@ class Node {
   void PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event);
   void SpinOccupancyGridThreadForever();
 
-  const MapOptions map_options_;
+  const NodeOptions node_options_;
 
   tf2_ros::TransformBroadcaster tf_broadcaster_;
 

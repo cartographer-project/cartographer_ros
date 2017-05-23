@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-string lua_config_stream
+cartographer_ros_msgs/TrajectoryOptions options
 cartographer_ros_msgs/SensorTopics topics
 ---
 int32 trajectory_id

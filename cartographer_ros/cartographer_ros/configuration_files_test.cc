@@ -37,6 +37,7 @@ TEST_P(ConfigurationFilesTest, ValidateNodeOptions) {
     ::cartographer::common::LuaParameterDictionary lua_parameter_dictionary(
         code, std::move(file_resolver));
     ::cartographer_ros::CreateNodeOptions(&lua_parameter_dictionary);
+    ::cartographer_ros::CreateTrajectoryOptions(&lua_parameter_dictionary);
   });
 }
 
