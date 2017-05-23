@@ -43,7 +43,7 @@ class MapBuilderBridge {
     TrajectoryOptions trajectory_options;
   };
 
-  MapBuilderBridge(const NodeOptions& map_options, tf2_ros::Buffer* tf_buffer);
+  MapBuilderBridge(const NodeOptions& node_options, tf2_ros::Buffer* tf_buffer);
 
   MapBuilderBridge(const MapBuilderBridge&) = delete;
   MapBuilderBridge& operator=(const MapBuilderBridge&) = delete;
