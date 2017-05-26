@@ -30,8 +30,14 @@
 #include "cartographer_ros_msgs/SubmapList.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
 #include "nav_msgs/OccupancyGrid.h"
+#include "visualization_msgs/Marker.h"
+#include "visualization_msgs/MarkerArray.h"
 
 namespace cartographer_ros {
+
+visualization_msgs::Marker createVisualizationMarker(
+    const int id, const int type, const std::string ns, const ros::Time time,
+    const std::string frame_id);
 
 class MapBuilderBridge {
  public:
@@ -60,6 +66,10 @@ class MapBuilderBridge {
   std::unordered_map<int, TrajectoryState> GetTrajectoryStates();
 
   SensorBridge* sensor_bridge(int trajectory_id);
+
+  visualization_msgs::MarkerArray GetTrajectoryNodesList();
+  std::unordered_map<std::string, visualization_msgs::MarkerArray>
+  GetConstraintsList();
 
  private:
   const NodeOptions options_;

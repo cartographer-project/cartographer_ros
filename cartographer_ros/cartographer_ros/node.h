@@ -30,6 +30,7 @@
 #include "cartographer_ros_msgs/TrajectorySubmapList.h"
 #include "ros/ros.h"
 #include "tf2_ros/transform_broadcaster.h"
+#include "visualization_msgs/MarkerArray.h"
 
 namespace cartographer_ros {
 
@@ -44,6 +45,10 @@ constexpr char kOccupancyGridTopic[] = "map";
 constexpr char kScanMatchedPointCloudTopic[] = "scan_matched_points2";
 constexpr char kSubmapListTopic[] = "submap_list";
 constexpr char kSubmapQueryServiceName[] = "submap_query";
+constexpr char kTrajectoryNodesListTopic[] = "trajectory_nodes_list";
+constexpr char kConstraintsListInterTopic[] = "constraints_inter_list";
+constexpr char kConstraintsListIntraTopic[] = "constraints_intra_list";
+
 
 // Wires up ROS topics to SLAM.
 class Node {
@@ -66,6 +71,9 @@ class Node {
 
   void PublishSubmapList(const ::ros::WallTimerEvent& timer_event);
   void PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event);
+  void PublishTrajectoryNodesList(const ::ros::WallTimerEvent& timer_event);
+  void PublishConstraintsList(const ::ros::WallTimerEvent& timer_event);
+
   void SpinOccupancyGridThreadForever();
 
   const NodeOptions options_;
@@ -87,6 +95,10 @@ class Node {
   ::ros::Publisher occupancy_grid_publisher_;
   std::thread occupancy_grid_thread_;
   bool terminating_ = false GUARDED_BY(mutex_);
+
+  ::ros::Publisher trajectory_nodes_list_publisher_;
+  ::ros::Publisher constraints_inter_list_publisher_;
+  ::ros::Publisher constraints_intra_list_publisher_;
 
   // We have to keep the timer handles of ::ros::WallTimers around, otherwise
   // they do not fire.

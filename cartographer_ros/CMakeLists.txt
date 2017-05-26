@@ -32,6 +32,7 @@ set(PACKAGE_DEPENDENCIES
   tf2_eigen
   tf2_ros
   urdf
+  visualization_msgs
 )
 
 find_package(cartographer REQUIRED)
