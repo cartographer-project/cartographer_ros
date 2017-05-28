@@ -101,13 +101,11 @@ class Node {
 
   ::ros::NodeHandle node_handle_;
   ::ros::Publisher submap_list_publisher_;
-  ::ros::ServiceServer submap_query_server_;
+  // These ros::ServiceServers need to live for the lifetime of the node.
+  std::vector<::ros::ServiceServer> service_servers_;
   ::ros::Publisher scan_matched_point_cloud_publisher_;
   cartographer::common::Time last_scan_matched_point_cloud_time_ =
       cartographer::common::Time::min();
-  ::ros::ServiceServer start_trajectory_server_;
-  ::ros::ServiceServer finish_trajectory_server_;
-  ::ros::ServiceServer write_assets_server_;
 
   // These are keyed with 'trajectory_id'.
   std::unordered_map<int, ::ros::Subscriber> laser_scan_subscribers_;

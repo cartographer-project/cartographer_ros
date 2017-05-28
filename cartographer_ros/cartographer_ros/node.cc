@@ -89,8 +89,14 @@ Node::Node(const NodeOptions& node_options, tf2_ros::Buffer* const tf_buffer)
   submap_list_publisher_ =
       node_handle_.advertise<::cartographer_ros_msgs::SubmapList>(
           kSubmapListTopic, kLatestOnlyPublisherQueueSize);
-  submap_query_server_ = node_handle_.advertiseService(
-      kSubmapQueryServiceName, &Node::HandleSubmapQuery, this);
+  service_servers_.push_back(node_handle_.advertiseService(
+      kSubmapQueryServiceName, &Node::HandleSubmapQuery, this));
+  service_servers_.push_back(node_handle_.advertiseService(
+      kStartTrajectoryServiceName, &Node::HandleStartTrajectory, this));
+  service_servers_.push_back(node_handle_.advertiseService(
+      kFinishTrajectoryServiceName, &Node::HandleFinishTrajectory, this));
+  service_servers_.push_back(node_handle_.advertiseService(
+      kWriteAssetsServiceName, &Node::HandleWriteAssets, this));
 
   if (node_options_.map_builder_options.use_trajectory_builder_2d()) {
     occupancy_grid_publisher_ =
@@ -111,13 +117,6 @@ Node::Node(const NodeOptions& node_options, tf2_ros::Buffer* const tf_buffer)
   wall_timers_.push_back(node_handle_.createWallTimer(
       ::ros::WallDuration(node_options_.pose_publish_period_sec),
       &Node::PublishTrajectoryStates, this));
-
-  start_trajectory_server_ = node_handle_.advertiseService(
-      kStartTrajectoryServiceName, &Node::HandleStartTrajectory, this);
-  finish_trajectory_server_ = node_handle_.advertiseService(
-      kFinishTrajectoryServiceName, &Node::HandleFinishTrajectory, this);
-  write_assets_server_ = node_handle_.advertiseService(
-      kWriteAssetsServiceName, &Node::HandleWriteAssets, this);
 }
 
 Node::~Node() {
