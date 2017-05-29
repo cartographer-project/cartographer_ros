@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-int32 submap_version
-geometry_msgs/Pose pose
-geometry_msgs/Pose local_pose
+visualization_msgs/MarkerArray constraints_inter
+visualization_msgs/MarkerArray constraints_intra
+visualization_msgs/MarkerArray residual_errors_inter
+visualization_msgs/MarkerArray residual_errors_intra

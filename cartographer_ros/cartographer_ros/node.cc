@@ -37,6 +37,7 @@
 #include "nav_msgs/Odometry.h"
 #include "ros/serialization.h"
 #include "sensor_msgs/PointCloud2.h"
+#include "geometry_msgs/PoseStamped.h"
 #include "tf2_eigen/tf2_eigen.h"
 
 namespace cartographer_ros {
@@ -68,6 +69,26 @@ void Node::Initialize() {
   submap_query_server_ = node_handle_.advertiseService(
       kSubmapQueryServiceName, &Node::HandleSubmapQuery, this);
 
+  trajectory_nodes_list_publisher_ =
+      node_handle_.advertise<::visualization_msgs::MarkerArray>(
+          kTrajectoryNodesListTopic, kLatestOnlyPublisherQueueSize);
+
+  constraints_inter_list_publisher_ =
+      node_handle_.advertise<::visualization_msgs::MarkerArray>(
+          kConstraintsListInterTopic, kLatestOnlyPublisherQueueSize);
+
+  constraints_intra_list_publisher_ =
+      node_handle_.advertise<::visualization_msgs::MarkerArray>(
+          kConstraintsListIntraTopic, kLatestOnlyPublisherQueueSize);
+
+  residual_errors_inter_list_publisher_ =
+      node_handle_.advertise<::visualization_msgs::MarkerArray>(
+          kResidualErrorsInterListTopic, kLatestOnlyPublisherQueueSize);
+
+  residual_errors_intra_list_publisher_ =
+      node_handle_.advertise<::visualization_msgs::MarkerArray>(
+          kResidualErrorsIntraListTopic, kLatestOnlyPublisherQueueSize);
+
   if (options_.map_builder_options.use_trajectory_builder_2d()) {
     occupancy_grid_publisher_ =
         node_handle_.advertise<::nav_msgs::OccupancyGrid>(
@@ -81,12 +102,25 @@ void Node::Initialize() {
       node_handle_.advertise<sensor_msgs::PointCloud2>(
           kScanMatchedPointCloudTopic, kLatestOnlyPublisherQueueSize);
 
+  debug_publisher_ = node_handle_.advertise<geometry_msgs::PoseStamped>(
+          "debug_pose", kLatestOnlyPublisherQueueSize);
+  debug_publisher2_ = node_handle_.advertise<geometry_msgs::PoseStamped>(
+          "debug_pose2", kLatestOnlyPublisherQueueSize);
+
+
   wall_timers_.push_back(node_handle_.createWallTimer(
       ::ros::WallDuration(options_.submap_publish_period_sec),
       &Node::PublishSubmapList, this));
   wall_timers_.push_back(node_handle_.createWallTimer(
       ::ros::WallDuration(options_.pose_publish_period_sec),
       &Node::PublishTrajectoryStates, this));
+
+  wall_timers_.push_back(node_handle_.createWallTimer(
+      ::ros::WallDuration(options_.submap_publish_period_sec),
+      &Node::PublishTrajectoryNodesList, this));
+  wall_timers_.push_back(node_handle_.createWallTimer(
+      ::ros::WallDuration(options_.submap_publish_period_sec),
+      &Node::PublishConstraintsList, this));
 }
 
 ::ros::NodeHandle* Node::node_handle() { return &node_handle_; }
@@ -103,6 +137,20 @@ bool Node::HandleSubmapQuery(
 void Node::PublishSubmapList(const ::ros::WallTimerEvent& unused_timer_event) {
   carto::common::MutexLocker lock(&mutex_);
   submap_list_publisher_.publish(map_builder_bridge_.GetSubmapList());
+}
+
+void Node::PublishTrajectoryNodesList(const ::ros::WallTimerEvent& unused_timer_event) {
+  carto::common::MutexLocker lock(&mutex_);
+  trajectory_nodes_list_publisher_.publish(map_builder_bridge_.GetTrajectoryNodesList());
+}
+
+void Node::PublishConstraintsList(const ::ros::WallTimerEvent& unused_timer_event) {
+  carto::common::MutexLocker lock(&mutex_);
+  cartographer_ros_msgs::ConstraintVisualization constraint_visualization = map_builder_bridge_.GetConstraintsList();
+  constraints_inter_list_publisher_.publish(constraint_visualization.constraints_inter);
+  constraints_intra_list_publisher_.publish(constraint_visualization.constraints_intra);
+  residual_errors_inter_list_publisher_.publish(constraint_visualization.residual_errors_inter);
+  residual_errors_intra_list_publisher_.publish(constraint_visualization.residual_errors_intra);
 }
 
 void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
@@ -159,6 +207,19 @@ void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
         stamped_transform.transform = ToGeometryMsgTransform(
             tracking_to_map * (*trajectory_state.published_to_tracking));
         tf_broadcaster_.sendTransform(stamped_transform);
+
+        geometry_msgs::PoseStamped p;
+        p.pose = ToGeometryMsgPose(tracking_to_local);
+        p.header.stamp = ros::Time::now();
+        p.header.frame_id = options_.map_frame;
+        debug_publisher_.publish(p);
+
+        geometry_msgs::PoseStamped p2;
+        p2.pose = ToGeometryMsgPose(trajectory_state.local_to_map);
+        p2.header.stamp = ros::Time::now();
+        p2.header.frame_id = options_.map_frame;
+        debug_publisher2_.publish(p2);
+
       }
     }
   }

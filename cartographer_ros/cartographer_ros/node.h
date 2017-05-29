@@ -23,6 +23,7 @@
 #include "cartographer/common/mutex.h"
 #include "cartographer_ros/map_builder_bridge.h"
 #include "cartographer_ros/node_options.h"
+#include "cartographer_ros_msgs/ConstraintVisualization.h"
 #include "cartographer_ros_msgs/FinishTrajectory.h"
 #include "cartographer_ros_msgs/SubmapEntry.h"
 #include "cartographer_ros_msgs/SubmapList.h"
@@ -44,6 +45,11 @@ constexpr char kOccupancyGridTopic[] = "map";
 constexpr char kScanMatchedPointCloudTopic[] = "scan_matched_points2";
 constexpr char kSubmapListTopic[] = "submap_list";
 constexpr char kSubmapQueryServiceName[] = "submap_query";
+constexpr char kTrajectoryNodesListTopic[] = "trajectory_nodes_list";
+constexpr char kConstraintsListInterTopic[] = "constraints_inter_list";
+constexpr char kConstraintsListIntraTopic[] = "constraints_intra_list";
+constexpr char kResidualErrorsInterListTopic[] = "residual_errors_inter_list";
+constexpr char kResidualErrorsIntraListTopic[] = "residual_errors_intra_list";
 
 // Wires up ROS topics to SLAM.
 class Node {
@@ -64,7 +70,9 @@ class Node {
       cartographer_ros_msgs::SubmapQuery::Request& request,
       cartographer_ros_msgs::SubmapQuery::Response& response);
 
+  void PublishConstraintsList(const ::ros::WallTimerEvent& timer_event);
   void PublishSubmapList(const ::ros::WallTimerEvent& timer_event);
+  void PublishTrajectoryNodesList(const ::ros::WallTimerEvent& timer_event);
   void PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event);
   void SpinOccupancyGridThreadForever();
 
@@ -78,13 +86,20 @@ class Node {
   std::unordered_set<string> expected_sensor_ids_;
 
   ::ros::NodeHandle node_handle_;
+  ::ros::Publisher constraints_inter_list_publisher_;
+  ::ros::Publisher constraints_intra_list_publisher_;
+  ::ros::Publisher residual_errors_inter_list_publisher_;
+  ::ros::Publisher residual_errors_intra_list_publisher_;
   ::ros::Publisher submap_list_publisher_;
+  ::ros::Publisher trajectory_nodes_list_publisher_;
   ::ros::ServiceServer submap_query_server_;
   ::ros::Publisher scan_matched_point_cloud_publisher_;
   cartographer::common::Time last_scan_matched_point_cloud_time_ =
       cartographer::common::Time::min();
 
   ::ros::Publisher occupancy_grid_publisher_;
+  ::ros::Publisher debug_publisher_;
+  ::ros::Publisher debug_publisher2_;
   std::thread occupancy_grid_thread_;
   bool terminating_ = false GUARDED_BY(mutex_);
 
