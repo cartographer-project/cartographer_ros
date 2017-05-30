@@ -65,9 +65,11 @@ class MapBuilderBridge {
 
  private:
   const NodeOptions node_options_;
-  std::unordered_map<int, TrajectoryOptions> trajectory_options_;
   cartographer::mapping::MapBuilder map_builder_;
   tf2_ros::Buffer* const tf_buffer_;
+
+  // These are keyed with 'trajectory_id'.
+  std::unordered_map<int, TrajectoryOptions> trajectory_options_;
   std::unordered_map<int, std::unique_ptr<SensorBridge>> sensor_bridges_;
 };
 

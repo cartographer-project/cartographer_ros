@@ -89,8 +89,8 @@ submap_query (`cartographer_ros_msgs/SubmapQuery`_)
   Fetches the requested submap.
 
 start_trajectory (`cartographer_ros_msgs/StartTrajectory`_)
-  Starts another trajectory by sending its sensor topics and trajectory options
-  with a binary proto. Returns an assigned trajectory ID.
+  Starts another trajectory by specifying its sensor topics and trajectory
+  options as an binary-encoded proto. Returns an assigned trajectory ID.
 
 finish_trajectory (`cartographer_ros_msgs/FinishTrajectory`_)
   Finishes the given `trajectory_id`'s trajectory by running a final optimization.

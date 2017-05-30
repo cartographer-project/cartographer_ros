@@ -70,16 +70,17 @@ TrajectoryOptions ToTrajectoryOptions(
   return options;
 }
 
-void ShutdownSubscriber(
-    std::unordered_map<int, ::ros::Subscriber>& subscribers,
-    int trajectory_id) {
-  if (subscribers.count(trajectory_id) != 0) {
-    subscribers[trajectory_id].shutdown();
-    ROS_INFO_STREAM("Shutdown the subscriber of ["
-                    << subscribers[trajectory_id].getTopic() << "]");
-    CHECK_EQ(subscribers.erase(trajectory_id), 1);
+void ShutdownSubscriber(std::unordered_map<int, ::ros::Subscriber>& subscribers,
+                        int trajectory_id) {
+  if (subscribers.count(trajectory_id) == 0) {
+    return;
   }
+  subscribers[trajectory_id].shutdown();
+  ROS_INFO_STREAM("Shutdown the subscriber of ["
+                  << subscribers[trajectory_id].getTopic() << "]");
+  CHECK_EQ(subscribers.erase(trajectory_id), 1);
 }
+
 }  // namespace
 
 Node::Node(const NodeOptions& node_options, tf2_ros::Buffer* const tf_buffer)
@@ -255,18 +256,14 @@ int Node::AddTrajectory(const TrajectoryOptions& options,
   if (options.use_odometry) {
     expected_sensor_ids.insert(topics.odometry_topic);
   }
-
-  int trajectory_id =
-      map_builder_bridge_.AddTrajectory(expected_sensor_ids, options);
-
-  return trajectory_id;
+  return map_builder_bridge_.AddTrajectory(expected_sensor_ids, options);
 }
 
 void Node::LaunchSubscribers(const TrajectoryOptions& options,
                              const cartographer_ros_msgs::SensorTopics& topics,
                              const int trajectory_id) {
   if (options.use_laser_scan) {
-    string topic = topics.laser_scan_topic;
+    const string topic = topics.laser_scan_topic;
     laser_scan_subscribers_[trajectory_id] =
         node_handle_.subscribe<sensor_msgs::LaserScan>(
             topic, kInfiniteSubscriberQueueSize,
@@ -279,7 +276,7 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
   }
 
   if (options.use_multi_echo_laser_scan) {
-    string topic = topics.multi_echo_laser_scan_topic;
+    const string topic = topics.multi_echo_laser_scan_topic;
     multi_echo_laser_scan_subscribers_[trajectory_id] =
         node_handle_.subscribe<sensor_msgs::MultiEchoLaserScan>(
             topic, kInfiniteSubscriberQueueSize,
@@ -370,7 +367,7 @@ bool Node::HandleFinishTrajectory(
     ::cartographer_ros_msgs::FinishTrajectory::Request& request,
     ::cartographer_ros_msgs::FinishTrajectory::Response& response) {
   carto::common::MutexLocker lock(&mutex_);
-  int trajectory_id = request.trajectory_id;
+  const int trajectory_id = request.trajectory_id;
   if (is_active_trajectory_.count(trajectory_id) == 0) {
     ROS_INFO_STREAM("Trajectory_id " << trajectory_id
                                      << " is not created yet.");

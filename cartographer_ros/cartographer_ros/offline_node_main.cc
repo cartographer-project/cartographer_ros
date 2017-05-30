@@ -72,6 +72,8 @@ std::vector<string> SplitString(const string& input, const char delimiter) {
   return tokens;
 }
 
+// TODO(hrapp): This is duplicated in node_main.cc. Pull out into a config
+// unit.
 std::tuple<NodeOptions, TrajectoryOptions> LoadOptions() {
   auto file_resolver = cartographer::common::make_unique<
       cartographer::common::ConfigurationFileResolver>(
@@ -123,6 +125,7 @@ void Run(const std::vector<string>& bag_filenames) {
   // For 3D SLAM, subscribe to all point clouds topics.
   if (trajectory_options.num_point_clouds > 0) {
     for (int i = 0; i < trajectory_options.num_point_clouds; ++i) {
+      // TODO(hrapp): This code is duplicated in places. Pull out a method.
       string topic = kPointCloud2Topic;
       if (trajectory_options.num_point_clouds > 1) {
         topic += "_" + std::to_string(i + 1);
