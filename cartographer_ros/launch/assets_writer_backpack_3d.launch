@@ -1,4 +1,3 @@
-<?xml version="1.0"?>
 <!--
   Copyright 2016 The Cartographer Authors
 
@@ -15,22 +14,14 @@
   limitations under the License.
 -->
 
-<package format="2">
-  <name>cartographer_ros_msgs</name>
-  <version>0.1.0</version>
-  <description>
-    ROS messages for the cartographer_ros package.
-  </description>
-  <maintainer email="google-cartographer@googlegroups.com">
-    The Cartographer Authors
-  </maintainer>
-  <license>Apache 2.0</license>
-
-  <url>https://github.com/googlecartographer/cartographer_ros</url>
-
-  <buildtool_depend>catkin</buildtool_depend>
-
-  <depend>geometry_msgs</depend>
-
-  <build_depend>message_generation</build_depend>
-</package>
+<launch>
+  <node name="cartographer_assets_writer" pkg="cartographer_ros" required="true"
+      type="cartographer_assets_writer" args="
+          -configuration_directory $(find cartographer_ros)/configuration_files
+          -configuration_basename assets_writer_backpack_3d.lua
+          -urdf_filename $(find cartographer_ros)/urdf/backpack_3d.urdf
+          -bag_filename $(arg bag_filenames)
+          -trajectory_filename $(arg trajectory_filename)"
+      output="screen">
+  </node>
+</launch>
