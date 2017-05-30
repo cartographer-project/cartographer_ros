@@ -386,8 +386,8 @@ bool Node::HandleFinishTrajectory(
 
   if (point_cloud_subscribers_.count(trajectory_id) != 0) {
     for (auto& entry : point_cloud_subscribers_[trajectory_id]) {
-      ROS_INFO_STREAM("Shutdown the subscriber of ["
-                      << entry.getTopic() << "]");
+      ROS_INFO_STREAM("Shutdown the subscriber of [" << entry.getTopic()
+                                                     << "]");
       entry.shutdown();
     }
     CHECK_EQ(point_cloud_subscribers_.erase(trajectory_id), 1);
