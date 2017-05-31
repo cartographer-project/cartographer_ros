@@ -88,11 +88,17 @@ Services
 submap_query (`cartographer_ros_msgs/SubmapQuery`_)
   Fetches the requested submap.
 
+start_trajectory (`cartographer_ros_msgs/StartTrajectory`_)
+  Starts another trajectory by specifying its sensor topics and trajectory
+  options as an binary-encoded proto. Returns an assigned trajectory ID.
+
 finish_trajectory (`cartographer_ros_msgs/FinishTrajectory`_)
-  Finishes the current trajectory by flushing all queued sensor data, running a
-  final optimization, and writing artifacts (e.g. the map) to disk. The `stem`
-  argument is used as a prefix for the various files which are written. Files
-  will usually end up in `~/.ros` or `ROS_HOME` if it is set.
+  Finishes the given `trajectory_id`'s trajectory by running a final optimization.
+
+write_assets (`cartographer_ros_msgs/WriteAssets`_)
+  Writes artifacts (e.g. the map) to disk. The `stem` argument is used as a prefix
+  for the various files which are written. Files will usually end up in `~/.ros` or
+  `ROS_HOME` if it is set.
 
 Required tf Transforms
 ======================

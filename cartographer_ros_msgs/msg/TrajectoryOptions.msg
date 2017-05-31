@@ -12,39 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 2.8.3)
+string tracking_frame
+string published_frame
+string odom_frame
+bool provide_odom_frame
+bool use_odometry
+bool use_laser_scan
+bool use_multi_echo_laser_scan
+int32 num_point_clouds
 
-project(cartographer_ros_msgs)
-
-set(PACKAGE_DEPENDENCIES
-  geometry_msgs
-)
-
-find_package(catkin REQUIRED COMPONENTS message_generation ${PACKAGE_DEPENDENCIES})
-
-add_message_files(
-  FILES
-    SubmapList.msg
-    TrajectorySubmapList.msg
-    SubmapEntry.msg
-    SensorTopics.msg
-    TrajectoryOptions.msg
-)
-
-add_service_files(
-  FILES
-    SubmapQuery.srv
-    FinishTrajectory.srv
-    StartTrajectory.srv
-    WriteAssets.srv
-)
-
-generate_messages(
-  DEPENDENCIES
-    geometry_msgs
-)
-
-catkin_package(
-  CATKIN_DEPENDS
-    ${PACKAGE_DEPENDENCIES}
-)
+# This is a binary-encoded
+# 'cartographer.mapping.proto.TrajectoryBuilderOptions' proto.
+string trajectory_builder_options_proto

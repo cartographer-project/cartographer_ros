@@ -12,39 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 2.8.3)
-
-project(cartographer_ros_msgs)
-
-set(PACKAGE_DEPENDENCIES
-  geometry_msgs
-)
-
-find_package(catkin REQUIRED COMPONENTS message_generation ${PACKAGE_DEPENDENCIES})
-
-add_message_files(
-  FILES
-    SubmapList.msg
-    TrajectorySubmapList.msg
-    SubmapEntry.msg
-    SensorTopics.msg
-    TrajectoryOptions.msg
-)
-
-add_service_files(
-  FILES
-    SubmapQuery.srv
-    FinishTrajectory.srv
-    StartTrajectory.srv
-    WriteAssets.srv
-)
-
-generate_messages(
-  DEPENDENCIES
-    geometry_msgs
-)
-
-catkin_package(
-  CATKIN_DEPENDS
-    ${PACKAGE_DEPENDENCIES}
-)
+cartographer_ros_msgs/TrajectoryOptions options
+cartographer_ros_msgs/SensorTopics topics
+---
+int32 trajectory_id

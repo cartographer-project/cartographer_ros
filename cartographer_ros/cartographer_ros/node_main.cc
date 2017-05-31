@@ -22,6 +22,7 @@
 #include "cartographer/common/make_unique.h"
 #include "cartographer/common/port.h"
 #include "cartographer_ros/node.h"
+#include "cartographer_ros/node_options.h"
 #include "cartographer_ros/ros_log_sink.h"
 #include "gflags/gflags.h"
 #include "tf2_ros/transform_listener.h"
@@ -37,9 +38,7 @@ DEFINE_string(configuration_basename, "",
 namespace cartographer_ros {
 namespace {
 
-constexpr int kInfiniteSubscriberQueueSize = 0;
-
-NodeOptions LoadOptions() {
+std::tuple<NodeOptions, TrajectoryOptions> LoadOptions() {
   auto file_resolver = cartographer::common::make_unique<
       cartographer::common::ConfigurationFileResolver>(
       std::vector<string>{FLAGS_configuration_directory});
@@ -48,121 +47,24 @@ NodeOptions LoadOptions() {
   cartographer::common::LuaParameterDictionary lua_parameter_dictionary(
       code, std::move(file_resolver));
 
-  return CreateNodeOptions(&lua_parameter_dictionary);
+  return std::make_tuple(CreateNodeOptions(&lua_parameter_dictionary),
+                         CreateTrajectoryOptions(&lua_parameter_dictionary));
 }
 
 void Run() {
-  const auto options = LoadOptions();
   constexpr double kTfBufferCacheTimeInSeconds = 1e6;
   tf2_ros::Buffer tf_buffer{::ros::Duration(kTfBufferCacheTimeInSeconds)};
   tf2_ros::TransformListener tf(tf_buffer);
-  Node node(options, &tf_buffer);
-  node.Initialize();
+  NodeOptions node_options;
+  TrajectoryOptions trajectory_options;
+  std::tie(node_options, trajectory_options) = LoadOptions();
 
-  int trajectory_id = -1;
-  std::unordered_set<string> expected_sensor_ids;
-
-  // For 2D SLAM, subscribe to exactly one horizontal laser.
-  ::ros::Subscriber laser_scan_subscriber;
-  if (options.use_laser_scan) {
-    laser_scan_subscriber = node.node_handle()->subscribe(
-        kLaserScanTopic, kInfiniteSubscriberQueueSize,
-        boost::function<void(const sensor_msgs::LaserScan::ConstPtr&)>(
-            [&](const sensor_msgs::LaserScan::ConstPtr& msg) {
-              node.map_builder_bridge()
-                  ->sensor_bridge(trajectory_id)
-                  ->HandleLaserScanMessage(kLaserScanTopic, msg);
-            }));
-    expected_sensor_ids.insert(kLaserScanTopic);
-  }
-  if (options.use_multi_echo_laser_scan) {
-    laser_scan_subscriber = node.node_handle()->subscribe(
-        kMultiEchoLaserScanTopic, kInfiniteSubscriberQueueSize,
-        boost::function<void(const sensor_msgs::MultiEchoLaserScan::ConstPtr&)>(
-            [&](const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
-              node.map_builder_bridge()
-                  ->sensor_bridge(trajectory_id)
-                  ->HandleMultiEchoLaserScanMessage(kMultiEchoLaserScanTopic,
-                                                    msg);
-            }));
-    expected_sensor_ids.insert(kMultiEchoLaserScanTopic);
-  }
-
-  // For 3D SLAM, subscribe to all point clouds topics.
-  std::vector<::ros::Subscriber> point_cloud_subscribers;
-  if (options.num_point_clouds > 0) {
-    for (int i = 0; i < options.num_point_clouds; ++i) {
-      string topic = kPointCloud2Topic;
-      if (options.num_point_clouds > 1) {
-        topic += "_" + std::to_string(i + 1);
-      }
-      point_cloud_subscribers.push_back(node.node_handle()->subscribe(
-          topic, kInfiniteSubscriberQueueSize,
-          boost::function<void(const sensor_msgs::PointCloud2::ConstPtr&)>(
-              [&, topic](const sensor_msgs::PointCloud2::ConstPtr& msg) {
-                node.map_builder_bridge()
-                    ->sensor_bridge(trajectory_id)
-                    ->HandlePointCloud2Message(topic, msg);
-              })));
-      expected_sensor_ids.insert(topic);
-    }
-  }
-
-  // For 2D SLAM, subscribe to the IMU if we expect it. For 3D SLAM, the IMU is
-  // required.
-  ::ros::Subscriber imu_subscriber;
-  if (options.map_builder_options.use_trajectory_builder_3d() ||
-      (options.map_builder_options.use_trajectory_builder_2d() &&
-       options.trajectory_builder_options.trajectory_builder_2d_options()
-           .use_imu_data())) {
-    imu_subscriber = node.node_handle()->subscribe(
-        kImuTopic, kInfiniteSubscriberQueueSize,
-        boost::function<void(const sensor_msgs::Imu::ConstPtr& msg)>(
-            [&](const sensor_msgs::Imu::ConstPtr& msg) {
-              node.map_builder_bridge()
-                  ->sensor_bridge(trajectory_id)
-                  ->HandleImuMessage(kImuTopic, msg);
-            }));
-    expected_sensor_ids.insert(kImuTopic);
-  }
-
-  // For both 2D and 3D SLAM, odometry is optional.
-  ::ros::Subscriber odometry_subscriber;
-  if (options.use_odometry) {
-    odometry_subscriber = node.node_handle()->subscribe(
-        kOdometryTopic, kInfiniteSubscriberQueueSize,
-        boost::function<void(const nav_msgs::Odometry::ConstPtr&)>(
-            [&](const nav_msgs::Odometry::ConstPtr& msg) {
-              node.map_builder_bridge()
-                  ->sensor_bridge(trajectory_id)
-                  ->HandleOdometryMessage(kOdometryTopic, msg);
-            }));
-    expected_sensor_ids.insert(kOdometryTopic);
-  }
-
-  trajectory_id = node.map_builder_bridge()->AddTrajectory(
-      expected_sensor_ids, options.tracking_frame);
-
-  ::ros::ServiceServer finish_trajectory_server =
-      node.node_handle()->advertiseService(
-          kFinishTrajectoryServiceName,
-          boost::function<bool(
-              ::cartographer_ros_msgs::FinishTrajectory::Request&,
-              ::cartographer_ros_msgs::FinishTrajectory::Response&)>(
-              [&](::cartographer_ros_msgs::FinishTrajectory::Request& request,
-                  ::cartographer_ros_msgs::FinishTrajectory::Response&) {
-                const int previous_trajectory_id = trajectory_id;
-                trajectory_id = node.map_builder_bridge()->AddTrajectory(
-                    expected_sensor_ids, options.tracking_frame);
-                node.map_builder_bridge()->FinishTrajectory(
-                    previous_trajectory_id);
-                node.map_builder_bridge()->WriteAssets(request.stem);
-                return true;
-              }));
+  Node node(node_options, &tf_buffer);
+  node.StartTrajectoryWithDefaultTopics(trajectory_options);
 
   ::ros::spin();
 
-  node.map_builder_bridge()->FinishTrajectory(trajectory_id);
+  node.FinishAllTrajectories();
 }
 
 }  // namespace

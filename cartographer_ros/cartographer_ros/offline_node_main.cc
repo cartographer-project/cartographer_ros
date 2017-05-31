@@ -24,6 +24,7 @@
 #include "cartographer/common/make_unique.h"
 #include "cartographer/common/port.h"
 #include "cartographer_ros/node.h"
+#include "cartographer_ros/node_options.h"
 #include "cartographer_ros/ros_log_sink.h"
 #include "cartographer_ros/urdf_reader.h"
 #include "gflags/gflags.h"
@@ -71,7 +72,9 @@ std::vector<string> SplitString(const string& input, const char delimiter) {
   return tokens;
 }
 
-NodeOptions LoadOptions() {
+// TODO(hrapp): This is duplicated in node_main.cc. Pull out into a config
+// unit.
+std::tuple<NodeOptions, TrajectoryOptions> LoadOptions() {
   auto file_resolver = cartographer::common::make_unique<
       cartographer::common::ConfigurationFileResolver>(
       std::vector<string>{FLAGS_configuration_directory});
@@ -80,11 +83,14 @@ NodeOptions LoadOptions() {
   cartographer::common::LuaParameterDictionary lua_parameter_dictionary(
       code, std::move(file_resolver));
 
-  return CreateNodeOptions(&lua_parameter_dictionary);
+  return std::make_tuple(CreateNodeOptions(&lua_parameter_dictionary),
+                         CreateTrajectoryOptions(&lua_parameter_dictionary));
 }
 
 void Run(const std::vector<string>& bag_filenames) {
-  auto options = LoadOptions();
+  NodeOptions node_options;
+  TrajectoryOptions trajectory_options;
+  std::tie(node_options, trajectory_options) = LoadOptions();
 
   tf2_ros::Buffer tf_buffer;
 
@@ -99,9 +105,8 @@ void Run(const std::vector<string>& bag_filenames) {
   // Since we preload the transform buffer, we should never have to wait for a
   // transform. When we finish processing the bag, we will simply drop any
   // remaining sensor data that cannot be transformed due to missing transforms.
-  options.lookup_transform_timeout_sec = 0.;
-  Node node(options, &tf_buffer);
-  node.Initialize();
+  node_options.lookup_transform_timeout_sec = 0.;
+  Node node(node_options, &tf_buffer);
 
   std::unordered_set<string> expected_sensor_ids;
   const auto check_insert = [&expected_sensor_ids, &node](const string& topic) {
@@ -110,18 +115,19 @@ void Run(const std::vector<string>& bag_filenames) {
   };
 
   // For 2D SLAM, subscribe to exactly one horizontal laser.
-  if (options.use_laser_scan) {
+  if (trajectory_options.use_laser_scan) {
     check_insert(kLaserScanTopic);
   }
-  if (options.use_multi_echo_laser_scan) {
+  if (trajectory_options.use_multi_echo_laser_scan) {
     check_insert(kMultiEchoLaserScanTopic);
   }
 
   // For 3D SLAM, subscribe to all point clouds topics.
-  if (options.num_point_clouds > 0) {
-    for (int i = 0; i < options.num_point_clouds; ++i) {
+  if (trajectory_options.num_point_clouds > 0) {
+    for (int i = 0; i < trajectory_options.num_point_clouds; ++i) {
+      // TODO(hrapp): This code is duplicated in places. Pull out a method.
       string topic = kPointCloud2Topic;
-      if (options.num_point_clouds > 1) {
+      if (trajectory_options.num_point_clouds > 1) {
         topic += "_" + std::to_string(i + 1);
       }
       check_insert(topic);
@@ -130,15 +136,16 @@ void Run(const std::vector<string>& bag_filenames) {
 
   // For 2D SLAM, subscribe to the IMU if we expect it. For 3D SLAM, the IMU is
   // required.
-  if (options.map_builder_options.use_trajectory_builder_3d() ||
-      (options.map_builder_options.use_trajectory_builder_2d() &&
-       options.trajectory_builder_options.trajectory_builder_2d_options()
+  if (node_options.map_builder_options.use_trajectory_builder_3d() ||
+      (node_options.map_builder_options.use_trajectory_builder_2d() &&
+       trajectory_options.trajectory_builder_options
+           .trajectory_builder_2d_options()
            .use_imu_data())) {
     check_insert(kImuTopic);
   }
 
   // For both 2D and 3D SLAM, odometry is optional.
-  if (options.use_odometry) {
+  if (trajectory_options.use_odometry) {
     check_insert(kOdometryTopic);
   }
 
@@ -162,7 +169,7 @@ void Run(const std::vector<string>& bag_filenames) {
     }
 
     const int trajectory_id = node.map_builder_bridge()->AddTrajectory(
-        expected_sensor_ids, options.tracking_frame);
+        expected_sensor_ids, trajectory_options);
 
     rosbag::Bag bag;
     bag.open(bag_filename, rosbag::bagmode::Read);
