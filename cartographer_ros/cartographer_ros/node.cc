@@ -81,6 +81,17 @@ void ShutdownSubscriber(std::unordered_map<int, ::ros::Subscriber>& subscribers,
   CHECK_EQ(subscribers.erase(trajectory_id), 1);
 }
 
+bool CheckTopicNameUnique(
+    const string topic,
+    const std::unordered_map<int, ::ros::Subscriber> subscribers) {
+  for (auto& entry : subscribers) {
+    if (entry.second.getTopic() == topic) {
+      ROS_ERROR_STREAM("Topic name [" << topic << "] is already used");
+      return false;
+    }
+  }
+  return true;
+}
 }  // namespace
 
 Node::Node(const NodeOptions& node_options, tf2_ros::Buffer* const tf_buffer)
@@ -230,10 +241,6 @@ int Node::AddTrajectory(const TrajectoryOptions& options,
                         const cartographer_ros_msgs::SensorTopics& topics) {
   std::unordered_set<string> expected_sensor_ids;
 
-  if (node_options_.map_builder_options.use_trajectory_builder_2d()) {
-    // Using point clouds is only supported in 3D.
-    CHECK_EQ(options.num_point_clouds, 0);
-  }
   if (options.use_laser_scan) {
     expected_sensor_ids.insert(topics.laser_scan_topic);
   }
@@ -337,12 +344,70 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
   is_active_trajectory_[trajectory_id] = true;
 }
 
+bool Node::CheckTrajectoryOptions(const TrajectoryOptions options) {
+  if (node_options_.map_builder_options.use_trajectory_builder_2d() &&
+      options.trajectory_builder_options.has_trajectory_builder_2d_options()) {
+    // Using point clouds is only supported in 3D.
+    if (options.num_point_clouds == 0) {
+      return true;
+    }
+  }
+  if (node_options_.map_builder_options.use_trajectory_builder_3d() &&
+      options.trajectory_builder_options.has_trajectory_builder_3d_options()) {
+    if (options.num_point_clouds != 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool Node::CheckTopicName(const ::cartographer_ros_msgs::SensorTopics& topics,
+                          const TrajectoryOptions options) {
+  if (!CheckTopicNameUnique(topics.laser_scan_topic, laser_scan_subscribers_)) {
+    return false;
+  }
+  if (!CheckTopicNameUnique(topics.multi_echo_laser_scan_topic,
+                            multi_echo_laser_scan_subscribers_)) {
+    return false;
+  }
+  if (!CheckTopicNameUnique(topics.imu_topic, imu_subscribers_)) {
+    return false;
+  }
+  if (!CheckTopicNameUnique(topics.odometry_topic, odom_subscribers_)) {
+    return false;
+  }
+  for (auto& subscribers : point_cloud_subscribers_) {
+    string topic = topics.point_cloud2_topic;
+    int count = 0;
+    for (auto& subscriber : subscribers.second) {
+      if (options.num_point_clouds > 1) {
+        topic += "_" + std::to_string(count + 1);
+        ++count;
+      }
+      if (subscriber.getTopic() == topic) {
+        ROS_ERROR_STREAM("Topic name [" << topic << "] is already used");
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 bool Node::HandleStartTrajectory(
     ::cartographer_ros_msgs::StartTrajectory::Request& request,
     ::cartographer_ros_msgs::StartTrajectory::Response& response) {
   carto::common::MutexLocker lock(&mutex_);
-  std::unordered_set<string> expected_sensor_ids;
   TrajectoryOptions options = ToTrajectoryOptions(request.options);
+  if (!Node::CheckTrajectoryOptions(options)) {
+    ROS_ERROR("Somethig wrong with your requested trajectory options");
+    return false;
+  }
+  if (!Node::CheckTopicName(request.topics, options)) {
+    ROS_ERROR("Somethig wrong with your requested topics");
+    return false;
+  }
+
+  std::unordered_set<string> expected_sensor_ids;
   const int trajectory_id = AddTrajectory(options, request.topics);
   LaunchSubscribers(options, request.topics, trajectory_id);
 
