@@ -65,7 +65,7 @@ bool FromRosMessage(const cartographer_ros_msgs::TrajectoryOptions& msg,
   options->num_point_clouds = msg.num_point_clouds;
   if (!options->trajectory_builder_options.ParseFromString(
           msg.trajectory_builder_options_proto)) {
-    ROS_ERROR("Failed to parse protobuf");
+    LOG(ERROR) << "Failed to parse protobuf";
     return false;
   }
   return true;
@@ -77,8 +77,8 @@ void ShutdownSubscriber(std::unordered_map<int, ::ros::Subscriber>& subscribers,
     return;
   }
   subscribers[trajectory_id].shutdown();
-  ROS_INFO_STREAM("Shutdown the subscriber of ["
-                  << subscribers[trajectory_id].getTopic() << "]");
+  LOG(INFO) << "Shutdown the subscriber of ["
+            << subscribers[trajectory_id].getTopic() << "]";
   CHECK_EQ(subscribers.erase(trajectory_id), 1);
 }
 
@@ -87,7 +87,7 @@ bool IsTopicNameUnique(
     const std::unordered_map<int, ::ros::Subscriber>& subscribers) {
   for (auto& entry : subscribers) {
     if (entry.second.getTopic() == topic) {
-      ROS_ERROR_STREAM("Topic name [" << topic << "] is already used.");
+      LOG(ERROR) << "Topic name [" << topic << "] is already used.";
       return false;
     }
   }
@@ -388,7 +388,7 @@ bool Node::ValidateTopicName(
         ++count;
       }
       if (subscriber.getTopic() == topic) {
-        ROS_ERROR_STREAM("Topic name [" << topic << "] is already used");
+        LOG(ERROR) << "Topic name [" << topic << "] is already used";
         return false;
       }
     }
@@ -403,11 +403,11 @@ bool Node::HandleStartTrajectory(
   TrajectoryOptions options;
   if (!FromRosMessage(request.options, &options) ||
       !Node::ValidateTrajectoryOptions(options)) {
-    ROS_ERROR("Invalid trajectory options.");
+    LOG(ERROR) << "Invalid trajectory options.";
     return false;
   }
   if (!Node::ValidateTopicName(request.topics, options)) {
-    ROS_ERROR("Invalid topics.");
+    LOG(ERROR) << "Invalid topics.";
     return false;
   }
 
@@ -438,13 +438,12 @@ bool Node::HandleFinishTrajectory(
   carto::common::MutexLocker lock(&mutex_);
   const int trajectory_id = request.trajectory_id;
   if (is_active_trajectory_.count(trajectory_id) == 0) {
-    ROS_INFO_STREAM("Trajectory_id " << trajectory_id
-                                     << " is not created yet.");
+    LOG(INFO) << "Trajectory_id " << trajectory_id << " is not created yet.";
     return false;
   }
   if (!is_active_trajectory_[trajectory_id]) {
-    ROS_INFO_STREAM("Trajectory_id " << trajectory_id
-                                     << " has already been finished.");
+    LOG(INFO) << "Trajectory_id " << trajectory_id
+              << " has already been finished.";
     return false;
   }
 
@@ -455,8 +454,7 @@ bool Node::HandleFinishTrajectory(
 
   if (point_cloud_subscribers_.count(trajectory_id) != 0) {
     for (auto& entry : point_cloud_subscribers_[trajectory_id]) {
-      ROS_INFO_STREAM("Shutdown the subscriber of [" << entry.getTopic()
-                                                     << "]");
+      LOG(INFO) << "Shutdown the subscriber of [" << entry.getTopic() << "]";
       entry.shutdown();
     }
     CHECK_EQ(point_cloud_subscribers_.erase(trajectory_id), 1);
