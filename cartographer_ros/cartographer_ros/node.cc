@@ -52,22 +52,23 @@ namespace {
 constexpr int kInfiniteSubscriberQueueSize = 0;
 constexpr int kLatestOnlyPublisherQueueSize = 1;
 
-TrajectoryOptions ToTrajectoryOptions(
-    const cartographer_ros_msgs::TrajectoryOptions& ros_options) {
-  TrajectoryOptions options;
-  options.tracking_frame = ros_options.tracking_frame;
-  options.published_frame = ros_options.published_frame;
-  options.odom_frame = ros_options.odom_frame;
-  options.provide_odom_frame = ros_options.provide_odom_frame;
-  options.use_odometry = ros_options.use_odometry;
-  options.use_laser_scan = ros_options.use_laser_scan;
-  options.use_multi_echo_laser_scan = ros_options.use_multi_echo_laser_scan;
-  options.num_point_clouds = ros_options.num_point_clouds;
-  if (!options.trajectory_builder_options.ParseFromString(
-          ros_options.trajectory_builder_options_proto)) {
+// Try to convert 'msg' into 'options'. Returns false on failure.
+bool FromRosMessage(const cartographer_ros_msgs::TrajectoryOptions& msg,
+                    TrajectoryOptions* options) {
+  options->tracking_frame = msg.tracking_frame;
+  options->published_frame = msg.published_frame;
+  options->odom_frame = msg.odom_frame;
+  options->provide_odom_frame = msg.provide_odom_frame;
+  options->use_odometry = msg.use_odometry;
+  options->use_laser_scan = msg.use_laser_scan;
+  options->use_multi_echo_laser_scan = msg.use_multi_echo_laser_scan;
+  options->num_point_clouds = msg.num_point_clouds;
+  if (!options->trajectory_builder_options.ParseFromString(
+          msg.trajectory_builder_options_proto)) {
     ROS_ERROR("Failed to parse protobuf");
+    return false;
   }
-  return options;
+  return true;
 }
 
 void ShutdownSubscriber(std::unordered_map<int, ::ros::Subscriber>& subscribers,
@@ -369,7 +370,7 @@ bool Node::ValidateTopicName(
     return false;
   }
   if (!IsTopicNameUnique(topics.multi_echo_laser_scan_topic,
-                            multi_echo_laser_scan_subscribers_)) {
+                         multi_echo_laser_scan_subscribers_)) {
     return false;
   }
   if (!IsTopicNameUnique(topics.imu_topic, imu_subscribers_)) {
@@ -399,8 +400,9 @@ bool Node::HandleStartTrajectory(
     ::cartographer_ros_msgs::StartTrajectory::Request& request,
     ::cartographer_ros_msgs::StartTrajectory::Response& response) {
   carto::common::MutexLocker lock(&mutex_);
-  const TrajectoryOptions options = ToTrajectoryOptions(request.options);
-  if (!Node::ValidateTrajectoryOptions(options)) {
+  TrajectoryOptions options;
+  if (!FromRosMessage(request.options, &options) ||
+      !Node::ValidateTrajectoryOptions(options)) {
     ROS_ERROR("Invalid trajectory options.");
     return false;
   }
