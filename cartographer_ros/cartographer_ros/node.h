@@ -91,9 +91,9 @@ class Node {
   void PublishSubmapList(const ::ros::WallTimerEvent& timer_event);
   void PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event);
   void SpinOccupancyGridThreadForever();
-  bool CheckTrajectoryOptions(const TrajectoryOptions options);
-  bool CheckTopicName(const ::cartographer_ros_msgs::SensorTopics& topics,
-                      const TrajectoryOptions options);
+  bool ValidateTrajectoryOptions(const TrajectoryOptions& options);
+  bool ValidateTopicName(const ::cartographer_ros_msgs::SensorTopics& topics,
+                         const TrajectoryOptions& options);
 
   const NodeOptions node_options_;
 
