@@ -124,6 +124,8 @@ If *provide_odom_frame* is enabled in the :doc:`configuration`, a continuous
 .. _cartographer_ros_msgs/FinishTrajectory: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/srv/FinishTrajectory.srv
 .. _cartographer_ros_msgs/SubmapList: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/msg/SubmapList.msg
 .. _cartographer_ros_msgs/SubmapQuery: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/srv/SubmapQuery.srv
+.. _cartographer_ros_msgs/StartTrajectory: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/srv/StartTrajectory.srv
+.. _cartographer_ros_msgs/WriteAssets: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/srv/WriteAssets.srv
 .. _nav_msgs/OccupancyGrid: http://docs.ros.org/api/nav_msgs/html/msg/OccupancyGrid.html
 .. _nav_msgs/Odometry: http://docs.ros.org/api/nav_msgs/html/msg/Odometry.html
 .. _sensor_msgs/Imu: http://docs.ros.org/api/sensor_msgs/html/msg/Imu.html
