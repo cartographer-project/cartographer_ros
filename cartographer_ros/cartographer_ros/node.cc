@@ -52,22 +52,23 @@ namespace {
 constexpr int kInfiniteSubscriberQueueSize = 0;
 constexpr int kLatestOnlyPublisherQueueSize = 1;
 
-TrajectoryOptions ToTrajectoryOptions(
-    cartographer_ros_msgs::TrajectoryOptions ros_options) {
-  TrajectoryOptions options;
-  options.tracking_frame = ros_options.tracking_frame;
-  options.published_frame = ros_options.published_frame;
-  options.odom_frame = ros_options.odom_frame;
-  options.provide_odom_frame = ros_options.provide_odom_frame;
-  options.use_odometry = ros_options.use_odometry;
-  options.use_laser_scan = ros_options.use_laser_scan;
-  options.use_multi_echo_laser_scan = ros_options.use_multi_echo_laser_scan;
-  options.num_point_clouds = ros_options.num_point_clouds;
-  if (!options.trajectory_builder_options.ParseFromString(
-          ros_options.trajectory_builder_options_proto)) {
-    ROS_ERROR("Failed to parse protobuf");
+// Try to convert 'msg' into 'options'. Returns false on failure.
+bool FromRosMessage(const cartographer_ros_msgs::TrajectoryOptions& msg,
+                    TrajectoryOptions* options) {
+  options->tracking_frame = msg.tracking_frame;
+  options->published_frame = msg.published_frame;
+  options->odom_frame = msg.odom_frame;
+  options->provide_odom_frame = msg.provide_odom_frame;
+  options->use_odometry = msg.use_odometry;
+  options->use_laser_scan = msg.use_laser_scan;
+  options->use_multi_echo_laser_scan = msg.use_multi_echo_laser_scan;
+  options->num_point_clouds = msg.num_point_clouds;
+  if (!options->trajectory_builder_options.ParseFromString(
+          msg.trajectory_builder_options_proto)) {
+    LOG(ERROR) << "Failed to parse protobuf";
+    return false;
   }
-  return options;
+  return true;
 }
 
 void ShutdownSubscriber(std::unordered_map<int, ::ros::Subscriber>& subscribers,
@@ -76,9 +77,21 @@ void ShutdownSubscriber(std::unordered_map<int, ::ros::Subscriber>& subscribers,
     return;
   }
   subscribers[trajectory_id].shutdown();
-  ROS_INFO_STREAM("Shutdown the subscriber of ["
-                  << subscribers[trajectory_id].getTopic() << "]");
+  LOG(INFO) << "Shutdown the subscriber of ["
+            << subscribers[trajectory_id].getTopic() << "]";
   CHECK_EQ(subscribers.erase(trajectory_id), 1);
+}
+
+bool IsTopicNameUnique(
+    const string& topic,
+    const std::unordered_map<int, ::ros::Subscriber>& subscribers) {
+  for (auto& entry : subscribers) {
+    if (entry.second.getTopic() == topic) {
+      LOG(ERROR) << "Topic name [" << topic << "] is already used.";
+      return false;
+    }
+  }
+  return true;
 }
 
 }  // namespace
@@ -230,10 +243,6 @@ int Node::AddTrajectory(const TrajectoryOptions& options,
                         const cartographer_ros_msgs::SensorTopics& topics) {
   std::unordered_set<string> expected_sensor_ids;
 
-  if (node_options_.map_builder_options.use_trajectory_builder_2d()) {
-    // Using point clouds is only supported in 3D.
-    CHECK_EQ(options.num_point_clouds, 0);
-  }
   if (options.use_laser_scan) {
     expected_sensor_ids.insert(topics.laser_scan_topic);
   }
@@ -337,12 +346,72 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
   is_active_trajectory_[trajectory_id] = true;
 }
 
+bool Node::ValidateTrajectoryOptions(const TrajectoryOptions& options) {
+  if (node_options_.map_builder_options.use_trajectory_builder_2d() &&
+      options.trajectory_builder_options.has_trajectory_builder_2d_options()) {
+    // Using point clouds is only supported in 3D.
+    if (options.num_point_clouds == 0) {
+      return true;
+    }
+  }
+  if (node_options_.map_builder_options.use_trajectory_builder_3d() &&
+      options.trajectory_builder_options.has_trajectory_builder_3d_options()) {
+    if (options.num_point_clouds != 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool Node::ValidateTopicName(
+    const ::cartographer_ros_msgs::SensorTopics& topics,
+    const TrajectoryOptions& options) {
+  if (!IsTopicNameUnique(topics.laser_scan_topic, laser_scan_subscribers_)) {
+    return false;
+  }
+  if (!IsTopicNameUnique(topics.multi_echo_laser_scan_topic,
+                         multi_echo_laser_scan_subscribers_)) {
+    return false;
+  }
+  if (!IsTopicNameUnique(topics.imu_topic, imu_subscribers_)) {
+    return false;
+  }
+  if (!IsTopicNameUnique(topics.odometry_topic, odom_subscribers_)) {
+    return false;
+  }
+  for (auto& subscribers : point_cloud_subscribers_) {
+    string topic = topics.point_cloud2_topic;
+    int count = 0;
+    for (auto& subscriber : subscribers.second) {
+      if (options.num_point_clouds > 1) {
+        topic += "_" + std::to_string(count + 1);
+        ++count;
+      }
+      if (subscriber.getTopic() == topic) {
+        LOG(ERROR) << "Topic name [" << topic << "] is already used";
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 bool Node::HandleStartTrajectory(
     ::cartographer_ros_msgs::StartTrajectory::Request& request,
     ::cartographer_ros_msgs::StartTrajectory::Response& response) {
   carto::common::MutexLocker lock(&mutex_);
+  TrajectoryOptions options;
+  if (!FromRosMessage(request.options, &options) ||
+      !Node::ValidateTrajectoryOptions(options)) {
+    LOG(ERROR) << "Invalid trajectory options.";
+    return false;
+  }
+  if (!Node::ValidateTopicName(request.topics, options)) {
+    LOG(ERROR) << "Invalid topics.";
+    return false;
+  }
+
   std::unordered_set<string> expected_sensor_ids;
-  TrajectoryOptions options = ToTrajectoryOptions(request.options);
   const int trajectory_id = AddTrajectory(options, request.topics);
   LaunchSubscribers(options, request.topics, trajectory_id);
 
@@ -369,13 +438,12 @@ bool Node::HandleFinishTrajectory(
   carto::common::MutexLocker lock(&mutex_);
   const int trajectory_id = request.trajectory_id;
   if (is_active_trajectory_.count(trajectory_id) == 0) {
-    ROS_INFO_STREAM("Trajectory_id " << trajectory_id
-                                     << " is not created yet.");
+    LOG(INFO) << "Trajectory_id " << trajectory_id << " is not created yet.";
     return false;
   }
   if (!is_active_trajectory_[trajectory_id]) {
-    ROS_INFO_STREAM("Trajectory_id " << trajectory_id
-                                     << " has already been finished.");
+    LOG(INFO) << "Trajectory_id " << trajectory_id
+              << " has already been finished.";
     return false;
   }
 
@@ -386,8 +454,7 @@ bool Node::HandleFinishTrajectory(
 
   if (point_cloud_subscribers_.count(trajectory_id) != 0) {
     for (auto& entry : point_cloud_subscribers_[trajectory_id]) {
-      ROS_INFO_STREAM("Shutdown the subscriber of [" << entry.getTopic()
-                                                     << "]");
+      LOG(INFO) << "Shutdown the subscriber of [" << entry.getTopic() << "]";
       entry.shutdown();
     }
     CHECK_EQ(point_cloud_subscribers_.erase(trajectory_id), 1);
