@@ -218,7 +218,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
         marker.scale.x = 0.1;
         marker.scale.y = 0.05;
         marker.scale.z = 0.05;
-        marker.pose = ToGeometryMsgPose(node.pose);
+        marker.pose = ToGeometryMsgPose(node.pose * node.constant_data->tracking_to_pose);
         trajectory_nodes_list.markers.push_back(marker);
       }
     }
