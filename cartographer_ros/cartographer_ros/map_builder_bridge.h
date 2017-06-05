@@ -63,6 +63,9 @@ class MapBuilderBridge {
   std::unique_ptr<nav_msgs::OccupancyGrid> BuildOccupancyGrid();
   std::unordered_map<int, TrajectoryState> GetTrajectoryStates();
   visualization_msgs::MarkerArray GetTrajectoryNodeList();
+  visualization_msgs::MarkerArray GetConstraintsList(
+      const ::cartographer::mapping::SparsePoseGraph::Constraint::Tag
+          wanted_constraint_tag);
 
   SensorBridge* sensor_bridge(int trajectory_id);
 
@@ -74,6 +77,10 @@ class MapBuilderBridge {
   // These are keyed with 'trajectory_id'.
   std::unordered_map<int, TrajectoryOptions> trajectory_options_;
   std::unordered_map<int, std::unique_ptr<SensorBridge>> sensor_bridges_;
+
+  visualization_msgs::Marker createVisualizationMarker(
+      const int id, const int type, const std::string ns, const ros::Time time,
+      const std::string frame_id);
 };
 
 }  // namespace cartographer_ros
