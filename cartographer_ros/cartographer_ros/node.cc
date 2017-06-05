@@ -88,6 +88,12 @@ Node::Node(const NodeOptions& node_options, tf2_ros::Buffer* const tf_buffer)
   trajectory_nodes_list_publisher_ =
       node_handle_.advertise<::visualization_msgs::MarkerArray>(
           kTrajectoryNodesListTopic, kLatestOnlyPublisherQueueSize);
+  constraints_intra_list_publisher_ =
+      node_handle_.advertise<::visualization_msgs::MarkerArray>(
+          kConstraintsListIntraTopic, kLatestOnlyPublisherQueueSize);
+  constraints_inter_list_publisher_ =
+      node_handle_.advertise<::visualization_msgs::MarkerArray>(
+          kConstraintsListInterTopic, kLatestOnlyPublisherQueueSize);
   service_servers_.push_back(node_handle_.advertiseService(
       kSubmapQueryServiceName, &Node::HandleSubmapQuery, this));
   service_servers_.push_back(node_handle_.advertiseService(
@@ -119,6 +125,9 @@ Node::Node(const NodeOptions& node_options, tf2_ros::Buffer* const tf_buffer)
   wall_timers_.push_back(node_handle_.createWallTimer(
       ::ros::WallDuration(node_options_.trajectory_publish_period_sec),
       &Node::PublishTrajectoryNodesList, this));
+  wall_timers_.push_back(node_handle_.createWallTimer(
+      ::ros::WallDuration(node_options_.submap_publish_period_sec),
+      &Node::PublishConstraintsList, this));
 }
 
 Node::~Node() {
@@ -215,6 +224,17 @@ void Node::PublishTrajectoryNodesList(
     trajectory_nodes_list_publisher_.publish(
         map_builder_bridge_.GetTrajectoryNodesList());
   }
+}
+
+void Node::PublishConstraintsList(
+    const ::ros::WallTimerEvent& unused_timer_event) {
+  carto::common::MutexLocker lock(&mutex_);
+  constraints_inter_list_publisher_.publish(
+      map_builder_bridge_.GetConstraintsList(
+          cartographer::mapping::SparsePoseGraph::Constraint::INTER_SUBMAP));
+  constraints_intra_list_publisher_.publish(
+      map_builder_bridge_.GetConstraintsList(
+          cartographer::mapping::SparsePoseGraph::Constraint::INTRA_SUBMAP));
 }
 
 void Node::SpinOccupancyGridThreadForever() {
