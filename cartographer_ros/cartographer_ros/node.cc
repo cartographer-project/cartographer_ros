@@ -40,6 +40,7 @@
 #include "ros/serialization.h"
 #include "sensor_msgs/PointCloud2.h"
 #include "tf2_eigen/tf2_eigen.h"
+#include "visualization_msgs/MarkerArray.h"
 
 namespace cartographer_ros {
 
@@ -112,6 +113,10 @@ Node::Node(const NodeOptions& node_options, tf2_ros::Buffer* const tf_buffer)
   service_servers_.push_back(node_handle_.advertiseService(
       kWriteAssetsServiceName, &Node::HandleWriteAssets, this));
 
+  trajectory_nodes_list_publisher_ =
+      node_handle_.advertise<::visualization_msgs::MarkerArray>(
+          kTrajectoryNodesListTopic, kLatestOnlyPublisherQueueSize);
+
   if (node_options_.map_builder_options.use_trajectory_builder_2d()) {
     occupancy_grid_publisher_ =
         node_handle_.advertise<::nav_msgs::OccupancyGrid>(
@@ -131,6 +136,9 @@ Node::Node(const NodeOptions& node_options, tf2_ros::Buffer* const tf_buffer)
   wall_timers_.push_back(node_handle_.createWallTimer(
       ::ros::WallDuration(node_options_.pose_publish_period_sec),
       &Node::PublishTrajectoryStates, this));
+  wall_timers_.push_back(node_handle_.createWallTimer(
+      ::ros::WallDuration(node_options_.submap_publish_period_sec),
+      &Node::PublishTrajectoryNodesList, this));
 }
 
 Node::~Node() {
@@ -218,6 +226,13 @@ void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
       }
     }
   }
+}
+
+void Node::PublishTrajectoryNodesList(
+    const ::ros::WallTimerEvent& unused_timer_event) {
+  carto::common::MutexLocker lock(&mutex_);
+  trajectory_nodes_list_publisher_.publish(
+      map_builder_bridge_.GetTrajectoryNodesList());
 }
 
 void Node::SpinOccupancyGridThreadForever() {

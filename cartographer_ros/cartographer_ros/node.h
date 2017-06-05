@@ -51,6 +51,7 @@ constexpr char kSubmapListTopic[] = "submap_list";
 constexpr char kSubmapQueryServiceName[] = "submap_query";
 constexpr char kStartTrajectoryServiceName[] = "start_trajectory";
 constexpr char kWriteAssetsServiceName[] = "write_assets";
+constexpr char kTrajectoryNodesListTopic[] = "trajectory_nodes_list";
 
 // Wires up ROS topics to SLAM.
 class Node {
@@ -90,6 +91,7 @@ class Node {
                          int trajectory_id);
   void PublishSubmapList(const ::ros::WallTimerEvent& timer_event);
   void PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event);
+  void PublishTrajectoryNodesList(const ::ros::WallTimerEvent& timer_event);
   void SpinOccupancyGridThreadForever();
   bool ValidateTrajectoryOptions(const TrajectoryOptions& options);
   bool ValidateTopicName(const ::cartographer_ros_msgs::SensorTopics& topics,
@@ -122,6 +124,7 @@ class Node {
   std::thread occupancy_grid_thread_;
   bool terminating_ = false GUARDED_BY(mutex_);
 
+  ::ros::Publisher trajectory_nodes_list_publisher_;
   // We have to keep the timer handles of ::ros::WallTimers around, otherwise
   // they do not fire.
   std::vector<::ros::WallTimer> wall_timers_;

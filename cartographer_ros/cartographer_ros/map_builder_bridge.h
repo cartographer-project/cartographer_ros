@@ -31,6 +31,8 @@
 #include "cartographer_ros_msgs/SubmapList.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
 #include "nav_msgs/OccupancyGrid.h"
+#include "visualization_msgs/Marker.h"
+#include "visualization_msgs/MarkerArray.h"
 
 namespace cartographer_ros {
 
@@ -63,6 +65,7 @@ class MapBuilderBridge {
 
   SensorBridge* sensor_bridge(int trajectory_id);
 
+  visualization_msgs::MarkerArray GetTrajectoryNodesList();
  private:
   const NodeOptions node_options_;
   cartographer::mapping::MapBuilder map_builder_;
