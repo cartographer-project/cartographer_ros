@@ -209,7 +209,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
     marker.header.frame_id = node_options_.map_frame;
     marker.color.b = 1.0;
     marker.color.a = 1.0;
-    marker.scale.x = 0.1;
+    marker.scale.x = 0.07;
     marker.pose.orientation.w = 1.0;
     for (const auto& node : single_trajectory) {
       marker.points.push_back(
