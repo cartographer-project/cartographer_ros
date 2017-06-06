@@ -230,8 +230,10 @@ void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
 void Node::PublishTrajectoryNodesList(
     const ::ros::WallTimerEvent& unused_timer_event) {
   carto::common::MutexLocker lock(&mutex_);
-  trajectory_nodes_list_publisher_.publish(
-      map_builder_bridge_.GetTrajectoryNodesList());
+  if (trajectory_nodes_list_publisher_.getNumSubscribers() > 0) {
+    trajectory_nodes_list_publisher_.publish(
+        map_builder_bridge_.GetTrajectoryNodesList());
+  }
 }
 
 void Node::SpinOccupancyGridThreadForever() {
