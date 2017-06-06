@@ -65,6 +65,7 @@ class MapBuilderBridge {
   SensorBridge* sensor_bridge(int trajectory_id);
 
   visualization_msgs::MarkerArray GetTrajectoryNodesList();
+
  private:
   const NodeOptions node_options_;
   cartographer::mapping::MapBuilder map_builder_;
