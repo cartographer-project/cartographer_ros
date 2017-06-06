@@ -137,7 +137,7 @@ Node::Node(const NodeOptions& node_options, tf2_ros::Buffer* const tf_buffer)
       ::ros::WallDuration(node_options_.pose_publish_period_sec),
       &Node::PublishTrajectoryStates, this));
   wall_timers_.push_back(node_handle_.createWallTimer(
-      ::ros::WallDuration(node_options_.submap_publish_period_sec),
+      ::ros::WallDuration(node_options_.trajectory_publish_period_sec),
       &Node::PublishTrajectoryNodesList, this));
 }
 
