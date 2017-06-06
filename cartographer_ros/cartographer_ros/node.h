@@ -106,6 +106,7 @@ class Node {
 
   ::ros::NodeHandle node_handle_;
   ::ros::Publisher submap_list_publisher_;
+  ::ros::Publisher trajectory_nodes_list_publisher_;
   // These ros::ServiceServers need to live for the lifetime of the node.
   std::vector<::ros::ServiceServer> service_servers_;
   ::ros::Publisher scan_matched_point_cloud_publisher_;
@@ -124,7 +125,6 @@ class Node {
   std::thread occupancy_grid_thread_;
   bool terminating_ = false GUARDED_BY(mutex_);
 
-  ::ros::Publisher trajectory_nodes_list_publisher_;
   // We have to keep the timer handles of ::ros::WallTimers around, otherwise
   // they do not fire.
   std::vector<::ros::WallTimer> wall_timers_;

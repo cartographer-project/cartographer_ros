@@ -104,6 +104,9 @@ Node::Node(const NodeOptions& node_options, tf2_ros::Buffer* const tf_buffer)
   submap_list_publisher_ =
       node_handle_.advertise<::cartographer_ros_msgs::SubmapList>(
           kSubmapListTopic, kLatestOnlyPublisherQueueSize);
+  trajectory_nodes_list_publisher_ =
+      node_handle_.advertise<::visualization_msgs::MarkerArray>(
+          kTrajectoryNodesListTopic, kLatestOnlyPublisherQueueSize);
   service_servers_.push_back(node_handle_.advertiseService(
       kSubmapQueryServiceName, &Node::HandleSubmapQuery, this));
   service_servers_.push_back(node_handle_.advertiseService(
@@ -112,10 +115,6 @@ Node::Node(const NodeOptions& node_options, tf2_ros::Buffer* const tf_buffer)
       kFinishTrajectoryServiceName, &Node::HandleFinishTrajectory, this));
   service_servers_.push_back(node_handle_.advertiseService(
       kWriteAssetsServiceName, &Node::HandleWriteAssets, this));
-
-  trajectory_nodes_list_publisher_ =
-      node_handle_.advertise<::visualization_msgs::MarkerArray>(
-          kTrajectoryNodesListTopic, kLatestOnlyPublisherQueueSize);
 
   if (node_options_.map_builder_options.use_trajectory_builder_2d()) {
     occupancy_grid_publisher_ =

@@ -31,7 +31,6 @@
 #include "cartographer_ros_msgs/SubmapList.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
 #include "nav_msgs/OccupancyGrid.h"
-#include "visualization_msgs/Marker.h"
 #include "visualization_msgs/MarkerArray.h"
 
 namespace cartographer_ros {
