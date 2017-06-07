@@ -23,6 +23,7 @@
 
 #include "cartographer/mapping/map_builder.h"
 #include "cartographer/mapping/proto/trajectory_builder_options.pb.h"
+#include "cartographer_ros/color_manager.h"
 #include "cartographer_ros/node_options.h"
 #include "cartographer_ros/sensor_bridge.h"
 #include "cartographer_ros/tf_bridge.h"
@@ -70,6 +71,7 @@ class MapBuilderBridge {
   const NodeOptions node_options_;
   cartographer::mapping::MapBuilder map_builder_;
   tf2_ros::Buffer* const tf_buffer_;
+  cartographer_ros::ColorManager trajectory_color_manager_;
 
   // These are keyed with 'trajectory_id'.
   std::unordered_map<int, TrajectoryOptions> trajectory_options_;

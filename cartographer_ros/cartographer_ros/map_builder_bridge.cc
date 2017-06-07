@@ -24,12 +24,18 @@
 namespace cartographer_ros {
 
 constexpr double kTrajectoryLineStripMarkerScale = 0.07;
+constexpr double kTrajectoryColorManagerInitialHue = 0.69;
+constexpr double kTrajectoryColorManagerSaturation = 0.8;
+constexpr double kTrajectoryColorManagerValue = 0.75;
 
 MapBuilderBridge::MapBuilderBridge(const NodeOptions& node_options,
                                    tf2_ros::Buffer* const tf_buffer)
     : node_options_(node_options),
       map_builder_(node_options.map_builder_options),
-      tf_buffer_(tf_buffer) {}
+      tf_buffer_(tf_buffer),
+      trajectory_color_manager_(kTrajectoryColorManagerInitialHue,
+                                kTrajectoryColorManagerSaturation,
+                                kTrajectoryColorManagerValue) {}
 
 int MapBuilderBridge::AddTrajectory(
     const std::unordered_set<string>& expected_sensor_ids,
@@ -208,11 +214,15 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
   int marker_id = 0;
   for (const auto& single_trajectory : trajectory_nodes) {
     visualization_msgs::Marker marker;
-    marker.id = marker_id++;
+    marker.id = marker_id;
     marker.type = visualization_msgs::Marker::LINE_STRIP;
     marker.header.stamp = ::ros::Time::now();
     marker.header.frame_id = node_options_.map_frame;
-    marker.color.b = 1.0;
+    ColorManager::rgb trajectory_color =
+        trajectory_color_manager_.get_color(marker_id);
+    marker.color.r = (float)trajectory_color.r;
+    marker.color.g = (float)trajectory_color.g;
+    marker.color.b = (float)trajectory_color.b;
     marker.color.a = 1.0;
     marker.scale.x = kTrajectoryLineStripMarkerScale;
     marker.pose.orientation.w = 1.0;
@@ -231,6 +241,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
       }
     }
     trajectory_nodes_list.markers.push_back(marker);
+    marker_id++;
   }
   return trajectory_nodes_list;
 }
