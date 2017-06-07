@@ -192,10 +192,6 @@ MapBuilderBridge::GetTrajectoryStates() {
   return trajectory_states;
 }
 
-SensorBridge* MapBuilderBridge::sensor_bridge(const int trajectory_id) {
-  return sensor_bridges_.at(trajectory_id).get();
-}
-
 visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
   visualization_msgs::MarkerArray trajectory_nodes_list;
   const auto trajectory_nodes =
@@ -218,6 +214,10 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
     trajectory_nodes_list.markers.push_back(marker);
   }
   return trajectory_nodes_list;
+}
+
+SensorBridge* MapBuilderBridge::sensor_bridge(const int trajectory_id) {
+  return sensor_bridges_.at(trajectory_id).get();
 }
 
 }  // namespace cartographer_ros
