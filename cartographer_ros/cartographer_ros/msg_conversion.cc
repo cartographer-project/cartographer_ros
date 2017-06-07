@@ -225,9 +225,7 @@ geometry_msgs::Transform ToGeometryMsgTransform(const Rigid3d& rigid3d) {
 
 geometry_msgs::Pose ToGeometryMsgPose(const Rigid3d& rigid3d) {
   geometry_msgs::Pose pose;
-  pose.position.x = rigid3d.translation().x();
-  pose.position.y = rigid3d.translation().y();
-  pose.position.z = rigid3d.translation().z();
+  pose.position = ToGeometryMsgPoint(rigid3d);
   pose.orientation.w = rigid3d.rotation().w();
   pose.orientation.x = rigid3d.rotation().x();
   pose.orientation.y = rigid3d.rotation().y();
