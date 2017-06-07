@@ -23,6 +23,8 @@
 
 namespace cartographer_ros {
 
+constexpr double kTrajectoryLineStripMarkerScale = 0.07;
+
 MapBuilderBridge::MapBuilderBridge(const NodeOptions& node_options,
                                    tf2_ros::Buffer* const tf_buffer)
     : node_options_(node_options),
@@ -205,7 +207,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
     marker.header.frame_id = node_options_.map_frame;
     marker.color.b = 1.0;
     marker.color.a = 1.0;
-    marker.scale.x = 0.07;
+    marker.scale.x = kTrajectoryLineStripMarkerScale;
     marker.pose.orientation.w = 1.0;
     for (const auto& node : single_trajectory) {
       marker.points.push_back(
