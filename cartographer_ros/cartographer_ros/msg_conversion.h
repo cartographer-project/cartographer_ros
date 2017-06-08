@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_ROS_GOOGLE_CARTOGRAPHER_SRC_MSG_CONVERSION_H_
-#define CARTOGRAPHER_ROS_GOOGLE_CARTOGRAPHER_SRC_MSG_CONVERSION_H_
+#ifndef CARTOGRAPHER_ROS_MSG_CONVERSION_H_
+#define CARTOGRAPHER_ROS_MSG_CONVERSION_H_
 
 #include "cartographer/common/port.h"
 #include "cartographer/kalman_filter/pose_tracker.h"
@@ -69,4 +69,4 @@ Eigen::Quaterniond ToEigen(const geometry_msgs::Quaternion& quaternion);
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAPHER_ROS_GOOGLE_CARTOGRAPHER_SRC_MSG_CONVERSION_H_
+#endif  // CARTOGRAPHER_ROS_MSG_CONVERSION_H_
