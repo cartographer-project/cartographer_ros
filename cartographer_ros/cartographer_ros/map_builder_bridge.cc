@@ -59,22 +59,29 @@ void MapBuilderBridge::FinishTrajectory(const int trajectory_id) {
   sensor_bridges_.erase(trajectory_id);
 }
 
+void MapBuilderBridge::SerializeState(const std::string& stem) {
+  std::ofstream proto_file(stem + ".pb",
+                           std::ios_base::out | std::ios_base::binary);
+  CHECK(map_builder_.sparse_pose_graph()->ToProto().SerializeToOstream(
+      &proto_file))
+      << "Could not serialize pose graph.";
+  proto_file.close();
+  CHECK(proto_file) << "Could not write pose graph.";
+}
+
 void MapBuilderBridge::WriteAssets(const string& stem) {
-  std::vector<::cartographer::mapping::TrajectoryNode> trajectory_nodes;
-  for (const auto& single_trajectory :
-       map_builder_.sparse_pose_graph()->GetTrajectoryNodes()) {
-    trajectory_nodes.insert(trajectory_nodes.end(), single_trajectory.begin(),
-                            single_trajectory.end());
-  }
-  if (trajectory_nodes.empty()) {
+  const auto trajectory_nodes =
+      map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
+  // TODO(yutakaoka): Add multi-trajectory support.
+  CHECK_EQ(trajectory_options_.count(0), 1);
+  CHECK_EQ(trajectory_nodes.size(), 1);
+  if (trajectory_nodes[0].empty()) {
     LOG(WARNING) << "No data was collected and no assets will be written.";
   } else {
     LOG(INFO) << "Writing assets with stem '" << stem << "'...";
-    // TODO(yutakaoka): Add multi-trajectory support.
-    CHECK_EQ(trajectory_options_.count(0), 1);
     if (node_options_.map_builder_options.use_trajectory_builder_2d()) {
       Write2DAssets(
-          trajectory_nodes, node_options_.map_frame,
+          trajectory_nodes[0], node_options_.map_frame,
           trajectory_options_[0]
               .trajectory_builder_options.trajectory_builder_2d_options()
               .submaps_options(),
@@ -83,7 +90,7 @@ void MapBuilderBridge::WriteAssets(const string& stem) {
 
     if (node_options_.map_builder_options.use_trajectory_builder_3d()) {
       Write3DAssets(
-          trajectory_nodes,
+          trajectory_nodes[0],
           trajectory_options_[0]
               .trajectory_builder_options.trajectory_builder_3d_options()
               .submaps_options()

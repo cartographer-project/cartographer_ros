@@ -26,6 +26,7 @@
 #include "cartographer/io/file_writer.h"
 #include "cartographer/io/points_processor.h"
 #include "cartographer/io/points_processor_pipeline_builder.h"
+#include "cartographer/mapping/proto/sparse_pose_graph.pb.h"
 #include "cartographer/sensor/point_cloud.h"
 #include "cartographer/sensor/range_data.h"
 #include "cartographer/transform/transform_interpolation_buffer.h"
@@ -55,8 +56,8 @@ DEFINE_string(
     "URDF file that contains static links for your sensor configuration.");
 DEFINE_string(bag_filename, "", "Bag to process.");
 DEFINE_string(
-    trajectory_filename, "",
-    "Proto containing the trajectory written by /finish_trajectory service.");
+    pose_graph_filename, "",
+    "Proto containing the pose graph written by /write_assets service.");
 DEFINE_bool(use_bag_transforms, true,
             "Whether to read and use the transforms from the bag.");
 
@@ -134,7 +135,7 @@ void HandleMessage(
   pipeline.back()->Process(std::move(batch));
 }
 
-void Run(const string& trajectory_filename, const string& bag_filename,
+void Run(const string& pose_graph_filename, const string& bag_filename,
          const string& configuration_directory,
          const string& configuration_basename, const string& urdf_filename) {
   auto file_resolver =
@@ -145,9 +146,15 @@ void Run(const string& trajectory_filename, const string& bag_filename,
   carto::common::LuaParameterDictionary lua_parameter_dictionary(
       code, std::move(file_resolver));
 
-  std::ifstream stream(trajectory_filename.c_str());
-  carto::mapping::proto::Trajectory trajectory_proto;
-  CHECK(trajectory_proto.ParseFromIstream(&stream));
+  std::ifstream stream(pose_graph_filename.c_str());
+  carto::mapping::proto::SparsePoseGraph pose_graph_proto;
+  CHECK(pose_graph_proto.ParseFromIstream(&stream));
+  CHECK_EQ(pose_graph_proto.trajectory_size(), 1)
+      << "Only pose graphs containing a single trajectory are supported.";
+  const carto::mapping::proto::Trajectory& trajectory_proto =
+      pose_graph_proto.trajectory(0);
+  CHECK_GT(trajectory_proto.node_size(), 0)
+      << "Trajectory does not contain any nodes.";
 
   const auto file_writer_factory = [](const string& filename) {
     return carto::common::make_unique<carto::io::StreamFileWriter>(filename);
@@ -222,10 +229,10 @@ int main(int argc, char** argv) {
   CHECK(!FLAGS_configuration_basename.empty())
       << "-configuration_basename is missing.";
   CHECK(!FLAGS_bag_filename.empty()) << "-bag_filename is missing.";
-  CHECK(!FLAGS_trajectory_filename.empty())
-      << "-trajectory_filename is missing.";
+  CHECK(!FLAGS_pose_graph_filename.empty())
+      << "-pose_graph_filename is missing.";
 
-  ::cartographer_ros::Run(FLAGS_trajectory_filename, FLAGS_bag_filename,
+  ::cartographer_ros::Run(FLAGS_pose_graph_filename, FLAGS_bag_filename,
                           FLAGS_configuration_directory,
                           FLAGS_configuration_basename, FLAGS_urdf_filename);
 }
