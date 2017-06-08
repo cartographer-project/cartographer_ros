@@ -211,14 +211,16 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
   const auto trajectory_nodes =
       map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
   int marker_id = 0;
-  for (const auto& single_trajectory : trajectory_nodes) {
+  for (int trajectory_id = 0; trajectory_id < (int)trajectory_nodes.size();
+       trajectory_id++) {
+    const auto& single_trajectory = trajectory_nodes[trajectory_id];
     visualization_msgs::Marker marker;
-    marker.id = marker_id;
+    marker.id = marker_id++;
     marker.type = visualization_msgs::Marker::LINE_STRIP;
     marker.header.stamp = ::ros::Time::now();
     marker.header.frame_id = node_options_.map_frame;
     ColorManager::ColorRGB trajectory_color =
-        trajectory_color_manager_.GetColor(marker_id);
+        trajectory_color_manager_.GetColor(trajectory_id);
     marker.color.r = (float)trajectory_color.r;
     marker.color.g = (float)trajectory_color.g;
     marker.color.b = (float)trajectory_color.b;
@@ -240,7 +242,6 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
       }
     }
     trajectory_nodes_list.markers.push_back(marker);
-    marker_id++;
   }
   return trajectory_nodes_list;
 }
