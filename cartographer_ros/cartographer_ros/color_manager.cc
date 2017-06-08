@@ -24,9 +24,9 @@ ColorManager::ColorManager(const double initial_hue, const double saturation,
                            const double value)
     : current_hue_(initial_hue), saturation_(saturation), value_(value) {}
 
-ColorManager::rgb ColorManager::hsv_to_rgb(const double h, const double s,
-                                           const double v) {
-  rgb out_rgb;
+ColorManager::ColorRGB ColorManager::HSVToRGB(const double h, const double s,
+                                              const double v) {
+  ColorRGB out_rgb;
   double p, q, t, f, h_6;
 
   h_6 = (h == 1.) ? 0. : 6 * h;
@@ -55,21 +55,21 @@ ColorManager::rgb ColorManager::hsv_to_rgb(const double h, const double s,
   return out_rgb;
 }
 
-ColorManager::rgb ColorManager::get_next_color() {
+ColorManager::ColorRGB ColorManager::GetNextColor() {
   // Uniform color sampling using the golden ratio from
   // http://martin.ankerl.com/2009/12/09/how-to-create-random-colors-programmatically/
   constexpr double golden_ratio_conjugate = (std::sqrt(5) - 1) / 2.;
-  rgb next_color = hsv_to_rgb(current_hue_, saturation_, value_);
+  ColorRGB next_color = HSVToRGB(current_hue_, saturation_, value_);
   current_hue_ += golden_ratio_conjugate;
   current_hue_ = std::fmod(current_hue_, 1.);
   generated_colors_.push_back(next_color);
   return next_color;
 }
 
-ColorManager::rgb ColorManager::get_color(int id) {
+ColorManager::ColorRGB ColorManager::GetColor(int id) {
   CHECK_GE(id, 0);
   while ((int)generated_colors_.size() <= id) {
-    get_next_color();
+    GetNextColor();
   }
   return generated_colors_[id];
 }

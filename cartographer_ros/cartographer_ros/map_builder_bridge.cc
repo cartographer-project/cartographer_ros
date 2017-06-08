@@ -217,8 +217,8 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
     marker.type = visualization_msgs::Marker::LINE_STRIP;
     marker.header.stamp = ::ros::Time::now();
     marker.header.frame_id = node_options_.map_frame;
-    ColorManager::rgb trajectory_color =
-        trajectory_color_manager_.get_color(marker_id);
+    ColorManager::ColorRGB trajectory_color =
+        trajectory_color_manager_.GetColor(marker_id);
     marker.color.r = (float)trajectory_color.r;
     marker.color.g = (float)trajectory_color.g;
     marker.color.b = (float)trajectory_color.b;

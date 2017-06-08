@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_ROS_GOOGLE_CARTOGRAPHER_SRC_COLOR_MANAGER_H_
-#define CARTOGRAPHER_ROS_GOOGLE_CARTOGRAPHER_SRC_COLOR_MANAGER_H_
+#ifndef CARTOGRAPHER_ROS_COLOR_MANAGER_H_
+#define CARTOGRAPHER_ROS_COLOR_MANAGER_H_
 
 #include <vector>
 
@@ -23,31 +23,30 @@ namespace cartographer_ros {
 
 class ColorManager {
  public:
-  /** A class for online generation of a colour palette, with every two direct
-  **  successors having large contrast. All parameters are from [0, 1].
-  **/
+  // A class for online generation of a colour palette, with every two direct
+  //  successors having large contrast. All parameters are from [0, 1].
   ColorManager(const double initial_hue, const double saturation,
                const double value);
 
-  struct rgb {
+  struct ColorRGB {
     // r, g, b are from [0,1]
     double r;
     double g;
     double b;
   };
 
-  rgb get_next_color();
-  rgb get_color(int id);
+  ColorRGB GetNextColor();
+  ColorRGB GetColor(int id);
 
  private:
   double current_hue_;
   double saturation_;
   double value_;
-  std::vector<rgb> generated_colors_;
+  std::vector<ColorRGB> generated_colors_;
 
-  rgb hsv_to_rgb(const double h, const double s, const double v);
+  ColorRGB HSVToRGB(const double h, const double s, const double v);
 };
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAPHER_ROS_GOOGLE_CARTOGRAPHER_SRC_COLOR_MANAGER_H_
+#endif  // CARTOGRAPHER_ROS_COLOR_MANAGER_H_
