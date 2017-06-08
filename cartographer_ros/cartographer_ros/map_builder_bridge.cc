@@ -24,7 +24,6 @@
 namespace cartographer_ros {
 
 constexpr double kTrajectoryLineStripMarkerScale = 0.07;
-constexpr double kTrajectoryColorManagerInitialHue = 0.69;
 constexpr double kTrajectoryColorManagerSaturation = 0.8;
 constexpr double kTrajectoryColorManagerValue = 0.75;
 
@@ -33,7 +32,7 @@ MapBuilderBridge::MapBuilderBridge(const NodeOptions& node_options,
     : node_options_(node_options),
       map_builder_(node_options.map_builder_options),
       tf_buffer_(tf_buffer),
-      trajectory_color_manager_(kTrajectoryColorManagerInitialHue,
+      trajectory_color_manager_(node_options.trajectory_hue_first,
                                 kTrajectoryColorManagerSaturation,
                                 kTrajectoryColorManagerValue) {}
 

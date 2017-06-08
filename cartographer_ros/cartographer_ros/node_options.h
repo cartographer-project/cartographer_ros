@@ -33,6 +33,7 @@ struct NodeOptions {
   double submap_publish_period_sec;
   double pose_publish_period_sec;
   double trajectory_publish_period_sec;
+  double trajectory_hue_first;
 };
 
 NodeOptions CreateNodeOptions(
