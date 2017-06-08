@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_ROS_GOOGLE_CARTOGRAPHER_SRC_TIME_CONVERSION_H_
-#define CARTOGRAPHER_ROS_GOOGLE_CARTOGRAPHER_SRC_TIME_CONVERSION_H_
+#ifndef CARTOGRAPHER_ROS_TIME_CONVERSION_H_
+#define CARTOGRAPHER_ROS_TIME_CONVERSION_H_
 
 #include "cartographer/common/time.h"
 #include "ros/ros.h"
@@ -28,4 +28,4 @@ namespace cartographer_ros {
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAPHER_ROS_GOOGLE_CARTOGRAPHER_SRC_TIME_CONVERSION_H_
+#endif  // CARTOGRAPHER_ROS_TIME_CONVERSION_H_
