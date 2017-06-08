@@ -44,6 +44,8 @@ geometry_msgs::Transform ToGeometryMsgTransform(
 geometry_msgs::Pose ToGeometryMsgPose(
     const ::cartographer::transform::Rigid3d& rigid3d);
 
+geometry_msgs::Point ToGeometryMsgPoint(const Eigen::Vector3d& vector3d);
+
 ::cartographer::sensor::PointCloudWithIntensities ToPointCloudWithIntensities(
     const sensor_msgs::LaserScan& msg);
 

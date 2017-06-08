@@ -23,6 +23,8 @@
 
 namespace cartographer_ros {
 
+constexpr double kTrajectoryLineStripMarkerScale = 0.07;
+
 MapBuilderBridge::MapBuilderBridge(const NodeOptions& node_options,
                                    tf2_ros::Buffer* const tf_buffer)
     : node_options_(node_options),
@@ -190,6 +192,30 @@ MapBuilderBridge::GetTrajectoryStates() {
         trajectory_options_[trajectory_id]};
   }
   return trajectory_states;
+}
+
+visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
+  visualization_msgs::MarkerArray trajectory_nodes_list;
+  const auto trajectory_nodes =
+      map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
+  int marker_id = 0;
+  for (const auto& single_trajectory : trajectory_nodes) {
+    visualization_msgs::Marker marker;
+    marker.id = marker_id++;
+    marker.type = visualization_msgs::Marker::LINE_STRIP;
+    marker.header.stamp = ::ros::Time::now();
+    marker.header.frame_id = node_options_.map_frame;
+    marker.color.b = 1.0;
+    marker.color.a = 1.0;
+    marker.scale.x = kTrajectoryLineStripMarkerScale;
+    marker.pose.orientation.w = 1.0;
+    for (const auto& node : single_trajectory) {
+      marker.points.push_back(ToGeometryMsgPoint(
+          (node.pose * node.constant_data->tracking_to_pose).translation()));
+    }
+    trajectory_nodes_list.markers.push_back(marker);
+  }
+  return trajectory_nodes_list;
 }
 
 SensorBridge* MapBuilderBridge::sensor_bridge(const int trajectory_id) {

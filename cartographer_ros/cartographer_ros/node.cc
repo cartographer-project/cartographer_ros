@@ -40,6 +40,7 @@
 #include "ros/serialization.h"
 #include "sensor_msgs/PointCloud2.h"
 #include "tf2_eigen/tf2_eigen.h"
+#include "visualization_msgs/MarkerArray.h"
 
 namespace cartographer_ros {
 
@@ -103,6 +104,9 @@ Node::Node(const NodeOptions& node_options, tf2_ros::Buffer* const tf_buffer)
   submap_list_publisher_ =
       node_handle_.advertise<::cartographer_ros_msgs::SubmapList>(
           kSubmapListTopic, kLatestOnlyPublisherQueueSize);
+  trajectory_nodes_list_publisher_ =
+      node_handle_.advertise<::visualization_msgs::MarkerArray>(
+          kTrajectoryNodesListTopic, kLatestOnlyPublisherQueueSize);
   service_servers_.push_back(node_handle_.advertiseService(
       kSubmapQueryServiceName, &Node::HandleSubmapQuery, this));
   service_servers_.push_back(node_handle_.advertiseService(
@@ -131,6 +135,9 @@ Node::Node(const NodeOptions& node_options, tf2_ros::Buffer* const tf_buffer)
   wall_timers_.push_back(node_handle_.createWallTimer(
       ::ros::WallDuration(node_options_.pose_publish_period_sec),
       &Node::PublishTrajectoryStates, this));
+  wall_timers_.push_back(node_handle_.createWallTimer(
+      ::ros::WallDuration(node_options_.trajectory_publish_period_sec),
+      &Node::PublishTrajectoryNodesList, this));
 }
 
 Node::~Node() {
@@ -217,6 +224,15 @@ void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
         tf_broadcaster_.sendTransform(stamped_transform);
       }
     }
+  }
+}
+
+void Node::PublishTrajectoryNodesList(
+    const ::ros::WallTimerEvent& unused_timer_event) {
+  carto::common::MutexLocker lock(&mutex_);
+  if (trajectory_nodes_list_publisher_.getNumSubscribers() > 0) {
+    trajectory_nodes_list_publisher_.publish(
+        map_builder_bridge_.GetTrajectoryNodesList());
   }
 }
 
