@@ -210,8 +210,8 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
     marker.scale.x = kTrajectoryLineStripMarkerScale;
     marker.pose.orientation.w = 1.0;
     for (const auto& node : single_trajectory) {
-      marker.points.push_back(
-          ToGeometryMsgPoint(node.pose * node.constant_data->tracking_to_pose));
+      marker.points.push_back(ToGeometryMsgPoint(
+          (node.pose * node.constant_data->tracking_to_pose).translation()));
     }
     trajectory_nodes_list.markers.push_back(marker);
   }

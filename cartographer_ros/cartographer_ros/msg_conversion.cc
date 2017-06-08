@@ -225,7 +225,7 @@ geometry_msgs::Transform ToGeometryMsgTransform(const Rigid3d& rigid3d) {
 
 geometry_msgs::Pose ToGeometryMsgPose(const Rigid3d& rigid3d) {
   geometry_msgs::Pose pose;
-  pose.position = ToGeometryMsgPoint(rigid3d);
+  pose.position = ToGeometryMsgPoint(rigid3d.translation());
   pose.orientation.w = rigid3d.rotation().w();
   pose.orientation.x = rigid3d.rotation().x();
   pose.orientation.y = rigid3d.rotation().y();
@@ -233,11 +233,11 @@ geometry_msgs::Pose ToGeometryMsgPose(const Rigid3d& rigid3d) {
   return pose;
 }
 
-geometry_msgs::Point ToGeometryMsgPoint(const Rigid3d& rigid3d) {
+geometry_msgs::Point ToGeometryMsgPoint(const Eigen::Vector3d& vector3d) {
   geometry_msgs::Point point;
-  point.x = rigid3d.translation().x();
-  point.y = rigid3d.translation().y();
-  point.z = rigid3d.translation().z();
+  point.x = vector3d.x();
+  point.y = vector3d.y();
+  point.z = vector3d.z();
   return point;
 }
 
