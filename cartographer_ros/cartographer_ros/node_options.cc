@@ -20,6 +20,8 @@
 
 namespace cartographer_ros {
 
+constexpr double kDefaultTrajectoryPublishPeriodSec = 30e-3;
+
 NodeOptions CreateNodeOptions(
     ::cartographer::common::LuaParameterDictionary* const
         lua_parameter_dictionary) {
@@ -35,7 +37,9 @@ NodeOptions CreateNodeOptions(
   options.pose_publish_period_sec =
       lua_parameter_dictionary->GetDouble("pose_publish_period_sec");
   options.trajectory_publish_period_sec =
-      lua_parameter_dictionary->GetDouble("trajectory_publish_period_sec");
+      lua_parameter_dictionary->HasKey("trajectory_publish_period_sec")
+          ? lua_parameter_dictionary->GetDouble("trajectory_publish_period_sec")
+          : kDefaultTrajectoryPublishPeriodSec;
 
   return options;
 }
