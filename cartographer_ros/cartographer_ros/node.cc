@@ -484,6 +484,7 @@ bool Node::HandleWriteAssets(
     ::cartographer_ros_msgs::WriteAssets::Request& request,
     ::cartographer_ros_msgs::WriteAssets::Response& response) {
   carto::common::MutexLocker lock(&mutex_);
+  map_builder_bridge_.SerializeState(request.stem);
   map_builder_bridge_.WriteAssets(request.stem);
   return true;
 }

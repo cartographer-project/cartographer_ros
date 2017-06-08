@@ -31,34 +31,6 @@
 
 namespace cartographer_ros {
 
-namespace {
-
-namespace carto = ::cartographer;
-
-void WriteTrajectory(const std::vector<::cartographer::mapping::TrajectoryNode>&
-                         trajectory_nodes,
-                     const std::string& stem) {
-  carto::mapping::proto::Trajectory trajectory;
-  // TODO(whess): Add multi-trajectory support.
-  for (const auto& node : trajectory_nodes) {
-    const auto& data = *node.constant_data;
-    auto* node_proto = trajectory.add_node();
-    node_proto->set_timestamp(carto::common::ToUniversal(data.time));
-    *node_proto->mutable_pose() =
-        carto::transform::ToProto(node.pose * data.tracking_to_pose);
-  }
-
-  // Write the trajectory.
-  std::ofstream proto_file(stem + ".pb",
-                           std::ios_base::out | std::ios_base::binary);
-  CHECK(trajectory.SerializeToOstream(&proto_file))
-      << "Could not serialize trajectory.";
-  proto_file.close();
-  CHECK(proto_file) << "Could not write trajectory.";
-}
-
-}  // namespace
-
 // Writes an occupancy grid.
 void Write2DAssets(
     const std::vector<::cartographer::mapping::TrajectoryNode>&
@@ -66,8 +38,6 @@ void Write2DAssets(
     const string& map_frame,
     const ::cartographer::mapping_2d::proto::SubmapsOptions& submaps_options,
     const std::string& stem) {
-  WriteTrajectory(trajectory_nodes, stem);
-
   ::nav_msgs::OccupancyGrid occupancy_grid;
   BuildOccupancyGrid2D(trajectory_nodes, map_frame, submaps_options,
                        &occupancy_grid);
@@ -79,8 +49,7 @@ void Write2DAssets(
 void Write3DAssets(const std::vector<::cartographer::mapping::TrajectoryNode>&
                        trajectory_nodes,
                    const double voxel_size, const std::string& stem) {
-  WriteTrajectory(trajectory_nodes, stem);
-
+  namespace carto = ::cartographer;
   const auto file_writer_factory = [](const string& filename) {
     return carto::common::make_unique<carto::io::StreamFileWriter>(filename);
   };
