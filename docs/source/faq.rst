@@ -51,3 +51,12 @@ To properly world align the resulting trajectory and map, gravity is used to def
 
 2. Roll and pitch can be derived quite well from IMU readings once the direction of gravity has been established.
 This saves work for the scan matcher by reducing the search window in these dimensions.
+
+How do I build Cartographer without the Rviz plugin?
+----------------------------------------------------
+
+By default Cartographer builds the Rviz plugin along with the rest of the code base, however on a system where you are not running Rviz, this may not be desirable as it requires install all of the Rviz dependencies.
+
+You can disable building of the Cartographer Rviz plugin by placing an empty file named `CATKIN_IGNORE` in the cartographer_rviz package in the cartographer_ros repository.
+Run `touch cartographer_rviz/CATKIN_IGNORE` from the cartographer_ros repository on your system.
+ 
