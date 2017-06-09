@@ -28,7 +28,7 @@ struct ColorRGB {
 
 // A function for on-demand generation of a colour palette, with every two
 // direct successors having large contrast. Initial hue is from [0, 1>.
-ColorRGB GetColor(int id, float initial_hue);
+ColorRGB GetColor(int id);
 
 ColorRGB HSVToRGB(const float h, const float s, const float v);
 

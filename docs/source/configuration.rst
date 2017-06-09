@@ -85,11 +85,6 @@ trajectory_publish_period_sec
   Interval in seconds at which to publish the trajectory markers, e.g. 30e-3
   for 30 milliseconds.
 
-trajectory_hue_first
-  Controls the color (hue) of the first trajectory (also affects the colors
-  of consecutive trajectories). The value needs to be from the interval
-  [0,1>. The default value is 0.69 (blue).
-
 .. _REP 105: http://www.ros.org/reps/rep-0105.html
 .. _ROS Names: http://wiki.ros.org/Names
 .. _nav_msgs/OccupancyGrid: http://docs.ros.org/api/nav_msgs/html/msg/OccupancyGrid.html

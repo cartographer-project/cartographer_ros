@@ -22,6 +22,7 @@
 
 namespace cartographer_ros {
 
+constexpr float kColorManagerInitialHue = 0.69;
 constexpr float kColorManagerSaturation = 0.85f;
 constexpr float kColorManagerValue = 0.77f;
 constexpr float kGoldenRatioConjugate = (std::sqrt(5) - 1) / 2.f;
@@ -52,11 +53,12 @@ ColorRGB HSVToRGB(const float h, const float s, const float v) {
   }
 }
 
-ColorRGB GetColor(int id, float initial_hue) {
+ColorRGB GetColor(int id) {
   CHECK_GE(id, 0);
   // Uniform color sampling using the golden ratio from
   // http://martin.ankerl.com/2009/12/09/how-to-create-random-colors-programmatically/
-  const float hue = std::fmod(initial_hue + kGoldenRatioConjugate * id, 1.f);
+  const float hue =
+      std::fmod(kColorManagerInitialHue + kGoldenRatioConjugate * id, 1.f);
   return HSVToRGB(hue, kColorManagerSaturation, kColorManagerValue);
 }
 

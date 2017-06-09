@@ -20,8 +20,6 @@
 
 namespace cartographer_ros {
 
-constexpr double kDefaultTrajectoryHue = 0.69;
-
 NodeOptions CreateNodeOptions(
     ::cartographer::common::LuaParameterDictionary* const
         lua_parameter_dictionary) {
@@ -38,10 +36,6 @@ NodeOptions CreateNodeOptions(
       lua_parameter_dictionary->GetDouble("pose_publish_period_sec");
   options.trajectory_publish_period_sec =
       lua_parameter_dictionary->GetDouble("trajectory_publish_period_sec");
-  options.trajectory_hue_first =
-      lua_parameter_dictionary->HasKey("trajectory_hue_first")
-          ? lua_parameter_dictionary->GetDouble("trajectory_hue_first")
-          : kDefaultTrajectoryHue;
 
   return options;
 }
