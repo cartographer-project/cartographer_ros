@@ -20,6 +20,8 @@
 
 #include "glog/logging.h"
 
+namespace cartographer_ros {
+
 namespace {
 
 constexpr float kInitialHue = 0.69;
@@ -55,8 +57,6 @@ constexpr float kGoldenRatioConjugate = (std::sqrt(5) - 1) / 2.f;
 }
 
 }  // namespace
-
-namespace cartographer_ros {
 
 ColorRgb GetColor(int id) {
   CHECK_GE(id, 0);
