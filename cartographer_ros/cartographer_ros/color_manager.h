@@ -25,26 +25,21 @@ class ColorManager {
  public:
   // A class for online generation of a colour palette, with every two direct
   //  successors having large contrast. All parameters are from [0, 1].
-  ColorManager(const double initial_hue, const double saturation,
-               const double value);
+  ColorManager(const float initial_hue);
 
   struct ColorRGB {
-    // r, g, b are from [0,1]
-    double r;
-    double g;
-    double b;
+    // r, g, b are from [0,1>
+    float r;
+    float g;
+    float b;
   };
 
-  ColorRGB GetNextColor();
   ColorRGB GetColor(int id);
 
  private:
-  double current_hue_;
-  double saturation_;
-  double value_;
-  std::vector<ColorRGB> generated_colors_;
+  float initial_hue_;
 
-  ColorRGB HSVToRGB(const double h, const double s, const double v);
+  ColorRGB HSVToRGB(const float h, const float s, const float v);
 };
 
 }  // namespace cartographer_ros
