@@ -427,9 +427,9 @@ bool Node::HandleStartTrajectory(
     return false;
   }
 
-  std::unordered_set<string> expected_sensor_ids;
   const int trajectory_id = AddTrajectory(options, request.topics);
   LaunchSubscribers(options, request.topics, trajectory_id);
+  response.trajectory_id = trajectory_id;
 
   is_active_trajectory_[trajectory_id] = true;
   return true;
@@ -446,6 +446,7 @@ void Node::StartTrajectoryWithDefaultTopics(const TrajectoryOptions& options) {
 
   const int trajectory_id = AddTrajectory(options, topics);
   LaunchSubscribers(options, topics, trajectory_id);
+  is_active_trajectory_[trajectory_id] = true;
 }
 
 bool Node::HandleFinishTrajectory(
