@@ -23,7 +23,6 @@
 
 #include "cartographer/mapping/map_builder.h"
 #include "cartographer/mapping/proto/trajectory_builder_options.pb.h"
-#include "cartographer_ros/color_manager.h"
 #include "cartographer_ros/node_options.h"
 #include "cartographer_ros/sensor_bridge.h"
 #include "cartographer_ros/tf_bridge.h"

@@ -17,6 +17,7 @@
 #include "cartographer_ros/map_builder_bridge.h"
 
 #include "cartographer_ros/assets_writer.h"
+#include "cartographer_ros/color.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/occupancy_grid.h"
 #include "cartographer_ros_msgs/TrajectorySubmapList.h"
@@ -208,14 +209,14 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
   int marker_id = 0;
   for (int trajectory_id = 0;
        trajectory_id < static_cast<int>(trajectory_nodes.size());
-       trajectory_id++) {
+       ++trajectory_id) {
     const auto& single_trajectory = trajectory_nodes[trajectory_id];
     visualization_msgs::Marker marker;
     marker.id = marker_id++;
     marker.type = visualization_msgs::Marker::LINE_STRIP;
     marker.header.stamp = ::ros::Time::now();
     marker.header.frame_id = node_options_.map_frame;
-    ColorRGB trajectory_color = GetColor(trajectory_id);
+    const ColorRgb trajectory_color = GetColor(trajectory_id);
     marker.color.r = trajectory_color.r;
     marker.color.g = trajectory_color.g;
     marker.color.b = trajectory_color.b;

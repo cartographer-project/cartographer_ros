@@ -14,20 +14,21 @@
  * limitations under the License.
  */
 
-#include "cartographer_ros/color_manager.h"
+#include "cartographer_ros/color.h"
 
 #include <cmath>
 
 #include "glog/logging.h"
 
-namespace cartographer_ros {
+namespace {
 
-constexpr float kColorManagerInitialHue = 0.69;
-constexpr float kColorManagerSaturation = 0.85f;
-constexpr float kColorManagerValue = 0.77f;
+constexpr float kInitialHue = 0.69;
+constexpr float kSaturation = 0.85f;
+constexpr float kValue = 0.77f;
 constexpr float kGoldenRatioConjugate = (std::sqrt(5) - 1) / 2.f;
 
-ColorRGB HSVToRGB(const float h, const float s, const float v) {
+::cartographer_ros::ColorRgb HsvToRgb(const float h, const float s,
+                                      const float v) {
   const float h_6 = (h == 1.f) ? 0.f : 6 * h;
   const int h_i = std::floor(h_6);
   const float f = h_6 - h_i;
@@ -53,13 +54,16 @@ ColorRGB HSVToRGB(const float h, const float s, const float v) {
   }
 }
 
-ColorRGB GetColor(int id) {
+}  // namespace
+
+namespace cartographer_ros {
+
+ColorRgb GetColor(int id) {
   CHECK_GE(id, 0);
   // Uniform color sampling using the golden ratio from
   // http://martin.ankerl.com/2009/12/09/how-to-create-random-colors-programmatically/
-  const float hue =
-      std::fmod(kColorManagerInitialHue + kGoldenRatioConjugate * id, 1.f);
-  return HSVToRGB(hue, kColorManagerSaturation, kColorManagerValue);
+  const float hue = std::fmod(kInitialHue + kGoldenRatioConjugate * id, 1.f);
+  return HsvToRgb(hue, kSaturation, kValue);
 }
 
 }  // namespace cartographer_ros

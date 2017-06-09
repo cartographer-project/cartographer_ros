@@ -19,7 +19,7 @@
 
 namespace cartographer_ros {
 
-struct ColorRGB {
+struct ColorRgb {
   // r, g, b are from [0,1]
   float r;
   float g;
@@ -28,9 +28,7 @@ struct ColorRGB {
 
 // A function for on-demand generation of a colour palette, with every two
 // direct successors having large contrast. Initial hue is from [0, 1>.
-ColorRGB GetColor(int id);
-
-ColorRGB HSVToRGB(const float h, const float s, const float v);
+ColorRgb GetColor(int id);
 
 }  // namespace cartographer_ros
 
