@@ -217,8 +217,18 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
     marker.scale.x = kTrajectoryLineStripMarkerScale;
     marker.pose.orientation.w = 1.0;
     for (const auto& node : single_trajectory) {
-      marker.points.push_back(ToGeometryMsgPoint(
-          (node.pose * node.constant_data->tracking_to_pose).translation()));
+      const ::geometry_msgs::Point node_point = ToGeometryMsgPoint(
+          (node.pose * node.constant_data->tracking_to_pose).translation());
+      marker.points.push_back(node_point);
+      // Work around the 16384 point limit in rviz by splitting the
+      // trajectory into multiple markers.
+      if (marker.points.size() == 16384) {
+        trajectory_nodes_list.markers.push_back(marker);
+        marker.id = marker_id++;
+        marker.points.clear();
+        // Push back the last point, so the two markers appear connected.
+        marker.points.push_back(node_point);
+      }
     }
     trajectory_nodes_list.markers.push_back(marker);
   }
