@@ -71,7 +71,6 @@ class MapBuilderBridge {
   const NodeOptions node_options_;
   cartographer::mapping::MapBuilder map_builder_;
   tf2_ros::Buffer* const tf_buffer_;
-  cartographer_ros::ColorManager trajectory_color_manager_;
 
   // These are keyed with 'trajectory_id'.
   std::unordered_map<int, TrajectoryOptions> trajectory_options_;

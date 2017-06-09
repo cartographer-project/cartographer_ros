@@ -29,8 +29,7 @@ MapBuilderBridge::MapBuilderBridge(const NodeOptions& node_options,
                                    tf2_ros::Buffer* const tf_buffer)
     : node_options_(node_options),
       map_builder_(node_options.map_builder_options),
-      tf_buffer_(tf_buffer),
-      trajectory_color_manager_(node_options.trajectory_hue_first) {}
+      tf_buffer_(tf_buffer) {}
 
 int MapBuilderBridge::AddTrajectory(
     const std::unordered_set<string>& expected_sensor_ids,
@@ -207,7 +206,8 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
   const auto trajectory_nodes =
       map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
   int marker_id = 0;
-  for (int trajectory_id = 0; trajectory_id < (int)trajectory_nodes.size();
+  for (int trajectory_id = 0;
+       trajectory_id < static_cast<int>(trajectory_nodes.size());
        trajectory_id++) {
     const auto& single_trajectory = trajectory_nodes[trajectory_id];
     visualization_msgs::Marker marker;
@@ -215,8 +215,8 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
     marker.type = visualization_msgs::Marker::LINE_STRIP;
     marker.header.stamp = ::ros::Time::now();
     marker.header.frame_id = node_options_.map_frame;
-    ColorManager::ColorRGB trajectory_color =
-        trajectory_color_manager_.GetColor(trajectory_id);
+    ColorRGB trajectory_color =
+        GetColor(trajectory_id, node_options_.trajectory_hue_first);
     marker.color.r = trajectory_color.r;
     marker.color.g = trajectory_color.g;
     marker.color.b = trajectory_color.b;

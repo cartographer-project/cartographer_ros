@@ -15,7 +15,9 @@
  */
 
 #include "cartographer_ros/color_manager.h"
+
 #include <cmath>
+
 #include "glog/logging.h"
 
 namespace cartographer_ros {
@@ -24,46 +26,37 @@ constexpr float kColorManagerSaturation = 0.85f;
 constexpr float kColorManagerValue = 0.77f;
 constexpr float kGoldenRatioConjugate = (std::sqrt(5) - 1) / 2.f;
 
-ColorManager::ColorManager(const float initial_hue)
-    : initial_hue_(initial_hue) {}
+ColorRGB HSVToRGB(const float h, const float s, const float v) {
+  const float h_6 = (h == 1.f) ? 0.f : 6 * h;
+  const int h_i = std::floor(h_6);
+  const float f = h_6 - h_i;
 
-ColorManager::ColorRGB ColorManager::HSVToRGB(const float h, const float s,
-                                              const float v) {
-  ColorRGB out_rgb;
-  float p, q, t, f, h_6;
+  const float p = v * (1.f - s);
+  const float q = v * (1.f - f * s);
+  const float t = v * (1.f - (1.f - f) * s);
 
-  h_6 = (h == 1.f) ? 0.f : 6 * h;
-  int h_i = std::floor(h_6);
-  f = h_6 - h_i;
-
-  p = v * (1.f - s);
-  q = v * (1.f - f * s);
-  t = v * (1.f - (1.f - f) * s);
-
-  if (h_i == 0)
-    out_rgb = {v, t, p};
-  else if (h_i == 1)
-    out_rgb = {q, v, p};
-  else if (h_i == 2)
-    out_rgb = {p, v, t};
-  else if (h_i == 3)
-    out_rgb = {p, q, v};
-  else if (h_i == 4)
-    out_rgb = {t, p, v};
-  else if (h_i == 5)
-    out_rgb = {v, p, q};
-  else
-    out_rgb = {0.f, 0.f, 0.f};
-
-  return out_rgb;
+  if (h_i == 0) {
+    return {v, t, p};
+  } else if (h_i == 1) {
+    return {q, v, p};
+  } else if (h_i == 2) {
+    return {p, v, t};
+  } else if (h_i == 3) {
+    return {p, q, v};
+  } else if (h_i == 4) {
+    return {t, p, v};
+  } else if (h_i == 5) {
+    return {v, p, q};
+  } else {
+    return {0.f, 0.f, 0.f};
+  }
 }
 
-ColorManager::ColorRGB ColorManager::GetColor(int id) {
+ColorRGB GetColor(int id, float initial_hue) {
   CHECK_GE(id, 0);
   // Uniform color sampling using the golden ratio from
   // http://martin.ankerl.com/2009/12/09/how-to-create-random-colors-programmatically/
-  const float hue =
-      std::fmod(initial_hue_ + kGoldenRatioConjugate * (id + 8), 1.f);
+  const float hue = std::fmod(initial_hue + kGoldenRatioConjugate * id, 1.f);
   return HSVToRGB(hue, kColorManagerSaturation, kColorManagerValue);
 }
 

@@ -17,30 +17,20 @@
 #ifndef CARTOGRAPHER_ROS_COLOR_MANAGER_H_
 #define CARTOGRAPHER_ROS_COLOR_MANAGER_H_
 
-#include <vector>
-
 namespace cartographer_ros {
 
-class ColorManager {
- public:
-  // A class for online generation of a colour palette, with every two direct
-  //  successors having large contrast. All parameters are from [0, 1].
-  ColorManager(const float initial_hue);
-
-  struct ColorRGB {
-    // r, g, b are from [0,1>
-    float r;
-    float g;
-    float b;
-  };
-
-  ColorRGB GetColor(int id);
-
- private:
-  float initial_hue_;
-
-  ColorRGB HSVToRGB(const float h, const float s, const float v);
+struct ColorRGB {
+  // r, g, b are from [0,1]
+  float r;
+  float g;
+  float b;
 };
+
+// A function for on-demand generation of a colour palette, with every two
+// direct successors having large contrast. Initial hue is from [0, 1>.
+ColorRGB GetColor(int id, float initial_hue);
+
+ColorRGB HSVToRGB(const float h, const float s, const float v);
 
 }  // namespace cartographer_ros
 
