@@ -24,7 +24,7 @@ namespace cartographer_ros {
 
 namespace {
 
-constexpr float kInitialHue = 0.69;
+constexpr float kInitialHue = 0.69f;
 constexpr float kSaturation = 0.85f;
 constexpr float kValue = 0.77f;
 constexpr float kGoldenRatioConjugate = (std::sqrt(5) - 1) / 2.f;
