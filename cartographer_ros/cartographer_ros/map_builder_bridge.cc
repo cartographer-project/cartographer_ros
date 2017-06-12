@@ -71,18 +71,18 @@ void MapBuilderBridge::SerializeState(const std::string& stem) {
 }
 
 void MapBuilderBridge::WriteAssets(const string& stem) {
-  const auto trajectory_nodes =
+  const auto all_trajectory_nodes =
       map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
   // TODO(yutakaoka): Add multi-trajectory support.
   CHECK_EQ(trajectory_options_.count(0), 1);
-  CHECK_EQ(trajectory_nodes.size(), 1);
-  if (trajectory_nodes[0].empty()) {
+  CHECK_EQ(all_trajectory_nodes.size(), 1);
+  if (all_trajectory_nodes[0].empty()) {
     LOG(WARNING) << "No data was collected and no assets will be written.";
   } else {
     LOG(INFO) << "Writing assets with stem '" << stem << "'...";
     if (node_options_.map_builder_options.use_trajectory_builder_2d()) {
       Write2DAssets(
-          trajectory_nodes[0], node_options_.map_frame,
+          all_trajectory_nodes[0], node_options_.map_frame,
           trajectory_options_[0]
               .trajectory_builder_options.trajectory_builder_2d_options()
               .submaps_options(),
@@ -91,7 +91,7 @@ void MapBuilderBridge::WriteAssets(const string& stem) {
 
     if (node_options_.map_builder_options.use_trajectory_builder_3d()) {
       Write3DAssets(
-          trajectory_nodes[0],
+          all_trajectory_nodes[0],
           trajectory_options_[0]
               .trajectory_builder_options.trajectory_builder_3d_options()
               .submaps_options()
@@ -140,7 +140,7 @@ cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
     for (size_t submap_index = 0; submap_index != submap_transforms.size();
          ++submap_index) {
       cartographer_ros_msgs::SubmapEntry submap_entry;
-      submap_entry.submap_version = submaps->Get(submap_index)->num_range_data;
+      submap_entry.submap_version = submaps->Get(submap_index)->num_range_data();
       submap_entry.pose = ToGeometryMsgPose(submap_transforms[submap_index]);
       trajectory_submap_list.submap.push_back(submap_entry);
     }
@@ -153,19 +153,20 @@ std::unique_ptr<nav_msgs::OccupancyGrid>
 MapBuilderBridge::BuildOccupancyGrid() {
   CHECK(node_options_.map_builder_options.use_trajectory_builder_2d())
       << "Publishing OccupancyGrids for 3D data is not yet supported";
-  std::vector<::cartographer::mapping::TrajectoryNode> trajectory_nodes;
-  for (const auto& single_trajectory :
+  std::vector<::cartographer::mapping::TrajectoryNode> flat_trajectory_nodes;
+  for (const auto& single_trajectory_nodes :
        map_builder_.sparse_pose_graph()->GetTrajectoryNodes()) {
-    trajectory_nodes.insert(trajectory_nodes.end(), single_trajectory.begin(),
-                            single_trajectory.end());
+    flat_trajectory_nodes.insert(flat_trajectory_nodes.end(),
+                                 single_trajectory_nodes.begin(),
+                                 single_trajectory_nodes.end());
   }
   std::unique_ptr<nav_msgs::OccupancyGrid> occupancy_grid;
-  if (!trajectory_nodes.empty()) {
+  if (!flat_trajectory_nodes.empty()) {
     occupancy_grid =
         cartographer::common::make_unique<nav_msgs::OccupancyGrid>();
     CHECK_EQ(trajectory_options_.count(0), 1);
     BuildOccupancyGrid2D(
-        trajectory_nodes, node_options_.map_frame,
+        flat_trajectory_nodes, node_options_.map_frame,
         trajectory_options_[0]
             .trajectory_builder_options.trajectory_builder_2d_options()
             .submaps_options(),
@@ -204,13 +205,13 @@ MapBuilderBridge::GetTrajectoryStates() {
 
 visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
   visualization_msgs::MarkerArray trajectory_nodes_list;
-  const auto trajectory_nodes =
+  const auto all_trajectory_nodes =
       map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
   int marker_id = 0;
   for (int trajectory_id = 0;
-       trajectory_id < static_cast<int>(trajectory_nodes.size());
+       trajectory_id < static_cast<int>(all_trajectory_nodes.size());
        ++trajectory_id) {
-    const auto& single_trajectory = trajectory_nodes[trajectory_id];
+    const auto& single_trajectory_nodes = all_trajectory_nodes[trajectory_id];
     visualization_msgs::Marker marker;
     marker.id = marker_id++;
     marker.type = visualization_msgs::Marker::LINE_STRIP;
@@ -223,7 +224,10 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
     marker.color.a = 1.0;
     marker.scale.x = kTrajectoryLineStripMarkerScale;
     marker.pose.orientation.w = 1.0;
-    for (const auto& node : single_trajectory) {
+    for (const auto& node : single_trajectory_nodes) {
+      if (node.trimmed()) {
+        continue;
+      }
       const ::geometry_msgs::Point node_point = ToGeometryMsgPoint(
           (node.pose * node.constant_data->tracking_to_pose).translation());
       marker.points.push_back(node_point);

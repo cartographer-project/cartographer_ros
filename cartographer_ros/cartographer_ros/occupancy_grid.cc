@@ -29,6 +29,9 @@ Eigen::AlignedBox2f ComputeMapBoundingBox(
         trajectory_nodes) {
   Eigen::AlignedBox2f bounding_box(Eigen::Vector2f::Zero());
   for (const auto& node : trajectory_nodes) {
+    if (node.trimmed()) {
+      continue;
+    }
     const auto& data = *node.constant_data;
     ::cartographer::sensor::RangeData range_data;
     if (!data.range_data_3d.returns.empty()) {
@@ -68,6 +71,9 @@ void BuildOccupancyGrid2D(
   carto::mapping_2d::RangeDataInserter range_data_inserter(
       submaps_options.range_data_inserter_options());
   for (const auto& node : trajectory_nodes) {
+    if (node.trimmed()) {
+      continue;
+    }
     CHECK(node.constant_data->range_data_3d.returns.empty());  // No 3D yet.
     range_data_inserter.Insert(
         carto::sensor::TransformRangeData(node.constant_data->range_data_2d,
