@@ -28,7 +28,6 @@ namespace {
 
 TEST(OccupancyGridTest, ComputeMapLimits) {
   using ::cartographer::mapping::TrajectoryNode;
-  constexpr int kTrajectoryId = 0;
   const TrajectoryNode trajectory_node{
       std::make_shared<TrajectoryNode::Data>(TrajectoryNode::Data{
           ::cartographer::common::FromUniversal(52),
@@ -38,7 +37,7 @@ TEST(OccupancyGridTest, ComputeMapLimits) {
                                             {}},
           ::cartographer::sensor::Compress(::cartographer::sensor::RangeData{
               Eigen::Vector3f::Zero(), {}, {}}),
-          kTrajectoryId, ::cartographer::transform::Rigid3d::Identity()}),
+          ::cartographer::transform::Rigid3d::Identity()}),
       ::cartographer::transform::Rigid3d::Identity()};
   constexpr double kResolution = 0.05;
   const ::cartographer::mapping_2d::MapLimits limits =
