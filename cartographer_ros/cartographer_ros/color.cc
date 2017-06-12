@@ -27,7 +27,7 @@ namespace {
 constexpr float kInitialHue = 0.69f;
 constexpr float kSaturation = 0.85f;
 constexpr float kValue = 0.77f;
-constexpr float kGoldenRatioConjugate = (std::sqrt(5) - 1) / 2.f;
+constexpr float kGoldenRatioConjugate = (std::sqrt(5.f) - 1.f) / 2.f;
 
 ::cartographer_ros::ColorRgb HsvToRgb(const float h, const float s,
                                       const float v) {
