@@ -21,8 +21,8 @@
 
 namespace cartographer_ros {
 
-// A function for on-demand generation of a colour palette, with every two
-// direct successors having large contrast. Initial hue is from [0, 1>.
+// A function for on-demand generation of a color palette, with every two
+// direct successors having large contrast.
 ::std_msgs::ColorRGBA GetColor(int id);
 
 }  // namespace cartographer_ros
