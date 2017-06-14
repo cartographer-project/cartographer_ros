@@ -20,10 +20,12 @@ set -o verbose
 . /opt/ros/${ROS_DISTRO}/setup.sh
 
 # Create a new workspace in 'catkin_ws'.
-mkdir catkin_ws
-cd catkin_ws
-wstool init src
+mkdir -p catkin_ws/src
+cd catkin_ws/src
+wstool init
 
 # Merge the cartographer_ros.rosinstall file and fetch code for dependencies.
-wstool merge -t src ../cartographer_ros/cartographer_ros.rosinstall
-wstool update -t src
+wstool merge ../../cartographer_ros/cartographer_ros.rosinstall
+wstool set cartographer -v ${CARTOGRAPHER_VERSION} -y
+wstool remove cartographer_ros
+wstool update
