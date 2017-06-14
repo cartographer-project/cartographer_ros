@@ -28,9 +28,16 @@ constexpr float kInitialHue = 0.69f;
 constexpr float kSaturation = 0.85f;
 constexpr float kValue = 0.77f;
 constexpr float kGoldenRatioConjugate = (std::sqrt(5.f) - 1.f) / 2.f;
+constexpr float kAlpha = 1.f;
 
-::cartographer_ros::ColorRgb HsvToRgb(const float h, const float s,
-                                      const float v) {
+struct ColorRgb {
+  // r, g, b are from [0,1]
+  float r;
+  float g;
+  float b;
+};
+
+ColorRgb HsvToRgb(const float h, const float s, const float v) {
   const float h_6 = (h == 1.f) ? 0.f : 6 * h;
   const int h_i = std::floor(h_6);
   const float f = h_6 - h_i;
@@ -58,12 +65,18 @@ constexpr float kGoldenRatioConjugate = (std::sqrt(5.f) - 1.f) / 2.f;
 
 }  // namespace
 
-ColorRgb GetColor(int id) {
+::std_msgs::ColorRGBA GetColor(int id) {
   CHECK_GE(id, 0);
   // Uniform color sampling using the golden ratio from
   // http://martin.ankerl.com/2009/12/09/how-to-create-random-colors-programmatically/
   const float hue = std::fmod(kInitialHue + kGoldenRatioConjugate * id, 1.f);
-  return HsvToRgb(hue, kSaturation, kValue);
+  ColorRgb result = HsvToRgb(hue, kSaturation, kValue);
+  ::std_msgs::ColorRGBA result_rgba;
+  result_rgba.r = result.r;
+  result_rgba.g = result.g;
+  result_rgba.b = result.b;
+  result_rgba.a = kAlpha;
+  return result_rgba;
 }
 
 }  // namespace cartographer_ros
