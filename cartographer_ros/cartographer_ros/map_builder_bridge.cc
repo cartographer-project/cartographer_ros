@@ -217,11 +217,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
     marker.type = visualization_msgs::Marker::LINE_STRIP;
     marker.header.stamp = ::ros::Time::now();
     marker.header.frame_id = node_options_.map_frame;
-    const ColorRgb trajectory_color = GetColor(trajectory_id);
-    marker.color.r = trajectory_color.r;
-    marker.color.g = trajectory_color.g;
-    marker.color.b = trajectory_color.b;
-    marker.color.a = 1.0;
+    marker.color = GetColor(trajectory_id);
     marker.scale.x = kTrajectoryLineStripMarkerScale;
     marker.pose.orientation.w = 1.0;
     for (const auto& node : single_trajectory_nodes) {

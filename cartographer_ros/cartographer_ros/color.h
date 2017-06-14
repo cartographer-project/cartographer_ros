@@ -17,18 +17,13 @@
 #ifndef CARTOGRAPHER_ROS_COLOR_MANAGER_H_
 #define CARTOGRAPHER_ROS_COLOR_MANAGER_H_
 
+#include <std_msgs/ColorRGBA.h>
+
 namespace cartographer_ros {
 
-struct ColorRgb {
-  // r, g, b are from [0,1]
-  float r;
-  float g;
-  float b;
-};
-
-// A function for on-demand generation of a colour palette, with every two
-// direct successors having large contrast. Initial hue is from [0, 1>.
-ColorRgb GetColor(int id);
+// A function for on-demand generation of a color palette, with every two
+// direct successors having large contrast.
+::std_msgs::ColorRGBA GetColor(int id);
 
 }  // namespace cartographer_ros
 

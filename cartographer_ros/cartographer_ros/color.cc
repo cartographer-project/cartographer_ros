@@ -28,9 +28,18 @@ constexpr float kInitialHue = 0.69f;
 constexpr float kSaturation = 0.85f;
 constexpr float kValue = 0.77f;
 constexpr float kGoldenRatioConjugate = (std::sqrt(5.f) - 1.f) / 2.f;
+constexpr float kAlpha = 1.f;
 
-::cartographer_ros::ColorRgb HsvToRgb(const float h, const float s,
-                                      const float v) {
+::std_msgs::ColorRGBA CreateRgba(const float r, const float g, const float b) {
+  ::std_msgs::ColorRGBA result;
+  result.r = r;
+  result.g = g;
+  result.b = b;
+  result.a = kAlpha;
+  return result;
+}
+
+::std_msgs::ColorRGBA HsvToRgb(const float h, const float s, const float v) {
   const float h_6 = (h == 1.f) ? 0.f : 6 * h;
   const int h_i = std::floor(h_6);
   const float f = h_6 - h_i;
@@ -40,25 +49,25 @@ constexpr float kGoldenRatioConjugate = (std::sqrt(5.f) - 1.f) / 2.f;
   const float t = v * (1.f - (1.f - f) * s);
 
   if (h_i == 0) {
-    return {v, t, p};
+    return CreateRgba(v, t, p);
   } else if (h_i == 1) {
-    return {q, v, p};
+    return CreateRgba(q, v, p);
   } else if (h_i == 2) {
-    return {p, v, t};
+    return CreateRgba(p, v, t);
   } else if (h_i == 3) {
-    return {p, q, v};
+    return CreateRgba(p, q, v);
   } else if (h_i == 4) {
-    return {t, p, v};
+    return CreateRgba(t, p, v);
   } else if (h_i == 5) {
-    return {v, p, q};
+    return CreateRgba(v, p, q);
   } else {
-    return {0.f, 0.f, 0.f};
+    return CreateRgba(0.f, 0.f, 0.f);
   }
 }
 
 }  // namespace
 
-ColorRgb GetColor(int id) {
+::std_msgs::ColorRGBA GetColor(int id) {
   CHECK_GE(id, 0);
   // Uniform color sampling using the golden ratio from
   // http://martin.ankerl.com/2009/12/09/how-to-create-random-colors-programmatically/
