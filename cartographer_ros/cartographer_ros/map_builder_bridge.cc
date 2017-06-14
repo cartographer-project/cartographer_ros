@@ -130,18 +130,18 @@ cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
   for (int trajectory_id = 0;
        trajectory_id < map_builder_.num_trajectory_builders();
        ++trajectory_id) {
-    const std::vector<cartographer::transform::Rigid3d> submap_transforms =
-        map_builder_.sparse_pose_graph()->GetSubmapTransforms(trajectory_id);
     const cartographer::mapping::Submaps* submaps =
         map_builder_.GetTrajectoryBuilder(trajectory_id)->submaps();
-    CHECK_LE(submap_transforms.size(), submaps->size());
-
+    const int num_submaps =
+        map_builder_.sparse_pose_graph()->num_submaps(trajectory_id);
     cartographer_ros_msgs::TrajectorySubmapList trajectory_submap_list;
-    for (size_t submap_index = 0; submap_index != submap_transforms.size();
-         ++submap_index) {
+    for (int submap_index = 0; submap_index != num_submaps; ++submap_index) {
       cartographer_ros_msgs::SubmapEntry submap_entry;
-      submap_entry.submap_version = submaps->Get(submap_index)->num_range_data();
-      submap_entry.pose = ToGeometryMsgPose(submap_transforms[submap_index]);
+      submap_entry.submap_version =
+          submaps->Get(submap_index)->num_range_data();
+      submap_entry.pose = ToGeometryMsgPose(
+          map_builder_.sparse_pose_graph()->GetSubmapTransform(
+              ::cartographer::mapping::SubmapId{trajectory_id, submap_index}));
       trajectory_submap_list.submap.push_back(submap_entry);
     }
     submap_list.trajectory.push_back(trajectory_submap_list);
