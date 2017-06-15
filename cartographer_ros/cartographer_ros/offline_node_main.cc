@@ -237,6 +237,16 @@ void Run(const std::vector<string>& bag_filenames) {
               ->HandleOdometryMessage(
                   topic, delayed_msg.instantiate<nav_msgs::Odometry>());
         }
+        rosgraph_msgs::Clock clock;
+        clock.clock = delayed_msg.getTime();
+        clock_publisher.publish(clock);
+
+        ::ros::spinOnce();
+
+        LOG_EVERY_N(INFO, 100000)
+            << "Processed " << (delayed_msg.getTime() - begin_time).toSec() << " of "
+            << duration_in_seconds << " bag time seconds...";
+
         delayed_messages.pop_front();
       }
 
@@ -247,15 +257,6 @@ void Run(const std::vector<string>& bag_filenames) {
       }
       delayed_messages.push_back(msg);
 
-      rosgraph_msgs::Clock clock;
-      clock.clock = msg.getTime();
-      clock_publisher.publish(clock);
-
-      ::ros::spinOnce();
-
-      LOG_EVERY_N(INFO, 100000)
-          << "Processed " << (msg.getTime() - begin_time).toSec() << " of "
-          << duration_in_seconds << " bag time seconds...";
     }
 
     bag.close();
