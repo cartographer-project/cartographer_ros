@@ -130,18 +130,15 @@ cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
   for (int trajectory_id = 0;
        trajectory_id < map_builder_.num_trajectory_builders();
        ++trajectory_id) {
-    const cartographer::mapping::Submaps* submaps =
-        map_builder_.GetTrajectoryBuilder(trajectory_id)->submaps();
-    const int num_submaps =
-        map_builder_.sparse_pose_graph()->num_submaps(trajectory_id);
+    auto* const trajectory_builder =
+        map_builder_.GetTrajectoryBuilder(trajectory_id);
+    const int num_submaps = trajectory_builder->num_submaps();
     cartographer_ros_msgs::TrajectorySubmapList trajectory_submap_list;
     for (int submap_index = 0; submap_index != num_submaps; ++submap_index) {
       cartographer_ros_msgs::SubmapEntry submap_entry;
-      submap_entry.submap_version =
-          submaps->Get(submap_index)->num_range_data();
-      submap_entry.pose = ToGeometryMsgPose(
-          map_builder_.sparse_pose_graph()->GetSubmapTransform(
-              ::cartographer::mapping::SubmapId{trajectory_id, submap_index}));
+      const auto submap_data = trajectory_builder->GetSubmapData(submap_index);
+      submap_entry.submap_version = submap_data.submap->num_range_data();
+      submap_entry.pose = ToGeometryMsgPose(submap_data.pose);
       trajectory_submap_list.submap.push_back(submap_entry);
     }
     submap_list.trajectory.push_back(trajectory_submap_list);
