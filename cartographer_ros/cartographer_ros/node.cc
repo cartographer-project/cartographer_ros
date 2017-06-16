@@ -365,8 +365,8 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
 bool Node::ValidateTrajectoryOptions(const TrajectoryOptions& options) {
   if (node_options_.map_builder_options.use_trajectory_builder_2d() &&
       options.trajectory_builder_options.has_trajectory_builder_2d_options()) {
-    // Using point clouds is only supported in 3D.
-    if (options.num_point_clouds == 0) {
+    // Only one point cloud source is supported in 2D.
+    if (options.num_point_clouds <= 1) {
       return true;
     }
   }
