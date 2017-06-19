@@ -17,7 +17,7 @@
 
 <package format="2">
   <name>cartographer_ros_msgs</name>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
   <description>
     ROS messages for the cartographer_ros package.
   </description>
