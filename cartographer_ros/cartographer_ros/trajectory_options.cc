@@ -51,7 +51,6 @@ TrajectoryOptions CreateTrajectoryOptions(
   return options;
 }
 
-// Try to convert 'msg' into 'options'. Returns false on failure.
 bool FromRosMessage(const cartographer_ros_msgs::TrajectoryOptions& msg,
                     TrajectoryOptions* options) {
   options->tracking_frame = msg.tracking_frame;
