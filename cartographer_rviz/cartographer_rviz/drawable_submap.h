@@ -72,6 +72,7 @@ class DrawableSubmap : public QObject {
 
   int submap_index() const { return submap_index_; }
   int trajectory_id() const { return trajectory_id_; }
+  int version() const { return metadata_version_; }
   bool visibility() const { return visibility_->getBool(); }
   void set_visibility(const bool visibility) {
     visibility_->setBool(visibility);

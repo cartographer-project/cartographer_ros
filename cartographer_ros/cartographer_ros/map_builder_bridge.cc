@@ -20,7 +20,6 @@
 #include "cartographer_ros/color.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/occupancy_grid.h"
-#include "cartographer_ros_msgs/TrajectorySubmapList.h"
 
 namespace cartographer_ros {
 
@@ -133,14 +132,19 @@ cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
       map_builder_.sparse_pose_graph()->GetAllSubmapData();
   for (size_t trajectory_id = 0; trajectory_id < all_submap_data.size();
        ++trajectory_id) {
-    cartographer_ros_msgs::TrajectorySubmapList trajectory_submap_list;
-    for (const auto& submap_data : all_submap_data[trajectory_id]) {
+    for (size_t submap_index = 0;
+         submap_index < all_submap_data[trajectory_id].size(); ++submap_index) {
+      const auto& submap_data = all_submap_data[trajectory_id][submap_index];
+      if (submap_data.submap == nullptr) {
+        continue;
+      }
       cartographer_ros_msgs::SubmapEntry submap_entry;
+      submap_entry.trajectory_id = trajectory_id;
+      submap_entry.submap_index = submap_index;
       submap_entry.submap_version = submap_data.submap->num_range_data();
       submap_entry.pose = ToGeometryMsgPose(submap_data.pose);
-      trajectory_submap_list.submap.push_back(submap_entry);
+      submap_list.submap.push_back(submap_entry);
     }
-    submap_list.trajectory.push_back(trajectory_submap_list);
   }
   return submap_list;
 }

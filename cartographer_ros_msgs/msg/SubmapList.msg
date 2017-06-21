@@ -13,4 +13,4 @@
 # limitations under the License.
 
 std_msgs/Header header
-TrajectorySubmapList[] trajectory
+SubmapEntry[] submap
