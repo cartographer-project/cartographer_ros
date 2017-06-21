@@ -16,8 +16,6 @@
 
 #include "cartographer_rviz/submaps_display.h"
 
-#include <algorithm>
-
 #include "OgreResourceGroupManager.h"
 #include "cartographer/common/make_unique.h"
 #include "cartographer/common/mutex.h"
@@ -146,6 +144,7 @@ void SubmapsDisplay::processMessage(
     trajectory.at(submap_index)
         ->Update(msg->header, submap_entry, context_->getFrameManager());
   }
+  // Remove all submaps not mentioned in the SubmapList.
   for (size_t trajectory_id = 0; trajectory_id < trajectories_.size();
        ++trajectory_id) {
     auto& trajectory = trajectories_[trajectory_id].second;
@@ -170,8 +169,8 @@ void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
                                    ros::Time(0) /* latest */);
     for (auto& trajectory : trajectories_) {
       for (auto& submap_entry : trajectory.second) {
-        auto& submap = submap_entry.second;
-        submap->SetAlpha(transform_stamped.transform.translation.z);
+        submap_entry.second->SetAlpha(
+            transform_stamped.transform.translation.z);
       }
     }
   } catch (const tf2::TransformException& ex) {
@@ -182,8 +181,7 @@ void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
   for (const auto& trajectory : trajectories_) {
     int num_ongoing_requests = 0;
     for (const auto& submap_entry : trajectory.second) {
-      const auto& submap = submap_entry.second;
-      if (submap->QueryInProgress()) {
+      if (submap_entry.second->QueryInProgress()) {
         ++num_ongoing_requests;
       }
     }
@@ -203,8 +201,7 @@ void SubmapsDisplay::AllEnabledToggled() {
   const bool visibility = visibility_all_enabled_->getBool();
   for (auto& trajectory : trajectories_) {
     for (auto& submap_entry : trajectory.second) {
-      auto& submap = submap_entry.second;
-      submap->set_visibility(visibility);
+      submap_entry.second->set_visibility(visibility);
     }
   }
 }
