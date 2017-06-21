@@ -31,7 +31,6 @@
 #include "cartographer_ros_msgs/SubmapList.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
 #include "cartographer_ros_msgs/TrajectoryOptions.h"
-#include "cartographer_ros_msgs/TrajectorySubmapList.h"
 #include "cartographer_ros_msgs/WriteAssets.h"
 #include "ros/ros.h"
 #include "tf2_ros/transform_broadcaster.h"

@@ -25,7 +25,6 @@ find_package(catkin REQUIRED COMPONENTS message_generation ${PACKAGE_DEPENDENCIE
 add_message_files(
   FILES
     SubmapList.msg
-    TrajectorySubmapList.msg
     SubmapEntry.msg
     SensorTopics.msg
     TrajectoryOptions.msg

@@ -17,6 +17,7 @@
 #ifndef CARTOGRAPHER_RVIZ_SRC_SUBMAPS_DISPLAY_H_
 #define CARTOGRAPHER_RVIZ_SRC_SUBMAPS_DISPLAY_H_
 
+#include <map>
 #include <memory>
 #include <vector>
 
@@ -68,7 +69,7 @@ class SubmapsDisplay
   ::rviz::StringProperty* map_frame_property_;
   ::rviz::StringProperty* tracking_frame_property_;
   using Trajectory = std::pair<std::unique_ptr<::rviz::Property>,
-                               std::vector<std::unique_ptr<DrawableSubmap>>>;
+                               std::map<int, std::unique_ptr<DrawableSubmap>>>;
   std::vector<Trajectory> trajectories_ GUARDED_BY(mutex_);
   ::cartographer::common::Mutex mutex_;
   ::rviz::Property* submaps_category_;

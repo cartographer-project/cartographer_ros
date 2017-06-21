@@ -244,8 +244,8 @@ void Run(const std::vector<string>& bag_filenames) {
         ::ros::spinOnce();
 
         LOG_EVERY_N(INFO, 100000)
-            << "Processed " << (delayed_msg.getTime() - begin_time).toSec() << " of "
-            << duration_in_seconds << " bag time seconds...";
+            << "Processed " << (delayed_msg.getTime() - begin_time).toSec()
+            << " of " << duration_in_seconds << " bag time seconds...";
 
         delayed_messages.pop_front();
       }
@@ -256,7 +256,6 @@ void Run(const std::vector<string>& bag_filenames) {
         continue;
       }
       delayed_messages.push_back(msg);
-
     }
 
     bag.close();
