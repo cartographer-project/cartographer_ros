@@ -106,7 +106,9 @@ bool MapBuilderBridge::HandleSubmapQuery(
     cartographer_ros_msgs::SubmapQuery::Response& response) {
   cartographer::mapping::proto::SubmapQuery::Response response_proto;
   const std::string error = map_builder_.SubmapToProto(
-      request.trajectory_id, request.submap_index, &response_proto);
+      cartographer::mapping::SubmapId{request.trajectory_id,
+                                      request.submap_index},
+      &response_proto);
   if (!error.empty()) {
     LOG(ERROR) << error;
     return false;
@@ -127,16 +129,13 @@ cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
   cartographer_ros_msgs::SubmapList submap_list;
   submap_list.header.stamp = ::ros::Time::now();
   submap_list.header.frame_id = node_options_.map_frame;
-  for (int trajectory_id = 0;
-       trajectory_id < map_builder_.num_trajectory_builders();
+  const auto all_submap_data =
+      map_builder_.sparse_pose_graph()->GetAllSubmapData();
+  for (size_t trajectory_id = 0; trajectory_id < all_submap_data.size();
        ++trajectory_id) {
-    auto* const trajectory_builder =
-        map_builder_.GetTrajectoryBuilder(trajectory_id);
-    const int num_submaps = trajectory_builder->num_submaps();
     cartographer_ros_msgs::TrajectorySubmapList trajectory_submap_list;
-    for (int submap_index = 0; submap_index != num_submaps; ++submap_index) {
+    for (const auto& submap_data : all_submap_data[trajectory_id]) {
       cartographer_ros_msgs::SubmapEntry submap_entry;
-      const auto submap_data = trajectory_builder->GetSubmapData(submap_index);
       submap_entry.submap_version = submap_data.submap->num_range_data();
       submap_entry.pose = ToGeometryMsgPose(submap_data.pose);
       trajectory_submap_list.submap.push_back(submap_entry);
