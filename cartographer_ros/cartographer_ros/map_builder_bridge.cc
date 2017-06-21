@@ -131,7 +131,7 @@ cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
   submap_list.header.frame_id = node_options_.map_frame;
   const auto all_submap_data =
       map_builder_.sparse_pose_graph()->GetAllSubmapData();
-  for (int trajectory_id = 0; trajectory_id < all_submap_data.size();
+  for (size_t trajectory_id = 0; trajectory_id < all_submap_data.size();
        ++trajectory_id) {
     cartographer_ros_msgs::TrajectorySubmapList trajectory_submap_list;
     for (const auto& submap_data : all_submap_data[trajectory_id]) {
