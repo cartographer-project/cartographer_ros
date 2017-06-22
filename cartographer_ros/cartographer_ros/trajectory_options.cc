@@ -50,4 +50,39 @@ TrajectoryOptions CreateTrajectoryOptions(
 
   return options;
 }
+
+bool FromRosMessage(const cartographer_ros_msgs::TrajectoryOptions& msg,
+                    TrajectoryOptions* options) {
+  options->tracking_frame = msg.tracking_frame;
+  options->published_frame = msg.published_frame;
+  options->odom_frame = msg.odom_frame;
+  options->provide_odom_frame = msg.provide_odom_frame;
+  options->use_odometry = msg.use_odometry;
+  options->use_laser_scan = msg.use_laser_scan;
+  options->use_multi_echo_laser_scan = msg.use_multi_echo_laser_scan;
+  options->num_point_clouds = msg.num_point_clouds;
+  if (!options->trajectory_builder_options.ParseFromString(
+          msg.trajectory_builder_options_proto)) {
+    LOG(ERROR) << "Failed to parse protobuf";
+    return false;
+  }
+  return true;
+}
+
+cartographer_ros_msgs::TrajectoryOptions ToRosMessage(
+    const TrajectoryOptions& options) {
+  cartographer_ros_msgs::TrajectoryOptions msg;
+  msg.tracking_frame = options.tracking_frame;
+  msg.published_frame = options.published_frame;
+  msg.odom_frame = options.odom_frame;
+  msg.provide_odom_frame = options.provide_odom_frame;
+  msg.use_odometry = options.use_odometry;
+  msg.use_laser_scan = options.use_laser_scan;
+  msg.use_multi_echo_laser_scan = options.use_multi_echo_laser_scan;
+  msg.num_point_clouds = options.num_point_clouds;
+  options.trajectory_builder_options.SerializeToString(
+      &msg.trajectory_builder_options_proto);
+  return msg;
+}
+
 }  // namespace cartographer_ros

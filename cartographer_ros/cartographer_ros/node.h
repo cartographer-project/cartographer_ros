@@ -22,6 +22,7 @@
 
 #include "cartographer/common/mutex.h"
 #include "cartographer_ros/map_builder_bridge.h"
+#include "cartographer_ros/node_constants.h"
 #include "cartographer_ros/node_options.h"
 #include "cartographer_ros/trajectory_options.h"
 #include "cartographer_ros_msgs/FinishTrajectory.h"
@@ -36,21 +37,6 @@
 #include "tf2_ros/transform_broadcaster.h"
 
 namespace cartographer_ros {
-
-// Default topic names; expected to be remapped as needed.
-constexpr char kLaserScanTopic[] = "scan";
-constexpr char kMultiEchoLaserScanTopic[] = "echoes";
-constexpr char kPointCloud2Topic[] = "points2";
-constexpr char kImuTopic[] = "imu";
-constexpr char kOdometryTopic[] = "odom";
-constexpr char kFinishTrajectoryServiceName[] = "finish_trajectory";
-constexpr char kOccupancyGridTopic[] = "map";
-constexpr char kScanMatchedPointCloudTopic[] = "scan_matched_points2";
-constexpr char kSubmapListTopic[] = "submap_list";
-constexpr char kSubmapQueryServiceName[] = "submap_query";
-constexpr char kStartTrajectoryServiceName[] = "start_trajectory";
-constexpr char kWriteAssetsServiceName[] = "write_assets";
-constexpr char kTrajectoryNodesListTopic[] = "trajectory_nodes_list";
 
 // Wires up ROS topics to SLAM.
 class Node {

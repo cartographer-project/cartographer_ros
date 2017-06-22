@@ -53,25 +53,6 @@ namespace {
 constexpr int kInfiniteSubscriberQueueSize = 0;
 constexpr int kLatestOnlyPublisherQueueSize = 1;
 
-// Try to convert 'msg' into 'options'. Returns false on failure.
-bool FromRosMessage(const cartographer_ros_msgs::TrajectoryOptions& msg,
-                    TrajectoryOptions* options) {
-  options->tracking_frame = msg.tracking_frame;
-  options->published_frame = msg.published_frame;
-  options->odom_frame = msg.odom_frame;
-  options->provide_odom_frame = msg.provide_odom_frame;
-  options->use_odometry = msg.use_odometry;
-  options->use_laser_scan = msg.use_laser_scan;
-  options->use_multi_echo_laser_scan = msg.use_multi_echo_laser_scan;
-  options->num_point_clouds = msg.num_point_clouds;
-  if (!options->trajectory_builder_options.ParseFromString(
-          msg.trajectory_builder_options_proto)) {
-    LOG(ERROR) << "Failed to parse protobuf";
-    return false;
-  }
-  return true;
-}
-
 void ShutdownSubscriber(std::unordered_map<int, ::ros::Subscriber>& subscribers,
                         int trajectory_id) {
   if (subscribers.count(trajectory_id) == 0) {
