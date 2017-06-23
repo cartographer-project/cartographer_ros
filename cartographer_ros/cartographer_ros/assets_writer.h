@@ -27,8 +27,8 @@ namespace cartographer_ros {
 
 // Writes a trajectory proto and an occupancy grid.
 void Write2DAssets(
-    const std::vector<::cartographer::mapping::TrajectoryNode>&
-        trajectory_nodes,
+    const std::vector<std::vector<::cartographer::mapping::TrajectoryNode>>&
+        all_trajectory_nodes,
     const string& map_frame,
     const ::cartographer::mapping_2d::proto::SubmapsOptions& submaps_options,
     const std::string& stem);

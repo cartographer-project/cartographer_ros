@@ -33,13 +33,13 @@ namespace cartographer_ros {
 
 // Writes an occupancy grid.
 void Write2DAssets(
-    const std::vector<::cartographer::mapping::TrajectoryNode>&
-        trajectory_nodes,
+    const std::vector<std::vector<::cartographer::mapping::TrajectoryNode>>&
+        all_trajectory_nodes,
     const string& map_frame,
     const ::cartographer::mapping_2d::proto::SubmapsOptions& submaps_options,
     const std::string& stem) {
   ::nav_msgs::OccupancyGrid occupancy_grid;
-  BuildOccupancyGrid2D(trajectory_nodes, map_frame, submaps_options,
+  BuildOccupancyGrid2D(all_trajectory_nodes, map_frame, submaps_options,
                        &occupancy_grid);
   WriteOccupancyGridToPgmAndYaml(occupancy_grid, stem);
 }
