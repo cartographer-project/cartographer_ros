@@ -31,6 +31,19 @@
 
 namespace cartographer_ros {
 
+bool HasNonTrimmedNode(
+    const std::vector<std::vector<::cartographer::mapping::TrajectoryNode>>&
+        all_trajectory_nodes) {
+  for (const auto& trajectory_nodes : all_trajectory_nodes) {
+    for (const auto& node : trajectory_nodes) {
+      if (!node.trimmed()) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 void Write2DAssets(
     const std::vector<std::vector<::cartographer::mapping::TrajectoryNode>>&
         all_trajectory_nodes,

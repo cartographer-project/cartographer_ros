@@ -25,6 +25,12 @@
 
 namespace cartographer_ros {
 
+// Returns 'true' if there is at least one untrimmed node for any trajectory.
+// The Write?DAssets functions expects this to be 'true'.
+bool HasNonTrimmedNode(
+    const std::vector<std::vector<::cartographer::mapping::TrajectoryNode>>&
+        all_trajectory_nodes);
+
 // Writes a trajectory proto and an occupancy grid.
 void Write2DAssets(
     const std::vector<std::vector<::cartographer::mapping::TrajectoryNode>>&
