@@ -89,10 +89,8 @@ void MapBuilderBridge::WriteAssets(const string& stem) {
     }
 
     if (node_options_.map_builder_options.use_trajectory_builder_3d()) {
-      // TODO(yutakaoka): Add multi-trajectory support.
-      CHECK_EQ(all_trajectory_nodes.size(), 1);
       Write3DAssets(
-          all_trajectory_nodes[0],
+          all_trajectory_nodes,
           trajectory_options_[0]
               .trajectory_builder_options.trajectory_builder_3d_options()
               .submaps_options()
