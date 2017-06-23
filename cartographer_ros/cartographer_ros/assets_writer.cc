@@ -94,7 +94,7 @@ void Write3DAssets(
       auto points_batch = carto::common::make_unique<carto::io::PointsBatch>();
       points_batch->time = node.time();
       points_batch->origin = range_data.origin;
-      points_batch->trajectory_index = trajectory_id;
+      points_batch->trajectory_id = trajectory_id;
       points_batch->points = range_data.returns;
       ply_writing_points_processor.Process(std::move(points_batch));
     }
