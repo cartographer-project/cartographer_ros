@@ -35,11 +35,11 @@ Eigen::AlignedBox2f ComputeMapBoundingBox2D(
       }
       const auto& data = *node.constant_data;
       ::cartographer::sensor::RangeData range_data;
-        range_data = ::cartographer::sensor::TransformRangeData(
-            data.range_data_2d, node.pose.cast<float>());
-        bounding_box.extend(range_data.origin.head<2>());
-        for (const Eigen::Vector3f& hit : range_data.returns) {
-          bounding_box.extend(hit.head<2>());
+      range_data = ::cartographer::sensor::TransformRangeData(
+          data.range_data_2d, node.pose.cast<float>());
+      bounding_box.extend(range_data.origin.head<2>());
+      for (const Eigen::Vector3f& hit : range_data.returns) {
+        bounding_box.extend(hit.head<2>());
       }
       for (const Eigen::Vector3f& miss : range_data.misses) {
         bounding_box.extend(miss.head<2>());
@@ -72,7 +72,7 @@ void BuildOccupancyGrid2D(
         continue;
       }
       latest_time = std::max(latest_time, node.time());
-      CHECK(node.constant_data->range_data_3d.returns.empty());  
+      CHECK(node.constant_data->range_data_3d.returns.empty());
       range_data_inserter.Insert(
           carto::sensor::TransformRangeData(node.constant_data->range_data_2d,
                                             node.pose.cast<float>()),
