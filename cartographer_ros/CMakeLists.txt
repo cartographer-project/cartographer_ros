@@ -101,6 +101,12 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${YAMLCPP_LIBRARIES})
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${LUA_INCLUDE_DIR})
 
 # PCL
+# Fix for PCL linking issue in Zesty, as in
+# https://github.com/ros-perception/perception_pcl/blob/b53b5d5c3abc7c3afde8a77177674e6d74c59522/pcl_ros/CMakeLists.txt#L12
+if(NOT "${PCL_LIBRARIES}" STREQUAL "")
+  # FIXME: this causes duplicates and not found error in ubuntu:zesty
+  list(REMOVE_ITEM PCL_LIBRARIES "/usr/lib/libmpi.so")
+endif()
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${PCL_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${PCL_LIBRARIES})
 foreach(DEFINITION ${PCL_DEFINITIONS})
