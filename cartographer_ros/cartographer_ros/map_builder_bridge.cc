@@ -38,6 +38,7 @@ int MapBuilderBridge::AddTrajectory(
       expected_sensor_ids, trajectory_options.trajectory_builder_options);
   LOG(INFO) << "Added trajectory with ID '" << trajectory_id << "'.";
 
+  // Make sure there is no trajectory with 'trajectory_id' yet.
   CHECK_EQ(sensor_bridges_.count(trajectory_id), 0);
   sensor_bridges_[trajectory_id] =
       cartographer::common::make_unique<SensorBridge>(
@@ -53,6 +54,7 @@ int MapBuilderBridge::AddTrajectory(
 void MapBuilderBridge::FinishTrajectory(const int trajectory_id) {
   LOG(INFO) << "Finishing trajectory with ID '" << trajectory_id << "'...";
 
+  // Make sure there is a trajectory with 'trajectory_id'.
   CHECK_EQ(sensor_bridges_.count(trajectory_id), 1);
   map_builder_.FinishTrajectory(trajectory_id);
   map_builder_.sparse_pose_graph()->RunFinalOptimization();
@@ -72,31 +74,32 @@ void MapBuilderBridge::SerializeState(const std::string& stem) {
 void MapBuilderBridge::WriteAssets(const string& stem) {
   const auto all_trajectory_nodes =
       map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
-  // TODO(yutakaoka): Add multi-trajectory support.
-  CHECK_EQ(trajectory_options_.count(0), 1);
-  CHECK_EQ(all_trajectory_nodes.size(), 1);
-  if (all_trajectory_nodes[0].empty()) {
+  if (!HasNonTrimmedNode(all_trajectory_nodes)) {
     LOG(WARNING) << "No data was collected and no assets will be written.";
-  } else {
-    LOG(INFO) << "Writing assets with stem '" << stem << "'...";
-    if (node_options_.map_builder_options.use_trajectory_builder_2d()) {
-      Write2DAssets(
-          all_trajectory_nodes[0], node_options_.map_frame,
-          trajectory_options_[0]
-              .trajectory_builder_options.trajectory_builder_2d_options()
-              .submaps_options(),
-          stem);
-    }
+    return;
+  }
+  // Make sure there is a trajectory with id = 0.
+  CHECK_EQ(trajectory_options_.count(0), 1);
+  LOG(INFO) << "Writing assets with stem '" << stem << "'...";
+  if (node_options_.map_builder_options.use_trajectory_builder_2d()) {
+    // We arbitrarily use the submap_options() from the first trajectory to
+    // write the 2D assets.
+    Write2DAssets(
+        all_trajectory_nodes, node_options_.map_frame,
+        trajectory_options_[0]
+            .trajectory_builder_options.trajectory_builder_2d_options()
+            .submaps_options(),
+        stem);
+  }
 
-    if (node_options_.map_builder_options.use_trajectory_builder_3d()) {
-      Write3DAssets(
-          all_trajectory_nodes[0],
-          trajectory_options_[0]
-              .trajectory_builder_options.trajectory_builder_3d_options()
-              .submaps_options()
-              .high_resolution(),
-          stem);
-    }
+  if (node_options_.map_builder_options.use_trajectory_builder_3d()) {
+    Write3DAssets(
+        all_trajectory_nodes,
+        trajectory_options_[0]
+            .trajectory_builder_options.trajectory_builder_3d_options()
+            .submaps_options()
+            .high_resolution(),
+        stem);
   }
 }
 
@@ -153,20 +156,16 @@ std::unique_ptr<nav_msgs::OccupancyGrid>
 MapBuilderBridge::BuildOccupancyGrid() {
   CHECK(node_options_.map_builder_options.use_trajectory_builder_2d())
       << "Publishing OccupancyGrids for 3D data is not yet supported";
-  std::vector<::cartographer::mapping::TrajectoryNode> flat_trajectory_nodes;
-  for (const auto& single_trajectory_nodes :
-       map_builder_.sparse_pose_graph()->GetTrajectoryNodes()) {
-    flat_trajectory_nodes.insert(flat_trajectory_nodes.end(),
-                                 single_trajectory_nodes.begin(),
-                                 single_trajectory_nodes.end());
-  }
+  const auto all_trajectory_nodes =
+      map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
   std::unique_ptr<nav_msgs::OccupancyGrid> occupancy_grid;
-  if (!flat_trajectory_nodes.empty()) {
+  if (HasNonTrimmedNode(all_trajectory_nodes)) {
     occupancy_grid =
         cartographer::common::make_unique<nav_msgs::OccupancyGrid>();
+    // Make sure there is a trajectory with id = 0.
     CHECK_EQ(trajectory_options_.count(0), 1);
     BuildOccupancyGrid2D(
-        flat_trajectory_nodes, node_options_.map_frame,
+        all_trajectory_nodes, node_options_.map_frame,
         trajectory_options_[0]
             .trajectory_builder_options.trajectory_builder_2d_options()
             .submaps_options(),
@@ -190,6 +189,7 @@ MapBuilderBridge::GetTrajectoryStates() {
       continue;
     }
 
+    // Make sure there is a trajectory with 'trajectory_id'.
     CHECK_EQ(trajectory_options_.count(trajectory_id), 1);
     trajectory_states[trajectory_id] = {
         pose_estimate,

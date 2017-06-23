@@ -25,19 +25,26 @@
 
 namespace cartographer_ros {
 
+// Returns 'true' if there is at least one untrimmed node for any trajectory.
+// The Write?DAssets functions expects this to be 'true'.
+bool HasNonTrimmedNode(
+    const std::vector<std::vector<::cartographer::mapping::TrajectoryNode>>&
+        all_trajectory_nodes);
+
 // Writes a trajectory proto and an occupancy grid.
 void Write2DAssets(
-    const std::vector<::cartographer::mapping::TrajectoryNode>&
-        trajectory_nodes,
+    const std::vector<std::vector<::cartographer::mapping::TrajectoryNode>>&
+        all_trajectory_nodes,
     const string& map_frame,
     const ::cartographer::mapping_2d::proto::SubmapsOptions& submaps_options,
     const std::string& stem);
 
 // Writes X-ray images, trajectory proto, and PLY files from the
-// 'trajectory_nodes'. The filenames will all start with 'stem'.
-void Write3DAssets(const std::vector<::cartographer::mapping::TrajectoryNode>&
-                       trajectory_nodes,
-                   const double voxel_size, const std::string& stem);
+// 'all_trajectory_nodes'. The filenames will all start with 'stem'.
+void Write3DAssets(
+    const std::vector<std::vector<::cartographer::mapping::TrajectoryNode>>&
+        all_trajectory_nodes,
+    const double voxel_size, const std::string& stem);
 
 }  // namespace cartographer_ros
 

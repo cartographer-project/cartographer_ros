@@ -41,7 +41,7 @@ TEST(OccupancyGridTest, ComputeMapLimits) {
       ::cartographer::transform::Rigid3d::Identity()};
   constexpr double kResolution = 0.05;
   const ::cartographer::mapping_2d::MapLimits limits =
-      ComputeMapLimits(kResolution, {trajectory_node});
+      ComputeMapLimits(kResolution, {{trajectory_node}});
   constexpr float kPaddingAwareTolerance = 5 * kResolution;
   EXPECT_NEAR(50.f, limits.max().x(), kPaddingAwareTolerance);
   EXPECT_NEAR(1.f, limits.max().y(), kPaddingAwareTolerance);

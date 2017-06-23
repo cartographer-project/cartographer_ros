@@ -24,30 +24,26 @@
 
 namespace {
 
-Eigen::AlignedBox2f ComputeMapBoundingBox(
-    const std::vector<::cartographer::mapping::TrajectoryNode>&
-        trajectory_nodes) {
+Eigen::AlignedBox2f ComputeMapBoundingBox2D(
+    const std::vector<std::vector<::cartographer::mapping::TrajectoryNode>>&
+        all_trajectory_nodes) {
   Eigen::AlignedBox2f bounding_box(Eigen::Vector2f::Zero());
-  for (const auto& node : trajectory_nodes) {
-    if (node.trimmed()) {
-      continue;
-    }
-    const auto& data = *node.constant_data;
-    ::cartographer::sensor::RangeData range_data;
-    if (!data.range_data_3d.returns.empty()) {
-      range_data = ::cartographer::sensor::TransformRangeData(
-          ::cartographer::sensor::Decompress(data.range_data_3d),
-          node.pose.cast<float>());
-    } else {
+  for (const auto& trajectory_nodes : all_trajectory_nodes) {
+    for (const auto& node : trajectory_nodes) {
+      if (node.trimmed()) {
+        continue;
+      }
+      const auto& data = *node.constant_data;
+      ::cartographer::sensor::RangeData range_data;
       range_data = ::cartographer::sensor::TransformRangeData(
           data.range_data_2d, node.pose.cast<float>());
-    }
-    bounding_box.extend(range_data.origin.head<2>());
-    for (const Eigen::Vector3f& hit : range_data.returns) {
-      bounding_box.extend(hit.head<2>());
-    }
-    for (const Eigen::Vector3f& miss : range_data.misses) {
-      bounding_box.extend(miss.head<2>());
+      bounding_box.extend(range_data.origin.head<2>());
+      for (const Eigen::Vector3f& hit : range_data.returns) {
+        bounding_box.extend(hit.head<2>());
+      }
+      for (const Eigen::Vector3f& miss : range_data.misses) {
+        bounding_box.extend(miss.head<2>());
+      }
     }
   }
   return bounding_box;
@@ -58,31 +54,33 @@ Eigen::AlignedBox2f ComputeMapBoundingBox(
 namespace cartographer_ros {
 
 void BuildOccupancyGrid2D(
-    const std::vector<::cartographer::mapping::TrajectoryNode>&
-        trajectory_nodes,
+    const std::vector<std::vector<::cartographer::mapping::TrajectoryNode>>&
+        all_trajectory_nodes,
     const string& map_frame,
     const ::cartographer::mapping_2d::proto::SubmapsOptions& submaps_options,
     ::nav_msgs::OccupancyGrid* const occupancy_grid) {
-  CHECK(!trajectory_nodes.empty());
   namespace carto = ::cartographer;
   const carto::mapping_2d::MapLimits map_limits =
-      ComputeMapLimits(submaps_options.resolution(), trajectory_nodes);
+      ComputeMapLimits(submaps_options.resolution(), all_trajectory_nodes);
   carto::mapping_2d::ProbabilityGrid probability_grid(map_limits);
   carto::mapping_2d::RangeDataInserter range_data_inserter(
       submaps_options.range_data_inserter_options());
-  for (const auto& node : trajectory_nodes) {
-    if (node.trimmed()) {
-      continue;
+  carto::common::Time latest_time = carto::common::Time::min();
+  for (const auto& trajectory_nodes : all_trajectory_nodes) {
+    for (const auto& node : trajectory_nodes) {
+      if (node.trimmed()) {
+        continue;
+      }
+      latest_time = std::max(latest_time, node.time());
+      CHECK(node.constant_data->range_data_3d.returns.empty());
+      range_data_inserter.Insert(
+          carto::sensor::TransformRangeData(node.constant_data->range_data_2d,
+                                            node.pose.cast<float>()),
+          &probability_grid);
     }
-    CHECK(node.constant_data->range_data_3d.returns.empty());  // No 3D yet.
-    range_data_inserter.Insert(
-        carto::sensor::TransformRangeData(node.constant_data->range_data_2d,
-                                          node.pose.cast<float>()),
-        &probability_grid);
   }
-
-  // TODO(whess): Compute the latest time of in 'trajectory_nodes'.
-  occupancy_grid->header.stamp = ToRos(trajectory_nodes.back().time());
+  CHECK(latest_time != carto::common::Time::min());
+  occupancy_grid->header.stamp = ToRos(latest_time);
   occupancy_grid->header.frame_id = map_frame;
   occupancy_grid->info.map_load_time = occupancy_grid->header.stamp;
 
@@ -128,9 +126,10 @@ void BuildOccupancyGrid2D(
 
 ::cartographer::mapping_2d::MapLimits ComputeMapLimits(
     const double resolution,
-    const std::vector<::cartographer::mapping::TrajectoryNode>&
-        trajectory_nodes) {
-  Eigen::AlignedBox2f bounding_box = ComputeMapBoundingBox(trajectory_nodes);
+    const std::vector<std::vector<::cartographer::mapping::TrajectoryNode>>&
+        all_trajectory_nodes) {
+  Eigen::AlignedBox2f bounding_box =
+      ComputeMapBoundingBox2D(all_trajectory_nodes);
   // Add some padding to ensure all rays are still contained in the map after
   // discretization.
   const float kPadding = 3.f * resolution;

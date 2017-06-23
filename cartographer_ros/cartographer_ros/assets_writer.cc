@@ -31,24 +31,35 @@
 
 namespace cartographer_ros {
 
-// Writes an occupancy grid.
+bool HasNonTrimmedNode(
+    const std::vector<std::vector<::cartographer::mapping::TrajectoryNode>>&
+        all_trajectory_nodes) {
+  for (const auto& trajectory_nodes : all_trajectory_nodes) {
+    for (const auto& node : trajectory_nodes) {
+      if (!node.trimmed()) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 void Write2DAssets(
-    const std::vector<::cartographer::mapping::TrajectoryNode>&
-        trajectory_nodes,
+    const std::vector<std::vector<::cartographer::mapping::TrajectoryNode>>&
+        all_trajectory_nodes,
     const string& map_frame,
     const ::cartographer::mapping_2d::proto::SubmapsOptions& submaps_options,
     const std::string& stem) {
   ::nav_msgs::OccupancyGrid occupancy_grid;
-  BuildOccupancyGrid2D(trajectory_nodes, map_frame, submaps_options,
+  BuildOccupancyGrid2D(all_trajectory_nodes, map_frame, submaps_options,
                        &occupancy_grid);
   WriteOccupancyGridToPgmAndYaml(occupancy_grid, stem);
 }
 
-// Writes X-ray images and PLY files from the 'trajectory_nodes'. The filenames
-// will all start with 'stem'.
-void Write3DAssets(const std::vector<::cartographer::mapping::TrajectoryNode>&
-                       trajectory_nodes,
-                   const double voxel_size, const std::string& stem) {
+void Write3DAssets(
+    const std::vector<std::vector<::cartographer::mapping::TrajectoryNode>>&
+        all_trajectory_nodes,
+    const double voxel_size, const std::string& stem) {
   namespace carto = ::cartographer;
   const auto file_writer_factory = [](const string& filename) {
     return carto::common::make_unique<carto::io::StreamFileWriter>(filename);
@@ -73,16 +84,20 @@ void Write3DAssets(const std::vector<::cartographer::mapping::TrajectoryNode>&
   carto::io::PlyWritingPointsProcessor ply_writing_points_processor(
       file_writer_factory(stem + ".ply"), &xz_xray_points_processor);
 
-  for (const auto& node : trajectory_nodes) {
-    const carto::sensor::RangeData range_data =
-        carto::sensor::TransformRangeData(
-            carto::sensor::Decompress(node.constant_data->range_data_3d),
-            node.pose.cast<float>());
-
-    auto points_batch = carto::common::make_unique<carto::io::PointsBatch>();
-    points_batch->origin = range_data.origin;
-    points_batch->points = range_data.returns;
-    ply_writing_points_processor.Process(std::move(points_batch));
+  for (size_t trajectory_id = 0; trajectory_id < all_trajectory_nodes.size();
+       ++trajectory_id) {
+    for (const auto& node : all_trajectory_nodes[trajectory_id]) {
+      const carto::sensor::RangeData range_data =
+          carto::sensor::TransformRangeData(
+              carto::sensor::Decompress(node.constant_data->range_data_3d),
+              node.pose.cast<float>());
+      auto points_batch = carto::common::make_unique<carto::io::PointsBatch>();
+      points_batch->time = node.time();
+      points_batch->origin = range_data.origin;
+      points_batch->trajectory_index = trajectory_id;
+      points_batch->points = range_data.returns;
+      ply_writing_points_processor.Process(std::move(points_batch));
+    }
   }
   ply_writing_points_processor.Flush();
 }

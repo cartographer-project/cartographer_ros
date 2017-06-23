@@ -29,8 +29,8 @@
 namespace cartographer_ros {
 
 void BuildOccupancyGrid2D(
-    const std::vector<::cartographer::mapping::TrajectoryNode>&
-        trajectory_nodes,
+    const std::vector<std::vector<::cartographer::mapping::TrajectoryNode>>&
+        all_trajectory_nodes,
     const string& map_frame,
     const ::cartographer::mapping_2d::proto::SubmapsOptions& submaps_options,
     ::nav_msgs::OccupancyGrid* const occupancy_grid);
@@ -39,8 +39,8 @@ void BuildOccupancyGrid2D(
 // misses) in the 'trajectory_nodes'.
 ::cartographer::mapping_2d::MapLimits ComputeMapLimits(
     double resolution,
-    const std::vector<::cartographer::mapping::TrajectoryNode>&
-        trajectory_nodes);
+    const std::vector<std::vector<::cartographer::mapping::TrajectoryNode>>&
+        all_trajectory_nodes);
 
 }  // namespace cartographer_ros
 
