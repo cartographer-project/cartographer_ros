@@ -79,7 +79,7 @@ void BuildOccupancyGrid2D(
           &probability_grid);
     }
   }
-  CHECK(lastest_time != carto::common::Time::min());
+  CHECK(latest_time != carto::common::Time::min());
   occupancy_grid->header.stamp = ToRos(latest_time);
   occupancy_grid->header.frame_id = map_frame;
   occupancy_grid->info.map_load_time = occupancy_grid->header.stamp;
