@@ -28,5 +28,3 @@ std::vector<std::string> SplitString(const std::string& input, char delimiter);
 }  // namespace cartographer_ros
 
 #endif  // CARTOGRAPHER_ROS_SPLIT_STRING_H_
-
-

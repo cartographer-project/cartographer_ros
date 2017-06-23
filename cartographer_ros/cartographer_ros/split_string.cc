@@ -32,4 +32,3 @@ std::vector<std::string> SplitString(const std::string& input,
 }
 
 }  // namespace cartographer_ros
-

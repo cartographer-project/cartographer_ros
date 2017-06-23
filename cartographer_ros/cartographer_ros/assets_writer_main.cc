@@ -136,7 +136,8 @@ std::unique_ptr<carto::io::PointsBatch> HandleMessage(
   return points_batch;
 }
 
-void Run(const string& pose_graph_filename, const std::vector<string>& bag_filenames,
+void Run(const string& pose_graph_filename,
+         const std::vector<string>& bag_filenames,
          const string& configuration_directory,
          const string& configuration_basename, const string& urdf_filename) {
   auto file_resolver =
@@ -246,7 +247,9 @@ int main(int argc, char** argv) {
   CHECK(!FLAGS_pose_graph_filename.empty())
       << "-pose_graph_filename is missing.";
 
-  ::cartographer_ros::Run(FLAGS_pose_graph_filename, cartographer_ros::SplitString(FLAGS_bag_filenames, ','),
-                          FLAGS_configuration_directory,
-                          FLAGS_configuration_basename, FLAGS_urdf_filename);
+  ::cartographer_ros::Run(
+      FLAGS_pose_graph_filename,
+      cartographer_ros::SplitString(FLAGS_bag_filenames, ','),
+      FLAGS_configuration_directory, FLAGS_configuration_basename,
+      FLAGS_urdf_filename);
 }
