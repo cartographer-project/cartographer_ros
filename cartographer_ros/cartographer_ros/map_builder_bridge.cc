@@ -245,22 +245,11 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
 visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintsList(
     const ::cartographer::mapping::SparsePoseGraph::Constraint::Tag
         wanted_constraint_tag) {
-  visualization_msgs::MarkerArray constraints_viz;
+  visualization_msgs::MarkerArray constraints_list;
 
-  const auto trajectory_nodes =
+  const auto all_trajectory_nodes =
       map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
   const auto constraints = map_builder_.sparse_pose_graph()->constraints();
-  std::vector<cartographer::transform::Rigid3d> submap_transforms;
-  for (auto& single_trajectory : trajectory_nodes) {
-    for (auto& node : single_trajectory) {
-      auto current_trajectory_transforms =
-          map_builder_.sparse_pose_graph()->GetSubmapTransforms(
-              node.constant_data->trajectory_id);
-      std::move(current_trajectory_transforms.begin(),
-                current_trajectory_transforms.end(),
-                std::back_inserter(submap_transforms));
-    }
-  }
 
   int marker_id = 0;
   ros::Time now = ros::Time::now();
@@ -313,10 +302,10 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintsList(
     constraint_marker.points.push_back(submap_pose_point);
     residual_error_marker.points.push_back(submap_pose_point);
     residual_error_marker.points.push_back(trajectory_node_point);
-    constraints_viz.markers.push_back(constraint_marker);
-    constraints_viz.markers.push_back(residual_error_marker);
+    constraints_list.markers.push_back(constraint_marker);
+    constraints_list.markers.push_back(residual_error_marker);
   }
-  return constraints_viz;
+  return constraints_list;
 }
 
 visualization_msgs::Marker MapBuilderBridge::createVisualizationMarker(
