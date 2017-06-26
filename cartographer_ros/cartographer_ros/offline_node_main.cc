@@ -26,6 +26,7 @@
 #include "cartographer_ros/node.h"
 #include "cartographer_ros/node_options.h"
 #include "cartographer_ros/ros_log_sink.h"
+#include "cartographer_ros/split_string.h"
 #include "cartographer_ros/urdf_reader.h"
 #include "gflags/gflags.h"
 #include "ros/callback_queue.h"
@@ -61,16 +62,6 @@ constexpr int kLatestOnlyPublisherQueueSize = 1;
 volatile std::sig_atomic_t sigint_triggered = 0;
 
 void SigintHandler(int) { sigint_triggered = 1; }
-
-std::vector<string> SplitString(const string& input, const char delimiter) {
-  std::stringstream stream(input);
-  string token;
-  std::vector<string> tokens;
-  while (std::getline(stream, token, delimiter)) {
-    tokens.push_back(token);
-  }
-  return tokens;
-}
 
 // TODO(hrapp): This is duplicated in node_main.cc. Pull out into a config
 // unit.

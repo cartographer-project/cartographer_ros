@@ -20,7 +20,7 @@
           -configuration_directory $(find cartographer_ros)/configuration_files
           -configuration_basename assets_writer_backpack_3d.lua
           -urdf_filename $(find cartographer_ros)/urdf/backpack_3d.urdf
-          -bag_filename $(arg bag_filenames)
+          -bag_filenames $(arg bag_filenames)
           -pose_graph_filename $(arg pose_graph_filename)"
       output="screen">
   </node>
