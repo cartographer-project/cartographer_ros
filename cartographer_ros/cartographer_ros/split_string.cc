@@ -22,7 +22,7 @@ namespace cartographer_ros {
 
 std::vector<std::string> SplitString(const std::string& input,
                                      const char delimiter) {
-  std::stringstream stream(input);
+  std::istringstream stream(input);
   std::string token;
   std::vector<std::string> tokens;
   while (std::getline(stream, token, delimiter)) {

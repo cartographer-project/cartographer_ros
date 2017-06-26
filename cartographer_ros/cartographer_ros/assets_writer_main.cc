@@ -154,7 +154,7 @@ void Run(const string& pose_graph_filename,
   CHECK_EQ(pose_graph_proto.trajectory_size(), bag_filenames.size())
       << "Pose graphs contains " << pose_graph_proto.trajectory_size()
       << " trajectories while " << bag_filenames.size()
-      << " bags where provided. This tool requires one bag for each "
+      << " bags were provided. This tool requires one bag for each "
          "trajectory in the same order as the correponding trajectories in the "
          "pose graph proto.";
 
