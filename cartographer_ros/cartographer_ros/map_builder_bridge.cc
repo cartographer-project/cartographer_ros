@@ -16,6 +16,7 @@
 
 #include "cartographer_ros/map_builder_bridge.h"
 
+#include "cartographer/mapping/sparse_pose_graph.h"
 #include "cartographer_ros/assets_writer.h"
 #include "cartographer_ros/color.h"
 #include "cartographer_ros/msg_conversion.h"
@@ -240,6 +241,88 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
     trajectory_nodes_list.markers.push_back(marker);
   }
   return trajectory_nodes_list;
+}
+
+visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintsList(
+    const ::cartographer::mapping::SparsePoseGraph::Constraint::Tag
+    wanted_constraint_tag) {
+  visualization_msgs::MarkerArray constraints_list;
+
+  const auto all_trajectory_nodes =
+      map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
+  const auto constraints = map_builder_.sparse_pose_graph()->constraints();
+
+  int marker_id = 0;
+  ros::Time now = ros::Time::now();
+  for (const auto& constraint : constraints) {
+    visualization_msgs::Marker constraint_marker, residual_error_marker;
+
+    std_msgs::ColorRGBA color_constraint, color_error;
+
+    if (constraint.tag != wanted_constraint_tag) {
+      continue;
+    }
+
+    if (constraint.tag ==
+        cartographer::mapping::SparsePoseGraph::Constraint::INTER_SUBMAP) {
+      // yellow
+      color_constraint.a = 1.0;
+      color_constraint.r = color_constraint.g = 1.0;
+      // cyan
+      color_error.a = 1.0;
+      color_error.b = color_error.g = 1.0;
+    } else {
+      color_constraint.a = color_error.a = 1.0;
+      color_constraint.g = 1.0;
+      color_error.b = 1.0;
+    }
+
+    constraint_marker = createVisualizationMarker(
+        marker_id++, visualization_msgs::Marker::LINE_STRIP, "constraint", now,
+        node_options_.map_frame);
+    constraint_marker.color = color_constraint;
+    residual_error_marker = createVisualizationMarker(
+        marker_id++, visualization_msgs::Marker::LINE_STRIP, "residual error",
+        now, node_options_.map_frame);
+    residual_error_marker.color = color_error;
+
+    geometry_msgs::Point submap_point, submap_pose_point, trajectory_node_point;
+    submap_point = ToGeometryMsgPoint(
+        map_builder_.sparse_pose_graph()->GetSubmapTransforms(
+            constraint.submap_id.trajectory_id)[constraint.submap_id.submap_index]
+            .translation());
+    submap_pose_point = ToGeometryMsgPoint(
+        (map_builder_.sparse_pose_graph()->GetSubmapTransforms(
+            constraint.submap_id.trajectory_id)[constraint.submap_id.submap_index] *
+            constraint.pose.zbar_ij)
+            .translation());
+    trajectory_node_point =
+        ToGeometryMsgPoint(all_trajectory_nodes[constraint.node_id.trajectory_id]
+                           [constraint.node_id.node_index]
+                               .pose.translation());
+
+    constraint_marker.points.push_back(submap_point);
+    constraint_marker.points.push_back(submap_pose_point);
+    residual_error_marker.points.push_back(submap_pose_point);
+    residual_error_marker.points.push_back(trajectory_node_point);
+    constraints_list.markers.push_back(constraint_marker);
+    constraints_list.markers.push_back(residual_error_marker);
+  }
+  return constraints_list;
+}
+
+visualization_msgs::Marker MapBuilderBridge::createVisualizationMarker(
+    const int id, const int type, const std::string ns, const ros::Time time,
+    const std::string frame_id) {
+  visualization_msgs::Marker m;
+  m.id = id;
+  m.type = type;
+  m.ns = ns;
+  m.header.stamp = time;
+  m.header.frame_id = frame_id;
+  m.color.a = 1.0;
+  m.scale.x = 0.02;
+  return m;
 }
 
 SensorBridge* MapBuilderBridge::sensor_bridge(const int trajectory_id) {
