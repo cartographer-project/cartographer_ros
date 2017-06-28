@@ -245,23 +245,12 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
 
 visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintsList(
     const ::cartographer::mapping::SparsePoseGraph::Constraint::Tag
-        wanted_constraint_tag) {
-  visualization_msgs::MarkerArray constraints_viz;
+    wanted_constraint_tag) {
+  visualization_msgs::MarkerArray constraints_list;
 
-  const auto trajectory_nodes =
+  const auto all_trajectory_nodes =
       map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
   const auto constraints = map_builder_.sparse_pose_graph()->constraints();
-  std::vector<cartographer::transform::Rigid3d> submap_transforms;
-  for (auto& single_trajectory : trajectory_nodes) {
-    for (auto& node : single_trajectory) {
-      auto current_trajectory_transforms =
-          map_builder_.sparse_pose_graph()->GetSubmapTransforms(
-              node.constant_data->trajectory_id);
-      std::move(current_trajectory_transforms.begin(),
-                current_trajectory_transforms.end(),
-                std::back_inserter(submap_transforms));
-    }
-  }
 
   int marker_id = 0;
   ros::Time now = ros::Time::now();
@@ -298,26 +287,28 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintsList(
     residual_error_marker.color = color_error;
 
     geometry_msgs::Point submap_point, submap_pose_point, trajectory_node_point;
-
     submap_point = ToGeometryMsgPoint(
-        submap_transforms[constraint.submap_id.submap_index].translation());
+        map_builder_.sparse_pose_graph()->GetSubmapTransforms(
+            constraint.submap_id.trajectory_id)[constraint.submap_id.submap_index]
+            .translation());
     submap_pose_point = ToGeometryMsgPoint(
-        (submap_transforms[constraint.submap_id.submap_index] *
-         constraint.pose.zbar_ij)
+        (map_builder_.sparse_pose_graph()->GetSubmapTransforms(
+            constraint.submap_id.trajectory_id)[constraint.submap_id.submap_index] *
+            constraint.pose.zbar_ij)
             .translation());
     trajectory_node_point =
-        ToGeometryMsgPoint(trajectory_nodes[constraint.node_id.trajectory_id]
-                                           [constraint.node_id.node_index]
-                                               .pose.translation());
+        ToGeometryMsgPoint(all_trajectory_nodes[constraint.node_id.trajectory_id]
+                           [constraint.node_id.node_index]
+                               .pose.translation());
 
     constraint_marker.points.push_back(submap_point);
     constraint_marker.points.push_back(submap_pose_point);
     residual_error_marker.points.push_back(submap_pose_point);
     residual_error_marker.points.push_back(trajectory_node_point);
-    constraints_viz.markers.push_back(constraint_marker);
-    constraints_viz.markers.push_back(residual_error_marker);
+    constraints_list.markers.push_back(constraint_marker);
+    constraints_list.markers.push_back(residual_error_marker);
   }
-  return constraints_viz;
+  return constraints_list;
 }
 
 visualization_msgs::Marker MapBuilderBridge::createVisualizationMarker(

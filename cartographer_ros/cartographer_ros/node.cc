@@ -126,7 +126,7 @@ Node::Node(const NodeOptions& node_options, tf2_ros::Buffer* const tf_buffer)
       ::ros::WallDuration(node_options_.trajectory_publish_period_sec),
       &Node::PublishTrajectoryNodesList, this));
   wall_timers_.push_back(node_handle_.createWallTimer(
-      ::ros::WallDuration(node_options_.submap_publish_period_sec),
+      ::ros::WallDuration(kConstraintPublishPeriodSec),
       &Node::PublishConstraintsList, this));
 }
 
@@ -229,12 +229,16 @@ void Node::PublishTrajectoryNodesList(
 void Node::PublishConstraintsList(
     const ::ros::WallTimerEvent& unused_timer_event) {
   carto::common::MutexLocker lock(&mutex_);
-  constraints_inter_list_publisher_.publish(
-      map_builder_bridge_.GetConstraintsList(
-          cartographer::mapping::SparsePoseGraph::Constraint::INTER_SUBMAP));
-  constraints_intra_list_publisher_.publish(
-      map_builder_bridge_.GetConstraintsList(
-          cartographer::mapping::SparsePoseGraph::Constraint::INTRA_SUBMAP));
+  if (constraints_intra_list_publisher_.getNumSubscribers() > 0) {
+    constraints_intra_list_publisher_.publish(
+        map_builder_bridge_.GetConstraintsList(
+            cartographer::mapping::SparsePoseGraph::Constraint::INTRA_SUBMAP));
+  }
+  if (constraints_inter_list_publisher_.getNumSubscribers() > 0) {
+    constraints_inter_list_publisher_.publish(
+        map_builder_bridge_.GetConstraintsList(
+            cartographer::mapping::SparsePoseGraph::Constraint::INTER_SUBMAP));
+  }
 }
 
 void Node::SpinOccupancyGridThreadForever() {

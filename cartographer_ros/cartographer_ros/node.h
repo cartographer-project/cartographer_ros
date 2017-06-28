@@ -84,6 +84,7 @@ class Node {
                          const TrajectoryOptions& options);
 
   const NodeOptions node_options_;
+  const float kConstraintPublishPeriodSec = 3.;
 
   tf2_ros::TransformBroadcaster tf_broadcaster_;
 
