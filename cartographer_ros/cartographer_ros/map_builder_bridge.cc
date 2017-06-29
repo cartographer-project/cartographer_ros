@@ -253,15 +253,13 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintsList(
 
   int marker_id = 0;
   ros::Time now = ros::Time::now();
+  const auto all_submap_data =
+      map_builder_.sparse_pose_graph()->GetAllSubmapData();
   for (const auto& constraint : constraints) {
-    visualization_msgs::Marker constraint_marker, residual_error_marker;
-
-    std_msgs::ColorRGBA color_constraint, color_error;
-
     if (constraint.tag != wanted_constraint_tag) {
       continue;
     }
-
+    std_msgs::ColorRGBA color_constraint, color_error;
     if (constraint.tag ==
         cartographer::mapping::SparsePoseGraph::Constraint::INTER_SUBMAP) {
       // yellow
@@ -276,6 +274,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintsList(
       color_error.b = 1.0;
     }
 
+    visualization_msgs::Marker constraint_marker, residual_error_marker;
     constraint_marker = createVisualizationMarker(
         marker_id++, visualization_msgs::Marker::LINE_STRIP, "constraint", now,
         node_options_.map_frame);
@@ -285,23 +284,26 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintsList(
         now, node_options_.map_frame);
     residual_error_marker.color = color_error;
 
-    geometry_msgs::Point submap_point, submap_pose_point, trajectory_node_point;
+    const auto submap_data = all_submap_data[constraint.submap_id.trajectory_id]
+                                            [constraint.submap_id.submap_index];
 
-    submap_point = ToGeometryMsgPoint(
-        submap_transforms[constraint.submap_id.submap_index].translation());
-    submap_pose_point = ToGeometryMsgPoint(
-        (submap_transforms[constraint.submap_id.submap_index] *
-         constraint.pose.zbar_ij)
-            .translation());
-    trajectory_node_point =
-        ToGeometryMsgPoint(trajectory_nodes[constraint.node_id.trajectory_id]
-                                           [constraint.node_id.node_index]
-                                               .pose.translation());
+    const auto submap_origin = submap_data.pose;
+    const auto constraint_pose = submap_origin * constraint.pose.zbar_ij;
+    const auto trajectory_node_pose =
+        all_trajectory_nodes[constraint.node_id.trajectory_id]
+                            [constraint.node_id.node_index]
+                                .pose;
 
-    constraint_marker.points.push_back(submap_point);
-    constraint_marker.points.push_back(submap_pose_point);
-    residual_error_marker.points.push_back(submap_pose_point);
-    residual_error_marker.points.push_back(trajectory_node_point);
+    constraint_marker.points.push_back(
+        ToGeometryMsgPoint(submap_origin.translation()));
+    constraint_marker.points.push_back(
+        ToGeometryMsgPoint(constraint_pose.translation()));
+
+    residual_error_marker.points.push_back(
+        ToGeometryMsgPoint(constraint_pose.translation()));
+    residual_error_marker.points.push_back(
+        ToGeometryMsgPoint(trajectory_node_pose.translation()));
+
     constraints_list.markers.push_back(constraint_marker);
     constraints_list.markers.push_back(residual_error_marker);
   }
