@@ -44,7 +44,6 @@ namespace {
 constexpr float kPointCloudComponentFourMagic = 1.;
 
 using ::cartographer::transform::Rigid3d;
-using ::cartographer::kalman_filter::PoseCovariance;
 using ::cartographer::sensor::PointCloudWithIntensities;
 
 sensor_msgs::PointCloud2 PreparePointCloud2Message(const int64 timestamp,
@@ -205,10 +204,6 @@ Eigen::Vector3d ToEigen(const geometry_msgs::Vector3& vector3) {
 Eigen::Quaterniond ToEigen(const geometry_msgs::Quaternion& quaternion) {
   return Eigen::Quaterniond(quaternion.w, quaternion.x, quaternion.y,
                             quaternion.z);
-}
-
-PoseCovariance ToPoseCovariance(const boost::array<double, 36>& covariance) {
-  return Eigen::Map<const Eigen::Matrix<double, 6, 6>>(covariance.data());
 }
 
 geometry_msgs::Transform ToGeometryMsgTransform(const Rigid3d& rigid3d) {
