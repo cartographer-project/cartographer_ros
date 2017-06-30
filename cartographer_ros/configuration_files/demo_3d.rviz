@@ -234,7 +234,7 @@ Visualization Manager:
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /trajectory_nodes_list
+      Marker Topic: /trajectory_node_list
       Name: MarkerArray
       Namespaces:
         "": true
