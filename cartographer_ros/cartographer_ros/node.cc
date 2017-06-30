@@ -88,9 +88,9 @@ Node::Node(const NodeOptions& node_options, tf2_ros::Buffer* const tf_buffer)
   trajectory_node_list_publisher_ =
       node_handle_.advertise<::visualization_msgs::MarkerArray>(
           kTrajectoryNodeListTopic, kLatestOnlyPublisherQueueSize);
-  constraints_list_publisher_ =
+  constraint_list_publisher_ =
       node_handle_.advertise<::visualization_msgs::MarkerArray>(
-          kConstraintsListTopic, kLatestOnlyPublisherQueueSize);
+          kConstraintListTopic, kLatestOnlyPublisherQueueSize);
   service_servers_.push_back(node_handle_.advertiseService(
       kSubmapQueryServiceName, &Node::HandleSubmapQuery, this));
   service_servers_.push_back(node_handle_.advertiseService(
@@ -124,7 +124,7 @@ Node::Node(const NodeOptions& node_options, tf2_ros::Buffer* const tf_buffer)
       &Node::PublishTrajectoryNodeList, this));
   wall_timers_.push_back(node_handle_.createWallTimer(
       ::ros::WallDuration(kConstraintPublishPeriodSec),
-      &Node::PublishConstraintsList, this));
+      &Node::PublishConstraintList, this));
 }
 
 Node::~Node() {
@@ -223,12 +223,11 @@ void Node::PublishTrajectoryNodeList(
   }
 }
 
-void Node::PublishConstraintsList(
+void Node::PublishConstraintList(
     const ::ros::WallTimerEvent& unused_timer_event) {
   carto::common::MutexLocker lock(&mutex_);
-  if (constraints_list_publisher_.getNumSubscribers() > 0) {
-    constraints_list_publisher_.publish(
-        map_builder_bridge_.GetConstraintsList());
+  if (constraint_list_publisher_.getNumSubscribers() > 0) {
+    constraint_list_publisher_.publish(map_builder_bridge_.GetConstraintList());
   }
 }
 

@@ -244,8 +244,8 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
   return trajectory_node_list;
 }
 
-visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintsList() {
-  visualization_msgs::MarkerArray constraints_list;
+visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintList() {
+  visualization_msgs::MarkerArray constraint_list;
   int marker_id = 0;
   const ros::Time now = ros::Time::now();
   visualization_msgs::Marker constraint_intra_marker;
@@ -332,23 +332,23 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintsList() {
         ToGeometryMsgPoint(trajectory_node_pose.translation()));
 
     // Work around the 16384 point limit in RViz by splitting into
-    // multiple markers, similar to GetTrajectoryNodesList().
+    // multiple markers, similar to GetTrajectoryNodeList().
     if (constraint_marker->points.size() == 16384) {
       CHECK_EQ(residual_marker->points.size(), 16384);
-      constraints_list.markers.push_back(*constraint_marker);
+      constraint_list.markers.push_back(*constraint_marker);
       constraint_marker->id = marker_id++;
       constraint_marker->points.clear();
-      constraints_list.markers.push_back(*residual_marker);
+      constraint_list.markers.push_back(*residual_marker);
       residual_marker->id = marker_id++;
       residual_marker->points.clear();
     }
   }
 
-  constraints_list.markers.push_back(constraint_intra_marker);
-  constraints_list.markers.push_back(residual_intra_marker);
-  constraints_list.markers.push_back(constraint_inter_marker);
-  constraints_list.markers.push_back(residual_inter_marker);
-  return constraints_list;
+  constraint_list.markers.push_back(constraint_intra_marker);
+  constraint_list.markers.push_back(residual_intra_marker);
+  constraint_list.markers.push_back(constraint_inter_marker);
+  constraint_list.markers.push_back(residual_inter_marker);
+  return constraint_list;
 }
 
 SensorBridge* MapBuilderBridge::sensor_bridge(const int trajectory_id) {
