@@ -221,6 +221,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
     marker.color = GetColor(trajectory_id);
     marker.scale.x = kTrajectoryLineStripMarkerScale;
     marker.pose.orientation.w = 1.0;
+    marker.pose.position.z = 0.05;
     for (const auto& node : single_trajectory_nodes) {
       if (node.trimmed()) {
         continue;
@@ -259,14 +260,17 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintsList() {
   visualization_msgs::Marker residual_intra_marker = constraint_intra_marker;
   residual_intra_marker.id = marker_id++;
   residual_intra_marker.ns = "Intra residuals";
+  residual_intra_marker.pose.position.z = 0.1;
 
   visualization_msgs::Marker constraint_inter_marker = constraint_intra_marker;
   constraint_inter_marker.id = marker_id++;
   constraint_inter_marker.ns = "Inter constraints";
+  constraint_inter_marker.pose.position.z = 0.1;
 
   visualization_msgs::Marker residual_inter_marker = constraint_intra_marker;
   residual_inter_marker.id = marker_id++;
   residual_inter_marker.ns = "Inter residuals";
+  residual_inter_marker.pose.position.z = 0.1;
 
   const auto all_trajectory_nodes =
       map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
