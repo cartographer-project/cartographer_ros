@@ -24,7 +24,8 @@
 namespace cartographer_ros {
 
 constexpr double kTrajectoryLineStripMarkerScale = 0.07;
-constexpr double kConstraintLineListMarkerScale = 0.025;
+constexpr double kIntraConstraintMarkerScale = 0.025;
+constexpr double kInterConstraintMarkerScale = 0.045;
 
 MapBuilderBridge::MapBuilderBridge(const NodeOptions& node_options,
                                    tf2_ros::Buffer* const tf_buffer)
@@ -253,7 +254,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintList() {
   constraint_intra_marker.type = visualization_msgs::Marker::LINE_LIST;
   constraint_intra_marker.header.stamp = ros::Time::now();
   constraint_intra_marker.header.frame_id = node_options_.map_frame;
-  constraint_intra_marker.scale.x = kConstraintLineListMarkerScale;
+  constraint_intra_marker.scale.x = kIntraConstraintMarkerScale;
   constraint_intra_marker.pose.orientation.w = 1.0;
 
   visualization_msgs::Marker residual_intra_marker = constraint_intra_marker;
@@ -267,11 +268,13 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintList() {
   visualization_msgs::Marker constraint_inter_marker = constraint_intra_marker;
   constraint_inter_marker.id = marker_id++;
   constraint_inter_marker.ns = "Inter constraints";
+  constraint_inter_marker.scale.x = kInterConstraintMarkerScale;
   constraint_inter_marker.pose.position.z = 0.1;
 
   visualization_msgs::Marker residual_inter_marker = constraint_intra_marker;
   residual_inter_marker.id = marker_id++;
   residual_inter_marker.ns = "Inter residuals";
+  constraint_inter_marker.scale.x = kInterConstraintMarkerScale;
   residual_inter_marker.pose.position.z = 0.1;
 
   const auto& all_trajectory_nodes =
@@ -288,10 +291,10 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintList() {
       constraint_marker = &constraint_intra_marker;
       residual_marker = &residual_intra_marker;
       // Color mapping for submaps of various trajectories - add trajectory id
-      // to ensure different starting colors. Also add a fixed offset of 20
+      // to ensure different starting colors. Also add a fixed offset of 25
       // to avoid having identical colors as trajectories.
       color_constraint = GetColor(constraint.submap_id.submap_index +
-                                  constraint.submap_id.trajectory_id + 20);
+                                  constraint.submap_id.trajectory_id + 25);
       color_residual.a = 1.0;
       color_residual.r = 1.0;
     } else {
