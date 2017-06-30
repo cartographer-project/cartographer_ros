@@ -88,12 +88,9 @@ Node::Node(const NodeOptions& node_options, tf2_ros::Buffer* const tf_buffer)
   trajectory_node_list_publisher_ =
       node_handle_.advertise<::visualization_msgs::MarkerArray>(
           kTrajectoryNodeListTopic, kLatestOnlyPublisherQueueSize);
-  constraints_intra_list_publisher_ =
+  constraints_list_publisher_ =
       node_handle_.advertise<::visualization_msgs::MarkerArray>(
-          kConstraintsListIntraTopic, kLatestOnlyPublisherQueueSize);
-  constraints_inter_list_publisher_ =
-      node_handle_.advertise<::visualization_msgs::MarkerArray>(
-          kConstraintsListInterTopic, kLatestOnlyPublisherQueueSize);
+          kConstraintsListTopic, kLatestOnlyPublisherQueueSize);
   service_servers_.push_back(node_handle_.advertiseService(
       kSubmapQueryServiceName, &Node::HandleSubmapQuery, this));
   service_servers_.push_back(node_handle_.advertiseService(
@@ -229,15 +226,9 @@ void Node::PublishTrajectoryNodeList(
 void Node::PublishConstraintsList(
     const ::ros::WallTimerEvent& unused_timer_event) {
   carto::common::MutexLocker lock(&mutex_);
-  if (constraints_inter_list_publisher_.getNumSubscribers() > 0) {
-    constraints_inter_list_publisher_.publish(
-        map_builder_bridge_.GetConstraintsList(
-            cartographer::mapping::SparsePoseGraph::Constraint::INTER_SUBMAP));
-  }
-  if (constraints_intra_list_publisher_.getNumSubscribers() > 0) {
-    constraints_intra_list_publisher_.publish(
-        map_builder_bridge_.GetConstraintsList(
-            cartographer::mapping::SparsePoseGraph::Constraint::INTRA_SUBMAP));
+  if (constraints_list_publisher_.getNumSubscribers() > 0) {
+    constraints_list_publisher_.publish(
+        map_builder_bridge_.GetConstraintsList());
   }
 }
 
