@@ -274,11 +274,11 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintList() {
   residual_inter_marker.ns = "Inter residuals";
   residual_inter_marker.pose.position.z = 0.1;
 
-  const auto all_trajectory_nodes =
+  const auto& all_trajectory_nodes =
       map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
-  const auto all_submap_data =
+  const auto& all_submap_data =
       map_builder_.sparse_pose_graph()->GetAllSubmapData();
-  const auto constraints = map_builder_.sparse_pose_graph()->constraints();
+  const auto& constraints = map_builder_.sparse_pose_graph()->constraints();
 
   for (const auto& constraint : constraints) {
     visualization_msgs::Marker *constraint_marker, *residual_marker;
