@@ -247,12 +247,11 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
 visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintList() {
   visualization_msgs::MarkerArray constraint_list;
   int marker_id = 0;
-  const ros::Time now = ros::Time::now();
   visualization_msgs::Marker constraint_intra_marker;
   constraint_intra_marker.id = marker_id++;
   constraint_intra_marker.ns = "Intra constraints";
   constraint_intra_marker.type = visualization_msgs::Marker::LINE_LIST;
-  constraint_intra_marker.header.stamp = now;
+  constraint_intra_marker.header.stamp = ros::Time::now();
   constraint_intra_marker.header.frame_id = node_options_.map_frame;
   constraint_intra_marker.scale.x = kConstraintLineListMarkerScale;
   constraint_intra_marker.pose.orientation.w = 1.0;
@@ -260,6 +259,9 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintList() {
   visualization_msgs::Marker residual_intra_marker = constraint_intra_marker;
   residual_intra_marker.id = marker_id++;
   residual_intra_marker.ns = "Intra residuals";
+  // This, and other markers which are less numerous are set to be slightly
+  // above the intra constraints marker in order to ensure that they are
+  // visible.
   residual_intra_marker.pose.position.z = 0.1;
 
   visualization_msgs::Marker constraint_inter_marker = constraint_intra_marker;
@@ -278,13 +280,6 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintList() {
       map_builder_.sparse_pose_graph()->GetAllSubmapData();
   const auto constraints = map_builder_.sparse_pose_graph()->constraints();
 
-  // Color mapping for submaps of various trajectories - add trajectory id
-  // to ensure different starting colors.
-  const auto submap_color_id_map =
-      [](const cartographer::mapping::SubmapId submap_id) -> int {
-    return submap_id.submap_index + submap_id.trajectory_id + 20;
-  };
-
   for (const auto& constraint : constraints) {
     visualization_msgs::Marker *constraint_marker, *residual_marker;
     std_msgs::ColorRGBA color_constraint, color_residual;
@@ -292,37 +287,42 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintList() {
         cartographer::mapping::SparsePoseGraph::Constraint::INTRA_SUBMAP) {
       constraint_marker = &constraint_intra_marker;
       residual_marker = &residual_intra_marker;
-      color_constraint = GetColor(submap_color_id_map(constraint.submap_id));
+      // Color mapping for submaps of various trajectories - add trajectory id
+      // to ensure different starting colors. Also add a fixed offset of 20
+      // to avoid having identical colors as trajectories.
+      color_constraint = GetColor(constraint.submap_id.submap_index +
+                                  constraint.submap_id.trajectory_id + 20);
       color_residual.a = 1.0;
       color_residual.r = 1.0;
     } else {
       constraint_marker = &constraint_inter_marker;
       residual_marker = &residual_inter_marker;
-      // yellow
+      // Bright yellow
       color_constraint.a = 1.0;
       color_constraint.r = color_constraint.g = 1.0;
-      // cyan
+      // Bright cyan
       color_residual.a = 1.0;
       color_residual.b = color_residual.g = 1.0;
     }
 
-    constraint_marker->colors.push_back(color_constraint);
-    constraint_marker->colors.push_back(color_constraint);
-    residual_marker->colors.push_back(color_residual);
-    residual_marker->colors.push_back(color_residual);
+    for (int i = 0; i < 2; ++i) {
+      constraint_marker->colors.push_back(color_constraint);
+      residual_marker->colors.push_back(color_residual);
+    }
 
     const auto& submap_data =
         all_submap_data[constraint.submap_id.trajectory_id]
                        [constraint.submap_id.submap_index];
-    const auto& submap_origin = submap_data.pose;
+    const auto& submap_pose = submap_data.pose;
     const auto& trajectory_node_pose =
         all_trajectory_nodes[constraint.node_id.trajectory_id]
                             [constraint.node_id.node_index]
                                 .pose;
-    const auto constraint_pose = submap_origin * constraint.pose.zbar_ij;
+    const ::cartographer::transform::Rigid3d constraint_pose =
+        submap_pose * constraint.pose.zbar_ij;
 
     constraint_marker->points.push_back(
-        ToGeometryMsgPoint(submap_origin.translation()));
+        ToGeometryMsgPoint(submap_pose.translation()));
     constraint_marker->points.push_back(
         ToGeometryMsgPoint(constraint_pose.translation()));
 
