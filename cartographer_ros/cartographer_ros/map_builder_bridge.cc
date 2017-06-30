@@ -286,24 +286,18 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintsList() {
   };
 
   for (const auto& constraint : constraints) {
-    auto& constraint_marker =
-        (constraint.tag ==
-         cartographer::mapping::SparsePoseGraph::Constraint::INTRA_SUBMAP)
-            ? constraint_intra_marker
-            : constraint_inter_marker;
-    auto& residual_marker =
-        (constraint.tag ==
-         cartographer::mapping::SparsePoseGraph::Constraint::INTRA_SUBMAP)
-            ? residual_intra_marker
-            : residual_inter_marker;
-
+    visualization_msgs::Marker *constraint_marker, *residual_marker;
     std_msgs::ColorRGBA color_constraint, color_residual;
     if (constraint.tag ==
         cartographer::mapping::SparsePoseGraph::Constraint::INTRA_SUBMAP) {
+      constraint_marker = &constraint_intra_marker;
+      residual_marker = &residual_intra_marker;
       color_constraint = GetColor(submap_color_id_map(constraint.submap_id));
       color_residual.a = 1.0;
       color_residual.r = 1.0;
     } else {
+      constraint_marker = &constraint_inter_marker;
+      residual_marker = &residual_inter_marker;
       // yellow
       color_constraint.a = 1.0;
       color_constraint.r = color_constraint.g = 1.0;
@@ -312,10 +306,10 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintsList() {
       color_residual.b = color_residual.g = 1.0;
     }
 
-    constraint_marker.colors.push_back(color_constraint);
-    constraint_marker.colors.push_back(color_constraint);
-    residual_marker.colors.push_back(color_residual);
-    residual_marker.colors.push_back(color_residual);
+    constraint_marker->colors.push_back(color_constraint);
+    constraint_marker->colors.push_back(color_constraint);
+    residual_marker->colors.push_back(color_residual);
+    residual_marker->colors.push_back(color_residual);
 
     const auto& submap_data =
         all_submap_data[constraint.submap_id.trajectory_id]
@@ -327,26 +321,26 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintsList() {
                                 .pose;
     const auto constraint_pose = submap_origin * constraint.pose.zbar_ij;
 
-    constraint_marker.points.push_back(
+    constraint_marker->points.push_back(
         ToGeometryMsgPoint(submap_origin.translation()));
-    constraint_marker.points.push_back(
+    constraint_marker->points.push_back(
         ToGeometryMsgPoint(constraint_pose.translation()));
 
-    residual_marker.points.push_back(
+    residual_marker->points.push_back(
         ToGeometryMsgPoint(constraint_pose.translation()));
-    residual_marker.points.push_back(
+    residual_marker->points.push_back(
         ToGeometryMsgPoint(trajectory_node_pose.translation()));
 
     // Work around the 16384 point limit in RViz by splitting into
     // multiple markers, similar to GetTrajectoryNodesList().
-    if (constraint_marker.points.size() == 16384) {
-      CHECK_EQ(residual_marker.points.size(), 16384);
-      constraints_list.markers.push_back(constraint_marker);
-      constraint_marker.id = marker_id++;
-      constraint_marker.points.clear();
-      constraints_list.markers.push_back(residual_marker);
-      residual_marker.id = marker_id++;
-      residual_marker.points.clear();
+    if (constraint_marker->points.size() == 16384) {
+      CHECK_EQ(residual_marker->points.size(), 16384);
+      constraints_list.markers.push_back(*constraint_marker);
+      constraint_marker->id = marker_id++;
+      constraint_marker->points.clear();
+      constraints_list.markers.push_back(*residual_marker);
+      residual_marker->id = marker_id++;
+      residual_marker->points.clear();
     }
   }
 
