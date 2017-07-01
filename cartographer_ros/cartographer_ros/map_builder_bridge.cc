@@ -333,18 +333,6 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintList() {
         ToGeometryMsgPoint(constraint_pose.translation()));
     residual_marker->points.push_back(
         ToGeometryMsgPoint(trajectory_node_pose.translation()));
-
-    // Work around the 16384 point limit in RViz by splitting into
-    // multiple markers, similar to GetTrajectoryNodeList().
-    if (constraint_marker->points.size() == 16384) {
-      CHECK_EQ(residual_marker->points.size(), 16384);
-      constraint_list.markers.push_back(*constraint_marker);
-      constraint_marker->id = marker_id++;
-      constraint_marker->points.clear();
-      constraint_list.markers.push_back(*residual_marker);
-      residual_marker->id = marker_id++;
-      residual_marker->points.clear();
-    }
   }
 
   constraint_list.markers.push_back(constraint_intra_marker);
