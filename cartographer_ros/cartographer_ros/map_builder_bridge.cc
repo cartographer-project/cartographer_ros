@@ -203,8 +203,8 @@ MapBuilderBridge::GetTrajectoryStates() {
   return trajectory_states;
 }
 
-visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
-  visualization_msgs::MarkerArray trajectory_nodes_list;
+visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
+  visualization_msgs::MarkerArray trajectory_node_list;
   const auto all_trajectory_nodes =
       map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
   int marker_id = 0;
@@ -230,16 +230,16 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodesList() {
       // Work around the 16384 point limit in rviz by splitting the
       // trajectory into multiple markers.
       if (marker.points.size() == 16384) {
-        trajectory_nodes_list.markers.push_back(marker);
+        trajectory_node_list.markers.push_back(marker);
         marker.id = marker_id++;
         marker.points.clear();
         // Push back the last point, so the two markers appear connected.
         marker.points.push_back(node_point);
       }
     }
-    trajectory_nodes_list.markers.push_back(marker);
+    trajectory_node_list.markers.push_back(marker);
   }
-  return trajectory_nodes_list;
+  return trajectory_node_list;
 }
 
 SensorBridge* MapBuilderBridge::sensor_bridge(const int trajectory_id) {

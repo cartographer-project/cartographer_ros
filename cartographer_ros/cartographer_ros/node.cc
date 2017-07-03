@@ -85,9 +85,9 @@ Node::Node(const NodeOptions& node_options, tf2_ros::Buffer* const tf_buffer)
   submap_list_publisher_ =
       node_handle_.advertise<::cartographer_ros_msgs::SubmapList>(
           kSubmapListTopic, kLatestOnlyPublisherQueueSize);
-  trajectory_nodes_list_publisher_ =
+  trajectory_node_list_publisher_ =
       node_handle_.advertise<::visualization_msgs::MarkerArray>(
-          kTrajectoryNodesListTopic, kLatestOnlyPublisherQueueSize);
+          kTrajectoryNodeListTopic, kLatestOnlyPublisherQueueSize);
   service_servers_.push_back(node_handle_.advertiseService(
       kSubmapQueryServiceName, &Node::HandleSubmapQuery, this));
   service_servers_.push_back(node_handle_.advertiseService(
@@ -118,7 +118,7 @@ Node::Node(const NodeOptions& node_options, tf2_ros::Buffer* const tf_buffer)
       &Node::PublishTrajectoryStates, this));
   wall_timers_.push_back(node_handle_.createWallTimer(
       ::ros::WallDuration(node_options_.trajectory_publish_period_sec),
-      &Node::PublishTrajectoryNodesList, this));
+      &Node::PublishTrajectoryNodeList, this));
 }
 
 Node::~Node() {
@@ -208,12 +208,12 @@ void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
   }
 }
 
-void Node::PublishTrajectoryNodesList(
+void Node::PublishTrajectoryNodeList(
     const ::ros::WallTimerEvent& unused_timer_event) {
   carto::common::MutexLocker lock(&mutex_);
-  if (trajectory_nodes_list_publisher_.getNumSubscribers() > 0) {
-    trajectory_nodes_list_publisher_.publish(
-        map_builder_bridge_.GetTrajectoryNodesList());
+  if (trajectory_node_list_publisher_.getNumSubscribers() > 0) {
+    trajectory_node_list_publisher_.publish(
+        map_builder_bridge_.GetTrajectoryNodeList());
   }
 }
 
