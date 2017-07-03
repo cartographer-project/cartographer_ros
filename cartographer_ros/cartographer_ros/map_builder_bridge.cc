@@ -16,6 +16,7 @@
 
 #include "cartographer_ros/map_builder_bridge.h"
 
+#include "cartographer/io/proto_stream.h"
 #include "cartographer_ros/assets_writer.h"
 #include "cartographer_ros/color.h"
 #include "cartographer_ros/msg_conversion.h"
@@ -62,13 +63,9 @@ void MapBuilderBridge::FinishTrajectory(const int trajectory_id) {
 }
 
 void MapBuilderBridge::SerializeState(const std::string& stem) {
-  std::ofstream proto_file(stem + ".pb",
-                           std::ios_base::out | std::ios_base::binary);
-  CHECK(map_builder_.sparse_pose_graph()->ToProto().SerializeToOstream(
-      &proto_file))
-      << "Could not serialize pose graph.";
-  proto_file.close();
-  CHECK(proto_file) << "Could not write pose graph.";
+  cartographer::io::ProtoStreamWriter writer(stem + ".pbstream");
+  map_builder_.SerializeState(&writer);
+  CHECK(writer.Close()) << "Could not write state.";
 }
 
 void MapBuilderBridge::WriteAssets(const string& stem) {
