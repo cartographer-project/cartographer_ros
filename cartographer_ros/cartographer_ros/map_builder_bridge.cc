@@ -226,8 +226,12 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
       if (node.trimmed()) {
         continue;
       }
-      const ::geometry_msgs::Point node_point = ToGeometryMsgPoint(
-          (node.pose * node.constant_data->tracking_to_pose).translation());
+      // In the 2D case, the pose in node.pose is yaw-only xy-plane aligned.
+      // Multiplying by node.constant_data->tracking_to_pose, which would give
+      // the full orientation, is not needed here since we are only using the
+      // translational part.
+      const ::geometry_msgs::Point node_point =
+          ToGeometryMsgPoint(node.pose.translation());
       marker.points.push_back(node_point);
       // Work around the 16384 point limit in RViz by splitting the
       // trajectory into multiple markers.
@@ -313,6 +317,8 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintList() {
     const auto& submap_data =
         all_submap_data[constraint.submap_id.trajectory_id]
                        [constraint.submap_id.submap_index];
+    // We can skip multiplying with node.constant_data->tracking_to_pose,
+    // similar to GetTrajectoryNodeList().
     const auto& submap_pose = submap_data.pose;
     const auto& trajectory_node_pose =
         all_trajectory_nodes[constraint.node_id.trajectory_id]
