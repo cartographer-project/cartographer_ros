@@ -26,6 +26,7 @@
 #include "cartographer/io/file_writer.h"
 #include "cartographer/io/points_processor.h"
 #include "cartographer/io/points_processor_pipeline_builder.h"
+#include "cartographer/io/proto_stream.h"
 #include "cartographer/mapping/proto/sparse_pose_graph.pb.h"
 #include "cartographer/sensor/point_cloud.h"
 #include "cartographer/sensor/range_data.h"
@@ -58,9 +59,8 @@ DEFINE_string(
 DEFINE_string(bag_filenames, "",
               "Bags to process, must be in the same order as the trajectories "
               "in 'pose_graph_filename'.");
-DEFINE_string(
-    pose_graph_filename, "",
-    "Proto containing the pose graph written by /write_assets service.");
+DEFINE_string(pose_graph_filename, "",
+              "Proto stream file containing the pose graph.");
 DEFINE_bool(use_bag_transforms, true,
             "Whether to read and use the transforms from the bag.");
 
@@ -148,9 +148,9 @@ void Run(const string& pose_graph_filename,
   carto::common::LuaParameterDictionary lua_parameter_dictionary(
       code, std::move(file_resolver));
 
-  std::ifstream stream(pose_graph_filename.c_str());
+  carto::io::ProtoStreamReader reader(pose_graph_filename);
   carto::mapping::proto::SparsePoseGraph pose_graph_proto;
-  CHECK(pose_graph_proto.ParseFromIstream(&stream));
+  CHECK(reader.ReadProto(&pose_graph_proto));
   CHECK_EQ(pose_graph_proto.trajectory_size(), bag_filenames.size())
       << "Pose graphs contains " << pose_graph_proto.trajectory_size()
       << " trajectories while " << bag_filenames.size()
