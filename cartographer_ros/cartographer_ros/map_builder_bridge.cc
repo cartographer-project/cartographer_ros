@@ -25,6 +25,7 @@
 namespace cartographer_ros {
 
 constexpr double kTrajectoryLineStripMarkerScale = 0.07;
+constexpr double kConstraintMarkerScale = 0.025;
 
 MapBuilderBridge::MapBuilderBridge(const NodeOptions& node_options,
                                    tf2_ros::Buffer* const tf_buffer)
@@ -217,14 +218,19 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
     marker.color = GetColor(trajectory_id);
     marker.scale.x = kTrajectoryLineStripMarkerScale;
     marker.pose.orientation.w = 1.0;
+    marker.pose.position.z = 0.05;
     for (const auto& node : single_trajectory_nodes) {
       if (node.trimmed()) {
         continue;
       }
-      const ::geometry_msgs::Point node_point = ToGeometryMsgPoint(
-          (node.pose * node.constant_data->tracking_to_pose).translation());
+      // In 2D, the pose in node.pose is xy-aligned. Multiplying by
+      // node.constant_data->tracking_to_pose would give the full orientation,
+      // but that is not needed here since we are only interested in the
+      // translational part.
+      const ::geometry_msgs::Point node_point =
+          ToGeometryMsgPoint(node.pose.translation());
       marker.points.push_back(node_point);
-      // Work around the 16384 point limit in rviz by splitting the
+      // Work around the 16384 point limit in RViz by splitting the
       // trajectory into multiple markers.
       if (marker.points.size() == 16384) {
         trajectory_node_list.markers.push_back(marker);
@@ -237,6 +243,105 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
     trajectory_node_list.markers.push_back(marker);
   }
   return trajectory_node_list;
+}
+
+visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintList() {
+  visualization_msgs::MarkerArray constraint_list;
+  int marker_id = 0;
+  visualization_msgs::Marker constraint_intra_marker;
+  constraint_intra_marker.id = marker_id++;
+  constraint_intra_marker.ns = "Intra constraints";
+  constraint_intra_marker.type = visualization_msgs::Marker::LINE_LIST;
+  constraint_intra_marker.header.stamp = ros::Time::now();
+  constraint_intra_marker.header.frame_id = node_options_.map_frame;
+  constraint_intra_marker.scale.x = kConstraintMarkerScale;
+  constraint_intra_marker.pose.orientation.w = 1.0;
+
+  visualization_msgs::Marker residual_intra_marker = constraint_intra_marker;
+  residual_intra_marker.id = marker_id++;
+  residual_intra_marker.ns = "Intra residuals";
+  // This and other markers which are less numerous are set to be slightly
+  // above the intra constraints marker in order to ensure that they are
+  // visible.
+  residual_intra_marker.pose.position.z = 0.1;
+
+  visualization_msgs::Marker constraint_inter_marker = constraint_intra_marker;
+  constraint_inter_marker.id = marker_id++;
+  constraint_inter_marker.ns = "Inter constraints";
+  constraint_inter_marker.pose.position.z = 0.1;
+
+  visualization_msgs::Marker residual_inter_marker = constraint_intra_marker;
+  residual_inter_marker.id = marker_id++;
+  residual_inter_marker.ns = "Inter residuals";
+  residual_inter_marker.pose.position.z = 0.1;
+
+  const auto all_trajectory_nodes =
+      map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
+  const auto all_submap_data =
+      map_builder_.sparse_pose_graph()->GetAllSubmapData();
+  const auto constraints = map_builder_.sparse_pose_graph()->constraints();
+
+  for (const auto& constraint : constraints) {
+    visualization_msgs::Marker *constraint_marker, *residual_marker;
+    std_msgs::ColorRGBA color_constraint, color_residual;
+    if (constraint.tag ==
+        cartographer::mapping::SparsePoseGraph::Constraint::INTRA_SUBMAP) {
+      constraint_marker = &constraint_intra_marker;
+      residual_marker = &residual_intra_marker;
+      // Color mapping for submaps of various trajectories - add trajectory id
+      // to ensure different starting colors. Also add a fixed offset of 25
+      // to avoid having identical colors as trajectories.
+      color_constraint = GetColor(constraint.submap_id.submap_index +
+                                  constraint.submap_id.trajectory_id + 25);
+      color_residual.a = 1.0;
+      color_residual.r = 1.0;
+    } else {
+      constraint_marker = &constraint_inter_marker;
+      residual_marker = &residual_inter_marker;
+      // Bright yellow
+      color_constraint.a = 1.0;
+      color_constraint.r = color_constraint.g = 1.0;
+      // Bright cyan
+      color_residual.a = 1.0;
+      color_residual.b = color_residual.g = 1.0;
+    }
+
+    for (int i = 0; i < 2; ++i) {
+      constraint_marker->colors.push_back(color_constraint);
+      residual_marker->colors.push_back(color_residual);
+    }
+
+    const auto& submap_data =
+        all_submap_data[constraint.submap_id.trajectory_id]
+                       [constraint.submap_id.submap_index];
+    const auto& submap_pose = submap_data.pose;
+    // Similar to GetTrajectoryNodeList(), we can skip multiplying with
+    // node.constant_data->tracking_to_pose.
+    const auto& trajectory_node_pose =
+        all_trajectory_nodes[constraint.node_id.trajectory_id]
+                            [constraint.node_id.node_index]
+                                .pose;
+    // Similar to GetTrajectoryNodeList(), we can skip multiplying with
+    // node.constant_data->tracking_to_pose.
+    const ::cartographer::transform::Rigid3d constraint_pose =
+        submap_pose * constraint.pose.zbar_ij;
+
+    constraint_marker->points.push_back(
+        ToGeometryMsgPoint(submap_pose.translation()));
+    constraint_marker->points.push_back(
+        ToGeometryMsgPoint(constraint_pose.translation()));
+
+    residual_marker->points.push_back(
+        ToGeometryMsgPoint(constraint_pose.translation()));
+    residual_marker->points.push_back(
+        ToGeometryMsgPoint(trajectory_node_pose.translation()));
+  }
+
+  constraint_list.markers.push_back(constraint_intra_marker);
+  constraint_list.markers.push_back(residual_intra_marker);
+  constraint_list.markers.push_back(constraint_inter_marker);
+  constraint_list.markers.push_back(residual_inter_marker);
+  return constraint_list;
 }
 
 SensorBridge* MapBuilderBridge::sensor_bridge(const int trajectory_id) {

@@ -33,6 +33,8 @@ constexpr char kSubmapQueryServiceName[] = "submap_query";
 constexpr char kStartTrajectoryServiceName[] = "start_trajectory";
 constexpr char kWriteAssetsServiceName[] = "write_assets";
 constexpr char kTrajectoryNodeListTopic[] = "trajectory_node_list";
+constexpr char kConstraintListTopic[] = "constraint_list";
+constexpr double kConstraintPublishPeriodSec = 0.5;
 
 }  // namespace cartographer_ros
 

@@ -63,6 +63,7 @@ class MapBuilderBridge {
   std::unique_ptr<nav_msgs::OccupancyGrid> BuildOccupancyGrid();
   std::unordered_map<int, TrajectoryState> GetTrajectoryStates();
   visualization_msgs::MarkerArray GetTrajectoryNodeList();
+  visualization_msgs::MarkerArray GetConstraintList();
 
   SensorBridge* sensor_bridge(int trajectory_id);
 
