@@ -193,7 +193,7 @@ void Run(const std::vector<string>& bag_filenames) {
 
       while (!delayed_messages.empty() &&
              delayed_messages.front().getTime() <
-                 msg.getTime() + ::ros::Duration(1.)) {
+                 msg.getTime() - ::ros::Duration(1.)) {
         const rosbag::MessageInstance& delayed_msg = delayed_messages.front();
         const string topic = node.node_handle()->resolveName(
             delayed_msg.getTopic(), false /* resolve */);
