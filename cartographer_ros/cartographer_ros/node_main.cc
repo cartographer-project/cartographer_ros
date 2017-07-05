@@ -34,6 +34,7 @@ DEFINE_string(configuration_directory, "",
 DEFINE_string(configuration_basename, "",
               "Basename, i.e. not containing any directory prefix, of the "
               "configuration file.");
+DEFINE_string(map_filename, "", "If non-empty, filename of a map to load.");
 
 namespace cartographer_ros {
 namespace {
@@ -60,6 +61,9 @@ void Run() {
   std::tie(node_options, trajectory_options) = LoadOptions();
 
   Node node(node_options, &tf_buffer);
+  if (!FLAGS_map_filename.empty()) {
+    node.LoadMap(FLAGS_map_filename);
+  }
   node.StartTrajectoryWithDefaultTopics(trajectory_options);
 
   ::ros::spin();

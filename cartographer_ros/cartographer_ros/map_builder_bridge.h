@@ -18,6 +18,7 @@
 #define CARTOGRAPHER_ROS_MAP_BUILDER_BRIDGE_H_
 
 #include <memory>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -49,6 +50,7 @@ class MapBuilderBridge {
   MapBuilderBridge(const MapBuilderBridge&) = delete;
   MapBuilderBridge& operator=(const MapBuilderBridge&) = delete;
 
+  void LoadMap(const std::string& map_filename);
   int AddTrajectory(const std::unordered_set<string>& expected_sensor_ids,
                     const TrajectoryOptions& trajectory_options);
   void FinishTrajectory(int trajectory_id);

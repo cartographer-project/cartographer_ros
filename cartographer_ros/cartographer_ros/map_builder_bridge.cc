@@ -33,6 +33,12 @@ MapBuilderBridge::MapBuilderBridge(const NodeOptions& node_options,
       map_builder_(node_options.map_builder_options),
       tf_buffer_(tf_buffer) {}
 
+void MapBuilderBridge::LoadMap(const std::string& map_filename) {
+  LOG(INFO) << "Loading map '" << map_filename << "'...";
+  cartographer::io::ProtoStreamReader stream(map_filename);
+  map_builder_.LoadMap(&stream);
+}
+
 int MapBuilderBridge::AddTrajectory(
     const std::unordered_set<string>& expected_sensor_ids,
     const TrajectoryOptions& trajectory_options) {
@@ -153,7 +159,7 @@ cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
 std::unique_ptr<nav_msgs::OccupancyGrid>
 MapBuilderBridge::BuildOccupancyGrid() {
   CHECK(node_options_.map_builder_options.use_trajectory_builder_2d())
-      << "Publishing OccupancyGrids for 3D data is not yet supported";
+      << "Publishing OccupancyGrids for 3D data is not yet supported.";
   const auto all_trajectory_nodes =
       map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
   std::unique_ptr<nav_msgs::OccupancyGrid> occupancy_grid;

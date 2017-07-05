@@ -494,4 +494,9 @@ void Node::FinishAllTrajectories() {
     }
   }
 }
+
+void Node::LoadMap(const std::string& map_filename) {
+  map_builder_bridge_.LoadMap(map_filename);
+}
+
 }  // namespace cartographer_ros
