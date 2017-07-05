@@ -50,6 +50,9 @@ class Node {
   // Finishes all yet active trajectories.
   void FinishAllTrajectories();
 
+  // Publishes the current state
+  void PublishCurrentState();
+
   // Starts the first trajectory with the default topics.
   void StartTrajectoryWithDefaultTopics(const TrajectoryOptions& options);
 

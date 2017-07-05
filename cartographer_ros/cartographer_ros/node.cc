@@ -231,6 +231,14 @@ void Node::PublishConstraintList(
   }
 }
 
+void Node::PublishCurrentState() {
+  const ::ros::WallTimerEvent unused_timer_event;
+  PublishSubmapList(unused_timer_event);
+  PublishTrajectoryStates(unused_timer_event);
+  PublishTrajectoryNodeList(unused_timer_event);
+  PublishConstraintList(unused_timer_event);
+}
+
 void Node::SpinOccupancyGridThreadForever() {
   for (;;) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
