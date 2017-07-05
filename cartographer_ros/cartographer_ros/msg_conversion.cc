@@ -43,8 +43,8 @@ namespace {
 // properly.
 constexpr float kPointCloudComponentFourMagic = 1.;
 
-using ::cartographer::transform::Rigid3d;
 using ::cartographer::sensor::PointCloudWithIntensities;
+using ::cartographer::transform::Rigid3d;
 
 sensor_msgs::PointCloud2 PreparePointCloud2Message(const int64 timestamp,
                                                    const string& frame_id,

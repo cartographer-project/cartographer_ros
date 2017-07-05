@@ -53,6 +53,9 @@ class Node {
   // Starts the first trajectory with the default topics.
   void StartTrajectoryWithDefaultTopics(const TrajectoryOptions& options);
 
+  // Loads a persisted state to use as a map.
+  void LoadMap(const std::string& map_filename);
+
   ::ros::NodeHandle* node_handle();
   MapBuilderBridge* map_builder_bridge();
 
