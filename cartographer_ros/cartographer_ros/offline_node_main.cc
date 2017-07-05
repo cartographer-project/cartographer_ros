@@ -53,6 +53,9 @@ DEFINE_bool(use_bag_transforms, true,
             "Whether to read, use and republish the transforms from the bag.");
 DEFINE_string(pbstream_filename, "",
               "If non-empty, filename of a pbstream to load.");
+DEFINE_bool(keep_running, false,
+            "Keep running the offline node after all messages from the bag "
+            "have been processed.");
 
 namespace cartographer_ros {
 namespace {
@@ -123,6 +126,9 @@ void Run(const std::vector<string>& bag_filenames) {
   if (urdf_transforms.size() > 0) {
     static_tf_broadcaster.sendTransform(urdf_transforms);
   }
+
+  ros::AsyncSpinner async_spinner(1, ros::getGlobalCallbackQueue());
+  async_spinner.start();
 
   for (const string& bag_filename : bag_filenames) {
     if (!::ros::ok()) {
@@ -195,8 +201,6 @@ void Run(const std::vector<string>& bag_filenames) {
         clock.clock = delayed_msg.getTime();
         clock_publisher.publish(clock);
 
-        ::ros::spinOnce();
-
         LOG_EVERY_N(INFO, 100000)
             << "Processed " << (delayed_msg.getTime() - begin_time).toSec()
             << " of " << duration_in_seconds << " bag time seconds...";
@@ -232,6 +236,13 @@ void Run(const std::vector<string>& bag_filenames) {
 #endif
 
   node.SerializeState(bag_filenames.front() + ".pbstream");
+
+  if (FLAGS_keep_running) {
+    ros::WallRate rate(20);
+    while (!::ros::ok()) {
+      rate.sleep();
+    }
+  }
 }
 
 }  // namespace
