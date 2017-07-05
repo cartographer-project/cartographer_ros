@@ -63,10 +63,6 @@ constexpr char kTfStaticTopic[] = "/tf_static";
 constexpr char kTfTopic[] = "tf";
 constexpr int kLatestOnlyPublisherQueueSize = 1;
 
-volatile std::sig_atomic_t sigint_triggered = 0;
-
-void SigintHandler(int) { sigint_triggered = 1; }
-
 // TODO(hrapp): This is duplicated in node_main.cc. Pull out into a config
 // unit.
 std::tuple<NodeOptions, TrajectoryOptions> LoadOptions() {
@@ -166,7 +162,7 @@ void Run(const std::vector<string>& bag_filenames) {
   }
 
   for (const string& bag_filename : bag_filenames) {
-    if (sigint_triggered) {
+    if (!::ros::ok()) {
       break;
     }
 
@@ -184,7 +180,7 @@ void Run(const std::vector<string>& bag_filenames) {
     // because it gets very inefficient with a large one.
     std::deque<rosbag::MessageInstance> delayed_messages;
     for (const rosbag::MessageInstance& msg : view) {
-      if (sigint_triggered) {
+      if (!::ros::ok()) {
         break;
       }
 
@@ -296,9 +292,7 @@ int main(int argc, char** argv) {
       << "-configuration_basename is missing.";
   CHECK(!FLAGS_bag_filenames.empty()) << "-bag_filenames is missing.";
 
-  std::signal(SIGINT, &::cartographer_ros::SigintHandler);
-  ::ros::init(argc, argv, "cartographer_offline_node",
-              ::ros::init_options::NoSigintHandler);
+  ::ros::init(argc, argv, "cartographer_offline_node");
   ::ros::start();
 
   cartographer_ros::ScopedRosLogSink ros_log_sink;
