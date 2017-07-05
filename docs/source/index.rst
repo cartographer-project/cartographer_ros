@@ -94,6 +94,18 @@ the demo:
     # Launch the 2D backpack demo.
     roslaunch cartographer_ros demo_backpack_2d.launch bag_filename:=${HOME}/Downloads/cartographer_paper_deutsches_museum.bag
 
+    # Pure localization demo: We use 2 different 2D bags from the Deutsche
+    # Museum. The first one is used to generate the map, the second to run
+    # pure localization.
+    wget -P ~/Downloads https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b2-2016-04-05-14-44-52.bag
+    wget -P ~/Downloads https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b2-2016-04-27-12-31-41.bag
+    # Generate the map: Run the next command, wait until cartographer_offline_node finishes.
+    roslaunch cartographer_ros offline_backpack_2d.launch bag_filenames:=${HOME}/Downloads/b2-2016-04-05-14-44-52.bag
+    # Run pure localization:
+    roslaunch cartographer_ros demo_backpack_2d_localization.launch \
+       bag_filename:=${HOME}/Downloads/b2-2016-04-27-12-31-41.bag \
+       map_filename:=${HOME}/Downloads/b2-2016-04-05-14-44-52.bag.pbstream
+
     # Download the 3D backpack example bag.
     wget -P ~/Downloads https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-04-05-14-14-00.bag
 
