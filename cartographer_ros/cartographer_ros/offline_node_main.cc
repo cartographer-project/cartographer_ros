@@ -265,6 +265,7 @@ void Run(const std::vector<string>& bag_filenames) {
     if (FLAGS_keep_running) {
       ::ros::WallRate rate(kClockPublishFrequency);
       while (::ros::ok()) {
+        clock.clock += ::ros::Duration(1. / kClockPublishFrequency);
         clock_publisher.publish(clock);
         ::ros::spinOnce();
         rate.sleep();
