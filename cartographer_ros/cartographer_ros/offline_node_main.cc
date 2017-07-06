@@ -65,6 +65,7 @@ constexpr char kClockTopic[] = "clock";
 constexpr char kTfStaticTopic[] = "/tf_static";
 constexpr char kTfTopic[] = "tf";
 constexpr int kLatestOnlyPublisherQueueSize = 1;
+constexpr double kClockPublishFrequency = 30.;
 
 // TODO(hrapp): This is duplicated in node_main.cc. Pull out into a config
 // unit.
@@ -177,6 +178,7 @@ void Run(const std::vector<string>& bag_filenames) {
     rosbag::View view(bag);
     const ::ros::Time begin_time = view.getBeginTime();
     const double duration_in_seconds = (view.getEndTime() - begin_time).toSec();
+    rosgraph_msgs::Clock clock;
 
     // We make sure that tf_messages are published before any data messages, so
     // that tf lookups always work and that tf_buffer has a small cache size -
@@ -238,7 +240,6 @@ void Run(const std::vector<string>& bag_filenames) {
               ->HandleOdometryMessage(
                   topic, delayed_msg.instantiate<nav_msgs::Odometry>());
         }
-        rosgraph_msgs::Clock clock;
         clock.clock = delayed_msg.getTime();
         clock_publisher.publish(clock);
 
@@ -262,7 +263,12 @@ void Run(const std::vector<string>& bag_filenames) {
     bag.close();
 
     if (FLAGS_keep_running) {
-      ::ros::spin();
+      ::ros::WallRate rate(kClockPublishFrequency);
+      while (::ros::ok()) {
+        clock_publisher.publish(clock);
+        ::ros::spinOnce();
+        rate.sleep();
+      }
     }
 
     node.map_builder_bridge()->FinishTrajectory(trajectory_id);
