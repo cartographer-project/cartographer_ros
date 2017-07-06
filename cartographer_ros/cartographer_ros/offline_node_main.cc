@@ -54,6 +54,9 @@ DEFINE_bool(use_bag_transforms, true,
             "Whether to read, use and republish the transforms from the bag.");
 DEFINE_string(pbstream_filename, "",
               "If non-empty, filename of a pbstream to load.");
+DEFINE_bool(keep_running, false,
+            "Keep running the offline node after all messages from the bag "
+            "have been processed.");
 
 namespace cartographer_ros {
 namespace {
@@ -257,6 +260,11 @@ void Run(const std::vector<string>& bag_filenames) {
     }
 
     bag.close();
+
+    if (FLAGS_keep_running) {
+      ::ros::spin();
+    }
+
     node.map_builder_bridge()->FinishTrajectory(trajectory_id);
   }
 
