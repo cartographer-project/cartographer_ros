@@ -50,6 +50,8 @@ DEFINE_string(
     "URDF file that contains static links for your sensor configuration.");
 DEFINE_bool(use_bag_transforms, true,
             "Whether to read, use and republish the transforms from the bag.");
+DEFINE_string(pbstream_filename, "",
+              "If non-empty, filename of a pbstream to load.");
 
 namespace cartographer_ros {
 namespace {
@@ -98,6 +100,11 @@ void Run(const std::vector<string>& bag_filenames) {
   // remaining sensor data that cannot be transformed due to missing transforms.
   node_options.lookup_transform_timeout_sec = 0.;
   Node node(node_options, &tf_buffer);
+  if (!FLAGS_pbstream_filename.empty()) {
+    // TODO(jihoonl): LoadMap should be replaced by some better deserialization
+    // of full SLAM state as non-frozen trajectories once possible
+    node.LoadMap(FLAGS_pbstream_filename);
+  }
 
   std::unordered_set<string> expected_sensor_ids;
   const auto check_insert = [&expected_sensor_ids, &node](const string& topic) {
