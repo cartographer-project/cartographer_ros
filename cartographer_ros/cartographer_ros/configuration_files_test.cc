@@ -42,8 +42,10 @@ TEST_P(ConfigurationFilesTest, ValidateNodeOptions) {
 }
 
 INSTANTIATE_TEST_CASE_P(ValidateAllNodeOptions, ConfigurationFilesTest,
-                        ::testing::Values("backpack_2d.lua", "backpack_3d.lua",
-                                          "pr2.lua", "revo_lds.lua",
+                        ::testing::Values("backpack_2d.lua",
+                                          "backpack_2d_localization.lua",
+                                          "backpack_3d.lua", "pr2.lua",
+                                          "revo_lds.lua",
                                           "taurob_tracker.lua"));
 
 }  // namespace
