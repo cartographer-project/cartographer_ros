@@ -99,7 +99,10 @@ void Run(const std::vector<string>& bag_filenames) {
   // remaining sensor data that cannot be transformed due to missing transforms.
   node_options.lookup_transform_timeout_sec = 0.;
   Node node(node_options, &tf_buffer);
+
   if (!FLAGS_map_filename.empty()) {
+    // TODO(jihoonl): LoadMap should be replaced by some better deserialization
+    // of full SLAM state as non-frozen trajectories once possible
     node.LoadMap(FLAGS_map_filename);
   }
 
