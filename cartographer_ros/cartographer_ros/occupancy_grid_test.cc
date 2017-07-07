@@ -31,12 +31,11 @@ TEST(OccupancyGridTest, ComputeMapLimits) {
   const TrajectoryNode trajectory_node{
       std::make_shared<TrajectoryNode::Data>(TrajectoryNode::Data{
           ::cartographer::common::FromUniversal(52),
-          ::cartographer::sensor::RangeData{Eigen::Vector3f::Zero(),
-                                            {Eigen::Vector3f(-30.f, 1.f, 0.f),
-                                             Eigen::Vector3f(50.f, -10.f, 0.f)},
-                                            {}},
           ::cartographer::sensor::Compress(::cartographer::sensor::RangeData{
-              Eigen::Vector3f::Zero(), {}, {}}),
+              Eigen::Vector3f::Zero(),
+              {Eigen::Vector3f(-30.f, 1.f, 0.f),
+               Eigen::Vector3f(50.f, -10.f, 0.f)},
+              {}}),
           ::cartographer::transform::Rigid3d::Identity()}),
       ::cartographer::transform::Rigid3d::Identity()};
   constexpr double kResolution = 0.05;
