@@ -29,6 +29,7 @@
 #include "OgreTexture.h"
 #include "OgreVector3.h"
 #include "cartographer/common/mutex.h"
+#include "cartographer/mapping/id.h"
 #include "cartographer_ros_msgs/SubmapEntry.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
 #include "ros/ros.h"
@@ -44,9 +45,8 @@ class DrawableSubmap : public QObject {
   Q_OBJECT
 
  public:
-  // Each submap is identified by a 'trajectory_id' plus a 'submap_index'.
-  // 'scene_manager' is the Ogre scene manager to which to add a node.
-  DrawableSubmap(int trajectory_id, int submap_index,
+  // The 'scene_manager' is the Ogre scene manager to which to add a node.
+  DrawableSubmap(const ::cartographer::mapping::SubmapId& submap_id,
                  Ogre::SceneManager* scene_manager,
                  ::rviz::Property* submap_category, const bool visible);
   ~DrawableSubmap() override;
@@ -70,8 +70,7 @@ class DrawableSubmap : public QObject {
   // 'current_tracking_z'.
   void SetAlpha(double current_tracking_z);
 
-  int submap_index() const { return submap_index_; }
-  int trajectory_id() const { return trajectory_id_; }
+  ::cartographer::mapping::SubmapId id() const { return id_; }
   int version() const { return metadata_version_; }
   bool visibility() const { return visibility_->getBool(); }
   void set_visibility(const bool visibility) {
@@ -91,8 +90,7 @@ class DrawableSubmap : public QObject {
   void UpdateTransform();
   float UpdateAlpha(float target_alpha);
 
-  const int trajectory_id_;
-  const int submap_index_;
+  const ::cartographer::mapping::SubmapId id_;
 
   ::cartographer::common::Mutex mutex_;
   Ogre::SceneManager* const scene_manager_;

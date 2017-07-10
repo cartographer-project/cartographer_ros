@@ -119,29 +119,27 @@ void SubmapsDisplay::processMessage(
   using ::cartographer::mapping::SubmapId;
   std::set<SubmapId> listed_submaps;
   for (const ::cartographer_ros_msgs::SubmapEntry& submap_entry : msg->submap) {
-    listed_submaps.insert(
-        SubmapId{submap_entry.trajectory_id, submap_entry.submap_index});
-    const size_t trajectory_id = submap_entry.trajectory_id;
-    while (trajectory_id >= trajectories_.size()) {
+    const SubmapId id{submap_entry.trajectory_id, submap_entry.submap_index};
+    listed_submaps.insert(id);
+    while (id.trajectory_id >= static_cast<int>(trajectories_.size())) {
       trajectories_.push_back(Trajectory(
           ::cartographer::common::make_unique<::rviz::Property>(
-              QString("Trajectory %1").arg(trajectory_id), QVariant(),
+              QString("Trajectory %1").arg(id.trajectory_id), QVariant(),
               QString("List of all submaps in Trajectory %1.")
-                  .arg(trajectory_id),
+                  .arg(id.trajectory_id),
               submaps_category_),
           std::map<int, std::unique_ptr<DrawableSubmap>>()));
     }
-    auto& trajectory_category = trajectories_[trajectory_id].first;
-    auto& trajectory = trajectories_[trajectory_id].second;
-    const int submap_index = submap_entry.submap_index;
-    if (trajectory.count(submap_index) == 0) {
+    auto& trajectory_category = trajectories_[id.trajectory_id].first;
+    auto& trajectory = trajectories_[id.trajectory_id].second;
+    if (trajectory.count(id.submap_index) == 0) {
       trajectory.emplace(
-          submap_index,
+          id.submap_index,
           ::cartographer::common::make_unique<DrawableSubmap>(
-              trajectory_id, submap_index, context_->getSceneManager(),
-              trajectory_category.get(), visibility_all_enabled_->getBool()));
+              id, context_->getSceneManager(), trajectory_category.get(),
+              visibility_all_enabled_->getBool()));
     }
-    trajectory.at(submap_index)
+    trajectory.at(id.submap_index)
         ->Update(msg->header, submap_entry, context_->getFrameManager());
   }
   // Remove all submaps not mentioned in the SubmapList.
