@@ -133,11 +133,14 @@ void SubmapsDisplay::processMessage(
     auto& trajectory_category = trajectories_[id.trajectory_id].first;
     auto& trajectory = trajectories_[id.trajectory_id].second;
     if (trajectory.count(id.submap_index) == 0) {
-      trajectory.emplace(
-          id.submap_index,
-          ::cartographer::common::make_unique<DrawableSubmap>(
-              id, context_->getSceneManager(), trajectory_category.get(),
-              visibility_all_enabled_->getBool()));
+      // TODO(ojura): Add RViz properties for adjusting submap pose axes
+      constexpr float kSubmapPoseAxesLength = 0.3f;
+      constexpr float kSubmapPoseAxesRadius = 0.06f;
+      trajectory.emplace(id.submap_index,
+                         ::cartographer::common::make_unique<DrawableSubmap>(
+                             id, context_, trajectory_category.get(),
+                             visibility_all_enabled_->getBool(),
+                             kSubmapPoseAxesLength, kSubmapPoseAxesRadius));
     }
     trajectory.at(id.submap_index)
         ->Update(msg->header, submap_entry, context_->getFrameManager());

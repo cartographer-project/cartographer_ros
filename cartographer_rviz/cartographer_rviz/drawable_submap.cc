@@ -64,15 +64,21 @@ Ogre::Quaternion ToOgre(const Eigen::Quaterniond& q) {
 
 }  // namespace
 
-DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
-                               Ogre::SceneManager* const scene_manager,
-                               ::rviz::Property* submap_category,
-                               const bool visible)
+DrawableSubmap::DrawableSubmap(
+    const ::cartographer::mapping::SubmapId& id,
+    ::rviz::DisplayContext* const display_context,
+    ::rviz::Property* const submap_category, const bool visible,
+    const float pose_axes_length, const float pose_axes_radius)
     : id_(id),
-      scene_manager_(scene_manager),
-      scene_node_(scene_manager->getRootSceneNode()->createChildSceneNode()),
-      manual_object_(scene_manager->createManualObject(
+      display_context_(display_context),
+      scene_node_(display_context->getSceneManager()
+                      ->getRootSceneNode()
+                      ->createChildSceneNode()),
+      submap_node_(scene_node_->createChildSceneNode()),
+      manual_object_(display_context->getSceneManager()->createManualObject(
           kManualObjectPrefix + GetSubmapIdentifier(id))),
+      pose_axes_(display_context->getSceneManager(), scene_node_,
+                 pose_axes_length, pose_axes_radius),
       last_query_timestamp_(0) {
   material_ = Ogre::MaterialManager::getSingleton().getByName(
       kSubmapSourceMaterialName);
@@ -90,9 +96,8 @@ DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
   visibility_ = ::cartographer::common::make_unique<::rviz::BoolProperty>(
       "" /* title */, visible, "" /* description */, submap_category,
       SLOT(ToggleVisibility()), this);
-  if (visible) {
-    scene_node_->attachObject(manual_object_);
-  }
+  submap_node_->attachObject(manual_object_);
+  scene_node_->setVisible(visible);
   connect(this, SIGNAL(RequestSucceeded()), this, SLOT(UpdateSceneNode()));
 }
 
@@ -107,8 +112,9 @@ DrawableSubmap::~DrawableSubmap() {
     Ogre::TextureManager::getSingleton().remove(texture_->getHandle());
     texture_.setNull();
   }
-  scene_manager_->destroySceneNode(scene_node_);
-  scene_manager_->destroyManualObject(manual_object_);
+  display_context_->getSceneManager()->destroySceneNode(submap_node_);
+  display_context_->getSceneManager()->destroySceneNode(scene_node_);
+  display_context_->getSceneManager()->destroyManualObject(manual_object_);
 }
 
 void DrawableSubmap::Update(
@@ -250,8 +256,11 @@ void DrawableSubmap::UpdateTransform() {
   CHECK(submap_texture_ != nullptr);
   const ::cartographer::transform::Rigid3d pose =
       pose_ * submap_texture_->slice_pose;
-  scene_node_->setPosition(ToOgre(pose.translation()));
-  scene_node_->setOrientation(ToOgre(pose.rotation()));
+  submap_node_->setPosition(ToOgre(pose.translation()));
+  submap_node_->setOrientation(ToOgre(pose.rotation()));
+  pose_axes_.setPosition(ToOgre(pose_.translation()));
+  pose_axes_.setOrientation(ToOgre(pose_.rotation()));
+  display_context_->queueRender();
 }
 
 float DrawableSubmap::UpdateAlpha(const float target_alpha) {
@@ -263,15 +272,7 @@ float DrawableSubmap::UpdateAlpha(const float target_alpha) {
 }
 
 void DrawableSubmap::ToggleVisibility() {
-  if (visibility_->getBool()) {
-    if (scene_node_->numAttachedObjects() == 0) {
-      scene_node_->attachObject(manual_object_);
-    }
-  } else {
-    if (scene_node_->numAttachedObjects() > 0) {
-      scene_node_->detachObject(manual_object_);
-    }
-  }
+  scene_node_->setVisible(visibility_->getBool());
 }
 
 }  // namespace cartographer_rviz
