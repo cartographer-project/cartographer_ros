@@ -45,8 +45,7 @@ class DrawableSubmap : public QObject {
   Q_OBJECT
 
  public:
-  // Each submap is identified by a 'trajectory_id' plus a 'submap_index'.
-  // 'scene_manager' is the Ogre scene manager to which to add a node.
+  // The 'scene_manager' is the Ogre scene manager to which to add a node.
   DrawableSubmap(const ::cartographer::mapping::SubmapId& submap_id,
                  Ogre::SceneManager* scene_manager,
                  ::rviz::Property* submap_category, const bool visible);
