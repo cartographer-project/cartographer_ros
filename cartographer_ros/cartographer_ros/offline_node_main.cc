@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <time.h>
+#include <chrono>
 #include <csignal>
 #include <sstream>
 #include <string>
@@ -81,6 +83,8 @@ std::tuple<NodeOptions, TrajectoryOptions> LoadOptions() {
 }
 
 void Run(const std::vector<string>& bag_filenames) {
+  const std::chrono::time_point<std::chrono::steady_clock> start_time =
+      std::chrono::steady_clock::now();
   NodeOptions node_options;
   TrajectoryOptions trajectory_options;
   std::tie(node_options, trajectory_options) = LoadOptions();
@@ -259,6 +263,21 @@ void Run(const std::vector<string>& bag_filenames) {
     bag.close();
     node.map_builder_bridge()->FinishTrajectory(trajectory_id);
   }
+
+  const std::chrono::time_point<std::chrono::steady_clock> end_time =
+      std::chrono::steady_clock::now();
+  const double wall_clock_seconds =
+      std::chrono::duration_cast<std::chrono::duration<double>>(end_time -
+                                                                start_time)
+          .count();
+
+  LOG(INFO) << "Elapsed wall clock time: " << wall_clock_seconds << " s";
+#ifdef __linux__
+  timespec cpu_timespec = {};
+  clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &cpu_timespec);
+  LOG(INFO) << "Elapsed CPU time: "
+            << (cpu_timespec.tv_sec + 1e-9 * cpu_timespec.tv_nsec) << " s";
+#endif
 
   node.map_builder_bridge()->SerializeState(bag_filenames.front());
   node.map_builder_bridge()->WriteAssets(bag_filenames.front());
