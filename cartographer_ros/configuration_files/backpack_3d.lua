@@ -26,6 +26,7 @@ options = {
   use_odometry = false,
   use_laser_scan = false,
   use_multi_echo_laser_scan = false,
+  num_subdivisions_per_laser_scan = 1,
   num_point_clouds = 2,
   lookup_transform_timeout_sec = 0.2,
   submap_publish_period_sec = 0.3,

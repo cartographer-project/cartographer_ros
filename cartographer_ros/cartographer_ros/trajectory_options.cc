@@ -14,11 +14,25 @@
  * limitations under the License.
  */
 
-#include "cartographer_ros/node_options.h"
+#include "cartographer_ros/trajectory_options.h"
 
 #include "glog/logging.h"
 
 namespace cartographer_ros {
+
+namespace {
+
+void CheckTrajectoryOptions(const TrajectoryOptions& options) {
+  CHECK_GE(options.num_subdivisions_per_laser_scan, 1);
+  CHECK_EQ(options.use_laser_scan + options.use_multi_echo_laser_scan +
+               (options.num_point_clouds > 0),
+           1)
+      << "Configuration error: 'use_laser_scan', "
+         "'use_multi_echo_laser_scan' and 'num_point_clouds' are "
+         "mutually exclusive, but one is required.";
+}
+
+}  // namespace
 
 TrajectoryOptions CreateTrajectoryOptions(
     ::cartographer::common::LuaParameterDictionary* const
@@ -38,16 +52,12 @@ TrajectoryOptions CreateTrajectoryOptions(
   options.use_laser_scan = lua_parameter_dictionary->GetBool("use_laser_scan");
   options.use_multi_echo_laser_scan =
       lua_parameter_dictionary->GetBool("use_multi_echo_laser_scan");
+  options.num_subdivisions_per_laser_scan =
+      lua_parameter_dictionary->GetNonNegativeInt(
+          "num_subdivisions_per_laser_scan");
   options.num_point_clouds =
       lua_parameter_dictionary->GetNonNegativeInt("num_point_clouds");
-
-  CHECK_EQ(options.use_laser_scan + options.use_multi_echo_laser_scan +
-               (options.num_point_clouds > 0),
-           1)
-      << "Configuration error: 'use_laser_scan', "
-         "'use_multi_echo_laser_scan' and 'num_point_clouds' are "
-         "mutually exclusive, but one is required.";
-
+  CheckTrajectoryOptions(options);
   return options;
 }
 
@@ -60,12 +70,15 @@ bool FromRosMessage(const cartographer_ros_msgs::TrajectoryOptions& msg,
   options->use_odometry = msg.use_odometry;
   options->use_laser_scan = msg.use_laser_scan;
   options->use_multi_echo_laser_scan = msg.use_multi_echo_laser_scan;
+  options->num_subdivisions_per_laser_scan =
+      msg.num_subdivisions_per_laser_scan;
   options->num_point_clouds = msg.num_point_clouds;
   if (!options->trajectory_builder_options.ParseFromString(
           msg.trajectory_builder_options_proto)) {
     LOG(ERROR) << "Failed to parse protobuf";
     return false;
   }
+  CheckTrajectoryOptions(*options);
   return true;
 }
 
@@ -79,6 +92,7 @@ cartographer_ros_msgs::TrajectoryOptions ToRosMessage(
   msg.use_odometry = options.use_odometry;
   msg.use_laser_scan = options.use_laser_scan;
   msg.use_multi_echo_laser_scan = options.use_multi_echo_laser_scan;
+  msg.num_subdivisions_per_laser_scan = options.num_subdivisions_per_laser_scan;
   msg.num_point_clouds = options.num_point_clouds;
   options.trajectory_builder_options.SerializeToString(
       &msg.trajectory_builder_options_proto);

@@ -19,6 +19,7 @@ bool provide_odom_frame
 bool use_odometry
 bool use_laser_scan
 bool use_multi_echo_laser_scan
+int32 num_subdivisions_per_laser_scan
 int32 num_point_clouds
 
 # This is a binary-encoded
