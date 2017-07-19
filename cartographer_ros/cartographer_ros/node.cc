@@ -269,8 +269,12 @@ int Node::AddTrajectory(const TrajectoryOptions& options,
       expected_sensor_ids.insert(topic);
     }
   }
-  if (options.trajectory_builder_options.trajectory_builder_2d_options()
-          .use_imu_data()) {
+  // For 2D SLAM, subscribe to the IMU if we expect it. For 3D SLAM, the IMU is
+  // required.
+  if (node_options_.map_builder_options.use_trajectory_builder_3d() ||
+      (node_options_.map_builder_options.use_trajectory_builder_2d() &&
+       options.trajectory_builder_options.trajectory_builder_2d_options()
+           .use_imu_data())) {
     expected_sensor_ids.insert(topics.imu_topic);
   }
   if (options.use_odometry) {
@@ -328,8 +332,12 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
     point_cloud_subscribers_[trajectory_id] = grouped_point_cloud_subscribers;
   }
 
-  if (options.trajectory_builder_options.trajectory_builder_2d_options()
-          .use_imu_data()) {
+  // For 2D SLAM, subscribe to the IMU if we expect it. For 3D SLAM, the IMU is
+  // required.
+  if (node_options_.map_builder_options.use_trajectory_builder_3d() ||
+      (node_options_.map_builder_options.use_trajectory_builder_2d() &&
+       options.trajectory_builder_options.trajectory_builder_2d_options()
+           .use_imu_data())) {
     string topic = topics.imu_topic;
     imu_subscribers_[trajectory_id] = node_handle_.subscribe<sensor_msgs::Imu>(
         topic, kInfiniteSubscriberQueueSize,
