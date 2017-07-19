@@ -29,7 +29,9 @@ namespace {
 
 const string& CheckNoLeadingSlash(const string& frame_id) {
   if (frame_id.size() > 0) {
-    CHECK_NE(frame_id[0], '/');
+    CHECK_NE(frame_id[0], '/') << "The frame_id " << frame_id
+                               << " should not start with a /. See 1.7 in "
+                                  "http://wiki.ros.org/tf2/Migration.";
   }
   return frame_id;
 }
