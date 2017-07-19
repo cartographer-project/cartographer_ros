@@ -39,10 +39,11 @@ const string& CheckNoLeadingSlash(const string& frame_id) {
 }  // namespace
 
 SensorBridge::SensorBridge(
-    const string& tracking_frame, const double lookup_transform_timeout_sec,
-    tf2_ros::Buffer* const tf_buffer,
+    const int num_subdivisions_per_laser_scan, const string& tracking_frame,
+    const double lookup_transform_timeout_sec, tf2_ros::Buffer* const tf_buffer,
     carto::mapping::TrajectoryBuilder* const trajectory_builder)
-    : tf_bridge_(tracking_frame, lookup_transform_timeout_sec, tf_buffer),
+    : num_subdivisions_per_laser_scan_(num_subdivisions_per_laser_scan),
+      tf_bridge_(tracking_frame, lookup_transform_timeout_sec, tf_buffer),
       trajectory_builder_(trajectory_builder) {}
 
 void SensorBridge::HandleOdometryMessage(
@@ -87,15 +88,17 @@ void SensorBridge::HandleImuMessage(const string& sensor_id,
 
 void SensorBridge::HandleLaserScanMessage(
     const string& sensor_id, const sensor_msgs::LaserScan::ConstPtr& msg) {
-  HandleRangefinder(sensor_id, FromRos(msg->header.stamp), msg->header.frame_id,
-                    ToPointCloudWithIntensities(*msg).points);
+  HandleLaserScan(sensor_id, FromRos(msg->header.stamp), msg->header.frame_id,
+                  ToPointCloudWithIntensities(*msg).points,
+                  msg->time_increment);
 }
 
 void SensorBridge::HandleMultiEchoLaserScanMessage(
     const string& sensor_id,
     const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
-  HandleRangefinder(sensor_id, FromRos(msg->header.stamp), msg->header.frame_id,
-                    ToPointCloudWithIntensities(*msg).points);
+  HandleLaserScan(sensor_id, FromRos(msg->header.stamp), msg->header.frame_id,
+                  ToPointCloudWithIntensities(*msg).points,
+                  msg->time_increment);
 }
 
 void SensorBridge::HandlePointCloud2Message(
@@ -111,6 +114,25 @@ void SensorBridge::HandlePointCloud2Message(
 }
 
 const TfBridge& SensorBridge::tf_bridge() const { return tf_bridge_; }
+
+void SensorBridge::HandleLaserScan(const string& sensor_id,
+                                   const carto::common::Time start_time,
+                                   const string& frame_id,
+                                   const carto::sensor::PointCloud& points,
+                                   const double seconds_between_points) {
+  for (int i = 0; i != num_subdivisions_per_laser_scan_; ++i) {
+    const size_t start_index =
+        points.size() * i / num_subdivisions_per_laser_scan_;
+    const size_t end_index =
+        points.size() * (i + 1) / num_subdivisions_per_laser_scan_;
+    const carto::sensor::PointCloud subdivision(points.begin() + start_index,
+                                                points.begin() + end_index);
+    const carto::common::Time subdivision_time =
+        start_time + carto::common::FromSeconds((start_index + end_index) / 2. *
+                                                seconds_between_points);
+    HandleRangefinder(sensor_id, subdivision_time, frame_id, subdivision);
+  }
+}
 
 void SensorBridge::HandleRangefinder(const string& sensor_id,
                                      const carto::common::Time time,

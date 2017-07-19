@@ -20,6 +20,7 @@
 #include "cartographer/common/configuration_file_resolver.h"
 #include "cartographer/common/lua_parameter_dictionary.h"
 #include "cartographer_ros/node_options.h"
+#include "cartographer_ros/trajectory_options.h"
 #include "gtest/gtest.h"
 #include "ros/package.h"
 

@@ -21,7 +21,6 @@
 
 #include "cartographer/common/lua_parameter_dictionary.h"
 #include "cartographer/mapping/map_builder.h"
-#include "cartographer_ros/trajectory_options.h"
 
 namespace cartographer_ros {
 
