@@ -30,6 +30,7 @@
 #include "OgreVector3.h"
 #include "cartographer/common/mutex.h"
 #include "cartographer/mapping/id.h"
+#include "cartographer/transform/rigid_transform.h"
 #include "cartographer_ros_msgs/SubmapEntry.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
 #include "ros/ros.h"
@@ -99,9 +100,8 @@ class DrawableSubmap : public QObject {
   Ogre::TexturePtr texture_;
   Ogre::MaterialPtr material_;
   double submap_z_ = 0. GUARDED_BY(mutex_);
-  Ogre::Vector3 position_ GUARDED_BY(mutex_);
-  Ogre::Quaternion orientation_ GUARDED_BY(mutex_);
-  Eigen::Affine3d slice_pose_ GUARDED_BY(mutex_);
+  ::cartographer::transform::Rigid3d pose_ GUARDED_BY(mutex_);
+  ::cartographer::transform::Rigid3d slice_pose_ GUARDED_BY(mutex_);
   std::chrono::milliseconds last_query_timestamp_ GUARDED_BY(mutex_);
   bool query_in_progress_ = false GUARDED_BY(mutex_);
   int metadata_version_ = -1 GUARDED_BY(mutex_);

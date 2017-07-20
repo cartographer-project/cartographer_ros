@@ -17,6 +17,7 @@ cmake_minimum_required(VERSION 2.8.12)  # Ships with Ubuntu 14.04 (Trusty)
 project(cartographer_rviz)
 
 set(PACKAGE_DEPENDENCIES
+  cartographer_ros
   cartographer_ros_msgs
   eigen_conversions
   message_runtime
