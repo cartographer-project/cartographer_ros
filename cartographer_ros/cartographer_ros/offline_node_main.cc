@@ -274,7 +274,6 @@ void Run(const std::vector<string>& bag_filenames) {
 #endif
 
   node.map_builder_bridge()->SerializeState(bag_filenames.front());
-  node.map_builder_bridge()->WriteAssets(bag_filenames.front());
 }
 
 }  // namespace

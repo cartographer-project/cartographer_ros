@@ -25,9 +25,11 @@
           -configuration_directory $(find cartographer_ros)/configuration_files
           -configuration_basename backpack_3d.lua
           -urdf_filename $(find cartographer_ros)/urdf/backpack_3d.urdf
-          -bag_filenames $(arg bag_filenames)"
-      output="screen">
+          -bag_filenames $(arg bag_filenames)">
     <remap from="points2_1" to="horizontal_laser_3d" />
     <remap from="points2_2" to="vertical_laser_3d" />
   </node>
+
+  <node name="cartographer_occupancy_grid_node" pkg="cartographer_ros"
+      type="cartographer_occupancy_grid_node" args="-resolution 0.05" />
 </launch>

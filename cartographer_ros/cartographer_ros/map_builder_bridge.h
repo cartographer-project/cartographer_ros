@@ -55,14 +55,12 @@ class MapBuilderBridge {
                     const TrajectoryOptions& trajectory_options);
   void FinishTrajectory(int trajectory_id);
   void SerializeState(const string& stem);
-  void WriteAssets(const string& stem);
 
   bool HandleSubmapQuery(
       cartographer_ros_msgs::SubmapQuery::Request& request,
       cartographer_ros_msgs::SubmapQuery::Response& response);
 
   cartographer_ros_msgs::SubmapList GetSubmapList();
-  std::unique_ptr<nav_msgs::OccupancyGrid> BuildOccupancyGrid();
   std::unordered_map<int, TrajectoryState> GetTrajectoryStates();
   visualization_msgs::MarkerArray GetTrajectoryNodeList();
   visualization_msgs::MarkerArray GetConstraintList();

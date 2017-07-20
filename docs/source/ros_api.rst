@@ -100,9 +100,10 @@ finish_trajectory (`cartographer_ros_msgs/FinishTrajectory`_)
   Finishes the given `trajectory_id`'s trajectory by running a final optimization.
 
 write_assets (`cartographer_ros_msgs/WriteAssets`_)
-  Writes artifacts (e.g. the map) to disk. The `stem` argument is used as a prefix
-  for the various files which are written. Files will usually end up in `~/.ros` or
-  `ROS_HOME` if it is set.
+  Writes the current internal state to disk. The `stem` argument is used as a prefix
+  for the written file. It will usually end up in `~/.ros` or `ROS_HOME` if it
+  is set. This file can be used as input to the `asset_writer_main` to
+  generate assets like probability grids, X-Rays or PLY files.
 
 Required tf Transforms
 ======================

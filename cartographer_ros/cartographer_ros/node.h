@@ -113,9 +113,6 @@ class Node {
   std::unordered_map<int, std::vector<::ros::Subscriber>> subscribers_;
   std::unordered_set<std::string> subscribed_topics_;
   std::unordered_map<int, bool> is_active_trajectory_ GUARDED_BY(mutex_);
-  ::ros::Publisher occupancy_grid_publisher_;
-  std::thread occupancy_grid_thread_;
-  bool terminating_ = false GUARDED_BY(mutex_);
 
   // We have to keep the timer handles of ::ros::WallTimers around, otherwise
   // they do not fire.
