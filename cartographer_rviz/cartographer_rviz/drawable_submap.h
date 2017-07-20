@@ -102,7 +102,6 @@ class DrawableSubmap : public QObject {
   Ogre::TexturePtr texture_;
   Ogre::MaterialPtr material_;
   ::cartographer::transform::Rigid3d pose_ GUARDED_BY(mutex_);
-  ::cartographer::transform::Rigid3d slice_pose_ GUARDED_BY(mutex_);
   std::chrono::milliseconds last_query_timestamp_ GUARDED_BY(mutex_);
   bool query_in_progress_ = false GUARDED_BY(mutex_);
   int metadata_version_ = -1 GUARDED_BY(mutex_);

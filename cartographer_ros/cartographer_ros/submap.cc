@@ -17,6 +17,7 @@
 #include "cartographer_ros/submap.h"
 
 #include "cartographer/common/make_unique.h"
+#include "cartographer/common/port.h"
 #include "cartographer/transform/transform.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
@@ -36,18 +37,22 @@ std::unique_ptr<SubmapTexture> FetchSubmapTexture(
                                srv.response.cells.end());
   std::string cells;
   ::cartographer::common::FastGunzipString(compressed_cells, &cells);
-  std::vector<char> r;
+  const int num_pixels = srv.response.width * srv.response.height;
+  CHECK_EQ(cells.size(), 2 * num_pixels);
+  std::vector<char> intensity;
+  intensity.reserve(num_pixels);
   std::vector<char> alpha;
+  alpha.reserve(num_pixels);
   for (int i = 0; i < srv.response.height; ++i) {
     for (int j = 0; j < srv.response.width; ++j) {
-      r.push_back(cells[(i * srv.response.width + j) * 2]);
+      intensity.push_back(cells[(i * srv.response.width + j) * 2]);
       alpha.push_back(cells[(i * srv.response.width + j) * 2 + 1]);
     }
   }
-  return ::cartographer::common::make_unique<SubmapTexture>(
-      SubmapTexture{srv.response.submap_version, r, alpha, srv.response.width,
-                    srv.response.height, srv.response.resolution,
-                    ToRigid3d(srv.response.slice_pose)});
+  return ::cartographer::common::make_unique<SubmapTexture>(SubmapTexture{
+      srv.response.submap_version, intensity, alpha, srv.response.width,
+      srv.response.height, srv.response.resolution,
+      ToRigid3d(srv.response.slice_pose)});
 }
 
 }  // namespace cartographer_ros

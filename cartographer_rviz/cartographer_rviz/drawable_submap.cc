@@ -97,6 +97,8 @@ DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
 }
 
 DrawableSubmap::~DrawableSubmap() {
+  // 'query_in_progress_' must be true until the Q_EMIT has happened - Qt then
+  // makes sure that 'RequestSucceeded' after our destruction. 
   if (QueryInProgress()) {
     rpc_request_future_.wait();
   }
@@ -139,7 +141,7 @@ void DrawableSubmap::Update(
 
 bool DrawableSubmap::MaybeFetchTexture(ros::ServiceClient* const client) {
   ::cartographer::common::MutexLocker locker(&mutex_);
-  // Received metadata version can also be lower - if we restarted Cartographer
+  // Received metadata version can also be lower if we restarted Cartographer
   const bool newer_version_available =
       submap_texture_ == nullptr ||
       submap_texture_->version != metadata_version_;

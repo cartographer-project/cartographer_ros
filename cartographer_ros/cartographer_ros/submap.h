@@ -20,7 +20,6 @@
 #include <memory>
 #include <vector>
 
-#include "cartographer/common/port.h"
 #include "cartographer/mapping/id.h"
 #include "cartographer/transform/rigid_transform.h"
 #include "ros/ros.h"
