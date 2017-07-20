@@ -74,6 +74,7 @@ class Node {
   bool HandleWriteAssets(
       cartographer_ros_msgs::WriteAssets::Request& request,
       cartographer_ros_msgs::WriteAssets::Response& response);
+  // Returns the set of topic names we want to subscribe to.
   std::unordered_set<string> ComputeExpectedTopics(
       const TrajectoryOptions& options,
       const cartographer_ros_msgs::SensorTopics& topics);
@@ -110,7 +111,7 @@ class Node {
 
   // These are keyed with 'trajectory_id'.
   std::unordered_map<int, std::vector<::ros::Subscriber>> subscribers_;
-  std::unordered_set<std::string> topics_in_use_;
+  std::unordered_set<std::string> subscribed_topics_;
   std::unordered_map<int, bool> is_active_trajectory_ GUARDED_BY(mutex_);
   ::ros::Publisher occupancy_grid_publisher_;
   std::thread occupancy_grid_thread_;

@@ -256,7 +256,8 @@ int Node::AddTrajectory(const TrajectoryOptions& options,
   const int trajectory_id =
       map_builder_bridge_.AddTrajectory(expected_sensor_ids, options);
   LaunchSubscribers(options, topics, trajectory_id);
-  topics_in_use_.insert(expected_sensor_ids.begin(), expected_sensor_ids.end());
+  subscribed_topics_.insert(expected_sensor_ids.begin(),
+                            expected_sensor_ids.end());
   return trajectory_id;
 }
 
@@ -356,7 +357,7 @@ bool Node::ValidateTopicNames(
     const ::cartographer_ros_msgs::SensorTopics& topics,
     const TrajectoryOptions& options) {
   for (const std::string& topic : ComputeExpectedTopics(options, topics)) {
-    if (topics_in_use_.count(topic) > 0) {
+    if (subscribed_topics_.count(topic) > 0) {
       LOG(ERROR) << "Topic name [" << topic << "] is already used.";
       return false;
     }
@@ -417,7 +418,7 @@ bool Node::HandleFinishTrajectory(
   // Shutdown the subscribers of this trajectory.
   for (auto& entry : subscribers_[trajectory_id]) {
     entry.shutdown();
-    topics_in_use_.erase(entry.getTopic());
+    subscribed_topics_.erase(entry.getTopic());
     LOG(INFO) << "Shutdown the subscriber of [" << entry.getTopic() << "]";
   }
   CHECK_EQ(subscribers_.erase(trajectory_id), 1);
