@@ -54,6 +54,9 @@ DEFINE_bool(use_bag_transforms, true,
             "Whether to read, use and republish the transforms from the bag.");
 DEFINE_string(pbstream_filename, "",
               "If non-empty, filename of a pbstream to load.");
+DEFINE_bool(keep_running, false,
+            "Keep running the offline node after all messages from the bag "
+            "have been processed.");
 
 namespace cartographer_ros {
 namespace {
@@ -62,10 +65,7 @@ constexpr char kClockTopic[] = "clock";
 constexpr char kTfStaticTopic[] = "/tf_static";
 constexpr char kTfTopic[] = "tf";
 constexpr int kLatestOnlyPublisherQueueSize = 1;
-
-volatile std::sig_atomic_t sigint_triggered = 0;
-
-void SigintHandler(int) { sigint_triggered = 1; }
+constexpr double kClockPublishFrequency = 30.;
 
 // TODO(hrapp): This is duplicated in node_main.cc. Pull out into a config
 // unit.
@@ -166,7 +166,7 @@ void Run(const std::vector<string>& bag_filenames) {
   }
 
   for (const string& bag_filename : bag_filenames) {
-    if (sigint_triggered) {
+    if (!::ros::ok()) {
       break;
     }
 
@@ -178,13 +178,14 @@ void Run(const std::vector<string>& bag_filenames) {
     rosbag::View view(bag);
     const ::ros::Time begin_time = view.getBeginTime();
     const double duration_in_seconds = (view.getEndTime() - begin_time).toSec();
+    rosgraph_msgs::Clock clock;
 
     // We make sure that tf_messages are published before any data messages, so
     // that tf lookups always work and that tf_buffer has a small cache size -
     // because it gets very inefficient with a large one.
     std::deque<rosbag::MessageInstance> delayed_messages;
     for (const rosbag::MessageInstance& msg : view) {
-      if (sigint_triggered) {
+      if (!::ros::ok()) {
         break;
       }
 
@@ -239,7 +240,6 @@ void Run(const std::vector<string>& bag_filenames) {
               ->HandleOdometryMessage(
                   topic, delayed_msg.instantiate<nav_msgs::Odometry>());
         }
-        rosgraph_msgs::Clock clock;
         clock.clock = delayed_msg.getTime();
         clock_publisher.publish(clock);
 
@@ -261,6 +261,17 @@ void Run(const std::vector<string>& bag_filenames) {
     }
 
     bag.close();
+
+    if (FLAGS_keep_running) {
+      ::ros::WallRate rate(kClockPublishFrequency);
+      while (::ros::ok()) {
+        clock.clock += ::ros::Duration(1. / kClockPublishFrequency);
+        clock_publisher.publish(clock);
+        ::ros::spinOnce();
+        rate.sleep();
+      }
+    }
+
     node.map_builder_bridge()->FinishTrajectory(trajectory_id);
   }
 
@@ -296,9 +307,7 @@ int main(int argc, char** argv) {
       << "-configuration_basename is missing.";
   CHECK(!FLAGS_bag_filenames.empty()) << "-bag_filenames is missing.";
 
-  std::signal(SIGINT, &::cartographer_ros::SigintHandler);
-  ::ros::init(argc, argv, "cartographer_offline_node",
-              ::ros::init_options::NoSigintHandler);
+  ::ros::init(argc, argv, "cartographer_offline_node");
   ::ros::start();
 
   cartographer_ros::ScopedRosLogSink ros_log_sink;
