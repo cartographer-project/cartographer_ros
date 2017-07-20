@@ -27,6 +27,7 @@
 #include "OgreImage.h"
 #include "cartographer/common/make_unique.h"
 #include "cartographer/common/port.h"
+#include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
 #include "eigen_conversions/eigen_msg.h"
 #include "ros/ros.h"
@@ -51,6 +52,14 @@ std::string GetSubmapIdentifier(
     const ::cartographer::mapping::SubmapId& submap_id) {
   return std::to_string(submap_id.trajectory_id) + "-" +
          std::to_string(submap_id.submap_index);
+}
+
+Ogre::Vector3 ToOgre(const Eigen::Vector3d& v) {
+  return Ogre::Vector3(v.x(), v.y(), v.z());
+}
+
+Ogre::Quaternion ToOgre(const Eigen::Quaterniond& q) {
+  return Ogre::Quaternion(q.w(), q.x(), q.y(), q.z());
 }
 
 }  // namespace
@@ -111,10 +120,9 @@ void DrawableSubmap::Update(
     return;
   }
   ::cartographer::common::MutexLocker locker(&mutex_);
-  position_ = position;
-  orientation_ = orientation;
   submap_z_ = metadata.pose.position.z;
   metadata_version_ = metadata.submap_version;
+  pose_ = ::cartographer_ros::ToRigid3d(metadata.pose);
   if (texture_version_ != -1) {
     // We have to update the transform since we are already displaying a texture
     // for this submap.
@@ -185,7 +193,7 @@ void DrawableSubmap::UpdateSceneNode() {
   std::string compressed_cells(response_.cells.begin(), response_.cells.end());
   std::string cells;
   ::cartographer::common::FastGunzipString(compressed_cells, &cells);
-  tf::poseMsgToEigen(response_.slice_pose, slice_pose_);
+  slice_pose_ = ::cartographer_ros::ToRigid3d(response_.slice_pose);
   UpdateTransform();
   query_in_progress_ = false;
   // The call to Ogre's loadRawData below does not work with an RG texture,
@@ -245,14 +253,9 @@ void DrawableSubmap::UpdateSceneNode() {
 }
 
 void DrawableSubmap::UpdateTransform() {
-  const Eigen::Quaterniond quaternion(slice_pose_.rotation());
-  const Ogre::Quaternion slice_rotation(quaternion.w(), quaternion.x(),
-                                        quaternion.y(), quaternion.z());
-  const Ogre::Vector3 slice_translation(slice_pose_.translation().x(),
-                                        slice_pose_.translation().y(),
-                                        slice_pose_.translation().z());
-  scene_node_->setPosition(orientation_ * slice_translation + position_);
-  scene_node_->setOrientation(orientation_ * slice_rotation);
+  const ::cartographer::transform::Rigid3d pose = pose_ * slice_pose_;
+  scene_node_->setPosition(ToOgre(pose.translation()));
+  scene_node_->setOrientation(ToOgre(pose.rotation()));
 }
 
 float DrawableSubmap::UpdateAlpha(const float target_alpha) {
