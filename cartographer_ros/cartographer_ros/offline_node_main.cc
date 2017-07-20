@@ -123,16 +123,10 @@ void Run(const std::vector<string>& bag_filenames) {
     check_insert(kMultiEchoLaserScanTopic);
   }
 
-  // For 3D SLAM, subscribe to all point clouds topics.
-  if (trajectory_options.num_point_clouds > 0) {
-    for (int i = 0; i < trajectory_options.num_point_clouds; ++i) {
-      // TODO(hrapp): This code is duplicated in places. Pull out a method.
-      string topic = kPointCloud2Topic;
-      if (trajectory_options.num_point_clouds > 1) {
-        topic += "_" + std::to_string(i + 1);
-      }
-      check_insert(topic);
-    }
+  // Subscribe to all point cloud topics.
+  for (const string& topic : ComputeRepeatedTopicNames(
+           kPointCloud2Topic, trajectory_options.num_point_clouds)) {
+    check_insert(topic);
   }
 
   // For 2D SLAM, subscribe to the IMU if we expect it. For 3D SLAM, the IMU is
