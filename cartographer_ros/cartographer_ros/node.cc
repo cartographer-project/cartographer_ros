@@ -50,9 +50,6 @@ using carto::transform::Rigid3d;
 
 namespace {
 
-constexpr int kInfiniteSubscriberQueueSize = 0;
-constexpr int kLatestOnlyPublisherQueueSize = 1;
-
 void ShutdownSubscriber(std::unordered_map<int, ::ros::Subscriber>& subscribers,
                         int trajectory_id) {
   if (subscribers.count(trajectory_id) == 0) {

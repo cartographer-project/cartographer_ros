@@ -61,7 +61,6 @@ namespace {
 constexpr char kClockTopic[] = "clock";
 constexpr char kTfStaticTopic[] = "/tf_static";
 constexpr char kTfTopic[] = "tf";
-constexpr int kLatestOnlyPublisherQueueSize = 1;
 
 volatile std::sig_atomic_t sigint_triggered = 0;
 
