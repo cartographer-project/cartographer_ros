@@ -36,6 +36,9 @@ constexpr char kTrajectoryNodeListTopic[] = "trajectory_node_list";
 constexpr char kConstraintListTopic[] = "constraint_list";
 constexpr double kConstraintPublishPeriodSec = 0.5;
 
+constexpr int kInfiniteSubscriberQueueSize = 0;
+constexpr int kLatestOnlyPublisherQueueSize = 1;
+
 }  // namespace cartographer_ros
 
 #endif  // CARTOGRAPHER_ROS_NODE_CONSTANTS_H_

@@ -18,6 +18,7 @@
 #define CARTOGRAPHER_RVIZ_SRC_DRAWABLE_SUBMAP_H_
 
 #include <future>
+#include <memory>
 
 #include "Eigen/Core"
 #include "Eigen/Geometry"
@@ -31,6 +32,7 @@
 #include "cartographer/common/mutex.h"
 #include "cartographer/mapping/id.h"
 #include "cartographer/transform/rigid_transform.h"
+#include "cartographer_ros/submap.h"
 #include "cartographer_ros_msgs/SubmapEntry.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
 #include "ros/ros.h"
@@ -99,15 +101,13 @@ class DrawableSubmap : public QObject {
   Ogre::ManualObject* manual_object_;
   Ogre::TexturePtr texture_;
   Ogre::MaterialPtr material_;
-  double submap_z_ = 0. GUARDED_BY(mutex_);
   ::cartographer::transform::Rigid3d pose_ GUARDED_BY(mutex_);
-  ::cartographer::transform::Rigid3d slice_pose_ GUARDED_BY(mutex_);
   std::chrono::milliseconds last_query_timestamp_ GUARDED_BY(mutex_);
   bool query_in_progress_ = false GUARDED_BY(mutex_);
   int metadata_version_ = -1 GUARDED_BY(mutex_);
-  int texture_version_ = -1 GUARDED_BY(mutex_);
   std::future<void> rpc_request_future_;
-  ::cartographer_ros_msgs::SubmapQuery::Response response_ GUARDED_BY(mutex_);
+  std::unique_ptr<::cartographer_ros::SubmapTexture> submap_texture_
+      GUARDED_BY(mutex_);
   float current_alpha_ = 0.f;
   std::unique_ptr<::rviz::BoolProperty> visibility_;
 };
