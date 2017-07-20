@@ -98,7 +98,7 @@ DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
 
 DrawableSubmap::~DrawableSubmap() {
   // 'query_in_progress_' must be true until the Q_EMIT has happened - Qt then
-  // makes sure that 'RequestSucceeded' after our destruction. 
+  // makes sure that 'RequestSucceeded' after our destruction.
   if (QueryInProgress()) {
     rpc_request_future_.wait();
   }
