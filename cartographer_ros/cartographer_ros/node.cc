@@ -225,11 +225,14 @@ std::unordered_set<string> Node::ComputeExpectedTopics(
     const cartographer_ros_msgs::SensorTopics& topics) {
   std::unordered_set<string> expected_topics;
 
-  if (options.use_laser_scan) {
-    expected_topics.insert(topics.laser_scan_topic);
+  for (const string& topic : ComputeRepeatedTopicNames(
+           topics.laser_scan_topic, options.num_laser_scans)) {
+    expected_topics.insert(topic);
   }
-  if (options.use_multi_echo_laser_scan) {
-    expected_topics.insert(topics.multi_echo_laser_scan_topic);
+  for (const string& topic :
+       ComputeRepeatedTopicNames(topics.multi_echo_laser_scan_topic,
+                                 options.num_multi_echo_laser_scans)) {
+    expected_topics.insert(topic);
   }
   for (const string& topic : ComputeRepeatedTopicNames(
            topics.point_cloud2_topic, options.num_point_clouds)) {
@@ -264,8 +267,8 @@ int Node::AddTrajectory(const TrajectoryOptions& options,
 void Node::LaunchSubscribers(const TrajectoryOptions& options,
                              const cartographer_ros_msgs::SensorTopics& topics,
                              const int trajectory_id) {
-  if (options.use_laser_scan) {
-    const string topic = topics.laser_scan_topic;
+  for (const string& topic : ComputeRepeatedTopicNames(
+           topics.laser_scan_topic, options.num_laser_scans)) {
     subscribers_[trajectory_id].push_back(
         node_handle_.subscribe<sensor_msgs::LaserScan>(
             topic, kInfiniteSubscriberQueueSize,
@@ -276,9 +279,9 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
                       ->HandleLaserScanMessage(topic, msg);
                 })));
   }
-
-  if (options.use_multi_echo_laser_scan) {
-    const string topic = topics.multi_echo_laser_scan_topic;
+  for (const string& topic :
+       ComputeRepeatedTopicNames(topics.multi_echo_laser_scan_topic,
+                                 options.num_multi_echo_laser_scans)) {
     subscribers_[trajectory_id].push_back(node_handle_.subscribe<
                                           sensor_msgs::MultiEchoLaserScan>(
         topic, kInfiniteSubscriberQueueSize,
@@ -289,7 +292,6 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
                   ->HandleMultiEchoLaserScanMessage(topic, msg);
             })));
   }
-
   for (const string& topic : ComputeRepeatedTopicNames(
            topics.point_cloud2_topic, options.num_point_clouds)) {
     subscribers_[trajectory_id].push_back(node_handle_.subscribe(

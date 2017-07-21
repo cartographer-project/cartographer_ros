@@ -64,11 +64,11 @@ Ogre::Quaternion ToOgre(const Eigen::Quaterniond& q) {
 
 }  // namespace
 
-DrawableSubmap::DrawableSubmap(
-    const ::cartographer::mapping::SubmapId& id,
-    ::rviz::DisplayContext* const display_context,
-    ::rviz::Property* const submap_category, const bool visible,
-    const float pose_axes_length, const float pose_axes_radius)
+DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
+                               ::rviz::DisplayContext* const display_context,
+                               ::rviz::Property* const submap_category,
+                               const bool visible, const float pose_axes_length,
+                               const float pose_axes_radius)
     : id_(id),
       display_context_(display_context),
       scene_node_(display_context->getSceneManager()

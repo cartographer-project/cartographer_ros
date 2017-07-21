@@ -115,15 +115,16 @@ void Run(const std::vector<string>& bag_filenames) {
               .second);
   };
 
-  // For 2D SLAM, subscribe to exactly one horizontal laser.
-  if (trajectory_options.use_laser_scan) {
-    check_insert(kLaserScanTopic);
+  // Subscribe to all laser scan, multi echo laser scan, and point cloud topics.
+  for (const string& topic : ComputeRepeatedTopicNames(
+           kLaserScanTopic, trajectory_options.num_laser_scans)) {
+    check_insert(topic);
   }
-  if (trajectory_options.use_multi_echo_laser_scan) {
-    check_insert(kMultiEchoLaserScanTopic);
+  for (const string& topic : ComputeRepeatedTopicNames(
+           kMultiEchoLaserScanTopic,
+           trajectory_options.num_multi_echo_laser_scans)) {
+    check_insert(topic);
   }
-
-  // Subscribe to all point cloud topics.
   for (const string& topic : ComputeRepeatedTopicNames(
            kPointCloud2Topic, trajectory_options.num_point_clouds)) {
     check_insert(topic);
@@ -139,7 +140,7 @@ void Run(const std::vector<string>& bag_filenames) {
     check_insert(kImuTopic);
   }
 
-  // For both 2D and 3D SLAM, odometry is optional.
+  // Odometry is optional.
   if (trajectory_options.use_odometry) {
     check_insert(kOdometryTopic);
   }
