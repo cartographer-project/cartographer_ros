@@ -99,10 +99,11 @@ start_trajectory (`cartographer_ros_msgs/StartTrajectory`_)
 finish_trajectory (`cartographer_ros_msgs/FinishTrajectory`_)
   Finishes the given `trajectory_id`'s trajectory by running a final optimization.
 
-write_assets (`cartographer_ros_msgs/WriteAssets`_)
-  Writes artifacts (e.g. the map) to disk. The `stem` argument is used as a prefix
-  for the various files which are written. Files will usually end up in `~/.ros` or
-  `ROS_HOME` if it is set.
+write_state (`cartographer_ros_msgs/WriteState`_)
+  Writes the current internal state to disk into `filename`. The file will
+  usually end up in `~/.ros` or `ROS_HOME` if it is set. This file can be used
+  as input to the `assets_writer_main` to generate assets like probability
+  grids, X-Rays or PLY files.
 
 Required tf Transforms
 ======================
@@ -129,7 +130,7 @@ If *provide_odom_frame* is enabled in the :doc:`configuration`, a continuous
 .. _cartographer_ros_msgs/SubmapList: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/msg/SubmapList.msg
 .. _cartographer_ros_msgs/SubmapQuery: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/srv/SubmapQuery.srv
 .. _cartographer_ros_msgs/StartTrajectory: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/srv/StartTrajectory.srv
-.. _cartographer_ros_msgs/WriteAssets: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/srv/WriteAssets.srv
+.. _cartographer_ros_msgs/WriteState: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/srv/WriteState.srv
 .. _nav_msgs/OccupancyGrid: http://docs.ros.org/api/nav_msgs/html/msg/OccupancyGrid.html
 .. _nav_msgs/Odometry: http://docs.ros.org/api/nav_msgs/html/msg/Odometry.html
 .. _sensor_msgs/Imu: http://docs.ros.org/api/sensor_msgs/html/msg/Imu.html

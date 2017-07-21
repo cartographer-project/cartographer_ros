@@ -35,7 +35,7 @@ add_service_files(
     SubmapQuery.srv
     FinishTrajectory.srv
     StartTrajectory.srv
-    WriteAssets.srv
+    WriteState.srv
 )
 
 generate_messages(

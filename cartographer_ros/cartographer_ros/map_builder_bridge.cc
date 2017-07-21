@@ -17,10 +17,8 @@
 #include "cartographer_ros/map_builder_bridge.h"
 
 #include "cartographer/io/proto_stream.h"
-#include "cartographer_ros/assets_writer.h"
 #include "cartographer_ros/color.h"
 #include "cartographer_ros/msg_conversion.h"
-#include "cartographer_ros/occupancy_grid.h"
 
 namespace cartographer_ros {
 
@@ -70,42 +68,10 @@ void MapBuilderBridge::FinishTrajectory(const int trajectory_id) {
   sensor_bridges_.erase(trajectory_id);
 }
 
-void MapBuilderBridge::SerializeState(const std::string& stem) {
-  cartographer::io::ProtoStreamWriter writer(stem + ".pbstream");
+void MapBuilderBridge::SerializeState(const std::string& filename) {
+  cartographer::io::ProtoStreamWriter writer(filename);
   map_builder_.SerializeState(&writer);
   CHECK(writer.Close()) << "Could not write state.";
-}
-
-void MapBuilderBridge::WriteAssets(const string& stem) {
-  const auto all_trajectory_nodes =
-      map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
-  if (!HasNonTrimmedNode(all_trajectory_nodes)) {
-    LOG(WARNING) << "No data was collected and no assets will be written.";
-    return;
-  }
-  // Make sure there is a trajectory with id = 0.
-  CHECK_EQ(trajectory_options_.count(0), 1);
-  LOG(INFO) << "Writing assets with stem '" << stem << "'...";
-  if (node_options_.map_builder_options.use_trajectory_builder_2d()) {
-    // We arbitrarily use the submap_options() from the first trajectory to
-    // write the 2D assets.
-    Write2DAssets(
-        all_trajectory_nodes, node_options_.map_frame,
-        trajectory_options_[0]
-            .trajectory_builder_options.trajectory_builder_2d_options()
-            .submaps_options(),
-        stem);
-  }
-
-  if (node_options_.map_builder_options.use_trajectory_builder_3d()) {
-    Write3DAssets(
-        all_trajectory_nodes,
-        trajectory_options_[0]
-            .trajectory_builder_options.trajectory_builder_3d_options()
-            .submaps_options()
-            .high_resolution(),
-        stem);
-  }
 }
 
 bool MapBuilderBridge::HandleSubmapQuery(
@@ -155,28 +121,6 @@ cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
     }
   }
   return submap_list;
-}
-
-std::unique_ptr<nav_msgs::OccupancyGrid>
-MapBuilderBridge::BuildOccupancyGrid() {
-  CHECK(node_options_.map_builder_options.use_trajectory_builder_2d())
-      << "Publishing OccupancyGrids for 3D data is not yet supported.";
-  const auto all_trajectory_nodes =
-      map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
-  std::unique_ptr<nav_msgs::OccupancyGrid> occupancy_grid;
-  if (HasNonTrimmedNode(all_trajectory_nodes)) {
-    occupancy_grid =
-        cartographer::common::make_unique<nav_msgs::OccupancyGrid>();
-    // Make sure there is a trajectory with id = 0.
-    CHECK_EQ(trajectory_options_.count(0), 1);
-    BuildOccupancyGrid2D(
-        all_trajectory_nodes, node_options_.map_frame,
-        trajectory_options_[0]
-            .trajectory_builder_options.trajectory_builder_2d_options()
-            .submaps_options(),
-        occupancy_grid.get());
-  }
-  return occupancy_grid;
 }
 
 std::unordered_map<int, MapBuilderBridge::TrajectoryState>

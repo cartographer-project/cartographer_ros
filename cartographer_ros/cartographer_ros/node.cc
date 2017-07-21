@@ -68,16 +68,7 @@ Node::Node(const NodeOptions& node_options, tf2_ros::Buffer* const tf_buffer)
   service_servers_.push_back(node_handle_.advertiseService(
       kFinishTrajectoryServiceName, &Node::HandleFinishTrajectory, this));
   service_servers_.push_back(node_handle_.advertiseService(
-      kWriteAssetsServiceName, &Node::HandleWriteAssets, this));
-
-  if (node_options_.map_builder_options.use_trajectory_builder_2d()) {
-    occupancy_grid_publisher_ =
-        node_handle_.advertise<::nav_msgs::OccupancyGrid>(
-            kOccupancyGridTopic, kLatestOnlyPublisherQueueSize,
-            true /* latched */);
-    occupancy_grid_thread_ =
-        std::thread(&Node::SpinOccupancyGridThreadForever, this);
-  }
+      kWriteStateServiceName, &Node::HandleWriteState, this));
 
   scan_matched_point_cloud_publisher_ =
       node_handle_.advertise<sensor_msgs::PointCloud2>(
@@ -97,15 +88,7 @@ Node::Node(const NodeOptions& node_options, tf2_ros::Buffer* const tf_buffer)
       &Node::PublishConstraintList, this));
 }
 
-Node::~Node() {
-  {
-    carto::common::MutexLocker lock(&mutex_);
-    terminating_ = true;
-  }
-  if (occupancy_grid_thread_.joinable()) {
-    occupancy_grid_thread_.join();
-  }
-}
+Node::~Node() {}
 
 ::ros::NodeHandle* Node::node_handle() { return &node_handle_; }
 
@@ -198,25 +181,6 @@ void Node::PublishConstraintList(
   carto::common::MutexLocker lock(&mutex_);
   if (constraint_list_publisher_.getNumSubscribers() > 0) {
     constraint_list_publisher_.publish(map_builder_bridge_.GetConstraintList());
-  }
-}
-
-void Node::SpinOccupancyGridThreadForever() {
-  for (;;) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    {
-      carto::common::MutexLocker lock(&mutex_);
-      if (terminating_) {
-        return;
-      }
-    }
-    if (occupancy_grid_publisher_.getNumSubscribers() == 0) {
-      continue;
-    }
-    const auto occupancy_grid = map_builder_bridge_.BuildOccupancyGrid();
-    if (occupancy_grid != nullptr) {
-      occupancy_grid_publisher_.publish(*occupancy_grid);
-    }
   }
 }
 
@@ -429,12 +393,11 @@ bool Node::HandleFinishTrajectory(
   return true;
 }
 
-bool Node::HandleWriteAssets(
-    ::cartographer_ros_msgs::WriteAssets::Request& request,
-    ::cartographer_ros_msgs::WriteAssets::Response& response) {
+bool Node::HandleWriteState(
+    ::cartographer_ros_msgs::WriteState::Request& request,
+    ::cartographer_ros_msgs::WriteState::Response& response) {
   carto::common::MutexLocker lock(&mutex_);
-  map_builder_bridge_.SerializeState(request.stem);
-  map_builder_bridge_.WriteAssets(request.stem);
+  map_builder_bridge_.SerializeState(request.filename);
   return true;
 }
 
