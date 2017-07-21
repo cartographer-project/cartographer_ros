@@ -38,6 +38,7 @@
 #include "ros/ros.h"
 #include "rviz/display_context.h"
 #include "rviz/frame_manager.h"
+#include "rviz/ogre_helpers/axes.h"
 #include "rviz/properties/bool_property.h"
 
 namespace cartographer_rviz {
@@ -48,10 +49,10 @@ class DrawableSubmap : public QObject {
   Q_OBJECT
 
  public:
-  // The 'scene_manager' is the Ogre scene manager to which to add a node.
   DrawableSubmap(const ::cartographer::mapping::SubmapId& submap_id,
-                 Ogre::SceneManager* scene_manager,
-                 ::rviz::Property* submap_category, const bool visible);
+                 ::rviz::DisplayContext* display_context,
+                 ::rviz::Property* submap_category, bool visible,
+                 float pose_axes_length, float pose_axes_radius);
   ~DrawableSubmap() override;
   DrawableSubmap(const DrawableSubmap&) = delete;
   DrawableSubmap& operator=(const DrawableSubmap&) = delete;
@@ -96,12 +97,14 @@ class DrawableSubmap : public QObject {
   const ::cartographer::mapping::SubmapId id_;
 
   ::cartographer::common::Mutex mutex_;
-  Ogre::SceneManager* const scene_manager_;
+  ::rviz::DisplayContext* const display_context_;
   Ogre::SceneNode* const scene_node_;
-  Ogre::ManualObject* manual_object_;
+  Ogre::SceneNode* const submap_node_;
+  Ogre::ManualObject* const manual_object_;
   Ogre::TexturePtr texture_;
   Ogre::MaterialPtr material_;
   ::cartographer::transform::Rigid3d pose_ GUARDED_BY(mutex_);
+  ::rviz::Axes pose_axes_;
   std::chrono::milliseconds last_query_timestamp_ GUARDED_BY(mutex_);
   bool query_in_progress_ = false GUARDED_BY(mutex_);
   int metadata_version_ = -1 GUARDED_BY(mutex_);
