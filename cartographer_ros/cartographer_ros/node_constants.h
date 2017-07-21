@@ -17,6 +17,9 @@
 #ifndef CARTOGRAPHER_ROS_NODE_CONSTANTS_H_
 #define CARTOGRAPHER_ROS_NODE_CONSTANTS_H_
 
+#include <string>
+#include <vector>
+
 namespace cartographer_ros {
 
 // Default topic names; expected to be remapped as needed.
@@ -38,6 +41,10 @@ constexpr double kConstraintPublishPeriodSec = 0.5;
 
 constexpr int kInfiniteSubscriberQueueSize = 0;
 constexpr int kLatestOnlyPublisherQueueSize = 1;
+
+// For multiple topics adds numbers to the topic name and returns the list.
+std::vector<std::string> ComputeRepeatedTopicNames(const std::string& topic,
+                                                   int num_topics);
 
 }  // namespace cartographer_ros
 

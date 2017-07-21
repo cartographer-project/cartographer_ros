@@ -18,6 +18,8 @@
 #define CARTOGRAPHER_ROS_NODE_H_
 
 #include <memory>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "cartographer/common/mutex.h"
@@ -72,6 +74,10 @@ class Node {
   bool HandleWriteAssets(
       cartographer_ros_msgs::WriteAssets::Request& request,
       cartographer_ros_msgs::WriteAssets::Response& response);
+  // Returns the set of topic names we want to subscribe to.
+  std::unordered_set<string> ComputeExpectedTopics(
+      const TrajectoryOptions& options,
+      const cartographer_ros_msgs::SensorTopics& topics);
   int AddTrajectory(const TrajectoryOptions& options,
                     const cartographer_ros_msgs::SensorTopics& topics);
   void LaunchSubscribers(const TrajectoryOptions& options,
@@ -83,8 +89,8 @@ class Node {
   void PublishConstraintList(const ::ros::WallTimerEvent& timer_event);
   void SpinOccupancyGridThreadForever();
   bool ValidateTrajectoryOptions(const TrajectoryOptions& options);
-  bool ValidateTopicName(const ::cartographer_ros_msgs::SensorTopics& topics,
-                         const TrajectoryOptions& options);
+  bool ValidateTopicNames(const ::cartographer_ros_msgs::SensorTopics& topics,
+                          const TrajectoryOptions& options);
 
   const NodeOptions node_options_;
 
@@ -104,12 +110,8 @@ class Node {
       cartographer::common::Time::min();
 
   // These are keyed with 'trajectory_id'.
-  std::unordered_map<int, ::ros::Subscriber> laser_scan_subscribers_;
-  std::unordered_map<int, ::ros::Subscriber> multi_echo_laser_scan_subscribers_;
-  std::unordered_map<int, ::ros::Subscriber> odom_subscribers_;
-  std::unordered_map<int, ::ros::Subscriber> imu_subscribers_;
-  std::unordered_map<int, std::vector<::ros::Subscriber>>
-      point_cloud_subscribers_;
+  std::unordered_map<int, std::vector<::ros::Subscriber>> subscribers_;
+  std::unordered_set<std::string> subscribed_topics_;
   std::unordered_map<int, bool> is_active_trajectory_ GUARDED_BY(mutex_);
   ::ros::Publisher occupancy_grid_publisher_;
   std::thread occupancy_grid_thread_;
