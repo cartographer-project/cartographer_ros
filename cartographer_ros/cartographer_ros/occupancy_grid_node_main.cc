@@ -285,7 +285,7 @@ void Node::PublishOccupancyGrid(const string& frame_id, const ros::Time& time,
   occupancy_grid.data.reserve(size.x() * size.y());
   for (int y = size.y() - 1; y >= 0; --y) {
     for (int x = 0; x < size.x(); ++x) {
-      uint32 packed = pixel_data[y * size.x() + x];
+      const uint32 packed = pixel_data[y * size.x() + x];
       const unsigned char color = packed >> 16;
       const unsigned char observed = packed >> 8;
       const int value =
