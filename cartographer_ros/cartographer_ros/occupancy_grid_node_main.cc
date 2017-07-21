@@ -21,10 +21,8 @@
 #include "Eigen/Core"
 #include "Eigen/Geometry"
 #include "cairo/cairo.h"
-#include "cartographer/common/make_unique.h"
 #include "cartographer/common/mutex.h"
 #include "cartographer/common/port.h"
-#include "cartographer/io/file_writer.h"
 #include "cartographer/mapping/id.h"
 #include "cartographer/transform/rigid_transform.h"
 #include "cartographer_ros/msg_conversion.h"
@@ -47,45 +45,56 @@ using ::cartographer::mapping::SubmapId;
 
 constexpr cairo_format_t kCairoFormat = CAIRO_FORMAT_ARGB32;
 
+// std::unique_ptr for Cairo surfaces. The surface is destroyed when the
+// std::unique_ptr is reset or destroyed.
+using UniqueCairoSurfacePtr =
+    std::unique_ptr<cairo_surface_t, void (*)(cairo_surface_t*)>;
+
+UniqueCairoSurfacePtr MakeUniqueCairoSurfacePtr(cairo_surface_t* surface) {
+  return UniqueCairoSurfacePtr(surface, cairo_surface_destroy);
+}
+
+// std::unique_ptr for Cairo contexts.
+using UniqueCairoPtr = std::unique_ptr<cairo_t, void (*)(cairo_t*)>;
+
+UniqueCairoPtr MakeUniqueCairoPtr(cairo_t* surface) {
+  return UniqueCairoPtr(surface, cairo_destroy);
+}
+
 Eigen::Affine3d ToEigen(const ::cartographer::transform::Rigid3d& rigid3) {
   return Eigen::Translation3d(rigid3.translation()) * rigid3.rotation();
 }
 
 struct SubmapState {
-  SubmapState(const ::cartographer::mapping::SubmapId& id) {}
-  ~SubmapState() {
-    if (texture.surface != nullptr) {
-      cairo_surface_destroy(texture.surface);
-    }
-  }
+  SubmapState() : surface(MakeUniqueCairoSurfacePtr(nullptr)) {}
 
-  struct {
-    int width;
-    int height;
-    int version;
-    double resolution;
-    ::cartographer::transform::Rigid3d slice_pose;
-    cairo_surface_t* surface = nullptr;
+  // Texture data.
+  int width;
+  int height;
+  int version;
+  double resolution;
+  ::cartographer::transform::Rigid3d slice_pose;
+  UniqueCairoSurfacePtr surface;
+  // Pixel data used by 'surface'. Must outlive 'surface'.
+  std::vector<uint32_t> cairo_data;
 
-    // Pixel data used by 'surface'. Must outlive 'surface'.
-    std::vector<uint32_t> cairo_data;
-  } texture;
+  // Metadata.
   ::cartographer::transform::Rigid3d pose;
   int metadata_version = -1;
 };
 
-void CairoDrawEachSubmap(const double scale,
-                         std::map<SubmapId, SubmapState>* submaps, cairo_t* cr,
-                         std::function<void(const SubmapState&)> func) {
+void CairoDrawEachSubmap(
+    const double scale, std::map<SubmapId, SubmapState>* submaps, cairo_t* cr,
+    std::function<void(const SubmapState&)> draw_callback) {
   cairo_scale(cr, scale, scale);
 
   for (auto& pair : *submaps) {
     auto& submap_state = pair.second;
-    if (submap_state.texture.surface == nullptr) {
+    if (submap_state.surface == nullptr) {
       return;
     }
     const Eigen::Matrix4d homo =
-        ToEigen(submap_state.pose * submap_state.texture.slice_pose).matrix();
+        ToEigen(submap_state.pose * submap_state.slice_pose).matrix();
 
     cairo_save(cr);
     cairo_matrix_t matrix;
@@ -93,11 +102,9 @@ void CairoDrawEachSubmap(const double scale,
                       homo(0, 3), -homo(1, 3));
     cairo_transform(cr, &matrix);
 
-    const double submap_resolution = submap_state.texture.resolution;
+    const double submap_resolution = submap_state.resolution;
     cairo_scale(cr, submap_resolution, submap_resolution);
-
-    func(submap_state);
-
+    draw_callback(submap_state);
     cairo_restore(cr);
   }
 }
@@ -119,12 +126,13 @@ class Node {
                             cairo_surface_t* surface);
 
   ::ros::NodeHandle node_handle_;
-  ::cartographer::common::Mutex mutex_;
   const double resolution_;
-  ::ros::ServiceClient client_;
-  ::ros::Subscriber submap_list_subscriber_;
-  ::ros::Publisher occupancy_grid_publisher_;
-  std::map<SubmapId, SubmapState> submaps_;
+
+  ::cartographer::common::Mutex mutex_;
+  ::ros::ServiceClient client_ GUARDED_BY(mutex_);
+  ::ros::Subscriber submap_list_subscriber_ GUARDED_BY(mutex_);
+  ::ros::Publisher occupancy_grid_publisher_ GUARDED_BY(mutex_);
+  std::map<SubmapId, SubmapState> submaps_ GUARDED_BY(mutex_);
 };
 
 Node::Node(const double resolution)
@@ -155,15 +163,11 @@ void Node::HandleSubmapList(
   }
   for (const auto& submap_msg : msg->submap) {
     const SubmapId id{submap_msg.trajectory_id, submap_msg.submap_index};
-    if (submaps_.count(id) == 0) {
-      submaps_.emplace(std::piecewise_construct, std::forward_as_tuple(id),
-                       std::forward_as_tuple(id));
-    }
-    SubmapState& submap_state = submaps_.at(id);
+    SubmapState& submap_state = submaps_[id];
     submap_state.pose = ToRigid3d(submap_msg.pose);
     submap_state.metadata_version = submap_msg.submap_version;
-    if (submap_state.texture.surface != nullptr &&
-        submap_state.texture.version == submap_msg.submap_version) {
+    if (submap_state.surface != nullptr &&
+        submap_state.version == submap_msg.submap_version) {
       continue;
     }
 
@@ -171,37 +175,37 @@ void Node::HandleSubmapList(
     if (fetched_texture == nullptr) {
       continue;
     }
-    submap_state.texture.width = fetched_texture->width;
-    submap_state.texture.height = fetched_texture->height;
-    submap_state.texture.version = fetched_texture->version;
-    submap_state.texture.slice_pose = fetched_texture->slice_pose;
-    submap_state.texture.resolution = fetched_texture->resolution;
+    submap_state.width = fetched_texture->width;
+    submap_state.height = fetched_texture->height;
+    submap_state.version = fetched_texture->version;
+    submap_state.slice_pose = fetched_texture->slice_pose;
+    submap_state.resolution = fetched_texture->resolution;
 
     // Properly dealing with a non-common stride would make this code much more
     // complicated. Let's check that it is not needed.
-    const int expected_stride = 4 * submap_state.texture.width;
-    CHECK_EQ(expected_stride, cairo_format_stride_for_width(
-                                  kCairoFormat, submap_state.texture.width));
-    submap_state.texture.cairo_data.clear();
-    if (submap_state.texture.surface != nullptr) {
-      cairo_surface_destroy(submap_state.texture.surface);
-    }
+    const int expected_stride = 4 * submap_state.width;
+    CHECK_EQ(expected_stride,
+             cairo_format_stride_for_width(kCairoFormat, submap_state.width));
+    submap_state.cairo_data.clear();
     for (size_t i = 0; i < fetched_texture->intensity.size(); ++i) {
+      // We use the red channel to track intensity information. The green
+      // channel we use to track if a cell was ever observed.
       const uint8_t intensity = fetched_texture->intensity.at(i);
       const uint8_t alpha = fetched_texture->alpha.at(i);
-      submap_state.texture.cairo_data.push_back(
-          (alpha << 24) | (intensity << 16) | (intensity << 8) | intensity);
+      const uint8_t observed = (intensity == 0 && alpha == 0) ? 0 : 255;
+      submap_state.cairo_data.push_back((alpha << 24) | (intensity << 16) |
+                                        (observed << 8) | 0);
     }
 
-    submap_state.texture.surface = cairo_image_surface_create_for_data(
-        reinterpret_cast<unsigned char*>(
-            submap_state.texture.cairo_data.data()),
-        kCairoFormat, submap_state.texture.width, submap_state.texture.height,
-        expected_stride);
-    CHECK_EQ(cairo_surface_status(submap_state.texture.surface),
+    submap_state.surface =
+        MakeUniqueCairoSurfacePtr(cairo_image_surface_create_for_data(
+            reinterpret_cast<unsigned char*>(submap_state.cairo_data.data()),
+            kCairoFormat, submap_state.width, submap_state.height,
+            expected_stride));
+    CHECK_EQ(cairo_surface_status(submap_state.surface.get()),
              CAIRO_STATUS_SUCCESS)
         << cairo_status_to_string(
-               cairo_surface_status(submap_state.texture.surface));
+               cairo_surface_status(submap_state.surface.get()));
   }
   DrawAndPublish(msg->header.frame_id, msg->header.stamp);
 }
@@ -213,27 +217,22 @@ void Node::DrawAndPublish(const string& frame_id, const ros::Time& time) {
 
   Eigen::AlignedBox2f bounding_box;
   {
-    cairo_surface_t* surface = cairo_image_surface_create(kCairoFormat, 1, 1);
-    cairo_t* cr = cairo_create(surface);
-    const auto update_bounding_box = [&bounding_box](cairo_t* cr, double x,
-                                                     double y) {
-      cairo_user_to_device(cr, &x, &y);
+    auto surface = MakeUniqueCairoSurfacePtr(
+        cairo_image_surface_create(kCairoFormat, 1, 1));
+    auto cr = MakeUniqueCairoPtr(cairo_create(surface.get()));
+    const auto update_bounding_box = [&bounding_box, &cr](double x, double y) {
+      cairo_user_to_device(cr.get(), &x, &y);
       bounding_box.extend(Eigen::Vector2f(x, y));
     };
 
     CairoDrawEachSubmap(
-        1. / resolution_, &submaps_, cr,
-        [&update_bounding_box, &bounding_box,
-         cr](const SubmapState& submap_state) {
-          update_bounding_box(cr, 0, 0);
-          update_bounding_box(cr, submap_state.texture.width, 0);
-          update_bounding_box(cr, 0, submap_state.texture.height);
-          update_bounding_box(cr, submap_state.texture.width,
-                              submap_state.texture.height);
-
+        1. / resolution_, &submaps_, cr.get(),
+        [&update_bounding_box, &bounding_box](const SubmapState& submap_state) {
+          update_bounding_box(0, 0);
+          update_bounding_box(submap_state.width, 0);
+          update_bounding_box(0, submap_state.height);
+          update_bounding_box(submap_state.width, submap_state.height);
         });
-    cairo_surface_destroy(surface);
-    cairo_destroy(cr);
   }
 
   const int kPaddingPixel = 5;
@@ -244,22 +243,20 @@ void Node::DrawAndPublish(const string& frame_id, const ros::Time& time) {
                               -bounding_box.min().y() + kPaddingPixel);
 
   {
-    cairo_surface_t* surface =
-        cairo_image_surface_create(kCairoFormat, size.x(), size.y());
-    cairo_t* cr = cairo_create(surface);
-    // This translates to (128, 128, 128) for unknown values.
-    cairo_set_source_rgba(cr, 0.5, 0.5, 0.5, 1.);
-    cairo_paint(cr);
-    cairo_translate(cr, origin.x(), origin.y());
-    CairoDrawEachSubmap(
-        1. / resolution_, &submaps_, cr, [cr](const SubmapState& submap_state) {
-          cairo_set_source_surface(cr, submap_state.texture.surface, 0., 0.);
-          cairo_paint(cr);
-        });
-    cairo_surface_flush(surface);
-    cairo_destroy(cr);
-    PublishOccupancyGrid(frame_id, time, origin, size, surface);
-    cairo_surface_destroy(surface);
+    auto surface = MakeUniqueCairoSurfacePtr(
+        cairo_image_surface_create(kCairoFormat, size.x(), size.y()));
+    auto cr = MakeUniqueCairoPtr(cairo_create(surface.get()));
+    cairo_set_source_rgba(cr.get(), 0.5, 0.0, 0.0, 1.);
+    cairo_paint(cr.get());
+    cairo_translate(cr.get(), origin.x(), origin.y());
+    CairoDrawEachSubmap(1. / resolution_, &submaps_, cr.get(),
+                        [&cr](const SubmapState& submap_state) {
+                          cairo_set_source_surface(
+                              cr.get(), submap_state.surface.get(), 0., 0.);
+                          cairo_paint(cr.get());
+                        });
+    cairo_surface_flush(surface.get());
+    PublishOccupancyGrid(frame_id, time, origin, size, surface.get());
   }
 }
 
@@ -270,7 +267,7 @@ void Node::PublishOccupancyGrid(const string& frame_id, const ros::Time& time,
   nav_msgs::OccupancyGrid occupancy_grid;
   occupancy_grid.header.stamp = time;
   occupancy_grid.header.frame_id = frame_id;
-  occupancy_grid.info.map_load_time = occupancy_grid.header.stamp;
+  occupancy_grid.info.map_load_time = time;
   occupancy_grid.info.resolution = resolution_;
   occupancy_grid.info.width = size.x();
   occupancy_grid.info.height = size.y();
@@ -283,12 +280,15 @@ void Node::PublishOccupancyGrid(const string& frame_id, const ros::Time& time,
   occupancy_grid.info.origin.orientation.y = 0.;
   occupancy_grid.info.origin.orientation.z = 0.;
 
-  unsigned char* data = cairo_image_surface_get_data(surface);
+  const uint32* pixel_data =
+      reinterpret_cast<uint32*>(cairo_image_surface_get_data(surface));
   occupancy_grid.data.reserve(size.x() * size.y());
   for (int y = size.y() - 1; y >= 0; --y) {
     for (int x = 0; x < size.x(); ++x) {
-      const unsigned char color = data[y * 4 * size.x() + 4 * x];
-      const int value = color == 128 ? -1 : ((1. - color / 255.) * 100.);
+      uint32 packed = pixel_data[y * size.x() + x];
+      const unsigned char color = packed >> 16;
+      const unsigned char observed = packed >> 8;
+      const int value = observed == 0 ? -1 : ((1. - color / 255.) * 100.);
       CHECK_LE(-1, value);
       CHECK_GE(100, value);
       occupancy_grid.data.push_back(value);
