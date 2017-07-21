@@ -100,7 +100,7 @@ class DrawableSubmap : public QObject {
   ::rviz::DisplayContext* const display_context_;
   Ogre::SceneNode* const scene_node_;
   Ogre::SceneNode* const submap_node_;
-  Ogre::ManualObject* manual_object_;
+  Ogre::ManualObject* const manual_object_;
   Ogre::TexturePtr texture_;
   Ogre::MaterialPtr material_;
   ::cartographer::transform::Rigid3d pose_ GUARDED_BY(mutex_);
