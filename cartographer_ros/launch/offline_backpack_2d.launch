@@ -26,7 +26,7 @@
           -configuration_basename backpack_2d.lua
           -urdf_filename $(find cartographer_ros)/urdf/backpack_2d.urdf
           -bag_filenames $(arg bag_filenames)"
-      >
+      output="screen">
     <remap from="echoes" to="horizontal_laser_2d" />
   </node>
 

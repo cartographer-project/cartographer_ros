@@ -54,7 +54,7 @@ class MapBuilderBridge {
   int AddTrajectory(const std::unordered_set<string>& expected_sensor_ids,
                     const TrajectoryOptions& trajectory_options);
   void FinishTrajectory(int trajectory_id);
-  void SerializeState(const string& stem);
+  void SerializeState(const string& filename);
 
   bool HandleSubmapQuery(
       cartographer_ros_msgs::SubmapQuery::Request& request,

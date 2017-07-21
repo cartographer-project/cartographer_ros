@@ -68,8 +68,8 @@ void MapBuilderBridge::FinishTrajectory(const int trajectory_id) {
   sensor_bridges_.erase(trajectory_id);
 }
 
-void MapBuilderBridge::SerializeState(const std::string& stem) {
-  cartographer::io::ProtoStreamWriter writer(stem + ".pbstream");
+void MapBuilderBridge::SerializeState(const std::string& filename) {
+  cartographer::io::ProtoStreamWriter writer(filename);
   map_builder_.SerializeState(&writer);
   CHECK(writer.Close()) << "Could not write state.";
 }

@@ -34,7 +34,7 @@
 #include "cartographer_ros_msgs/SubmapList.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
 #include "cartographer_ros_msgs/TrajectoryOptions.h"
-#include "cartographer_ros_msgs/WriteAssets.h"
+#include "cartographer_ros_msgs/WriteState.h"
 #include "ros/ros.h"
 #include "tf2_ros/transform_broadcaster.h"
 
@@ -71,9 +71,9 @@ class Node {
   bool HandleFinishTrajectory(
       cartographer_ros_msgs::FinishTrajectory::Request& request,
       cartographer_ros_msgs::FinishTrajectory::Response& response);
-  bool HandleWriteAssets(
-      cartographer_ros_msgs::WriteAssets::Request& request,
-      cartographer_ros_msgs::WriteAssets::Response& response);
+  bool HandleWriteState(
+      cartographer_ros_msgs::WriteState::Request& request,
+      cartographer_ros_msgs::WriteState::Response& response);
   // Returns the set of topic names we want to subscribe to.
   std::unordered_set<string> ComputeExpectedTopics(
       const TrajectoryOptions& options,

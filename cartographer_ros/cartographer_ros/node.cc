@@ -68,7 +68,7 @@ Node::Node(const NodeOptions& node_options, tf2_ros::Buffer* const tf_buffer)
   service_servers_.push_back(node_handle_.advertiseService(
       kFinishTrajectoryServiceName, &Node::HandleFinishTrajectory, this));
   service_servers_.push_back(node_handle_.advertiseService(
-      kWriteAssetsServiceName, &Node::HandleWriteAssets, this));
+      kWriteStateServiceName, &Node::HandleWriteState, this));
 
   scan_matched_point_cloud_publisher_ =
       node_handle_.advertise<sensor_msgs::PointCloud2>(
@@ -393,11 +393,11 @@ bool Node::HandleFinishTrajectory(
   return true;
 }
 
-bool Node::HandleWriteAssets(
-    ::cartographer_ros_msgs::WriteAssets::Request& request,
-    ::cartographer_ros_msgs::WriteAssets::Response& response) {
+bool Node::HandleWriteState(
+    ::cartographer_ros_msgs::WriteState::Request& request,
+    ::cartographer_ros_msgs::WriteState::Response& response) {
   carto::common::MutexLocker lock(&mutex_);
-  map_builder_bridge_.SerializeState(request.stem);
+  map_builder_bridge_.SerializeState(request.filename);
   return true;
 }
 
