@@ -26,6 +26,9 @@
     <remap from="scan" to="/base_scan" />
   </node>
 
+  <node name="cartographer_occupancy_grid_node" pkg="cartographer_ros"
+      type="cartographer_occupancy_grid_node" args="-resolution 0.05" />
+
   <node name="tf_remove_frames" pkg="cartographer_ros"
       type="tf_remove_frames.py">
     <remap from="tf_out" to="/tf" />
