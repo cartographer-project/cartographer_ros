@@ -34,8 +34,8 @@ struct TrajectoryOptions {
   string odom_frame;
   bool provide_odom_frame;
   bool use_odometry;
-  bool use_laser_scan;
-  bool use_multi_echo_laser_scan;
+  int num_laser_scans;
+  int num_multi_echo_laser_scans;
   int num_subdivisions_per_laser_scan;
   int num_point_clouds;
 };

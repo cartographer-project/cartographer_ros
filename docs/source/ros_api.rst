@@ -39,20 +39,24 @@ range data is required.
 
 scan (`sensor_msgs/LaserScan`_)
   Supported in 2D and 3D (e.g. using an axially rotating planar laser scanner).
-  If *use_laser_scan* is enabled in the :doc:`configuration`, this topic will
-  be used as input for SLAM.
+  If *num_laser_scans* is set to 1 in the :doc:`configuration`, this topic will
+  be used as input for SLAM. If *num_laser_scans* is greater than 1, multiple
+  numbered scan topics (i.e. scan_1, scan_2, scan_3, ...  up to and including
+  *num_laser_scans*) will be used as inputs for SLAM.
 
 echoes (`sensor_msgs/MultiEchoLaserScan`_)
   Supported in 2D and 3D (e.g. using an axially rotating planar laser scanner).
-  If *use_multi_echo_laser_scan* is enabled in the :doc:`configuration`, this
-  topic will be used as input for SLAM. Only the first echo is used.
+  If *num_multi_echo_laser_scans* is set to 1 in the :doc:`configuration`, this
+  topic will be used as input for SLAM. Only the first echo is used. If
+  *num_multi_echo_laser_scans* is greater than 1, multiple numbered echoes
+  topics (i.e. echoes_1, echoes_2, echoes_3, ...  up to and including
+  *num_multi_echo_laser_scans*) will be used as inputs for SLAM.
 
 points2 (`sensor_msgs/PointCloud2`_)
-  Only supported in 3D. If *num_point_clouds* is set to 1 in the
-  :doc:`configuration`, this topic will be used as input for SLAM. If
-  *num_point_clouds* is greater than 1, multiple numbered points2 topics (i.e.
-  points2_1, points2_2, points2_3, ...  up to and including *num_point_clouds*)
-  will be used as inputs for SLAM.
+  If *num_point_clouds* is set to 1 in the :doc:`configuration`, this topic will
+  be used as input for SLAM. If *num_point_clouds* is greater than 1, multiple
+  numbered points2 topics (i.e. points2_1, points2_2, points2_3, ...  up to and
+  including *num_point_clouds*) will be used as inputs for SLAM.
 
 The following additional sensor data topics may also be provided.
 

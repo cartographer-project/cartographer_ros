@@ -24,12 +24,12 @@ namespace {
 
 void CheckTrajectoryOptions(const TrajectoryOptions& options) {
   CHECK_GE(options.num_subdivisions_per_laser_scan, 1);
-  CHECK_EQ(options.use_laser_scan + options.use_multi_echo_laser_scan +
-               (options.num_point_clouds > 0),
+  CHECK_GE(options.num_laser_scans + options.num_multi_echo_laser_scans +
+               options.num_point_clouds,
            1)
-      << "Configuration error: 'use_laser_scan', "
-         "'use_multi_echo_laser_scan' and 'num_point_clouds' are "
-         "mutually exclusive, but one is required.";
+      << "Configuration error: 'num_laser_scans', "
+         "'num_multi_echo_laser_scans' and 'num_point_clouds' are "
+         "all zero, but at least one is required.";
 }
 
 }  // namespace
@@ -49,9 +49,10 @@ TrajectoryOptions CreateTrajectoryOptions(
   options.provide_odom_frame =
       lua_parameter_dictionary->GetBool("provide_odom_frame");
   options.use_odometry = lua_parameter_dictionary->GetBool("use_odometry");
-  options.use_laser_scan = lua_parameter_dictionary->GetBool("use_laser_scan");
-  options.use_multi_echo_laser_scan =
-      lua_parameter_dictionary->GetBool("use_multi_echo_laser_scan");
+  options.num_laser_scans =
+      lua_parameter_dictionary->GetNonNegativeInt("num_laser_scans");
+  options.num_multi_echo_laser_scans =
+      lua_parameter_dictionary->GetNonNegativeInt("num_multi_echo_laser_scans");
   options.num_subdivisions_per_laser_scan =
       lua_parameter_dictionary->GetNonNegativeInt(
           "num_subdivisions_per_laser_scan");
@@ -68,8 +69,8 @@ bool FromRosMessage(const cartographer_ros_msgs::TrajectoryOptions& msg,
   options->odom_frame = msg.odom_frame;
   options->provide_odom_frame = msg.provide_odom_frame;
   options->use_odometry = msg.use_odometry;
-  options->use_laser_scan = msg.use_laser_scan;
-  options->use_multi_echo_laser_scan = msg.use_multi_echo_laser_scan;
+  options->num_laser_scans = msg.num_laser_scans;
+  options->num_multi_echo_laser_scans = msg.num_multi_echo_laser_scans;
   options->num_subdivisions_per_laser_scan =
       msg.num_subdivisions_per_laser_scan;
   options->num_point_clouds = msg.num_point_clouds;
@@ -90,8 +91,8 @@ cartographer_ros_msgs::TrajectoryOptions ToRosMessage(
   msg.odom_frame = options.odom_frame;
   msg.provide_odom_frame = options.provide_odom_frame;
   msg.use_odometry = options.use_odometry;
-  msg.use_laser_scan = options.use_laser_scan;
-  msg.use_multi_echo_laser_scan = options.use_multi_echo_laser_scan;
+  msg.num_laser_scans = options.num_laser_scans;
+  msg.num_multi_echo_laser_scans = options.num_multi_echo_laser_scans;
   msg.num_subdivisions_per_laser_scan = options.num_subdivisions_per_laser_scan;
   msg.num_point_clouds = options.num_point_clouds;
   options.trajectory_builder_options.SerializeToString(

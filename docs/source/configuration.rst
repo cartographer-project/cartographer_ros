@@ -55,21 +55,28 @@ use_odometry
   If enabled, subscribes to `nav_msgs/Odometry`_ on the topic "odom". Odometry
   must be provided in this case, and the information will be included in SLAM.
 
-use_laser_scan
-  If enabled, the node subscribes to `sensor_msgs/LaserScan`_ on the "scan"
-  topic. If 2D SLAM is used, either this or *use_multi_echo_laser_scan*
-  must be enabled.
+num_laser_scans
+  Number of laser scanners to subscribe to. Subscribes to
+  `sensor_msgs/LaserScan`_ on the "scan" topic for one laser scanner, or topics
+  "scan_1", "scan_2", etc for multiple laser scanners.
 
-use_multi_echo_laser_scan
-  If enabled, the node subscribes to  `sensor_msgs/MultiEchoLaserScan`_ on the
-  "echoes" topic. If 2D SLAM is used, either this or *use_laser_scan*
-  must be enabled.
+num_multi_echo_laser_scans
+  Number of multi-echo laser scanners to subscribe to. Subscribes to
+  `sensor_msgs/MultiEchoLaserScan`_ on the "echoes" topic for one laser scanner,
+  or topics "echoes_1", "echoes_2", etc for multiple laser scanners.
+
+num_subdivisions_per_laser_scan
+  Number of point clouds into which each scan received by the *num_laser_scans*
+  and *num_multi_echo_laser_scans* is split into. Subdividing a scan makes it
+  possible to unwarp scans acquired while the scanner is moving. There is a
+  corresponding trajectory builder option to accumulate the subdivided scan.
 
 num_point_clouds
-  Number of 3D lasers to subscribe to. Must be a positive value if and only if
-  using 3D SLAM. Subscribes to `sensor_msgs/PointCloud2`_ on the "points2"
-  topic for one laser, or topics "points2_1", "points2_2", etc for multiple
-  lasers.
+  Number of 3D rangefinders to subscribe to. Subscribes to
+  `sensor_msgs/PointCloud2`_ on the "points2" topic for one rangefinder, or
+  topics "points2_1", "points2_2", etc for multiple rangefinders. At least one
+  of *num_laser_scans*, *num_multi_echo_laser_scans*, or *num_point_clouds* must
+  be used.
 
 lookup_transform_timeout_sec
   Timeout in seconds to use for looking up transforms using `tf2`_.
