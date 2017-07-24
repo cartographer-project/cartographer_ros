@@ -130,10 +130,10 @@ void DrawableSubmap::Update(
   ::cartographer::common::MutexLocker locker(&mutex_);
   metadata_version_ = metadata.submap_version;
   pose_ = ::cartographer_ros::ToRigid3d(metadata.pose);
+  scene_node_->setPosition(ToOgre(pose_.translation()));
+  scene_node_->setOrientation(ToOgre(pose_.rotation()));
   if (submap_texture_ != nullptr) {
-    // We have to update the transform since we are already displaying a texture
-    // for this submap.
-    UpdateTransform();
+    display_context_->queueRender();
   }
   visibility_->setName(
       QString("%1.%2").arg(id_.submap_index).arg(metadata_version_));
@@ -197,7 +197,8 @@ void DrawableSubmap::SetAlpha(const double current_tracking_z) {
 
 void DrawableSubmap::UpdateSceneNode() {
   ::cartographer::common::MutexLocker locker(&mutex_);
-  UpdateTransform();
+  submap_node_->setPosition(ToOgre(submap_texture_->slice_pose.translation()));
+  submap_node_->setOrientation(ToOgre(submap_texture_->slice_pose.rotation()));
   // The call to Ogre's loadRawData below does not work with an RG texture,
   // therefore we create an RGB one whose blue channel is always 0.
   std::vector<char> rgb;
@@ -250,16 +251,7 @@ void DrawableSubmap::UpdateSceneNode() {
 
   texture_unit->setTextureName(texture_->getName());
   texture_unit->setTextureFiltering(Ogre::TFO_NONE);
-}
 
-void DrawableSubmap::UpdateTransform() {
-  CHECK(submap_texture_ != nullptr);
-  const ::cartographer::transform::Rigid3d pose =
-      pose_ * submap_texture_->slice_pose;
-  submap_node_->setPosition(ToOgre(pose.translation()));
-  submap_node_->setOrientation(ToOgre(pose.rotation()));
-  pose_axes_.setPosition(ToOgre(pose_.translation()));
-  pose_axes_.setOrientation(ToOgre(pose_.rotation()));
   display_context_->queueRender();
 }
 

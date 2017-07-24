@@ -71,9 +71,8 @@ class Node {
   bool HandleFinishTrajectory(
       cartographer_ros_msgs::FinishTrajectory::Request& request,
       cartographer_ros_msgs::FinishTrajectory::Response& response);
-  bool HandleWriteState(
-      cartographer_ros_msgs::WriteState::Request& request,
-      cartographer_ros_msgs::WriteState::Response& response);
+  bool HandleWriteState(cartographer_ros_msgs::WriteState::Request& request,
+                        cartographer_ros_msgs::WriteState::Response& response);
   // Returns the set of topic names we want to subscribe to.
   std::unordered_set<string> ComputeExpectedTopics(
       const TrajectoryOptions& options,

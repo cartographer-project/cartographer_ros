@@ -255,9 +255,9 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintList() {
       // Color mapping for submaps of various trajectories - add trajectory id
       // to ensure different starting colors. Also add a fixed offset of 25
       // to avoid having identical colors as trajectories.
-      color_constraint = ToMessage(cartographer::io::GetColor(
-          constraint.submap_id.submap_index +
-          constraint.submap_id.trajectory_id + 25));
+      color_constraint = ToMessage(
+          cartographer::io::GetColor(constraint.submap_id.submap_index +
+                                     constraint.submap_id.trajectory_id + 25));
       color_residual.a = 1.0;
       color_residual.r = 1.0;
     } else {
