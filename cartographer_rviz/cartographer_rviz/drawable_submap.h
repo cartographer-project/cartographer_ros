@@ -91,7 +91,6 @@ class DrawableSubmap : public QObject {
   void ToggleVisibility();
 
  private:
-  void UpdateTransform();
   float UpdateAlpha(float target_alpha);
 
   const ::cartographer::mapping::SubmapId id_;

@@ -273,7 +273,8 @@ void Run(const std::vector<string>& bag_filenames) {
             << (cpu_timespec.tv_sec + 1e-9 * cpu_timespec.tv_nsec) << " s";
 #endif
 
-  node.map_builder_bridge()->SerializeState(bag_filenames.front() + ".pbstream");
+  node.map_builder_bridge()->SerializeState(bag_filenames.front() +
+                                            ".pbstream");
 }
 
 }  // namespace
