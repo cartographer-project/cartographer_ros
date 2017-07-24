@@ -16,14 +16,27 @@
 
 #include "cartographer_ros/map_builder_bridge.h"
 
+#include "cartographer/io/color.h"
 #include "cartographer/io/proto_stream.h"
-#include "cartographer_ros/color.h"
 #include "cartographer_ros/msg_conversion.h"
 
 namespace cartographer_ros {
 
+namespace {
+
 constexpr double kTrajectoryLineStripMarkerScale = 0.07;
 constexpr double kConstraintMarkerScale = 0.025;
+
+::std_msgs::ColorRGBA ToMessage(const cartographer::io::Color& color) {
+  ::std_msgs::ColorRGBA result;
+  result.r = color[0] / 255.;
+  result.g = color[1] / 255.;
+  result.b = color[2] / 255.;
+  result.a = 1.f;
+  return result;
+}
+
+}  // namespace
 
 MapBuilderBridge::MapBuilderBridge(const NodeOptions& node_options,
                                    tf2_ros::Buffer* const tf_buffer)
@@ -166,7 +179,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
     marker.type = visualization_msgs::Marker::LINE_STRIP;
     marker.header.stamp = ::ros::Time::now();
     marker.header.frame_id = node_options_.map_frame;
-    marker.color = GetColor(trajectory_id);
+    marker.color = ToMessage(cartographer::io::GetColor(trajectory_id));
     marker.scale.x = kTrajectoryLineStripMarkerScale;
     marker.pose.orientation.w = 1.0;
     marker.pose.position.z = 0.05;
@@ -242,8 +255,9 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintList() {
       // Color mapping for submaps of various trajectories - add trajectory id
       // to ensure different starting colors. Also add a fixed offset of 25
       // to avoid having identical colors as trajectories.
-      color_constraint = GetColor(constraint.submap_id.submap_index +
-                                  constraint.submap_id.trajectory_id + 25);
+      color_constraint = ToMessage(cartographer::io::GetColor(
+          constraint.submap_id.submap_index +
+          constraint.submap_id.trajectory_id + 25));
       color_residual.a = 1.0;
       color_residual.r = 1.0;
     } else {
@@ -274,7 +288,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintList() {
                                 .pose;
     // Similar to GetTrajectoryNodeList(), we can skip multiplying with
     // node.constant_data->tracking_to_pose.
-    const ::cartographer::transform::Rigid3d constraint_pose =
+    const cartographer::transform::Rigid3d constraint_pose =
         submap_pose * constraint.pose.zbar_ij;
 
     constraint_marker->points.push_back(

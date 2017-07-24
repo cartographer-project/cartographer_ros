@@ -23,6 +23,7 @@
 #include "cairo/cairo.h"
 #include "cartographer/common/mutex.h"
 #include "cartographer/common/port.h"
+#include "cartographer/io/image.h"
 #include "cartographer/mapping/id.h"
 #include "cartographer/transform/rigid_transform.h"
 #include "cartographer_ros/msg_conversion.h"
@@ -45,28 +46,13 @@ using ::cartographer::mapping::SubmapId;
 
 constexpr cairo_format_t kCairoFormat = CAIRO_FORMAT_ARGB32;
 
-// std::unique_ptr for Cairo surfaces. The surface is destroyed when the
-// std::unique_ptr is reset or destroyed.
-using UniqueCairoSurfacePtr =
-    std::unique_ptr<cairo_surface_t, void (*)(cairo_surface_t*)>;
-
-UniqueCairoSurfacePtr MakeUniqueCairoSurfacePtr(cairo_surface_t* surface) {
-  return UniqueCairoSurfacePtr(surface, cairo_surface_destroy);
-}
-
-// std::unique_ptr for Cairo contexts.
-using UniqueCairoPtr = std::unique_ptr<cairo_t, void (*)(cairo_t*)>;
-
-UniqueCairoPtr MakeUniqueCairoPtr(cairo_t* surface) {
-  return UniqueCairoPtr(surface, cairo_destroy);
-}
-
 Eigen::Affine3d ToEigen(const ::cartographer::transform::Rigid3d& rigid3) {
   return Eigen::Translation3d(rigid3.translation()) * rigid3.rotation();
 }
 
 struct SubmapState {
-  SubmapState() : surface(MakeUniqueCairoSurfacePtr(nullptr)) {}
+  SubmapState()
+      : surface(::cartographer::io::MakeUniqueCairoSurfacePtr(nullptr)) {}
 
   // Texture data.
   int width;
@@ -74,7 +60,7 @@ struct SubmapState {
   int version;
   double resolution;
   ::cartographer::transform::Rigid3d slice_pose;
-  UniqueCairoSurfacePtr surface;
+  ::cartographer::io::UniqueCairoSurfacePtr surface;
   // Pixel data used by 'surface'. Must outlive 'surface'.
   std::vector<uint32_t> cairo_data;
 
@@ -197,8 +183,8 @@ void Node::HandleSubmapList(
                                         (observed << 8) | 0);
     }
 
-    submap_state.surface =
-        MakeUniqueCairoSurfacePtr(cairo_image_surface_create_for_data(
+    submap_state.surface = ::cartographer::io::MakeUniqueCairoSurfacePtr(
+        cairo_image_surface_create_for_data(
             reinterpret_cast<unsigned char*>(submap_state.cairo_data.data()),
             kCairoFormat, submap_state.width, submap_state.height,
             expected_stride));
@@ -217,9 +203,10 @@ void Node::DrawAndPublish(const string& frame_id, const ros::Time& time) {
 
   Eigen::AlignedBox2f bounding_box;
   {
-    auto surface = MakeUniqueCairoSurfacePtr(
+    auto surface = ::cartographer::io::MakeUniqueCairoSurfacePtr(
         cairo_image_surface_create(kCairoFormat, 1, 1));
-    auto cr = MakeUniqueCairoPtr(cairo_create(surface.get()));
+    auto cr =
+        ::cartographer::io::MakeUniqueCairoPtr(cairo_create(surface.get()));
     const auto update_bounding_box = [&bounding_box, &cr](double x, double y) {
       cairo_user_to_device(cr.get(), &x, &y);
       bounding_box.extend(Eigen::Vector2f(x, y));
@@ -243,9 +230,10 @@ void Node::DrawAndPublish(const string& frame_id, const ros::Time& time) {
                               -bounding_box.min().y() + kPaddingPixel);
 
   {
-    auto surface = MakeUniqueCairoSurfacePtr(
+    auto surface = ::cartographer::io::MakeUniqueCairoSurfacePtr(
         cairo_image_surface_create(kCairoFormat, size.x(), size.y()));
-    auto cr = MakeUniqueCairoPtr(cairo_create(surface.get()));
+    auto cr =
+        ::cartographer::io::MakeUniqueCairoPtr(cairo_create(surface.get()));
     cairo_set_source_rgba(cr.get(), 0.5, 0.0, 0.0, 1.);
     cairo_paint(cr.get());
     cairo_translate(cr.get(), origin.x(), origin.y());
