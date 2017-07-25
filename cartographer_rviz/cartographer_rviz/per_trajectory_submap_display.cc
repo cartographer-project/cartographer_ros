@@ -21,6 +21,7 @@
 namespace cartographer_rviz {
 
 namespace {
+
 constexpr int kMaxOnGoingRequestsPerTrajectory = 6;
 
 }  // namespace

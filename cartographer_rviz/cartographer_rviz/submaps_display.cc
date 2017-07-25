@@ -35,7 +35,6 @@ namespace cartographer_rviz {
 
 namespace {
 
-constexpr int kMaxOnGoingRequestsPerTrajectory = 6;
 constexpr char kMaterialsDirectory[] = "/ogre_media/materials";
 constexpr char kGlsl120Directory[] = "/glsl120";
 constexpr char kScriptsDirectory[] = "/scripts";
