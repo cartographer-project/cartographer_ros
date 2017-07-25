@@ -33,11 +33,14 @@ class PerTrajectorySubmapDisplay : public QObject {
  public:
   using SubmapId = ::cartographer::mapping::SubmapId;
 
-  PerTrajectorySubmapDisplay(int trajectory_id, ::rviz::Property* submap_category,
-                     ::rviz::DisplayContext* display_context, bool visible);
+  PerTrajectorySubmapDisplay(int trajectory_id,
+                             ::rviz::Property* submap_category,
+                             ::rviz::DisplayContext* display_context,
+                             bool visible);
   ~PerTrajectorySubmapDisplay() override;
   PerTrajectorySubmapDisplay(const PerTrajectorySubmapDisplay&) = delete;
-  PerTrajectorySubmapDisplay& operator=(const PerTrajectorySubmapDisplay&) = delete;
+  PerTrajectorySubmapDisplay& operator=(const PerTrajectorySubmapDisplay&) =
+      delete;
 
   bool visibility() const { return visible_->getBool(); }
   void set_visibility(const bool visibility) { visible_->setBool(visibility); }
@@ -47,9 +50,8 @@ class PerTrajectorySubmapDisplay : public QObject {
 
   // Updates the 'metadata' for this submap. If necessary, the next call to
   // MaybeFetchTexture() will fetch a new submap texture.
-  void ProcessMessage(
-      const ::std_msgs::Header& header,
-      const ::cartographer_ros_msgs::SubmapEntry& submap_entry);
+  void ProcessMessage(const ::std_msgs::Header& header,
+                      const ::cartographer_ros_msgs::SubmapEntry& submap_entry);
 
   void RemoveUnlistedSubmaps(const std::set<SubmapId> listed_submap);
 
