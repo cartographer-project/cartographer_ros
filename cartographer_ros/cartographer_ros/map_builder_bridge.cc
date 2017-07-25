@@ -27,11 +27,11 @@ namespace {
 constexpr double kTrajectoryLineStripMarkerScale = 0.07;
 constexpr double kConstraintMarkerScale = 0.025;
 
-::std_msgs::ColorRGBA ToMessage(const cartographer::io::Color& color) {
+::std_msgs::ColorRGBA ToMessage(const cartographer::io::FloatColor& color) {
   ::std_msgs::ColorRGBA result;
-  result.r = color[0] / 255.;
-  result.g = color[1] / 255.;
-  result.b = color[2] / 255.;
+  result.r = color[0];
+  result.g = color[1];
+  result.b = color[2];
   result.a = 1.f;
   return result;
 }
