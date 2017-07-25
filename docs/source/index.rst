@@ -21,6 +21,7 @@ Cartographer ROS Integration
    :hidden:
 
    configuration
+   tuning
    ros_api
    data
    faq
