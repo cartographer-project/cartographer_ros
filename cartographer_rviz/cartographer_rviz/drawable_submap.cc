@@ -23,8 +23,6 @@
 
 #include "Eigen/Core"
 #include "Eigen/Geometry"
-#include "OgreGpuProgramParams.h"
-#include "OgreImage.h"
 #include "cartographer/common/make_unique.h"
 #include "cartographer/common/port.h"
 #include "cartographer_ros/msg_conversion.h"
@@ -37,30 +35,12 @@ namespace cartographer_rviz {
 namespace {
 
 constexpr std::chrono::milliseconds kMinQueryDelayInMs(250);
-constexpr char kSubmapTexturePrefix[] = "SubmapTexture";
-constexpr char kManualObjectPrefix[] = "ManualObjectSubmap";
-constexpr char kSubmapMaterialPrefix[] = "SubmapMaterial";
-constexpr char kSubmapSourceMaterialName[] = "cartographer_ros/Submap";
 
 // Distance before which the submap will be shown at full opacity, and distance
 // over which the submap will then fade out.
 constexpr double kFadeOutStartDistanceInMeters = 1.;
 constexpr double kFadeOutDistanceInMeters = 2.;
 constexpr float kAlphaUpdateThreshold = 0.2f;
-
-std::string GetSubmapIdentifier(
-    const ::cartographer::mapping::SubmapId& submap_id) {
-  return std::to_string(submap_id.trajectory_id) + "-" +
-         std::to_string(submap_id.submap_index);
-}
-
-Ogre::Vector3 ToOgre(const Eigen::Vector3d& v) {
-  return Ogre::Vector3(v.x(), v.y(), v.z());
-}
-
-Ogre::Quaternion ToOgre(const Eigen::Quaterniond& q) {
-  return Ogre::Quaternion(q.w(), q.x(), q.y(), q.z());
-}
 
 }  // namespace
 
@@ -74,21 +54,10 @@ DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
       scene_node_(display_context->getSceneManager()
                       ->getRootSceneNode()
                       ->createChildSceneNode()),
-      submap_node_(scene_node_->createChildSceneNode()),
-      manual_object_(display_context->getSceneManager()->createManualObject(
-          kManualObjectPrefix + GetSubmapIdentifier(id))),
+      ogre_submap_(id, display_context->getSceneManager(), scene_node_),
       pose_axes_(display_context->getSceneManager(), scene_node_,
                  pose_axes_length, pose_axes_radius),
       last_query_timestamp_(0) {
-  material_ = Ogre::MaterialManager::getSingleton().getByName(
-      kSubmapSourceMaterialName);
-  material_ =
-      material_->clone(kSubmapMaterialPrefix + GetSubmapIdentifier(id_));
-  material_->setReceiveShadows(false);
-  material_->getTechnique(0)->setLightingEnabled(false);
-  material_->setCullingMode(Ogre::CULL_NONE);
-  material_->setDepthBias(-1.f, 0.f);
-  material_->setDepthWriteEnabled(false);
   // DrawableSubmap creates and manages its visibility property object
   // (a unique_ptr is needed because the Qt parent of the visibility
   // property is the submap_category object - the BoolProperty needs
@@ -96,7 +65,6 @@ DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
   visibility_ = ::cartographer::common::make_unique<::rviz::BoolProperty>(
       "" /* title */, visible, "" /* description */, submap_category,
       SLOT(ToggleVisibility()), this);
-  submap_node_->attachObject(manual_object_);
   scene_node_->setVisible(visible);
   connect(this, SIGNAL(RequestSucceeded()), this, SLOT(UpdateSceneNode()));
 }
@@ -107,14 +75,7 @@ DrawableSubmap::~DrawableSubmap() {
   if (QueryInProgress()) {
     rpc_request_future_.wait();
   }
-  Ogre::MaterialManager::getSingleton().remove(material_->getHandle());
-  if (!texture_.isNull()) {
-    Ogre::TextureManager::getSingleton().remove(texture_->getHandle());
-    texture_.setNull();
-  }
-  display_context_->getSceneManager()->destroySceneNode(submap_node_);
   display_context_->getSceneManager()->destroySceneNode(scene_node_);
-  display_context_->getSceneManager()->destroyManualObject(manual_object_);
 }
 
 void DrawableSubmap::Update(
@@ -132,9 +93,7 @@ void DrawableSubmap::Update(
   pose_ = ::cartographer_ros::ToRigid3d(metadata.pose);
   scene_node_->setPosition(ToOgre(pose_.translation()));
   scene_node_->setOrientation(ToOgre(pose_.rotation()));
-  if (submap_texture_ != nullptr) {
-    display_context_->queueRender();
-  }
+  display_context_->queueRender();
   visibility_->setName(
       QString("%1.%2").arg(id_.submap_index).arg(metadata_version_));
   visibility_->setDescription(
@@ -187,84 +146,26 @@ void DrawableSubmap::SetAlpha(const double current_tracking_z) {
       std::abs(pose_.translation().z() - current_tracking_z);
   const double fade_distance =
       std::max(distance_z - kFadeOutStartDistanceInMeters, 0.);
-  const float alpha = static_cast<float>(
+  const float target_alpha = static_cast<float>(
       std::max(0., 1. - fade_distance / kFadeOutDistanceInMeters));
 
-  const Ogre::GpuProgramParametersSharedPtr parameters =
-      material_->getTechnique(0)->getPass(0)->getFragmentProgramParameters();
-  parameters->setNamedConstant("u_alpha", UpdateAlpha(alpha));
-}
-
-void DrawableSubmap::UpdateSceneNode() {
-  ::cartographer::common::MutexLocker locker(&mutex_);
-  submap_node_->setPosition(ToOgre(submap_texture_->slice_pose.translation()));
-  submap_node_->setOrientation(ToOgre(submap_texture_->slice_pose.rotation()));
-  // The call to Ogre's loadRawData below does not work with an RG texture,
-  // therefore we create an RGB one whose blue channel is always 0.
-  std::vector<char> rgb;
-  for (size_t i = 0; i < submap_texture_->intensity.size(); ++i) {
-    rgb.push_back(submap_texture_->intensity[i]);
-    rgb.push_back(submap_texture_->alpha[i]);
-    rgb.push_back(0.);
-  }
-
-  manual_object_->clear();
-  const float metric_width =
-      submap_texture_->resolution * submap_texture_->width;
-  const float metric_height =
-      submap_texture_->resolution * submap_texture_->height;
-  manual_object_->begin(material_->getName(),
-                        Ogre::RenderOperation::OT_TRIANGLE_STRIP);
-  // Bottom left
-  manual_object_->position(-metric_height, 0.0f, 0.0f);
-  manual_object_->textureCoord(0.0f, 1.0f);
-  // Bottom right
-  manual_object_->position(-metric_height, -metric_width, 0.0f);
-  manual_object_->textureCoord(1.0f, 1.0f);
-  // Top left
-  manual_object_->position(0.0f, 0.0f, 0.0f);
-  manual_object_->textureCoord(0.0f, 0.0f);
-  // Top right
-  manual_object_->position(0.0f, -metric_width, 0.0f);
-  manual_object_->textureCoord(1.0f, 0.0f);
-  manual_object_->end();
-
-  Ogre::DataStreamPtr pixel_stream;
-  pixel_stream.bind(new Ogre::MemoryDataStream(rgb.data(), rgb.size()));
-
-  if (!texture_.isNull()) {
-    Ogre::TextureManager::getSingleton().remove(texture_->getHandle());
-    texture_.setNull();
-  }
-  const std::string texture_name =
-      kSubmapTexturePrefix + GetSubmapIdentifier(id_);
-  texture_ = Ogre::TextureManager::getSingleton().loadRawData(
-      texture_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
-      pixel_stream, submap_texture_->width, submap_texture_->height,
-      Ogre::PF_BYTE_RGB, Ogre::TEX_TYPE_2D, 0);
-
-  Ogre::Pass* const pass = material_->getTechnique(0)->getPass(0);
-  pass->setSceneBlending(Ogre::SBF_ONE, Ogre::SBF_ONE_MINUS_SOURCE_ALPHA);
-  Ogre::TextureUnitState* const texture_unit =
-      pass->getNumTextureUnitStates() > 0 ? pass->getTextureUnitState(0)
-                                          : pass->createTextureUnitState();
-
-  texture_unit->setTextureName(texture_->getName());
-  texture_unit->setTextureFiltering(Ogre::TFO_NONE);
-
-  display_context_->queueRender();
-}
-
-float DrawableSubmap::UpdateAlpha(const float target_alpha) {
   if (std::abs(target_alpha - current_alpha_) > kAlphaUpdateThreshold ||
       target_alpha == 0.f || target_alpha == 1.f) {
     current_alpha_ = target_alpha;
   }
-  return current_alpha_;
+  ogre_submap_.SetAlpha(current_alpha_);
+  display_context_->queueRender();
+}
+
+void DrawableSubmap::UpdateSceneNode() {
+  ::cartographer::common::MutexLocker locker(&mutex_);
+  ogre_submap_.Update(*submap_texture_);
+  display_context_->queueRender();
 }
 
 void DrawableSubmap::ToggleVisibility() {
   scene_node_->setVisible(visibility_->getBool());
+  display_context_->queueRender();
 }
 
 }  // namespace cartographer_rviz
