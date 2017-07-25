@@ -162,9 +162,13 @@ void Run(const string& pose_graph_filename,
     return carto::common::make_unique<carto::io::StreamFileWriter>(filename);
   };
 
+  // This vector must outlive the pipeline.
+  std::vector<::cartographer::mapping::proto::Trajectory> all_trajectories(
+      pose_graph_proto.trajectory().begin(),
+      pose_graph_proto.trajectory().end());
+
   carto::io::PointsProcessorPipelineBuilder builder;
-  // TODO(hrapp): Pass all trajectories to the PointsProcessors.
-  carto::io::RegisterBuiltInPointsProcessors(pose_graph_proto.trajectory(0),
+  carto::io::RegisterBuiltInPointsProcessors(all_trajectories,
                                              file_writer_factory, &builder);
   std::vector<std::unique_ptr<carto::io::PointsProcessor>> pipeline =
       builder.CreatePipeline(
