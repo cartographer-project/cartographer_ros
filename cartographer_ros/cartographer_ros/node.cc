@@ -111,29 +111,26 @@ void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
   for (const auto& entry : map_builder_bridge_.GetTrajectoryStates()) {
     const auto& trajectory_state = entry.second;
 
-    geometry_msgs::TransformStamped stamped_transform;
-    stamped_transform.header.stamp = ToRos(trajectory_state.pose_estimate.time);
-
-    const auto& tracking_to_local = trajectory_state.pose_estimate.pose;
-    const Rigid3d tracking_to_map =
-        trajectory_state.local_to_map * tracking_to_local;
-
     // We only publish a point cloud if it has changed. It is not needed at high
     // frequency, and republishing it would be computationally wasteful.
     if (trajectory_state.pose_estimate.time !=
         last_scan_matched_point_cloud_time_) {
       scan_matched_point_cloud_publisher_.publish(ToPointCloud2Message(
           carto::common::ToUniversal(trajectory_state.pose_estimate.time),
-          trajectory_state.trajectory_options.tracking_frame,
+          node_options_.map_frame,
           carto::sensor::TransformPointCloud(
               trajectory_state.pose_estimate.point_cloud,
-              tracking_to_local.inverse().cast<float>())));
+              trajectory_state.local_to_map.cast<float>())));
       last_scan_matched_point_cloud_time_ = trajectory_state.pose_estimate.time;
-    } else {
-      // If we do not publish a new point cloud, we still allow time of the
-      // published poses to advance.
-      stamped_transform.header.stamp = ros::Time::now();
     }
+
+    geometry_msgs::TransformStamped stamped_transform;
+    // If we do not publish a new point cloud, we still allow time of the
+    // published poses to advance.
+    stamped_transform.header.stamp = ros::Time::now();
+    const auto& tracking_to_local = trajectory_state.pose_estimate.pose;
+    const Rigid3d tracking_to_map =
+        trajectory_state.local_to_map * tracking_to_local;
 
     if (trajectory_state.published_to_tracking != nullptr) {
       if (trajectory_state.trajectory_options.provide_odom_frame) {
