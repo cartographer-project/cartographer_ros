@@ -108,15 +108,12 @@ void SubmapsDisplay::processMessage(
       continue;
     }
 
-    const auto& submaps = trajectories_[trajectory_id]->submaps();
-    const auto it = submaps.find(submap_entry.submap_index);
-    if (it != submaps.end() &&
-        it->second->version() > submap_entry.submap_version) {
-      // Versions should only increase unless Cartographer restarted.
+    if (trajectories_[trajectory_id]->IsTrajectoryInvaild(submap_entry)) {
       trajectories_.clear();
       break;
     }
   }
+
   using ::cartographer::mapping::SubmapId;
   std::set<SubmapId> listed_submaps;
   for (const ::cartographer_ros_msgs::SubmapEntry& submap_entry : msg->submap) {
@@ -128,29 +125,13 @@ void SubmapsDisplay::processMessage(
               id.trajectory_id, submaps_category_, context_,
               visibility_all_enabled_->getBool()));
     }
-
-    auto& trajectory = trajectories_[id.trajectory_id];
-    const auto& submaps = trajectory->submaps();
-    if (submaps.count(id.submap_index) == 0) {
-      trajectory->AddSubmap(id);
-    }
-    trajectory->UpdateSubmap(id.submap_index, msg->header, submap_entry,
-                             context_->getFrameManager());
+    trajectories_[id.trajectory_id]->ProcessMessage(msg->header, submap_entry);
   }
 
   // Remove all submaps not mentioned in the SubmapList.
   for (size_t trajectory_id = 0; trajectory_id < trajectories_.size();
        ++trajectory_id) {
-    auto& trajectory = trajectories_[trajectory_id];
-    auto& submaps = trajectory->submaps();
-    for (auto it = submaps.begin(); it != submaps.end();) {
-      if (listed_submaps.count(
-              SubmapId{static_cast<int>(trajectory_id), it->first}) == 0) {
-        it = submaps.erase(it);
-      } else {
-        ++it;
-      }
-    }
+    trajectories_[trajectory_id]->RemoveUnlistedSubmaps(listed_submaps);
   }
 }
 
@@ -163,11 +144,7 @@ void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
                                    tracking_frame_property_->getStdString(),
                                    ros::Time(0) /* latest */);
     for (auto& trajectory : trajectories_) {
-      auto& submaps = trajectory->submaps();
-      for (auto& submap_entry : submaps) {
-        submap_entry.second->SetAlpha(
-            transform_stamped.transform.translation.z);
-      }
+      trajectory->SetAlpha(transform_stamped.transform.translation.z);
     }
   } catch (const tf2::TransformException& ex) {
     ROS_WARN("Could not compute submap fading: %s", ex.what());
@@ -175,21 +152,7 @@ void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
 
   // Schedule fetching of new submap textures.
   for (const auto& trajectory : trajectories_) {
-    int num_ongoing_requests = 0;
-    const auto& submaps = trajectory->submaps();
-    for (const auto& submap_entry : submaps) {
-      if (submap_entry.second->QueryInProgress()) {
-        ++num_ongoing_requests;
-      }
-    }
-    for (auto it = submaps.rbegin();
-         it != submaps.rend() &&
-         num_ongoing_requests < kMaxOnGoingRequestsPerTrajectory;
-         ++it) {
-      if (it->second->MaybeFetchTexture(&client_)) {
-        ++num_ongoing_requests;
-      }
-    }
+    trajectory->FetchTexture(&client_);
   }
 }
 

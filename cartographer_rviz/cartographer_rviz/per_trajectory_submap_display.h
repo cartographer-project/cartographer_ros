@@ -22,13 +22,17 @@
 #include "rviz/properties/bool_property.h"
 
 #include "cartographer/mapping/id.h"
+#include "cartographer_ros_msgs/SubmapEntry.h"
 #include "cartographer_rviz/drawable_submap.h"
+#include "std_msgs/Header.h"
 
 namespace cartographer_rviz {
 class PerTrajectorySubmapDisplay : public QObject {
   Q_OBJECT
 
  public:
+  using SubmapId = ::cartographer::mapping::SubmapId;
+
   PerTrajectorySubmapDisplay(int trajectory_id, ::rviz::Property* submap_category,
                      ::rviz::DisplayContext* display_context, bool visible);
   ~PerTrajectorySubmapDisplay() override;
@@ -38,18 +42,20 @@ class PerTrajectorySubmapDisplay : public QObject {
   bool visibility() const { return visible_->getBool(); }
   void set_visibility(const bool visibility) { visible_->setBool(visibility); }
 
-  const std::map<int, std::unique_ptr<DrawableSubmap>>& submaps() const {
-    return submaps_;
-  }
-  std::map<int, std::unique_ptr<DrawableSubmap>>& submaps() { return submaps_; }
-
-  void AddSubmap(const ::cartographer::mapping::SubmapId& submap_id);
+  bool IsTrajectoryInvaild(
+      const ::cartographer_ros_msgs::SubmapEntry& submap_entry);
 
   // Updates the 'metadata' for this submap. If necessary, the next call to
   // MaybeFetchTexture() will fetch a new submap texture.
-  void UpdateSubmap(const int submap_index, const ::std_msgs::Header& header,
-                    const ::cartographer_ros_msgs::SubmapEntry& metadata,
-                    ::rviz::FrameManager* frame_manager);
+  void ProcessMessage(
+      const ::std_msgs::Header& header,
+      const ::cartographer_ros_msgs::SubmapEntry& submap_entry);
+
+  void RemoveUnlistedSubmaps(const std::set<SubmapId> listed_submap);
+
+  void SetAlpha(float current_tracking_z);
+  void FetchTexture(ros::ServiceClient* const client);
+
  private Q_SLOTS:
   void AllEnabledToggled();
 
