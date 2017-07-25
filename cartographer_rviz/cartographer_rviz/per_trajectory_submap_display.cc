@@ -20,27 +20,25 @@
 
 namespace cartographer_rviz {
 
-PerTrajectorySubmapDisplay::PerTrajectorySubmapDisplay(const int trajectory_id,
-                                       ::rviz::Property* submap_category,
+PerTrajectorySubmapDisplay::PerTrajectorySubmapDisplay(int trajectory_id,
+                                       ::rviz::Property* submaps_category,
                                        ::rviz::DisplayContext* display_context,
-                                       const bool visible)
+                                       bool visible)
     : id_(trajectory_id),
-      submaps_category_(submap_category),
       display_context_(display_context)
 {
-  property_ = new ::rviz::BoolProperty(
+  visible_ = ::cartographer::common::make_unique<::rviz::BoolProperty>(
       QString("Trajectory %1").arg(id_), visible,
       QString("List of all submaps in Trajectory %1.").arg(id_),
-      submaps_category_, SLOT(AllEnabledToggled()), this);
+      submaps_category, SLOT(AllEnabledToggled()), this);
 }
 
 PerTrajectorySubmapDisplay::~PerTrajectorySubmapDisplay() {
   submaps_.clear();
-  delete property_;
 }
 
 void PerTrajectorySubmapDisplay::AllEnabledToggled() {
-  const bool visibility = property_->getBool();
+  const bool visibility = visible_->getBool();
   for (auto& submap : submaps_) {
     submap.second->set_visibility(visibility);
   }
@@ -53,7 +51,7 @@ void PerTrajectorySubmapDisplay::AddSubmap(
   submaps_.emplace(
       submap_id.submap_index,
       ::cartographer::common::make_unique<DrawableSubmap>(
-          submap_id, display_context_, property_, property_->getBool(),
+          submap_id, display_context_, visible_.get(), visible_->getBool(),
           kSubmapPoseAxesLength, kSubmapPoseAxesRadius));
 }
 

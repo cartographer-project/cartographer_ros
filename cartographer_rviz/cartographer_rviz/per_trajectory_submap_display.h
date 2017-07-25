@@ -17,8 +17,6 @@
 #ifndef CARTOGRAPHER_RVIZ_SRC_DRAWABLE_TRAJECTORY_H_
 #define CARTOGRAPHER_RVIZ_SRC_DRAWABLE_TRAJECTORY_H_
 
-#include <future>
-
 #include "rviz/display_context.h"
 #include "rviz/frame_manager.h"
 #include "rviz/properties/bool_property.h"
@@ -31,14 +29,14 @@ class PerTrajectorySubmapDisplay : public QObject {
   Q_OBJECT
 
  public:
-  PerTrajectorySubmapDisplay(const int trajectory_id, ::rviz::Property* submap_category,
-                     ::rviz::DisplayContext* display_context, const bool visible);
+  PerTrajectorySubmapDisplay(int trajectory_id, ::rviz::Property* submap_category,
+                     ::rviz::DisplayContext* display_context, bool visible);
   ~PerTrajectorySubmapDisplay() override;
   PerTrajectorySubmapDisplay(const PerTrajectorySubmapDisplay&) = delete;
   PerTrajectorySubmapDisplay& operator=(const PerTrajectorySubmapDisplay&) = delete;
 
-  bool visibility() const { return property_->getBool(); }
-  void set_visibility(const bool visibility) { property_->setBool(visibility); }
+  bool visibility() const { return visible_->getBool(); }
+  void set_visibility(const bool visibility) { visible_->setBool(visibility); }
 
   const std::map<int, std::unique_ptr<DrawableSubmap>>& submaps() const {
     return submaps_;
@@ -57,12 +55,11 @@ class PerTrajectorySubmapDisplay : public QObject {
 
  private:
   const int id_;
-  ::rviz::Property* const submaps_category_;
   ::rviz::DisplayContext* const display_context_;
 
   std::map<int, std::unique_ptr<DrawableSubmap>> submaps_;
 
-  ::rviz::BoolProperty* property_;
+  std::unique_ptr<::rviz::BoolProperty> visible_;
 };
 
 }  // namespace cartographer_rviz
