@@ -22,19 +22,15 @@
 
 #include "Eigen/Core"
 #include "Eigen/Geometry"
-#include "OgreManualObject.h"
-#include "OgreMaterial.h"
-#include "OgreQuaternion.h"
 #include "OgreSceneManager.h"
 #include "OgreSceneNode.h"
-#include "OgreTexture.h"
-#include "OgreVector3.h"
 #include "cartographer/common/mutex.h"
 #include "cartographer/mapping/id.h"
 #include "cartographer/transform/rigid_transform.h"
 #include "cartographer_ros/submap.h"
 #include "cartographer_ros_msgs/SubmapEntry.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
+#include "cartographer_rviz/ogre_submap.h"
 #include "ros/ros.h"
 #include "rviz/display_context.h"
 #include "rviz/frame_manager.h"
@@ -91,17 +87,12 @@ class DrawableSubmap : public QObject {
   void ToggleVisibility();
 
  private:
-  float UpdateAlpha(float target_alpha);
-
   const ::cartographer::mapping::SubmapId id_;
 
   ::cartographer::common::Mutex mutex_;
   ::rviz::DisplayContext* const display_context_;
   Ogre::SceneNode* const scene_node_;
-  Ogre::SceneNode* const submap_node_;
-  Ogre::ManualObject* const manual_object_;
-  Ogre::TexturePtr texture_;
-  Ogre::MaterialPtr material_;
+  OgreSubmap ogre_submap_;
   ::cartographer::transform::Rigid3d pose_ GUARDED_BY(mutex_);
   ::rviz::Axes pose_axes_;
   std::chrono::milliseconds last_query_timestamp_ GUARDED_BY(mutex_);
