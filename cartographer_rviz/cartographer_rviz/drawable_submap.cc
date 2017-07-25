@@ -93,9 +93,7 @@ void DrawableSubmap::Update(
   pose_ = ::cartographer_ros::ToRigid3d(metadata.pose);
   scene_node_->setPosition(ToOgre(pose_.translation()));
   scene_node_->setOrientation(ToOgre(pose_.rotation()));
-  if (submap_texture_ != nullptr) {
-    display_context_->queueRender();
-  }
+  display_context_->queueRender();
   visibility_->setName(
       QString("%1.%2").arg(id_.submap_index).arg(metadata_version_));
   visibility_->setDescription(
@@ -155,8 +153,8 @@ void DrawableSubmap::SetAlpha(const double current_tracking_z) {
       target_alpha == 0.f || target_alpha == 1.f) {
     current_alpha_ = target_alpha;
   }
-
   ogre_submap_.SetAlpha(current_alpha_);
+  display_context_->queueRender();
 }
 
 void DrawableSubmap::UpdateSceneNode() {
@@ -167,6 +165,7 @@ void DrawableSubmap::UpdateSceneNode() {
 
 void DrawableSubmap::ToggleVisibility() {
   scene_node_->setVisible(visibility_->getBool());
+  display_context_->queueRender();
 }
 
 }  // namespace cartographer_rviz
