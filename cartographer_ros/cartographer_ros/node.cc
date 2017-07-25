@@ -106,7 +106,10 @@ Node::~Node() {}
 
 ::ros::NodeHandle* Node::node_handle() { return &node_handle_; }
 
-MapBuilderBridge* Node::map_builder_bridge() { return &map_builder_bridge_; }
+::cartographer::common::Mutex::Proxy<MapBuilderBridge>
+Node::map_builder_bridge() {
+  return {&map_builder_bridge_, &mutex_};
+}
 
 bool Node::HandleSubmapQuery(
     ::cartographer_ros_msgs::SubmapQuery::Request& request,

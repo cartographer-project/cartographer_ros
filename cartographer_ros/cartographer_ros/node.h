@@ -70,7 +70,8 @@ class Node {
   void LoadMap(const std::string& map_filename);
 
   ::ros::NodeHandle* node_handle();
-  MapBuilderBridge* map_builder_bridge();
+
+  ::cartographer::common::Mutex::Proxy<MapBuilderBridge> map_builder_bridge();
 
  private:
   bool HandleSubmapQuery(
