@@ -111,24 +111,35 @@ void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
   for (const auto& entry : map_builder_bridge_.GetTrajectoryStates()) {
     const auto& trajectory_state = entry.second;
 
+    // TODO(whess): Use improved models, e.g. using odometry and IMU when
+    // available.
+    constexpr double extrapolation_estimation_time_sec = 0.001;  // 1 ms
+    if (extrapolators_.count(entry.first) == 0) {
+      extrapolators_.emplace(
+          std::piecewise_construct, std::forward_as_tuple(entry.first),
+          std::forward_as_tuple(::cartographer::common::FromSeconds(
+              extrapolation_estimation_time_sec)));
+    }
+    auto& extrapolator = extrapolators_.at(entry.first);
     // We only publish a point cloud if it has changed. It is not needed at high
     // frequency, and republishing it would be computationally wasteful.
-    if (trajectory_state.pose_estimate.time !=
-        last_scan_matched_point_cloud_time_) {
+    if (trajectory_state.pose_estimate.time != extrapolator.GetLastPoseTime()) {
       scan_matched_point_cloud_publisher_.publish(ToPointCloud2Message(
           carto::common::ToUniversal(trajectory_state.pose_estimate.time),
           node_options_.map_frame,
           carto::sensor::TransformPointCloud(
               trajectory_state.pose_estimate.point_cloud,
               trajectory_state.local_to_map.cast<float>())));
-      last_scan_matched_point_cloud_time_ = trajectory_state.pose_estimate.time;
+      extrapolator.AddPose(trajectory_state.pose_estimate.time,
+                           trajectory_state.pose_estimate.pose);
     }
 
     geometry_msgs::TransformStamped stamped_transform;
     // If we do not publish a new point cloud, we still allow time of the
     // published poses to advance.
     stamped_transform.header.stamp = ros::Time::now();
-    const auto& tracking_to_local = trajectory_state.pose_estimate.pose;
+    const Rigid3d tracking_to_local =
+        extrapolator.ExtrapolatePose(FromRos(stamped_transform.header.stamp));
     const Rigid3d tracking_to_map =
         trajectory_state.local_to_map * tracking_to_local;
 
