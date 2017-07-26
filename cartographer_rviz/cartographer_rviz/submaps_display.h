@@ -31,6 +31,18 @@
 
 namespace cartographer_rviz {
 
+struct Trajectory : public QObject {
+  Q_OBJECT
+
+ public:
+  std::unique_ptr<::rviz::BoolProperty> visibility;
+  std::map<int, std::unique_ptr<DrawableSubmap>> submaps;
+  Trajectory(std::unique_ptr<::rviz::BoolProperty>&& property);
+
+ private Q_SLOTS:
+  void AllEnabledToggled();
+};
+
 // RViz plugin used for displaying maps which are represented by a collection of
 // submaps.
 //
@@ -68,11 +80,9 @@ class SubmapsDisplay
   ::rviz::StringProperty* submap_query_service_property_;
   ::rviz::StringProperty* map_frame_property_;
   ::rviz::StringProperty* tracking_frame_property_;
-  using Trajectory = std::pair<std::unique_ptr<::rviz::Property>,
-                               std::map<int, std::unique_ptr<DrawableSubmap>>>;
-  std::vector<Trajectory> trajectories_ GUARDED_BY(mutex_);
+  std::vector<std::unique_ptr<Trajectory>> trajectories_ GUARDED_BY(mutex_);
   ::cartographer::common::Mutex mutex_;
-  ::rviz::Property* submaps_category_;
+  ::rviz::Property* trajectories_category_;
   ::rviz::BoolProperty* visibility_all_enabled_;
 };
 
