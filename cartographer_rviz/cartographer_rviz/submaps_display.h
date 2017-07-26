@@ -32,6 +32,21 @@
 
 namespace cartographer_rviz {
 
+// This should be a private class in SubmapsDisplay, unfortunately, QT does not
+// allow for this.
+struct Trajectory : public QObject {
+  Q_OBJECT
+
+ public:
+  Trajectory(std::unique_ptr<::rviz::BoolProperty> property);
+
+  std::unique_ptr<::rviz::BoolProperty> visibility;
+  std::map<int, std::unique_ptr<DrawableSubmap>> submaps;
+
+ private Q_SLOTS:
+  void AllEnabledToggled();
+};
+
 // RViz plugin used for displaying maps which are represented by a collection of
 // submaps.
 //
@@ -70,11 +85,9 @@ class SubmapsDisplay
   std::unique_ptr<std::string> map_frame_;
   ::rviz::StringProperty* tracking_frame_property_;
   Ogre::SceneNode* map_node_ = nullptr;  // Represents the map frame.
-  using Trajectory = std::pair<std::unique_ptr<::rviz::Property>,
-                               std::map<int, std::unique_ptr<DrawableSubmap>>>;
-  std::vector<Trajectory> trajectories_ GUARDED_BY(mutex_);
+  std::vector<std::unique_ptr<Trajectory>> trajectories_ GUARDED_BY(mutex_);
   ::cartographer::common::Mutex mutex_;
-  ::rviz::Property* submaps_category_;
+  ::rviz::Property* trajectories_category_;
   ::rviz::BoolProperty* visibility_all_enabled_;
 };
 
