@@ -17,12 +17,14 @@
 #ifndef CARTOGRAPHER_ROS_NODE_H_
 #define CARTOGRAPHER_ROS_NODE_H_
 
+#include <map>
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 #include "cartographer/common/mutex.h"
+#include "cartographer/mapping/pose_extrapolator.h"
 #include "cartographer_ros/map_builder_bridge.h"
 #include "cartographer_ros/node_constants.h"
 #include "cartographer_ros/node_options.h"
@@ -105,10 +107,9 @@ class Node {
   // These ros::ServiceServers need to live for the lifetime of the node.
   std::vector<::ros::ServiceServer> service_servers_;
   ::ros::Publisher scan_matched_point_cloud_publisher_;
-  cartographer::common::Time last_scan_matched_point_cloud_time_ =
-      cartographer::common::Time::min();
 
   // These are keyed with 'trajectory_id'.
+  std::map<int, ::cartographer::mapping::PoseExtrapolator> extrapolators_;
   std::unordered_map<int, std::vector<::ros::Subscriber>> subscribers_;
   std::unordered_set<std::string> subscribed_topics_;
   std::unordered_map<int, bool> is_active_trajectory_ GUARDED_BY(mutex_);
