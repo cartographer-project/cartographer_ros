@@ -18,11 +18,11 @@ Cartographer ROS Integration
 
 .. toctree::
    :maxdepth: 2
-   :hidden:
 
    configuration
    tuning
    ros_api
+   assets_writer
    data
    faq
 
