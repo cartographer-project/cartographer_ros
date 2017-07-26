@@ -35,7 +35,7 @@ Most of its options can be found in `trajectory_builder_2d.lua`_ for 2D and `tra
 
 The other system is global SLAM (sometimes called the backend).
 It runs in background threads and its main job is to find loop closure constraints.
-It does that by exhaustively scan matching scans against submaps.
+It does that by scan matching scans against submaps.
 It also incorporates other sensor data to get a higher level view and identify the most consistent globals solution.
 In 3D, it it also tries to find the direction of gravity.
 Most of its options can be found in `sparse_pose_graph.lua`_
@@ -52,7 +52,7 @@ For this example we'll start at commit ``cartographer`` commit `ea7c39b`_ and ``
 At our starting configuration, we see some slipping pretty early in the bag.
 The backpack passed over a ramp in the Deutsches Museum which violates the 2D assumption of a flat floor.
 It is visible in the laser scan data that contradicting information is passed to the SLAM.
-But the slipping also indicates that we trust the point cloud matching to much and disregard the other sensors quite strongly.
+But the slipping also indicates that we trust the point cloud matching too much and disregard the other sensors quite strongly.
 Our aim is to improve the situation through tuning.
 
 .. _ea7c39b: https://github.com/googlecartographer/cartographer/commit/ea7c39b6f078c693b92fed06d86ca501021147d9
@@ -103,7 +103,7 @@ Tuning the ``CeresScanMatcher``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In our case, the scan matcher can freely move the match forward and backwards without impacting the score.
-We'd like to penalize this situation by making the scan matcher pay more for deriving from the prior that it got.
+We'd like to penalize this situation by making the scan matcher pay more for deviating from the prior that it got.
 The two parameters controlling this are ``TRAJECTORY_BUILDER_2D.ceres_scan_matcher.translation_weight`` and ``rotation_weight``.
 The higher, the more expensive it is to move the result away from the prior, or in other words: scan matching has to generate a higher score in another position to be accepted.
 
@@ -124,8 +124,8 @@ Here, the scan matcher used rotation to still slightly mess up the result though
 Setting the ``rotation_weight`` to ``4e2`` leaves us with a reasonable result.
 
 
-The verification
-----------------
+Verification
+------------
 
 To make sure that we did not overtune for this particular issue, we need to run the configuration against other collected data.
 In this case, the new parameters did reveal slipping, for example at the beginning of ``b2-2016-04-05-14-44-52.bag``, so we had to lower the ``translation_weight`` to ``1e2``.
