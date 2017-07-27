@@ -38,11 +38,11 @@ Ogre::Quaternion ToOgre(const Eigen::Quaterniond& q);
 // are expected to be called from the Ogre thread.
 class OgreSubmap {
  public:
-  // Attaches a node visualizing the submap 'id' to the 'scene_node' which is
+  // Attaches a node visualizing the submap 'id' to the 'submap_node' which is
   // expected to represent the submap frame.
   OgreSubmap(const ::cartographer::mapping::SubmapId& id,
              Ogre::SceneManager* const scene_manager,
-             Ogre::SceneNode* const scene_node);
+             Ogre::SceneNode* const submap_node);
   ~OgreSubmap();
 
   OgreSubmap(const OgreSubmap&) = delete;
@@ -58,8 +58,8 @@ class OgreSubmap {
  private:
   const ::cartographer::mapping::SubmapId id_;
   Ogre::SceneManager* const scene_manager_;
-  Ogre::SceneNode* const scene_node_;
   Ogre::SceneNode* const submap_node_;
+  Ogre::SceneNode* const slice_node_;
   Ogre::ManualObject* const manual_object_;
   Ogre::TexturePtr texture_;
   Ogre::MaterialPtr material_;

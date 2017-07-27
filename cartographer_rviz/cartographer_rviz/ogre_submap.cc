@@ -50,11 +50,11 @@ Ogre::Quaternion ToOgre(const Eigen::Quaterniond& q) {
 
 OgreSubmap::OgreSubmap(const ::cartographer::mapping::SubmapId& id,
                        Ogre::SceneManager* const scene_manager,
-                       Ogre::SceneNode* const scene_node)
+                       Ogre::SceneNode* const submap_node)
     : id_(id),
       scene_manager_(scene_manager),
-      scene_node_(scene_node),
-      submap_node_(scene_node_->createChildSceneNode()),
+      submap_node_(submap_node),
+      slice_node_(submap_node_->createChildSceneNode()),
       manual_object_(scene_manager_->createManualObject(
           kManualObjectPrefix + GetSubmapIdentifier(id))) {
   material_ = Ogre::MaterialManager::getSingleton().getByName(
@@ -66,7 +66,7 @@ OgreSubmap::OgreSubmap(const ::cartographer::mapping::SubmapId& id,
   material_->setCullingMode(Ogre::CULL_NONE);
   material_->setDepthBias(-1.f, 0.f);
   material_->setDepthWriteEnabled(false);
-  submap_node_->attachObject(manual_object_);
+  slice_node_->attachObject(manual_object_);
 }
 
 OgreSubmap::~OgreSubmap() {
@@ -75,14 +75,14 @@ OgreSubmap::~OgreSubmap() {
     Ogre::TextureManager::getSingleton().remove(texture_->getHandle());
     texture_.setNull();
   }
-  scene_manager_->destroySceneNode(submap_node_);
+  scene_manager_->destroySceneNode(slice_node_);
   scene_manager_->destroyManualObject(manual_object_);
 }
 
 void OgreSubmap::Update(
     const ::cartographer_ros::SubmapTexture& submap_texture) {
-  submap_node_->setPosition(ToOgre(submap_texture.slice_pose.translation()));
-  submap_node_->setOrientation(ToOgre(submap_texture.slice_pose.rotation()));
+  slice_node_->setPosition(ToOgre(submap_texture.slice_pose.translation()));
+  slice_node_->setOrientation(ToOgre(submap_texture.slice_pose.rotation()));
   // The call to Ogre's loadRawData below does not work with an RG texture,
   // therefore we create an RGB one whose blue channel is always 0.
   std::vector<char> rgb;
