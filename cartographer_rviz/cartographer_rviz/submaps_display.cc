@@ -165,33 +165,6 @@ void SubmapsDisplay::processMessage(
 
 void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
   ::cartographer::common::MutexLocker locker(&mutex_);
-  if (map_frame_ != nullptr) {
-    // Update the map frame to fixed frame transform.
-    Ogre::Vector3 position;
-    Ogre::Quaternion orientation;
-    if (context_->getFrameManager()->getTransform(
-            *map_frame_, ros::Time(0) /* latest */, position, orientation)) {
-      map_node_->setPosition(position);
-      map_node_->setOrientation(orientation);
-      context_->queueRender();
-    }
-    // Update the fading by z distance.
-    try {
-      const ::geometry_msgs::TransformStamped transform_stamped =
-          tf_buffer_.lookupTransform(*map_frame_,
-                                     tracking_frame_property_->getStdString(),
-                                     ros::Time(0) /* latest */);
-      for (auto& trajectory : trajectories_) {
-        for (auto& submap_entry : trajectory.second) {
-          submap_entry.second->SetAlpha(
-              transform_stamped.transform.translation.z);
-        }
-      }
-    } catch (const tf2::TransformException& ex) {
-      ROS_WARN("Could not compute submap fading: %s", ex.what());
-    }
-  }
-
   // Schedule fetching of new submap textures.
   for (const auto& trajectory : trajectories_) {
     int num_ongoing_requests = 0;
@@ -208,6 +181,33 @@ void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
         ++num_ongoing_requests;
       }
     }
+  }
+  if (map_frame_ == nullptr) {
+    return;
+  }
+  // Update the fading by z distance.
+  const ros::Time kLatest(0);
+  try {
+    const ::geometry_msgs::TransformStamped transform_stamped =
+        tf_buffer_.lookupTransform(
+            *map_frame_, tracking_frame_property_->getStdString(), kLatest);
+    for (auto& trajectory : trajectories_) {
+      for (auto& submap_entry : trajectory.second) {
+        submap_entry.second->SetAlpha(
+            transform_stamped.transform.translation.z);
+      }
+    }
+  } catch (const tf2::TransformException& ex) {
+    ROS_WARN("Could not compute submap fading: %s", ex.what());
+  }
+  // Update the map frame to fixed frame transform.
+  Ogre::Vector3 position;
+  Ogre::Quaternion orientation;
+  if (context_->getFrameManager()->getTransform(*map_frame_, kLatest, position,
+                                                orientation)) {
+    map_node_->setPosition(position);
+    map_node_->setOrientation(orientation);
+    context_->queueRender();
   }
 }
 
