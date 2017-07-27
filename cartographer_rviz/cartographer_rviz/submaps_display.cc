@@ -35,7 +35,6 @@ namespace cartographer_rviz {
 
 namespace {
 
-constexpr int kMaxOnGoingRequestsPerTrajectory = 6;
 constexpr char kMaterialsDirectory[] = "/ogre_media/materials";
 constexpr char kGlsl120Directory[] = "/glsl120";
 constexpr char kScriptsDirectory[] = "/scripts";
@@ -107,56 +106,31 @@ void SubmapsDisplay::processMessage(
     if (trajectory_id >= trajectories_.size()) {
       continue;
     }
-    const auto& trajectory = trajectories_[trajectory_id].second;
-    const auto it = trajectory.find(submap_entry.submap_index);
-    if (it != trajectory.end() &&
-        it->second->version() > submap_entry.submap_version) {
-      // Versions should only increase unless Cartographer restarted.
+
+    if (trajectories_[trajectory_id]->IsTrajectoryInvaild(submap_entry)) {
       trajectories_.clear();
       break;
     }
   }
+
   using ::cartographer::mapping::SubmapId;
   std::set<SubmapId> listed_submaps;
   for (const ::cartographer_ros_msgs::SubmapEntry& submap_entry : msg->submap) {
     const SubmapId id{submap_entry.trajectory_id, submap_entry.submap_index};
     listed_submaps.insert(id);
     while (id.trajectory_id >= static_cast<int>(trajectories_.size())) {
-      trajectories_.push_back(Trajectory(
-          ::cartographer::common::make_unique<::rviz::Property>(
-              QString("Trajectory %1").arg(id.trajectory_id), QVariant(),
-              QString("List of all submaps in Trajectory %1.")
-                  .arg(id.trajectory_id),
-              submaps_category_),
-          std::map<int, std::unique_ptr<DrawableSubmap>>()));
+      trajectories_.push_back(
+          ::cartographer::common::make_unique<PerTrajectorySubmapDisplay>(
+              id.trajectory_id, submaps_category_, context_,
+              visibility_all_enabled_->getBool()));
     }
-    auto& trajectory_category = trajectories_[id.trajectory_id].first;
-    auto& trajectory = trajectories_[id.trajectory_id].second;
-    if (trajectory.count(id.submap_index) == 0) {
-      // TODO(ojura): Add RViz properties for adjusting submap pose axes
-      constexpr float kSubmapPoseAxesLength = 0.3f;
-      constexpr float kSubmapPoseAxesRadius = 0.06f;
-      trajectory.emplace(id.submap_index,
-                         ::cartographer::common::make_unique<DrawableSubmap>(
-                             id, context_, trajectory_category.get(),
-                             visibility_all_enabled_->getBool(),
-                             kSubmapPoseAxesLength, kSubmapPoseAxesRadius));
-    }
-    trajectory.at(id.submap_index)
-        ->Update(msg->header, submap_entry, context_->getFrameManager());
+    trajectories_[id.trajectory_id]->ProcessMessage(msg->header, submap_entry);
   }
+
   // Remove all submaps not mentioned in the SubmapList.
   for (size_t trajectory_id = 0; trajectory_id < trajectories_.size();
        ++trajectory_id) {
-    auto& trajectory = trajectories_[trajectory_id].second;
-    for (auto it = trajectory.begin(); it != trajectory.end();) {
-      if (listed_submaps.count(
-              SubmapId{static_cast<int>(trajectory_id), it->first}) == 0) {
-        it = trajectory.erase(it);
-      } else {
-        ++it;
-      }
-    }
+    trajectories_[trajectory_id]->RemoveUnlistedSubmaps(listed_submaps);
   }
 }
 
@@ -169,10 +143,7 @@ void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
                                    tracking_frame_property_->getStdString(),
                                    ros::Time(0) /* latest */);
     for (auto& trajectory : trajectories_) {
-      for (auto& submap_entry : trajectory.second) {
-        submap_entry.second->SetAlpha(
-            transform_stamped.transform.translation.z);
-      }
+      trajectory->SetAlpha(transform_stamped.transform.translation.z);
     }
   } catch (const tf2::TransformException& ex) {
     ROS_WARN("Could not compute submap fading: %s", ex.what());
@@ -180,20 +151,7 @@ void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
 
   // Schedule fetching of new submap textures.
   for (const auto& trajectory : trajectories_) {
-    int num_ongoing_requests = 0;
-    for (const auto& submap_entry : trajectory.second) {
-      if (submap_entry.second->QueryInProgress()) {
-        ++num_ongoing_requests;
-      }
-    }
-    for (auto it = trajectory.second.rbegin();
-         it != trajectory.second.rend() &&
-         num_ongoing_requests < kMaxOnGoingRequestsPerTrajectory;
-         ++it) {
-      if (it->second->MaybeFetchTexture(&client_)) {
-        ++num_ongoing_requests;
-      }
-    }
+    trajectory->FetchTexture(&client_);
   }
 }
 
@@ -201,9 +159,7 @@ void SubmapsDisplay::AllEnabledToggled() {
   ::cartographer::common::MutexLocker locker(&mutex_);
   const bool visibility = visibility_all_enabled_->getBool();
   for (auto& trajectory : trajectories_) {
-    for (auto& submap_entry : trajectory.second) {
-      submap_entry.second->set_visibility(visibility);
-    }
+    trajectory->set_visibility(visibility);
   }
 }
 

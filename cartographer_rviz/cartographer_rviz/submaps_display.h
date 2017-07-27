@@ -24,7 +24,7 @@
 #include "cartographer/common/mutex.h"
 #include "cartographer/common/port.h"
 #include "cartographer_ros_msgs/SubmapList.h"
-#include "cartographer_rviz/drawable_submap.h"
+#include "cartographer_rviz/per_trajectory_submap_display.h"
 #include "rviz/message_filter_display.h"
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_listener.h"
@@ -68,9 +68,9 @@ class SubmapsDisplay
   ::rviz::StringProperty* submap_query_service_property_;
   ::rviz::StringProperty* map_frame_property_;
   ::rviz::StringProperty* tracking_frame_property_;
-  using Trajectory = std::pair<std::unique_ptr<::rviz::Property>,
-                               std::map<int, std::unique_ptr<DrawableSubmap>>>;
-  std::vector<Trajectory> trajectories_ GUARDED_BY(mutex_);
+
+  std::vector<std::unique_ptr<PerTrajectorySubmapDisplay>> trajectories_
+      GUARDED_BY(mutex_);
   ::cartographer::common::Mutex mutex_;
   ::rviz::Property* submaps_category_;
   ::rviz::BoolProperty* visibility_all_enabled_;
