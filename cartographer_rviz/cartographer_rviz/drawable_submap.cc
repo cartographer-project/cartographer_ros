@@ -91,6 +91,7 @@ DrawableSubmap::~DrawableSubmap() {
     rpc_request_future_.wait();
   }
   display_context_->getSceneManager()->destroySceneNode(submap_node_);
+  display_context_->getSceneManager()->destroySceneNode(submap_id_text_node_);
 }
 
 void DrawableSubmap::Update(
