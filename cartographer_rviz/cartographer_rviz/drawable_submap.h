@@ -35,6 +35,7 @@
 #include "rviz/display_context.h"
 #include "rviz/frame_manager.h"
 #include "rviz/ogre_helpers/axes.h"
+#include "rviz/ogre_helpers/movable_text.h"
 #include "rviz/properties/bool_property.h"
 
 namespace cartographer_rviz {
@@ -91,9 +92,11 @@ class DrawableSubmap : public QObject {
   ::cartographer::common::Mutex mutex_;
   ::rviz::DisplayContext* const display_context_;
   Ogre::SceneNode* const submap_node_;
+  Ogre::SceneNode* const submap_id_text_node_;
   OgreSubmap ogre_submap_;
   ::cartographer::transform::Rigid3d pose_ GUARDED_BY(mutex_);
   ::rviz::Axes pose_axes_;
+  ::rviz::MovableText submap_id_text_;
   std::chrono::milliseconds last_query_timestamp_ GUARDED_BY(mutex_);
   bool query_in_progress_ = false GUARDED_BY(mutex_);
   int metadata_version_ = -1 GUARDED_BY(mutex_);
