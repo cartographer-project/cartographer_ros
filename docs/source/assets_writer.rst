@@ -15,7 +15,6 @@
 .. cartographer SHA: 30f7de1a325d6604c780f2f74d9a345ec369d12d
 .. cartographer_ros SHA: 44459e18102305745c56f92549b87d8e91f434fe
 
-
 Assets writer
 =============
 
@@ -35,7 +34,7 @@ Its inputs are
 4. and a pipeline configuration, which is defined in a ``.lua`` file.
 
 The assets writer runs through the sensor data in batches with a known trajectory.
-It can be used to colour, filter and export SLAM point cloud data in a variety of formats.
+It can be used to color, filter and export SLAM point cloud data in a variety of formats.
 For more information on what the asset writer can be used for, refer to the examples below below and the header files in `cartographer/io`_.
 
 Sample usage
@@ -71,12 +70,12 @@ Now we run the assets writer with the `sample configuration file`_ for the 3D ba
       bag_filenames:=${HOME}/Downloads/b3-2016-04-05-14-14-00.bag \
       pose_graph_filename:=${HOME}/Downloads/b3-2016-04-05-14-14-00.bag.pbstream
 
-At the timo of writing, the generated assets end up in ``~/.ros``.
+At the time of writing, the generated assets end up in ``~/.ros``.
 
 Configuration
 -------------
 
-The assets writer is modelled as a pipeline.
+The assets writer is modeled as a pipeline.
 It consists of `PointsProcessor`_\ s and `PointsBatch`_\ s  flow through it.
 Data flows from the first processor to the next, each has the chance to modify the ``PointsBatch`` before passing it on.
 
