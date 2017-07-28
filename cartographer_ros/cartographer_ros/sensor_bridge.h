@@ -17,7 +17,10 @@
 #ifndef CARTOGRAPHER_ROS_SENSOR_BRIDGE_H_
 #define CARTOGRAPHER_ROS_SENSOR_BRIDGE_H_
 
+#include <memory>
+
 #include "cartographer/mapping/trajectory_builder.h"
+#include "cartographer/sensor/imu_data.h"
 #include "cartographer/transform/rigid_transform.h"
 #include "cartographer/transform/transform.h"
 #include "cartographer_ros/tf_bridge.h"
@@ -45,6 +48,8 @@ class SensorBridge {
 
   void HandleOdometryMessage(const string& sensor_id,
                              const nav_msgs::Odometry::ConstPtr& msg);
+  std::unique_ptr<::cartographer::sensor::ImuData> ToImuData(
+      const sensor_msgs::Imu::ConstPtr& msg);
   void HandleImuMessage(const string& sensor_id,
                         const sensor_msgs::Imu::ConstPtr& msg);
   void HandleLaserScanMessage(const string& sensor_id,

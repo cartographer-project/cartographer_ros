@@ -106,21 +106,24 @@ void Node::PublishSubmapList(const ::ros::WallTimerEvent& unused_timer_event) {
   submap_list_publisher_.publish(map_builder_bridge_.GetSubmapList());
 }
 
+::cartographer::mapping::PoseExtrapolator* Node::GetExtrapolator(
+    int trajectory_id) {
+  constexpr double kExtrapolationEstimationTimeSec = 0.001;  // 1 ms
+  if (extrapolators_.count(trajectory_id) == 0) {
+    extrapolators_.emplace(
+        std::piecewise_construct, std::forward_as_tuple(trajectory_id),
+        std::forward_as_tuple(::cartographer::common::FromSeconds(
+            kExtrapolationEstimationTimeSec)));
+  }
+  return &extrapolators_.at(trajectory_id);
+}
+
 void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
   carto::common::MutexLocker lock(&mutex_);
   for (const auto& entry : map_builder_bridge_.GetTrajectoryStates()) {
     const auto& trajectory_state = entry.second;
 
-    // TODO(whess): Use improved models, e.g. using odometry and IMU when
-    // available.
-    constexpr double extrapolation_estimation_time_sec = 0.001;  // 1 ms
-    if (extrapolators_.count(entry.first) == 0) {
-      extrapolators_.emplace(
-          std::piecewise_construct, std::forward_as_tuple(entry.first),
-          std::forward_as_tuple(::cartographer::common::FromSeconds(
-              extrapolation_estimation_time_sec)));
-    }
-    auto& extrapolator = extrapolators_.at(entry.first);
+    auto& extrapolator = *GetExtrapolator(entry.first);
     // We only publish a point cloud if it has changed. It is not needed at high
     // frequency, and republishing it would be computationally wasteful.
     if (trajectory_state.pose_estimate.time != extrapolator.GetLastPoseTime()) {
@@ -292,8 +295,13 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
             boost::function<void(const sensor_msgs::Imu::ConstPtr&)>(
                 [this, trajectory_id,
                  topic](const sensor_msgs::Imu::ConstPtr& msg) {
-                  map_builder_bridge_.sensor_bridge(trajectory_id)
-                      ->HandleImuMessage(topic, msg);
+                  auto sensor_bridge_ptr =
+                      map_builder_bridge_.sensor_bridge(trajectory_id);
+                  sensor_bridge_ptr->HandleImuMessage(topic, msg);
+                  auto imu_data_ptr = sensor_bridge_ptr->ToImuData(msg);
+                  if (imu_data_ptr != nullptr) {
+                    GetExtrapolator(trajectory_id)->AddImuData(*imu_data_ptr);
+                  }
                 })));
   }
 

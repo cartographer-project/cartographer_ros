@@ -16,6 +16,7 @@
 
 #include "cartographer_ros/sensor_bridge.h"
 
+#include "cartographer/common/make_unique.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/time_conversion.h"
 
@@ -58,8 +59,8 @@ void SensorBridge::HandleOdometryMessage(
   }
 }
 
-void SensorBridge::HandleImuMessage(const string& sensor_id,
-                                    const sensor_msgs::Imu::ConstPtr& msg) {
+std::unique_ptr<::cartographer::sensor::ImuData> SensorBridge::ToImuData(
+    const sensor_msgs::Imu::ConstPtr& msg) {
   CHECK_NE(msg->linear_acceleration_covariance[0], -1)
       << "Your IMU data claims to not contain linear acceleration measurements "
          "by setting linear_acceleration_covariance[0] to -1. Cartographer "
@@ -74,15 +75,27 @@ void SensorBridge::HandleImuMessage(const string& sensor_id,
   const carto::common::Time time = FromRos(msg->header.stamp);
   const auto sensor_to_tracking = tf_bridge_.LookupToTracking(
       time, CheckNoLeadingSlash(msg->header.frame_id));
-  if (sensor_to_tracking != nullptr) {
-    CHECK(sensor_to_tracking->translation().norm() < 1e-5)
-        << "The IMU frame must be colocated with the tracking frame. "
-           "Transforming linear acceleration into the tracking frame will "
-           "otherwise be imprecise.";
-    trajectory_builder_->AddImuData(
-        sensor_id, time,
-        sensor_to_tracking->rotation() * ToEigen(msg->linear_acceleration),
-        sensor_to_tracking->rotation() * ToEigen(msg->angular_velocity));
+  if (sensor_to_tracking == nullptr) {
+    return nullptr;
+  }
+  CHECK(sensor_to_tracking->translation().norm() < 1e-5)
+      << "The IMU frame must be colocated with the tracking frame. "
+         "Transforming linear acceleration into the tracking frame will "
+         "otherwise be imprecise.";
+  return ::cartographer::common::make_unique<::cartographer::sensor::ImuData>(
+      ::cartographer::sensor::ImuData{
+          time,
+          sensor_to_tracking->rotation() * ToEigen(msg->linear_acceleration),
+          sensor_to_tracking->rotation() * ToEigen(msg->angular_velocity)});
+}
+
+void SensorBridge::HandleImuMessage(const string& sensor_id,
+                                    const sensor_msgs::Imu::ConstPtr& msg) {
+  std::unique_ptr<::cartographer::sensor::ImuData> imu_data = ToImuData(msg);
+  if (imu_data != nullptr) {
+    trajectory_builder_->AddImuData(sensor_id, imu_data->time,
+                                    imu_data->linear_acceleration,
+                                    imu_data->angular_velocity);
   }
 }
 
