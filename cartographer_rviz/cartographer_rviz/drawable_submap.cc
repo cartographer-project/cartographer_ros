@@ -43,7 +43,7 @@ constexpr double kFadeOutDistanceInMeters = 2.;
 constexpr float kAlphaUpdateThreshold = 0.2f;
 
 const Ogre::ColourValue kSubmapIdColor(Ogre::ColourValue::Red);
-const Eigen::Vector3d kSubmapIdLocalTranslation(0.0, 0.0, 0.3);
+const Eigen::Vector3d kSubmapIdPosition(0.0, 0.0, 0.3);
 constexpr float kSubmapIdCharHeight = 0.2f;
 
 }  // namespace
@@ -78,7 +78,7 @@ DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
   submap_id_text_.setTextAlignment(::rviz::MovableText::H_CENTER,
                                    ::rviz::MovableText::V_ABOVE);
   // TODO(jihoonl): Make it toggleable.
-  submap_id_text_node_->setPosition(ToOgre(kSubmapIdLocalTranslation));
+  submap_id_text_node_->setPosition(ToOgre(kSubmapIdPosition));
   submap_id_text_node_->attachObject(&submap_id_text_);
   submap_node_->setVisible(visible);
   connect(this, SIGNAL(RequestSucceeded()), this, SLOT(UpdateSceneNode()));
