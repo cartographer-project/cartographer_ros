@@ -16,10 +16,17 @@
 ROS API
 =======
 
-The following ROS API is provided by `cartographer_node`_.
+Cartographer Node
+=================
+
+The `cartographer_node`_ is the SLAM node used for online, real-time SLAM.
+
+.. _cartographer_node: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros/cartographer_ros/node_main.cc
 
 Command-line Flags
-==================
+------------------
+
+TODO(hrapp): Should these not be removed? It seems duplicated efforts documenting them here and there.
 
 .. TODO(damonkohler): Use an options list if it can be made to render nicely.
 
@@ -31,8 +38,13 @@ Command-line Flags
   Basename (i.e. not containing any directory prefix) of the configuration file
   (e.g. backpack_3d.lua).
 
+\-\-map_filename
+  A Cartographer state file that will be loaded from disk. This allows to
+  add new trajectories SLAMing from an earlier state, but the loaded state is
+  frozen.
+
 Subscribed Topics
-=================
+-----------------
 
 The following range data topics are mutually exclusive. At least one source of
 range data is required.
@@ -70,12 +82,7 @@ odom (`nav_msgs/Odometry`_)
   SLAM.
 
 Published Topics
-================
-
-map (`nav_msgs/OccupancyGrid`_)
-  Only supported in 2D. If subscribed to, a background thread will continuously
-  compute and publish the map. The time between updates will increase with the
-  size of the map. For faster updates, use the submaps APIs.
+----------------
 
 scan_matched_points2 (`sensor_msgs/PointCloud2`_)
   Point cloud as it was used for the purpose of scan-to-submap matching. This
@@ -87,7 +94,7 @@ submap_list (`cartographer_ros_msgs/SubmapList`_)
   submap, across all trajectories.
 
 Services
-========
+--------
 
 submap_query (`cartographer_ros_msgs/SubmapQuery`_)
   Fetches the requested submap.
@@ -106,7 +113,7 @@ write_state (`cartographer_ros_msgs/WriteState`_)
   grids, X-Rays or PLY files.
 
 Required tf Transforms
-======================
+----------------------
 
 Transforms from all incoming sensor data frames to the :doc:`configured
 <configuration>` *tracking_frame* and *published_frame* must be available.
@@ -114,7 +121,7 @@ Typically, these are published periodically by a `robot_state_publisher` or a
 `static_transform_publisher`.
 
 Provided tf Transforms
-======================
+----------------------
 
 The transformation between the :doc:`configured <configuration>` *map_frame*
 and *published_frame* is always provided.
@@ -125,7 +132,6 @@ If *provide_odom_frame* is enabled in the :doc:`configuration`, a continuous
 
 .. _robot_state_publisher: http://wiki.ros.org/robot_state_publisher
 .. _static_transform_publisher: http://wiki.ros.org/tf#static_transform_publisher
-.. _cartographer_node: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros/cartographer_ros/node_main.cc
 .. _cartographer_ros_msgs/FinishTrajectory: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/srv/FinishTrajectory.srv
 .. _cartographer_ros_msgs/SubmapList: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/msg/SubmapList.msg
 .. _cartographer_ros_msgs/SubmapQuery: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/srv/SubmapQuery.srv
@@ -137,3 +143,38 @@ If *provide_odom_frame* is enabled in the :doc:`configuration`, a continuous
 .. _sensor_msgs/LaserScan: http://docs.ros.org/api/sensor_msgs/html/msg/LaserScan.html
 .. _sensor_msgs/MultiEchoLaserScan: http://docs.ros.org/api/sensor_msgs/html/msg/MultiEchoLaserScan.html
 .. _sensor_msgs/PointCloud2: http://docs.ros.org/api/sensor_msgs/html/msg/PointCloud2.html
+
+Offline Node
+============
+
+The `offline_node`_ is the fastest way of SLAMing a bag of sensor data.
+It does not listen on any topics, instead it reads TF and sensor data out of a set of bags provided on the commandline.
+It also publishes a clock with the advancing sensor data, i.e. replaces ``rosbag play``.
+In all other regards, it behaves like the ``cartographer_node``.
+Each bag will become a separate trajectory in the final state.
+Once it is done processing all data, it writes out the final Cartographer state and exits.
+
+.. _offline_node: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros/cartographer_ros/offline_node_main.cc
+
+
+Occupancy grid Node
+=================
+
+The `occupancy_grid_node`_ listens to the submaps published by SLAM and builds a ROS occupancy_grid and publishes it.
+This tool is to keep old nodes that require a single monolithic map to work happy until new nav stacks can deal with Cartographer's submaps directly.
+Generating the map is expensive and slow, so map updates are in the order of seconds.
+
+.. _occupancy_grid_node: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros/cartographer_ros/occupancy_grid_node_main.cc
+
+Subscribed Topics
+-----------------
+
+It subscribes to Cartographer's ``submap_list`` topic only.
+
+Published Topics
+----------------
+
+map (`nav_msgs/OccupancyGrid`_)
+  If subscribed to, the node will continuously compute and publish the map. The
+  time between updates will increase with the size of the map. For faster
+  updates, use the submaps APIs.
