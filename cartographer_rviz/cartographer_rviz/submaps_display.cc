@@ -49,9 +49,6 @@ SubmapsDisplay::SubmapsDisplay() : tf_listener_(tf_buffer_) {
   submap_query_service_property_ = new ::rviz::StringProperty(
       "Submap query service", kDefaultSubmapQueryServiceName,
       "Submap query service to connect to.", this, SLOT(Reset()));
-  map_frame_property_ = new ::rviz::StringProperty(
-      "Map frame", kDefaultMapFrame, "Map frame, used for fading out submaps.",
-      this);
   tracking_frame_property_ = new ::rviz::StringProperty(
       "Tracking frame", kDefaultTrackingFrame,
       "Tracking frame, used for fading out submaps.", this);
@@ -75,7 +72,11 @@ SubmapsDisplay::SubmapsDisplay() : tf_listener_(tf_buffer_) {
   Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
 }
 
-SubmapsDisplay::~SubmapsDisplay() { client_.shutdown(); }
+SubmapsDisplay::~SubmapsDisplay() {
+  client_.shutdown();
+  trajectories_.clear();
+  scene_manager_->destroySceneNode(map_node_);
+}
 
 void SubmapsDisplay::Reset() { reset(); }
 
@@ -86,6 +87,7 @@ void SubmapsDisplay::CreateClient() {
 
 void SubmapsDisplay::onInitialize() {
   MFDClass::onInitialize();
+  map_node_ = scene_manager_->getRootSceneNode()->createChildSceneNode();
   CreateClient();
 }
 
@@ -100,6 +102,8 @@ void SubmapsDisplay::reset() {
 void SubmapsDisplay::processMessage(
     const ::cartographer_ros_msgs::SubmapList::ConstPtr& msg) {
   ::cartographer::common::MutexLocker locker(&mutex_);
+  map_frame_ =
+      ::cartographer::common::make_unique<std::string>(msg->header.frame_id);
   // In case Cartographer node is relaunched, destroy trajectories from the
   // previous instance.
   for (const ::cartographer_ros_msgs::SubmapEntry& submap_entry : msg->submap) {
@@ -138,12 +142,11 @@ void SubmapsDisplay::processMessage(
       constexpr float kSubmapPoseAxesRadius = 0.06f;
       trajectory.emplace(id.submap_index,
                          ::cartographer::common::make_unique<DrawableSubmap>(
-                             id, context_, trajectory_category.get(),
+                             id, context_, map_node_, trajectory_category.get(),
                              visibility_all_enabled_->getBool(),
                              kSubmapPoseAxesLength, kSubmapPoseAxesRadius));
     }
-    trajectory.at(id.submap_index)
-        ->Update(msg->header, submap_entry, context_->getFrameManager());
+    trajectory.at(id.submap_index)->Update(msg->header, submap_entry);
   }
   // Remove all submaps not mentioned in the SubmapList.
   for (size_t trajectory_id = 0; trajectory_id < trajectories_.size();
@@ -162,22 +165,6 @@ void SubmapsDisplay::processMessage(
 
 void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
   ::cartographer::common::MutexLocker locker(&mutex_);
-  // Update the fading by z distance.
-  try {
-    const ::geometry_msgs::TransformStamped transform_stamped =
-        tf_buffer_.lookupTransform(map_frame_property_->getStdString(),
-                                   tracking_frame_property_->getStdString(),
-                                   ros::Time(0) /* latest */);
-    for (auto& trajectory : trajectories_) {
-      for (auto& submap_entry : trajectory.second) {
-        submap_entry.second->SetAlpha(
-            transform_stamped.transform.translation.z);
-      }
-    }
-  } catch (const tf2::TransformException& ex) {
-    ROS_WARN("Could not compute submap fading: %s", ex.what());
-  }
-
   // Schedule fetching of new submap textures.
   for (const auto& trajectory : trajectories_) {
     int num_ongoing_requests = 0;
@@ -194,6 +181,33 @@ void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
         ++num_ongoing_requests;
       }
     }
+  }
+  if (map_frame_ == nullptr) {
+    return;
+  }
+  // Update the fading by z distance.
+  const ros::Time kLatest(0);
+  try {
+    const ::geometry_msgs::TransformStamped transform_stamped =
+        tf_buffer_.lookupTransform(
+            *map_frame_, tracking_frame_property_->getStdString(), kLatest);
+    for (auto& trajectory : trajectories_) {
+      for (auto& submap_entry : trajectory.second) {
+        submap_entry.second->SetAlpha(
+            transform_stamped.transform.translation.z);
+      }
+    }
+  } catch (const tf2::TransformException& ex) {
+    ROS_WARN("Could not compute submap fading: %s", ex.what());
+  }
+  // Update the map frame to fixed frame transform.
+  Ogre::Vector3 position;
+  Ogre::Quaternion orientation;
+  if (context_->getFrameManager()->getTransform(*map_frame_, kLatest, position,
+                                                orientation)) {
+    map_node_->setPosition(position);
+    map_node_->setOrientation(orientation);
+    context_->queueRender();
   }
 }
 

@@ -47,8 +47,8 @@ class DrawableSubmap : public QObject {
  public:
   DrawableSubmap(const ::cartographer::mapping::SubmapId& submap_id,
                  ::rviz::DisplayContext* display_context,
-                 ::rviz::Property* submap_category, bool visible,
-                 float pose_axes_length, float pose_axes_radius);
+                 Ogre::SceneNode* map_node, ::rviz::Property* submap_category,
+                 bool visible, float pose_axes_length, float pose_axes_radius);
   ~DrawableSubmap() override;
   DrawableSubmap(const DrawableSubmap&) = delete;
   DrawableSubmap& operator=(const DrawableSubmap&) = delete;
@@ -56,8 +56,7 @@ class DrawableSubmap : public QObject {
   // Updates the 'metadata' for this submap. If necessary, the next call to
   // MaybeFetchTexture() will fetch a new submap texture.
   void Update(const ::std_msgs::Header& header,
-              const ::cartographer_ros_msgs::SubmapEntry& metadata,
-              ::rviz::FrameManager* frame_manager);
+              const ::cartographer_ros_msgs::SubmapEntry& metadata);
 
   // If an update is needed, it will send an RPC using 'client' to request the
   // new data for the submap and returns true.
@@ -91,7 +90,7 @@ class DrawableSubmap : public QObject {
 
   ::cartographer::common::Mutex mutex_;
   ::rviz::DisplayContext* const display_context_;
-  Ogre::SceneNode* const scene_node_;
+  Ogre::SceneNode* const submap_node_;
   OgreSubmap ogre_submap_;
   ::cartographer::transform::Rigid3d pose_ GUARDED_BY(mutex_);
   ::rviz::Axes pose_axes_;

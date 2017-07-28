@@ -19,6 +19,7 @@
 
 #include <map>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "cartographer/common/mutex.h"
@@ -66,8 +67,9 @@ class SubmapsDisplay
   ::tf2_ros::TransformListener tf_listener_;
   ros::ServiceClient client_;
   ::rviz::StringProperty* submap_query_service_property_;
-  ::rviz::StringProperty* map_frame_property_;
+  std::unique_ptr<std::string> map_frame_;
   ::rviz::StringProperty* tracking_frame_property_;
+  Ogre::SceneNode* map_node_ = nullptr;  // Represents the map frame.
   using Trajectory = std::pair<std::unique_ptr<::rviz::Property>,
                                std::map<int, std::unique_ptr<DrawableSubmap>>>;
   std::vector<Trajectory> trajectories_ GUARDED_BY(mutex_);

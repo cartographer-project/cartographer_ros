@@ -195,7 +195,6 @@ Visualization Manager:
       Value: false
     - Class: Submaps
       Enabled: true
-      Map frame: map
       Name: Submaps
       Submap query service: /submap_query
       Topic: /submap_list
