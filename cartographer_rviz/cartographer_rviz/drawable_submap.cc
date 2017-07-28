@@ -42,6 +42,10 @@ constexpr double kFadeOutStartDistanceInMeters = 1.;
 constexpr double kFadeOutDistanceInMeters = 2.;
 constexpr float kAlphaUpdateThreshold = 0.2f;
 
+const Ogre::ColourValue kSubmapIdColor(Ogre::ColourValue::Red);
+const Eigen::Vector3d kSubmapIdPosition(0.0, 0.0, 0.3);
+constexpr float kSubmapIdCharHeight = 0.2f;
+
 }  // namespace
 
 DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
@@ -53,9 +57,14 @@ DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
     : id_(id),
       display_context_(display_context),
       submap_node_(map_node->createChildSceneNode()),
+      submap_id_text_node_(submap_node_->createChildSceneNode()),
       ogre_submap_(id, display_context->getSceneManager(), submap_node_),
       pose_axes_(display_context->getSceneManager(), submap_node_,
                  pose_axes_length, pose_axes_radius),
+      submap_id_text_(QString("(%1,%2)")
+                          .arg(id.trajectory_id)
+                          .arg(id.submap_index)
+                          .toStdString()),
       last_query_timestamp_(0) {
   // DrawableSubmap creates and manages its visibility property object
   // (a unique_ptr is needed because the Qt parent of the visibility
@@ -64,6 +73,13 @@ DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
   visibility_ = ::cartographer::common::make_unique<::rviz::BoolProperty>(
       "" /* title */, visible, "" /* description */, submap_category,
       SLOT(ToggleVisibility()), this);
+  submap_id_text_.setCharacterHeight(kSubmapIdCharHeight);
+  submap_id_text_.setColor(kSubmapIdColor);
+  submap_id_text_.setTextAlignment(::rviz::MovableText::H_CENTER,
+                                   ::rviz::MovableText::V_ABOVE);
+  // TODO(jihoonl): Make it toggleable.
+  submap_id_text_node_->setPosition(ToOgre(kSubmapIdPosition));
+  submap_id_text_node_->attachObject(&submap_id_text_);
   submap_node_->setVisible(visible);
   connect(this, SIGNAL(RequestSucceeded()), this, SLOT(UpdateSceneNode()));
 }
@@ -75,6 +91,7 @@ DrawableSubmap::~DrawableSubmap() {
     rpc_request_future_.wait();
   }
   display_context_->getSceneManager()->destroySceneNode(submap_node_);
+  display_context_->getSceneManager()->destroySceneNode(submap_id_text_node_);
 }
 
 void DrawableSubmap::Update(
