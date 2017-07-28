@@ -14,6 +14,7 @@
 
 .. cartographer SHA: ea7c39b6f078c693b92fed06d86ca501021147d9
 .. cartographer_ros SHA: 44459e18102305745c56f92549b87d8e91f434fe
+.. TODO(hrapp): mention insert_free_space somewhere
 
 Tuning
 ======
@@ -35,9 +36,9 @@ Most of its options can be found in `trajectory_builder_2d.lua`_ for 2D and `tra
 
 The other system is global SLAM (sometimes called the backend).
 It runs in background threads and its main job is to find loop closure constraints.
-It does that by scan matching scans against submaps.
-It also incorporates other sensor data to get a higher level view and identify the most consistent globals solution.
-In 3D, it it also tries to find the direction of gravity.
+It does that by scan-matching scans against submaps.
+It also incorporates other sensor data to get a higher level view and identify the most consistent global solution.
+In 3D, it also tries to find the direction of gravity.
 Most of its options can be found in `sparse_pose_graph.lua`_
 
 .. _sparse_pose_graph.lua: https://github.com/googlecartographer/cartographer/blob/ea7c39b6f078c693b92fed06d86ca501021147d9/configuration_files/sparse_pose_graph.lua
@@ -47,7 +48,7 @@ On a higher abstraction, the job of local SLAM is to generate good submaps and t
 Tuning local SLAM
 -----------------
 
-For this example we'll start at commit ``cartographer`` commit `ea7c39b`_ and ``cartographer_ros`` commit `44459e1`_ and look at the bag ``b2-2016-04-27-12-31-41.bag`` from our test data set.
+For this example we'll start at ``cartographer`` commit `ea7c39b`_ and ``cartographer_ros`` commit `44459e1`_ and look at the bag ``b2-2016-04-27-12-31-41.bag`` from our test data set.
 
 At our starting configuration, we see some slipping pretty early in the bag.
 The backpack passed over a ramp in the Deutsches Museum which violates the 2D assumption of a flat floor.
@@ -60,9 +61,9 @@ Our aim is to improve the situation through tuning.
 
 If we only look at this particular submap, that the error is fully contained in one submap.
 We also see that over time, global SLAM figures out that something weird happened and partially corrects for it.
-The broken Submap is broken forever though.
+The broken submap is broken forever though.
 
-TODO(hrapp): VIDEO
+.. TODO(hrapp): VIDEO
 
 Since the problem here is slippage inside a submap, it is a local SLAM issue.
 So let's turn off global SLAM to not mess with our tuning.
@@ -71,12 +72,12 @@ So let's turn off global SLAM to not mess with our tuning.
 
    SPARSE_POSE_GRAPH.optimize_every_n_scans = 0
 
-Corect size of submaps
-^^^^^^^^^^^^^^^^^^^^^^
+Correct size of submaps
+^^^^^^^^^^^^^^^^^^^^^^^
 
 Local SLAM drifts over time, only loop closure can fix this drift.
 Submaps must be small enough so that the drift inside them is below the resolution, so that they are locally correct.
-On the other side, they should be so large as being distinct for loop closure to work properly.
+On the other hand, they should be large enough to be being distinct for loop closure to work properly.
 The size of submaps is configured through ``TRAJECTORY_BUILDER_2D.submaps.num_range_data``.
 Looking at the individual submaps for this example they already fit the two constraints rather well, so we assume this parameter is well tuned.
 
@@ -92,7 +93,7 @@ If your sensor setup and timing is reasonable, using only the ``CeresScanMatcher
 If you do not have other sensors or you do not trust them, Cartographer also provides a ``RealTimeCorrelativeScanMatcher``.
 It uses an approach similar to how scans are matched against submaps in loop closure, but instead it matches against the current submap.
 The best match is then used as prior for the ``CeresScanMatcher``.
-This scan matcher is very expensive and will essentially override any signal from other sensors but the range finder, but it is robust in feature rich environment.
+This scan matcher is very expensive and will essentially override any signal from other sensors but the range finder, but it is robust in feature rich environments.
 
 Tuning the correlative scan matcher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -113,12 +114,13 @@ For instructional purposes, let's make deviating from the prior really expensive
 
    TRAJECTORY_BUILDER_2D.ceres_scan_matcher.translation_weight = 1e3
 
-TODO: video
+.. TODO(hrapp): video
 
-This allows the optimizer to pretty liberally overwrite the scan matcher results, and the pose floats freely.
+This allows the optimizer to pretty liberally overwrite the scan matcher results.
+This results in poses close to the prior, but inconsistent with the depth sensor and clearly broken.
 Experimenting with this value yields a better result at ``2e2``.
 
-TODO(hrapp): VIDEO with translation_weight = 2e2
+.. TODO(hrapp): VIDEO with translation_weight = 2e2
 
 Here, the scan matcher used rotation to still slightly mess up the result though.
 Setting the ``rotation_weight`` to ``4e2`` leaves us with a reasonable result.
@@ -129,11 +131,10 @@ Verification
 
 To make sure that we did not overtune for this particular issue, we need to run the configuration against other collected data.
 In this case, the new parameters did reveal slipping, for example at the beginning of ``b2-2016-04-05-14-44-52.bag``, so we had to lower the ``translation_weight`` to ``1e2``.
-These setting are worse for the case we wanted to fix, but no longer slips.
+This setting is worse for the case we wanted to fix, but no longer slips.
 Before checking them in, we normalize all weights, since they only have relative meaning.
 The result of this tuning was `PR 428`_.
 In general, always try to tune for a platform, not a particular bag.
 
 .. _PR 428: https://github.com/googlecartographer/cartographer/pull/428
 
-TODO(hrapp): mention insert_free_space somewhere
