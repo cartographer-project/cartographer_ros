@@ -108,12 +108,12 @@ void Node::PublishSubmapList(const ::ros::WallTimerEvent& unused_timer_event) {
 
 ::cartographer::mapping::PoseExtrapolator* Node::GetExtrapolator(
     int trajectory_id) {
-  constexpr double extrapolation_estimation_time_sec = 0.001;  // 1 ms
+  constexpr double kExtrapolationEstimationTimeSec = 0.001;  // 1 ms
   if (extrapolators_.count(trajectory_id) == 0) {
     extrapolators_.emplace(
         std::piecewise_construct, std::forward_as_tuple(trajectory_id),
         std::forward_as_tuple(::cartographer::common::FromSeconds(
-            extrapolation_estimation_time_sec)));
+            kExtrapolationEstimationTimeSec)));
   }
   return &extrapolators_.at(trajectory_id);
 }
