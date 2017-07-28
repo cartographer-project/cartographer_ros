@@ -85,6 +85,7 @@ class Node {
                          const cartographer_ros_msgs::SensorTopics& topics,
                          int trajectory_id);
   void PublishSubmapList(const ::ros::WallTimerEvent& timer_event);
+  ::cartographer::mapping::PoseExtrapolator* GetExtrapolator(int trajectory_id);
   void PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event);
   void PublishTrajectoryNodeList(const ::ros::WallTimerEvent& timer_event);
   void PublishConstraintList(const ::ros::WallTimerEvent& timer_event);
