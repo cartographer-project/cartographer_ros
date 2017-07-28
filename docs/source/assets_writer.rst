@@ -27,7 +27,16 @@ The trajectory alone is rarely of interest.
 But once the best trajectory is established, the full sensor data can be used to derive and visualize information about its surroundings.
 
 Cartographer provides the assets writer for this.
-Its input is the Cartographer state, the sensor data originally fed to SLAM, the sensor extrinsics and a pipeline configuration file.
+Its inputs are
+
+1. the original sensor data fed to SLAM in a ROS bag file,
+2. the cartographer state, which is contained in the ``.pbstream`` file that SLAM creates,
+3. the sensor extrinsics (i.e. TF data from the bag or a URDF),
+4. and a pipeline configuration, which is defined in a ``.lua`` file.
+
+The assets writer runs through the sensor data in batches with a known trajectory.
+It can be used to colour, filter and export SLAM point cloud data in a variety of formats.
+For more information on what the asset writer can be used for, refer to the examples below below and the header files in `cartographer/io`_.
 
 Sample usage
 ------------
@@ -41,7 +50,7 @@ Sample usage
    roslaunch cartographer_ros offline_backpack_3d.launch bag_filenames:=${HOME}/Downloads/b3-2016-04-05-14-14-00.bag
 
 Watch the output on the commandline until the offline node terminates.
-It will have written ``b3-2016-04-05-14-14-00.bag.psbtream`` which represents the Cartographer state after it processed all data and finished all optimizations.
+It will have written ``b3-2016-04-05-14-14-00.bag.pbstream`` which represents the Cartographer state after it processed all data and finished all optimizations.
 You could have gotten the same state data by running the online node and calling:
 
 .. code-block:: bash
@@ -49,8 +58,8 @@ You could have gotten the same state data by running the online node and calling
    # Finish the first trajectory. No further data will be accepted on it.
    rosservice call /finish_trajectory 0
 
-   # Ask Cartographer to serialize its current state into ~/ros/output.pbstream
-   rosservice call /write_state output.pbstream
+   # Ask Cartographer to serialize its current state.
+   rosservice call /write_state ${HOME}/Downloads/b3-2016-04-05-14-14-00.bag.pbstream
 
 Now we run the assets writer with the `sample configuration file`_ for the 3D backpack:
 
@@ -62,7 +71,7 @@ Now we run the assets writer with the `sample configuration file`_ for the 3D ba
       bag_filenames:=${HOME}/Downloads/b3-2016-04-05-14-14-00.bag \
       pose_graph_filename:=${HOME}/Downloads/b3-2016-04-05-14-14-00.bag.pbstream
 
-At the time of this writing, the generated assets end up in ``~/.ros``.
+At the timo of writing, the generated assets end up in ``~/.ros``.
 
 Configuration
 -------------
@@ -74,8 +83,8 @@ Data flows from the first processor to the next, each has the chance to modify t
 .. _PointsProcessor: https://github.com/googlecartographer/cartographer/blob/30f7de1a325d6604c780f2f74d9a345ec369d12d/cartographer/io/points_processor.h
 .. _PointsBatch: https://github.com/googlecartographer/cartographer/blob/30f7de1a325d6604c780f2f74d9a345ec369d12d/cartographer/io/points_batch.h
 
-For example the `assets_writer_backpack_3d.lua`_ uses ``min_max_range_filter`` to remove points that are either to close or to far from the sensor.
-After this, it writes X-Rays, next recolors the ``PointsBatch``\ s depending on the sensor frame ids and writes another set of X-Rays using these new colors.
+For example the `assets_writer_backpack_3d.lua`_ uses ``min_max_range_filter`` to remove points that are either too close or too far from the sensor.
+After this, it writes X-Rays, then recolors the ``PointsBatch``\ s depending on the sensor frame ids and writes another set of X-Rays using these new colors.
 
 .. _assets_writer_backpack_3d.lua: https://github.com/googlecartographer/cartographer_ros/blob/44459e18102305745c56f92549b87d8e91f434fe/cartographer_ros/configuration_files/assets_writer_backpack_3d.lua
 
