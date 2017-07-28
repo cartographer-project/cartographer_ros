@@ -152,7 +152,7 @@ It does not listen on any topics, instead it reads TF and sensor data out of a s
 It also publishes a clock with the advancing sensor data, i.e. replaces ``rosbag play``.
 In all other regards, it behaves like the ``cartographer_node``.
 Each bag will become a separate trajectory in the final state.
-Once it is done processing all data, it writes out the final cartographer state and exits.
+Once it is done processing all data, it writes out the final Cartographer state and exits.
 
 .. _offline_node: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros/cartographer_ros/offline_node_main.cc
 
@@ -160,7 +160,7 @@ Once it is done processing all data, it writes out the final cartographer state 
 Occupancy grid Node
 =================
 
-The `occupancy_grid_node`_ is listening to the submaps published by SLAM and builds a ROS occupancy_grid and publishes it.
+The `occupancy_grid_node`_ listens to the submaps published by SLAM and builds a ROS occupancy_grid and publishes it.
 This tool is to keep old nodes that require a single monolithic map to work happy until new nav stacks can deal with Cartographer's submaps directly.
 Generating the map is expensive and slow, so map updates are in the order of seconds.
 
@@ -169,7 +169,7 @@ Generating the map is expensive and slow, so map updates are in the order of sec
 Subscribed Topics
 -----------------
 
-It subscribes to cartographers submap_list topic only.
+It subscribes to Cartographer's ``submap_list`` topic only.
 
 Published Topics
 ----------------
