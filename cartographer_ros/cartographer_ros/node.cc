@@ -106,16 +106,21 @@ void Node::PublishSubmapList(const ::ros::WallTimerEvent& unused_timer_event) {
   submap_list_publisher_.publish(map_builder_bridge_.GetSubmapList());
 }
 
-::cartographer::mapping::PoseExtrapolator* Node::GetExtrapolator(
-    int trajectory_id) {
+void Node::AddExtrapolator(const int trajectory_id,
+                           const TrajectoryOptions& options) {
   constexpr double kExtrapolationEstimationTimeSec = 0.001;  // 1 ms
-  if (extrapolators_.count(trajectory_id) == 0) {
-    extrapolators_.emplace(
-        std::piecewise_construct, std::forward_as_tuple(trajectory_id),
-        std::forward_as_tuple(::cartographer::common::FromSeconds(
-            kExtrapolationEstimationTimeSec)));
-  }
-  return &extrapolators_.at(trajectory_id);
+  CHECK(extrapolators_.count(trajectory_id) == 0);
+  const double gravity_time_constant =
+      node_options_.map_builder_options.use_trajectory_builder_3d()
+          ? options.trajectory_builder_options.trajectory_builder_3d_options()
+                .imu_gravity_time_constant()
+          : options.trajectory_builder_options.trajectory_builder_2d_options()
+                .imu_gravity_time_constant();
+  extrapolators_.emplace(
+      std::piecewise_construct, std::forward_as_tuple(trajectory_id),
+      std::forward_as_tuple(
+          ::cartographer::common::FromSeconds(kExtrapolationEstimationTimeSec),
+          gravity_time_constant));
 }
 
 void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
@@ -123,7 +128,7 @@ void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
   for (const auto& entry : map_builder_bridge_.GetTrajectoryStates()) {
     const auto& trajectory_state = entry.second;
 
-    auto& extrapolator = *GetExtrapolator(entry.first);
+    auto& extrapolator = extrapolators_.at(entry.first);
     // We only publish a point cloud if it has changed. It is not needed at high
     // frequency, and republishing it would be computationally wasteful.
     if (trajectory_state.pose_estimate.time != extrapolator.GetLastPoseTime()) {
@@ -236,6 +241,7 @@ int Node::AddTrajectory(const TrajectoryOptions& options,
       ComputeExpectedTopics(options, topics);
   const int trajectory_id =
       map_builder_bridge_.AddTrajectory(expected_sensor_ids, options);
+  AddExtrapolator(trajectory_id, options);
   LaunchSubscribers(options, topics, trajectory_id);
   subscribed_topics_.insert(expected_sensor_ids.begin(),
                             expected_sensor_ids.end());
@@ -253,6 +259,7 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
             boost::function<void(const sensor_msgs::LaserScan::ConstPtr&)>(
                 [this, trajectory_id,
                  topic](const sensor_msgs::LaserScan::ConstPtr& msg) {
+                  carto::common::MutexLocker lock(&mutex_);
                   map_builder_bridge_.sensor_bridge(trajectory_id)
                       ->HandleLaserScanMessage(topic, msg);
                 })));
@@ -266,6 +273,7 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
         boost::function<void(const sensor_msgs::MultiEchoLaserScan::ConstPtr&)>(
             [this, trajectory_id,
              topic](const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
+              carto::common::MutexLocker lock(&mutex_);
               map_builder_bridge_.sensor_bridge(trajectory_id)
                   ->HandleMultiEchoLaserScanMessage(topic, msg);
             })));
@@ -277,6 +285,7 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
         boost::function<void(const sensor_msgs::PointCloud2::ConstPtr&)>(
             [this, trajectory_id,
              topic](const sensor_msgs::PointCloud2::ConstPtr& msg) {
+              carto::common::MutexLocker lock(&mutex_);
               map_builder_bridge_.sensor_bridge(trajectory_id)
                   ->HandlePointCloud2Message(topic, msg);
             })));
@@ -295,13 +304,14 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
             boost::function<void(const sensor_msgs::Imu::ConstPtr&)>(
                 [this, trajectory_id,
                  topic](const sensor_msgs::Imu::ConstPtr& msg) {
+                  carto::common::MutexLocker lock(&mutex_);
                   auto sensor_bridge_ptr =
                       map_builder_bridge_.sensor_bridge(trajectory_id);
-                  sensor_bridge_ptr->HandleImuMessage(topic, msg);
                   auto imu_data_ptr = sensor_bridge_ptr->ToImuData(msg);
                   if (imu_data_ptr != nullptr) {
-                    GetExtrapolator(trajectory_id)->AddImuData(*imu_data_ptr);
+                    extrapolators_.at(trajectory_id).AddImuData(*imu_data_ptr);
                   }
+                  sensor_bridge_ptr->HandleImuMessage(topic, msg);
                 })));
   }
 
@@ -313,6 +323,7 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
             boost::function<void(const nav_msgs::Odometry::ConstPtr&)>(
                 [this, trajectory_id,
                  topic](const nav_msgs::Odometry::ConstPtr& msg) {
+                  carto::common::MutexLocker lock(&mutex_);
                   map_builder_bridge_.sensor_bridge(trajectory_id)
                       ->HandleOdometryMessage(topic, msg);
                 })));
@@ -431,6 +442,7 @@ void Node::FinishAllTrajectories() {
 }
 
 void Node::LoadMap(const std::string& map_filename) {
+  carto::common::MutexLocker lock(&mutex_);
   map_builder_bridge_.LoadMap(map_filename);
 }
 
