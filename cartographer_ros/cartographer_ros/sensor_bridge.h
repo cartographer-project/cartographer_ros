@@ -48,7 +48,7 @@ class SensorBridge {
 
   void HandleOdometryMessage(const string& sensor_id,
                              const nav_msgs::Odometry::ConstPtr& msg);
-  std::unique_ptr<::cartographer::sensor::ImuData> ToImuData(
+  const std::shared_ptr<::cartographer::sensor::ImuData> ToImuData(
       const sensor_msgs::Imu::ConstPtr& msg);
   void HandleImuMessage(const string& sensor_id,
                         const sensor_msgs::Imu::ConstPtr& msg);

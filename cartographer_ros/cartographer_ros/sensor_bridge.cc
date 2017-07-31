@@ -59,7 +59,7 @@ void SensorBridge::HandleOdometryMessage(
   }
 }
 
-std::unique_ptr<::cartographer::sensor::ImuData> SensorBridge::ToImuData(
+const std::shared_ptr<::cartographer::sensor::ImuData> SensorBridge::ToImuData(
     const sensor_msgs::Imu::ConstPtr& msg) {
   CHECK_NE(msg->linear_acceleration_covariance[0], -1)
       << "Your IMU data claims to not contain linear acceleration measurements "
@@ -82,7 +82,7 @@ std::unique_ptr<::cartographer::sensor::ImuData> SensorBridge::ToImuData(
       << "The IMU frame must be colocated with the tracking frame. "
          "Transforming linear acceleration into the tracking frame will "
          "otherwise be imprecise.";
-  return ::cartographer::common::make_unique<::cartographer::sensor::ImuData>(
+  return std::make_shared<::cartographer::sensor::ImuData>(
       ::cartographer::sensor::ImuData{
           time,
           sensor_to_tracking->rotation() * ToEigen(msg->linear_acceleration),
@@ -91,7 +91,7 @@ std::unique_ptr<::cartographer::sensor::ImuData> SensorBridge::ToImuData(
 
 void SensorBridge::HandleImuMessage(const string& sensor_id,
                                     const sensor_msgs::Imu::ConstPtr& msg) {
-  std::unique_ptr<::cartographer::sensor::ImuData> imu_data = ToImuData(msg);
+  std::shared_ptr<::cartographer::sensor::ImuData> imu_data = ToImuData(msg);
   if (imu_data != nullptr) {
     trajectory_builder_->AddImuData(sensor_id, imu_data->time,
                                     imu_data->linear_acceleration,
