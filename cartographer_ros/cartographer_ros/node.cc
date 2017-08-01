@@ -347,18 +347,13 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
 }
 
 bool Node::ValidateTrajectoryOptions(const TrajectoryOptions& options) {
-  if (node_options_.map_builder_options.use_trajectory_builder_2d() &&
-      options.trajectory_builder_options.has_trajectory_builder_2d_options()) {
-    // Only one point cloud source is supported in 2D.
-    if (options.num_point_clouds <= 1) {
-      return true;
-    }
+  if (node_options_.map_builder_options.use_trajectory_builder_2d()) {
+    return options.trajectory_builder_options
+        .has_trajectory_builder_2d_options();
   }
-  if (node_options_.map_builder_options.use_trajectory_builder_3d() &&
-      options.trajectory_builder_options.has_trajectory_builder_3d_options()) {
-    if (options.num_point_clouds != 0) {
-      return true;
-    }
+  if (node_options_.map_builder_options.use_trajectory_builder_3d()) {
+    return options.trajectory_builder_options
+        .has_trajectory_builder_3d_options();
   }
   return false;
 }
@@ -381,11 +376,11 @@ bool Node::HandleStartTrajectory(
   carto::common::MutexLocker lock(&mutex_);
   TrajectoryOptions options;
   if (!FromRosMessage(request.options, &options) ||
-      !Node::ValidateTrajectoryOptions(options)) {
+      !ValidateTrajectoryOptions(options)) {
     LOG(ERROR) << "Invalid trajectory options.";
     return false;
   }
-  if (!Node::ValidateTopicNames(request.topics, options)) {
+  if (!ValidateTopicNames(request.topics, options)) {
     LOG(ERROR) << "Invalid topics.";
     return false;
   }
@@ -395,6 +390,7 @@ bool Node::HandleStartTrajectory(
 
 void Node::StartTrajectoryWithDefaultTopics(const TrajectoryOptions& options) {
   carto::common::MutexLocker lock(&mutex_);
+  CHECK(ValidateTrajectoryOptions(options));
   AddTrajectory(options, DefaultSensorTopics());
 }
 
