@@ -455,7 +455,9 @@ void Node::FinishAllTrajectories() {
 
 void Node::FinishTrajectory(const int trajectory_id) {
   carto::common::MutexLocker lock(&mutex_);
+  CHECK(is_active_trajectory_.at(trajectory_id));
   map_builder_bridge_.FinishTrajectory(trajectory_id);
+  is_active_trajectory_[trajectory_id] = false;
 }
 
 void Node::HandleOdometryMessage(const int trajectory_id,
