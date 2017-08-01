@@ -106,8 +106,6 @@ Node::~Node() {}
 
 ::ros::NodeHandle* Node::node_handle() { return &node_handle_; }
 
-MapBuilderBridge* Node::map_builder_bridge() { return &map_builder_bridge_; }
-
 bool Node::HandleSubmapQuery(
     ::cartographer_ros_msgs::SubmapQuery::Request& request,
     ::cartographer_ros_msgs::SubmapQuery::Response& response) {
@@ -453,6 +451,57 @@ void Node::FinishAllTrajectories() {
       map_builder_bridge_.FinishTrajectory(trajectory_id);
     }
   }
+}
+
+void Node::FinishTrajectory(const int trajectory_id) {
+  carto::common::MutexLocker lock(&mutex_);
+  CHECK(is_active_trajectory_.at(trajectory_id));
+  map_builder_bridge_.FinishTrajectory(trajectory_id);
+  is_active_trajectory_[trajectory_id] = false;
+}
+
+void Node::HandleOdometryMessage(const int trajectory_id,
+                                 const string& sensor_id,
+                                 const nav_msgs::Odometry::ConstPtr& msg) {
+  carto::common::MutexLocker lock(&mutex_);
+  map_builder_bridge_.sensor_bridge(trajectory_id)
+      ->HandleOdometryMessage(sensor_id, msg);
+}
+
+void Node::HandleImuMessage(const int trajectory_id, const string& sensor_id,
+                            const sensor_msgs::Imu::ConstPtr& msg) {
+  carto::common::MutexLocker lock(&mutex_);
+  map_builder_bridge_.sensor_bridge(trajectory_id)
+      ->HandleImuMessage(sensor_id, msg);
+}
+
+void Node::HandleLaserScanMessage(const int trajectory_id,
+                                  const string& sensor_id,
+                                  const sensor_msgs::LaserScan::ConstPtr& msg) {
+  carto::common::MutexLocker lock(&mutex_);
+  map_builder_bridge_.sensor_bridge(trajectory_id)
+      ->HandleLaserScanMessage(sensor_id, msg);
+}
+
+void Node::HandleMultiEchoLaserScanMessage(
+    int trajectory_id, const string& sensor_id,
+    const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
+  carto::common::MutexLocker lock(&mutex_);
+  map_builder_bridge_.sensor_bridge(trajectory_id)
+      ->HandleMultiEchoLaserScanMessage(sensor_id, msg);
+}
+
+void Node::HandlePointCloud2Message(
+    const int trajectory_id, const string& sensor_id,
+    const sensor_msgs::PointCloud2::ConstPtr& msg) {
+  carto::common::MutexLocker lock(&mutex_);
+  map_builder_bridge_.sensor_bridge(trajectory_id)
+      ->HandlePointCloud2Message(sensor_id, msg);
+}
+
+void Node::SerializeState(const string& filename) {
+  carto::common::MutexLocker lock(&mutex_);
+  map_builder_bridge_.SerializeState(filename);
 }
 
 void Node::LoadMap(const std::string& map_filename) {

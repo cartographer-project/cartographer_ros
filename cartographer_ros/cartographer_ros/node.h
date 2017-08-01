@@ -53,6 +53,8 @@ class Node {
 
   // Finishes all yet active trajectories.
   void FinishAllTrajectories();
+  // Finishes a single given trajectory.
+  void FinishTrajectory(int trajectory_id);
 
   // Starts the first trajectory with the default topics.
   void StartTrajectoryWithDefaultTopics(const TrajectoryOptions& options);
@@ -66,11 +68,26 @@ class Node {
       const std::unordered_set<string>& expected_sensor_ids,
       const TrajectoryOptions& options);
 
+  // The following functions handle adding sensor data to a trajectory.
+  void HandleOdometryMessage(int trajectory_id, const string& sensor_id,
+                             const nav_msgs::Odometry::ConstPtr& msg);
+  void HandleImuMessage(int trajectory_id, const string& sensor_id,
+                        const sensor_msgs::Imu::ConstPtr& msg);
+  void HandleLaserScanMessage(int trajectory_id, const string& sensor_id,
+                              const sensor_msgs::LaserScan::ConstPtr& msg);
+  void HandleMultiEchoLaserScanMessage(
+      int trajectory_id, const string& sensor_id,
+      const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg);
+  void HandlePointCloud2Message(int trajectory_id, const string& sensor_id,
+                                const sensor_msgs::PointCloud2::ConstPtr& msg);
+
+  // Serializes the complete Node state.
+  void SerializeState(const string& filename);
+
   // Loads a persisted state to use as a map.
   void LoadMap(const std::string& map_filename);
 
   ::ros::NodeHandle* node_handle();
-  MapBuilderBridge* map_builder_bridge();
 
  private:
   bool HandleSubmapQuery(

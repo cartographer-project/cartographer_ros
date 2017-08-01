@@ -173,35 +173,28 @@ void Run(const std::vector<string>& bag_filenames) {
         const string topic = node.node_handle()->resolveName(
             delayed_msg.getTopic(), false /* resolve */);
         if (delayed_msg.isType<sensor_msgs::LaserScan>()) {
-          node.map_builder_bridge()
-              ->sensor_bridge(trajectory_id)
-              ->HandleLaserScanMessage(
-                  topic, delayed_msg.instantiate<sensor_msgs::LaserScan>());
+          node.HandleLaserScanMessage(
+              trajectory_id, topic,
+              delayed_msg.instantiate<sensor_msgs::LaserScan>());
         }
         if (delayed_msg.isType<sensor_msgs::MultiEchoLaserScan>()) {
-          node.map_builder_bridge()
-              ->sensor_bridge(trajectory_id)
-              ->HandleMultiEchoLaserScanMessage(
-                  topic,
-                  delayed_msg.instantiate<sensor_msgs::MultiEchoLaserScan>());
+          node.HandleMultiEchoLaserScanMessage(
+              trajectory_id, topic,
+              delayed_msg.instantiate<sensor_msgs::MultiEchoLaserScan>());
         }
         if (delayed_msg.isType<sensor_msgs::PointCloud2>()) {
-          node.map_builder_bridge()
-              ->sensor_bridge(trajectory_id)
-              ->HandlePointCloud2Message(
-                  topic, delayed_msg.instantiate<sensor_msgs::PointCloud2>());
+          node.HandlePointCloud2Message(
+              trajectory_id, topic,
+              delayed_msg.instantiate<sensor_msgs::PointCloud2>());
         }
         if (delayed_msg.isType<sensor_msgs::Imu>()) {
-          node.map_builder_bridge()
-              ->sensor_bridge(trajectory_id)
-              ->HandleImuMessage(topic,
-                                 delayed_msg.instantiate<sensor_msgs::Imu>());
+          node.HandleImuMessage(trajectory_id, topic,
+                                delayed_msg.instantiate<sensor_msgs::Imu>());
         }
         if (delayed_msg.isType<nav_msgs::Odometry>()) {
-          node.map_builder_bridge()
-              ->sensor_bridge(trajectory_id)
-              ->HandleOdometryMessage(
-                  topic, delayed_msg.instantiate<nav_msgs::Odometry>());
+          node.HandleOdometryMessage(
+              trajectory_id, topic,
+              delayed_msg.instantiate<nav_msgs::Odometry>());
         }
         rosgraph_msgs::Clock clock;
         clock.clock = delayed_msg.getTime();
@@ -225,7 +218,7 @@ void Run(const std::vector<string>& bag_filenames) {
     }
 
     bag.close();
-    node.map_builder_bridge()->FinishTrajectory(trajectory_id);
+    node.FinishTrajectory(trajectory_id);
   }
 
   const std::chrono::time_point<std::chrono::steady_clock> end_time =
@@ -243,8 +236,7 @@ void Run(const std::vector<string>& bag_filenames) {
             << (cpu_timespec.tv_sec + 1e-9 * cpu_timespec.tv_nsec) << " s";
 #endif
 
-  node.map_builder_bridge()->SerializeState(bag_filenames.front() +
-                                            ".pbstream");
+  node.SerializeState(bag_filenames.front() + ".pbstream");
 }
 
 }  // namespace
