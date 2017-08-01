@@ -110,39 +110,9 @@ void Run(const std::vector<string>& bag_filenames) {
   }
 
   std::unordered_set<string> expected_sensor_ids;
-  const auto check_insert = [&expected_sensor_ids, &node](const string& topic) {
+  for (const string& topic : node.ComputeDefaultTopics(trajectory_options)) {
     CHECK(expected_sensor_ids.insert(node.node_handle()->resolveName(topic))
               .second);
-  };
-
-  // Subscribe to all laser scan, multi echo laser scan, and point cloud topics.
-  for (const string& topic : ComputeRepeatedTopicNames(
-           kLaserScanTopic, trajectory_options.num_laser_scans)) {
-    check_insert(topic);
-  }
-  for (const string& topic : ComputeRepeatedTopicNames(
-           kMultiEchoLaserScanTopic,
-           trajectory_options.num_multi_echo_laser_scans)) {
-    check_insert(topic);
-  }
-  for (const string& topic : ComputeRepeatedTopicNames(
-           kPointCloud2Topic, trajectory_options.num_point_clouds)) {
-    check_insert(topic);
-  }
-
-  // For 2D SLAM, subscribe to the IMU if we expect it. For 3D SLAM, the IMU is
-  // required.
-  if (node_options.map_builder_options.use_trajectory_builder_3d() ||
-      (node_options.map_builder_options.use_trajectory_builder_2d() &&
-       trajectory_options.trajectory_builder_options
-           .trajectory_builder_2d_options()
-           .use_imu_data())) {
-    check_insert(kImuTopic);
-  }
-
-  // Odometry is optional.
-  if (trajectory_options.use_odometry) {
-    check_insert(kOdometryTopic);
   }
 
   ::ros::Publisher tf_publisher =
@@ -164,8 +134,8 @@ void Run(const std::vector<string>& bag_filenames) {
       break;
     }
 
-    const int trajectory_id = node.map_builder_bridge()->AddTrajectory(
-        expected_sensor_ids, trajectory_options);
+    const int trajectory_id =
+        node.AddOfflineTrajectory(expected_sensor_ids, trajectory_options);
 
     rosbag::Bag bag;
     bag.open(bag_filename, rosbag::bagmode::Read);

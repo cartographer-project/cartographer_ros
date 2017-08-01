@@ -44,6 +44,20 @@
 
 namespace cartographer_ros {
 
+namespace {
+
+cartographer_ros_msgs::SensorTopics DefaultSensorTopics() {
+  cartographer_ros_msgs::SensorTopics topics;
+  topics.laser_scan_topic = kLaserScanTopic;
+  topics.multi_echo_laser_scan_topic = kMultiEchoLaserScanTopic;
+  topics.point_cloud2_topic = kPointCloud2Topic;
+  topics.imu_topic = kImuTopic;
+  topics.odometry_topic = kOdometryTopic;
+  return topics;
+}
+
+}  // namespace
+
 namespace carto = ::cartographer;
 
 using carto::transform::Rigid3d;
@@ -207,7 +221,7 @@ std::unordered_set<string> Node::ComputeExpectedTopics(
     const TrajectoryOptions& options,
     const cartographer_ros_msgs::SensorTopics& topics) {
   std::unordered_set<string> expected_topics;
-
+  // Subscribe to all laser scan, multi echo laser scan, and point cloud topics.
   for (const string& topic : ComputeRepeatedTopicNames(
            topics.laser_scan_topic, options.num_laser_scans)) {
     expected_topics.insert(topic);
@@ -229,6 +243,7 @@ std::unordered_set<string> Node::ComputeExpectedTopics(
            .use_imu_data())) {
     expected_topics.insert(topics.imu_topic);
   }
+  // Odometry is optional.
   if (options.use_odometry) {
     expected_topics.insert(topics.odometry_topic);
   }
@@ -243,6 +258,7 @@ int Node::AddTrajectory(const TrajectoryOptions& options,
       map_builder_bridge_.AddTrajectory(expected_sensor_ids, options);
   AddExtrapolator(trajectory_id, options);
   LaunchSubscribers(options, topics, trajectory_id);
+  is_active_trajectory_[trajectory_id] = true;
   subscribed_topics_.insert(expected_sensor_ids.begin(),
                             expected_sensor_ids.end());
   return trajectory_id;
@@ -328,8 +344,6 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
                       ->HandleOdometryMessage(topic, msg);
                 })));
   }
-
-  is_active_trajectory_[trajectory_id] = true;
 }
 
 bool Node::ValidateTrajectoryOptions(const TrajectoryOptions& options) {
@@ -375,25 +389,29 @@ bool Node::HandleStartTrajectory(
     LOG(ERROR) << "Invalid topics.";
     return false;
   }
-
-  const int trajectory_id = AddTrajectory(options, request.topics);
-  response.trajectory_id = trajectory_id;
-
-  is_active_trajectory_[trajectory_id] = true;
+  response.trajectory_id = AddTrajectory(options, request.topics);
   return true;
 }
 
 void Node::StartTrajectoryWithDefaultTopics(const TrajectoryOptions& options) {
   carto::common::MutexLocker lock(&mutex_);
-  cartographer_ros_msgs::SensorTopics topics;
-  topics.laser_scan_topic = kLaserScanTopic;
-  topics.multi_echo_laser_scan_topic = kMultiEchoLaserScanTopic;
-  topics.point_cloud2_topic = kPointCloud2Topic;
-  topics.imu_topic = kImuTopic;
-  topics.odometry_topic = kOdometryTopic;
+  AddTrajectory(options, DefaultSensorTopics());
+}
 
-  const int trajectory_id = AddTrajectory(options, topics);
-  is_active_trajectory_[trajectory_id] = true;
+std::unordered_set<string> Node::ComputeDefaultTopics(
+    const TrajectoryOptions& options) {
+  carto::common::MutexLocker lock(&mutex_);
+  return ComputeExpectedTopics(options, DefaultSensorTopics());
+}
+
+int Node::AddOfflineTrajectory(
+    const std::unordered_set<string>& expected_sensor_ids,
+    const TrajectoryOptions& options) {
+  carto::common::MutexLocker lock(&mutex_);
+  const int trajectory_id =
+      map_builder_bridge_.AddTrajectory(expected_sensor_ids, options);
+  AddExtrapolator(trajectory_id, options);
+  return trajectory_id;
 }
 
 bool Node::HandleFinishTrajectory(

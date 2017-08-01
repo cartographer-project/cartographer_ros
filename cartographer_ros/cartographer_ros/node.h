@@ -57,6 +57,15 @@ class Node {
   // Starts the first trajectory with the default topics.
   void StartTrajectoryWithDefaultTopics(const TrajectoryOptions& options);
 
+  // Compute the default topics for the given 'options'.
+  std::unordered_set<string> ComputeDefaultTopics(
+      const TrajectoryOptions& options);
+
+  // Adds a trajectory for offline processing, i.e. not listening to topics.
+  int AddOfflineTrajectory(
+      const std::unordered_set<string>& expected_sensor_ids,
+      const TrajectoryOptions& options);
+
   // Loads a persisted state to use as a map.
   void LoadMap(const std::string& map_filename);
 
