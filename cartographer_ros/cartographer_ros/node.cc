@@ -56,6 +56,23 @@ cartographer_ros_msgs::SensorTopics DefaultSensorTopics() {
   return topics;
 }
 
+// Subscribes to the 'topic' for 'trajectory_id' using the 'node_handle' and
+// calls 'handler' on the 'node' to handle messages. Returns the subscriber.
+template <typename MessageType>
+::ros::Subscriber SubscribeWithHandler(
+    void (Node::*handler)(int, const string&,
+                          const typename MessageType::ConstPtr&),
+    const int trajectory_id, const string& topic,
+    ::ros::NodeHandle* const node_handle, Node* const node) {
+  return node_handle->subscribe<MessageType>(
+      topic, kInfiniteSubscriberQueueSize,
+      boost::function<void(const typename MessageType::ConstPtr&)>(
+          [node, handler, trajectory_id,
+           topic](const typename MessageType::ConstPtr& msg) {
+            (node->*handler)(trajectory_id, topic, msg);
+          }));
+}
+
 }  // namespace
 
 namespace carto = ::cartographer;
@@ -268,41 +285,24 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
   for (const string& topic : ComputeRepeatedTopicNames(
            topics.laser_scan_topic, options.num_laser_scans)) {
     subscribers_[trajectory_id].push_back(
-        node_handle_.subscribe<sensor_msgs::LaserScan>(
-            topic, kInfiniteSubscriberQueueSize,
-            boost::function<void(const sensor_msgs::LaserScan::ConstPtr&)>(
-                [this, trajectory_id,
-                 topic](const sensor_msgs::LaserScan::ConstPtr& msg) {
-                  carto::common::MutexLocker lock(&mutex_);
-                  map_builder_bridge_.sensor_bridge(trajectory_id)
-                      ->HandleLaserScanMessage(topic, msg);
-                })));
+        SubscribeWithHandler<sensor_msgs::LaserScan>(
+            &Node::HandleLaserScanMessage, trajectory_id, topic, &node_handle_,
+            this));
   }
   for (const string& topic :
        ComputeRepeatedTopicNames(topics.multi_echo_laser_scan_topic,
                                  options.num_multi_echo_laser_scans)) {
-    subscribers_[trajectory_id].push_back(node_handle_.subscribe<
-                                          sensor_msgs::MultiEchoLaserScan>(
-        topic, kInfiniteSubscriberQueueSize,
-        boost::function<void(const sensor_msgs::MultiEchoLaserScan::ConstPtr&)>(
-            [this, trajectory_id,
-             topic](const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
-              carto::common::MutexLocker lock(&mutex_);
-              map_builder_bridge_.sensor_bridge(trajectory_id)
-                  ->HandleMultiEchoLaserScanMessage(topic, msg);
-            })));
+    subscribers_[trajectory_id].push_back(
+        SubscribeWithHandler<sensor_msgs::MultiEchoLaserScan>(
+            &Node::HandleMultiEchoLaserScanMessage, trajectory_id, topic,
+            &node_handle_, this));
   }
   for (const string& topic : ComputeRepeatedTopicNames(
            topics.point_cloud2_topic, options.num_point_clouds)) {
-    subscribers_[trajectory_id].push_back(node_handle_.subscribe(
-        topic, kInfiniteSubscriberQueueSize,
-        boost::function<void(const sensor_msgs::PointCloud2::ConstPtr&)>(
-            [this, trajectory_id,
-             topic](const sensor_msgs::PointCloud2::ConstPtr& msg) {
-              carto::common::MutexLocker lock(&mutex_);
-              map_builder_bridge_.sensor_bridge(trajectory_id)
-                  ->HandlePointCloud2Message(topic, msg);
-            })));
+    subscribers_[trajectory_id].push_back(
+        SubscribeWithHandler<sensor_msgs::PointCloud2>(
+            &Node::HandlePointCloud2Message, trajectory_id, topic,
+            &node_handle_, this));
   }
 
   // For 2D SLAM, subscribe to the IMU if we expect it. For 3D SLAM, the IMU is
@@ -313,34 +313,17 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
            .use_imu_data())) {
     string topic = topics.imu_topic;
     subscribers_[trajectory_id].push_back(
-        node_handle_.subscribe<sensor_msgs::Imu>(
-            topic, kInfiniteSubscriberQueueSize,
-            boost::function<void(const sensor_msgs::Imu::ConstPtr&)>(
-                [this, trajectory_id,
-                 topic](const sensor_msgs::Imu::ConstPtr& msg) {
-                  carto::common::MutexLocker lock(&mutex_);
-                  auto sensor_bridge_ptr =
-                      map_builder_bridge_.sensor_bridge(trajectory_id);
-                  auto imu_data_ptr = sensor_bridge_ptr->ToImuData(msg);
-                  if (imu_data_ptr != nullptr) {
-                    extrapolators_.at(trajectory_id).AddImuData(*imu_data_ptr);
-                  }
-                  sensor_bridge_ptr->HandleImuMessage(topic, msg);
-                })));
+        SubscribeWithHandler<sensor_msgs::Imu>(&Node::HandleImuMessage,
+                                               trajectory_id, topic,
+                                               &node_handle_, this));
   }
 
   if (options.use_odometry) {
     string topic = topics.odometry_topic;
     subscribers_[trajectory_id].push_back(
-        node_handle_.subscribe<nav_msgs::Odometry>(
-            topic, kInfiniteSubscriberQueueSize,
-            boost::function<void(const nav_msgs::Odometry::ConstPtr&)>(
-                [this, trajectory_id,
-                 topic](const nav_msgs::Odometry::ConstPtr& msg) {
-                  carto::common::MutexLocker lock(&mutex_);
-                  map_builder_bridge_.sensor_bridge(trajectory_id)
-                      ->HandleOdometryMessage(topic, msg);
-                })));
+        SubscribeWithHandler<nav_msgs::Odometry>(&Node::HandleOdometryMessage,
+                                                 trajectory_id, topic,
+                                                 &node_handle_, this));
   }
 }
 
@@ -405,6 +388,7 @@ int Node::AddOfflineTrajectory(
   const int trajectory_id =
       map_builder_bridge_.AddTrajectory(expected_sensor_ids, options);
   AddExtrapolator(trajectory_id, options);
+  is_active_trajectory_[trajectory_id] = true;
   return trajectory_id;
 }
 
@@ -471,8 +455,12 @@ void Node::HandleOdometryMessage(const int trajectory_id,
 void Node::HandleImuMessage(const int trajectory_id, const string& sensor_id,
                             const sensor_msgs::Imu::ConstPtr& msg) {
   carto::common::MutexLocker lock(&mutex_);
-  map_builder_bridge_.sensor_bridge(trajectory_id)
-      ->HandleImuMessage(sensor_id, msg);
+  auto sensor_bridge_ptr = map_builder_bridge_.sensor_bridge(trajectory_id);
+  auto imu_data_ptr = sensor_bridge_ptr->ToImuData(msg);
+  if (imu_data_ptr != nullptr) {
+    extrapolators_.at(trajectory_id).AddImuData(*imu_data_ptr);
+  }
+  sensor_bridge_ptr->HandleImuMessage(sensor_id, msg);
 }
 
 void Node::HandleLaserScanMessage(const int trajectory_id,
