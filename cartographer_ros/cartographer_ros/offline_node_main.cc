@@ -63,6 +63,7 @@ namespace {
 constexpr char kClockTopic[] = "clock";
 constexpr char kTfStaticTopic[] = "/tf_static";
 constexpr char kTfTopic[] = "tf";
+constexpr double kClockPublishFrequency = 30.;
 
 // TODO(hrapp): This is duplicated in node_main.cc. Pull out into a config
 // unit.
@@ -129,6 +130,7 @@ void Run(const std::vector<string>& bag_filenames) {
 
   ros::AsyncSpinner async_spinner(1, ros::getGlobalCallbackQueue());
   async_spinner.start();
+  rosgraph_msgs::Clock clock;
 
   for (const string& bag_filename : bag_filenames) {
     if (!::ros::ok()) {
@@ -197,7 +199,6 @@ void Run(const std::vector<string>& bag_filenames) {
               trajectory_id, topic,
               delayed_msg.instantiate<nav_msgs::Odometry>());
         }
-        rosgraph_msgs::Clock clock;
         clock.clock = delayed_msg.getTime();
         clock_publisher.publish(clock);
 
@@ -238,8 +239,10 @@ void Run(const std::vector<string>& bag_filenames) {
   node.SerializeState(bag_filenames.front() + ".pbstream");
 
   if (FLAGS_keep_running) {
-    ros::WallRate rate(20);
-    while (!::ros::ok()) {
+    ::ros::WallRate rate(kClockPublishFrequency);
+    while (::ros::ok()) {
+      clock_publisher.publish(clock);
+      ::ros::spinOnce();
       rate.sleep();
     }
   }
