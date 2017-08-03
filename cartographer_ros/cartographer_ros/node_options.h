@@ -18,9 +18,12 @@
 #define CARTOGRAPHER_ROS_NODE_OPTIONS_H_
 
 #include <string>
+#include <tuple>
 
 #include "cartographer/common/lua_parameter_dictionary.h"
-#include "cartographer/mapping/map_builder.h"
+#include "cartographer/common/port.h"
+#include "cartographer/mapping/proto/map_builder_options.pb.h"
+#include "cartographer_ros/trajectory_options.h"
 
 namespace cartographer_ros {
 
@@ -36,6 +39,10 @@ struct NodeOptions {
 
 NodeOptions CreateNodeOptions(
     ::cartographer::common::LuaParameterDictionary* lua_parameter_dictionary);
+
+std::tuple<NodeOptions, TrajectoryOptions> LoadOptions(
+    const string& configuration_directory,
+    const string& configuration_basename);
 
 }  // namespace cartographer_ros
 

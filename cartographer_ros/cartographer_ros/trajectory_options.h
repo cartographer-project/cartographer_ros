@@ -21,7 +21,7 @@
 
 #include "cartographer/common/lua_parameter_dictionary.h"
 #include "cartographer/common/port.h"
-#include "cartographer_ros/sensor_bridge.h"
+#include "cartographer/mapping/proto/trajectory_builder_options.pb.h"
 #include "cartographer_ros_msgs/TrajectoryOptions.h"
 
 namespace cartographer_ros {
