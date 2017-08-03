@@ -16,7 +16,6 @@
 
 #include <time.h>
 #include <chrono>
-#include <csignal>
 #include <sstream>
 #include <string>
 #include <vector>
