@@ -63,7 +63,7 @@ namespace {
 constexpr char kClockTopic[] = "clock";
 constexpr char kTfStaticTopic[] = "/tf_static";
 constexpr char kTfTopic[] = "tf";
-constexpr double kClockPublishFrequencyHz = 30.;
+constexpr double kClockPublishFrequencySec = 1. / 30.;
 constexpr int kSingleThreaded = 1;
 
 // TODO(hrapp): This is duplicated in node_main.cc. Pull out into a config
@@ -133,7 +133,7 @@ void Run(const std::vector<string>& bag_filenames) {
   async_spinner.start();
   rosgraph_msgs::Clock clock;
   auto clock_republish_timer = node.node_handle()->createWallTimer(
-      ::ros::WallDuration(1. / kClockPublishFrequencyHz),
+      ::ros::WallDuration(kClockPublishFrequencySec),
       [&clock_publisher, &clock](const ::ros::WallTimerEvent&) {
         clock_publisher.publish(clock);
       },
@@ -152,7 +152,8 @@ void Run(const std::vector<string>& bag_filenames) {
     rosbag::View view(bag);
     const ::ros::Time begin_time = view.getBeginTime();
     const double duration_in_seconds = (view.getEndTime() - begin_time).toSec();
-    // The message processing loop publishes the clock.
+    // While the bag is being processed, the message processing loop publishes
+    // the clock, so the clock republish timer is stopped.
     clock_republish_timer.stop();
 
     // We make sure that tf_messages are published before any data messages, so
@@ -227,6 +228,8 @@ void Run(const std::vector<string>& bag_filenames) {
     }
 
     bag.close();
+    // Ensure the clock is republished also during trajectory finalization,
+    // which might take a while.
     clock_republish_timer.start();
     node.FinishTrajectory(trajectory_id);
   }
@@ -248,10 +251,7 @@ void Run(const std::vector<string>& bag_filenames) {
 
   node.SerializeState(bag_filenames.front() + ".pbstream");
   if (FLAGS_keep_running) {
-    ::ros::WallRate rate(10.);
-    while (::ros::ok()) {
-      rate.sleep();
-    }
+    ::ros::waitForShutdown();
   }
 }
 
