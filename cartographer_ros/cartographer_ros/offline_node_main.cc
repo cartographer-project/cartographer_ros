@@ -51,6 +51,9 @@ DEFINE_bool(use_bag_transforms, true,
             "Whether to read, use and republish the transforms from the bag.");
 DEFINE_string(pbstream_filename, "",
               "If non-empty, filename of a pbstream to load.");
+DEFINE_bool(keep_running, false,
+            "Keep running the offline node after all messages from the bag "
+            "have been processed.");
 
 namespace cartographer_ros {
 namespace {
@@ -58,6 +61,8 @@ namespace {
 constexpr char kClockTopic[] = "clock";
 constexpr char kTfStaticTopic[] = "/tf_static";
 constexpr char kTfTopic[] = "tf";
+constexpr double kClockPublishFrequencySec = 1. / 30.;
+constexpr int kSingleThreaded = 1;
 
 void Run(const std::vector<string>& bag_filenames) {
   const std::chrono::time_point<std::chrono::steady_clock> start_time =
@@ -107,6 +112,16 @@ void Run(const std::vector<string>& bag_filenames) {
   if (urdf_transforms.size() > 0) {
     static_tf_broadcaster.sendTransform(urdf_transforms);
   }
+
+  ros::AsyncSpinner async_spinner(kSingleThreaded);
+  async_spinner.start();
+  rosgraph_msgs::Clock clock;
+  auto clock_republish_timer = node.node_handle()->createWallTimer(
+      ::ros::WallDuration(kClockPublishFrequencySec),
+      [&clock_publisher, &clock](const ::ros::WallTimerEvent&) {
+        clock_publisher.publish(clock);
+      },
+      false /* oneshot */, false /* autostart */);
 
   for (const string& bag_filename : bag_filenames) {
     if (!::ros::ok()) {
@@ -175,11 +190,8 @@ void Run(const std::vector<string>& bag_filenames) {
               trajectory_id, topic,
               delayed_msg.instantiate<nav_msgs::Odometry>());
         }
-        rosgraph_msgs::Clock clock;
         clock.clock = delayed_msg.getTime();
         clock_publisher.publish(clock);
-
-        ::ros::spinOnce();
 
         LOG_EVERY_N(INFO, 100000)
             << "Processed " << (delayed_msg.getTime() - begin_time).toSec()
@@ -197,8 +209,15 @@ void Run(const std::vector<string>& bag_filenames) {
     }
 
     bag.close();
+    // Ensure the clock is republished also during trajectory finalization,
+    // which might take a while.
+    clock_republish_timer.start();
     node.FinishTrajectory(trajectory_id);
+    clock_republish_timer.stop();
   }
+
+  // Republish the clock after bag processing has been completed.
+  clock_republish_timer.start();
 
   const std::chrono::time_point<std::chrono::steady_clock> end_time =
       std::chrono::steady_clock::now();
@@ -216,6 +235,9 @@ void Run(const std::vector<string>& bag_filenames) {
 #endif
 
   node.SerializeState(bag_filenames.front() + ".pbstream");
+  if (FLAGS_keep_running) {
+    ::ros::waitForShutdown();
+  }
 }
 
 }  // namespace
