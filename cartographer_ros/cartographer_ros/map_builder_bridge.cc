@@ -175,6 +175,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
        ++trajectory_id) {
     const auto& single_trajectory_nodes = all_trajectory_nodes[trajectory_id];
     visualization_msgs::Marker marker;
+    marker.ns = "Trajectory " + std::to_string(trajectory_id);
     marker.id = marker_id++;
     marker.type = visualization_msgs::Marker::LINE_STRIP;
     marker.header.stamp = ::ros::Time::now();
