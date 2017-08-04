@@ -63,7 +63,8 @@ namespace {
 constexpr char kClockTopic[] = "clock";
 constexpr char kTfStaticTopic[] = "/tf_static";
 constexpr char kTfTopic[] = "tf";
-constexpr double kClockPublishFrequency = 30.;
+constexpr double kClockPublishFrequencyHz = 30.;
+constexpr int kSingleThreaded = 1;
 
 // TODO(hrapp): This is duplicated in node_main.cc. Pull out into a config
 // unit.
@@ -128,9 +129,15 @@ void Run(const std::vector<string>& bag_filenames) {
     static_tf_broadcaster.sendTransform(urdf_transforms);
   }
 
-  ros::AsyncSpinner async_spinner(1, ros::getGlobalCallbackQueue());
+  ros::AsyncSpinner async_spinner(kSingleThreaded);
   async_spinner.start();
   rosgraph_msgs::Clock clock;
+  auto clock_republish_timer = node.node_handle()->createWallTimer(
+      ::ros::WallDuration(1. / kClockPublishFrequencyHz),
+      [&clock_publisher, &clock](const ::ros::WallTimerEvent&) {
+        clock_publisher.publish(clock);
+      },
+      false /* oneshot */, false /* autostart */);
 
   for (const string& bag_filename : bag_filenames) {
     if (!::ros::ok()) {
@@ -145,6 +152,8 @@ void Run(const std::vector<string>& bag_filenames) {
     rosbag::View view(bag);
     const ::ros::Time begin_time = view.getBeginTime();
     const double duration_in_seconds = (view.getEndTime() - begin_time).toSec();
+    // The message processing loop publishes the clock.
+    clock_republish_timer.stop();
 
     // We make sure that tf_messages are published before any data messages, so
     // that tf lookups always work and that tf_buffer has a small cache size -
@@ -218,6 +227,7 @@ void Run(const std::vector<string>& bag_filenames) {
     }
 
     bag.close();
+    clock_republish_timer.start();
     node.FinishTrajectory(trajectory_id);
   }
 
@@ -237,12 +247,9 @@ void Run(const std::vector<string>& bag_filenames) {
 #endif
 
   node.SerializeState(bag_filenames.front() + ".pbstream");
-
   if (FLAGS_keep_running) {
-    ::ros::WallRate rate(kClockPublishFrequency);
+    ::ros::WallRate rate(10.);
     while (::ros::ok()) {
-      clock_publisher.publish(clock);
-      ::ros::spinOnce();
       rate.sleep();
     }
   }
