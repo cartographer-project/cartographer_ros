@@ -152,9 +152,6 @@ void Run(const std::vector<string>& bag_filenames) {
     rosbag::View view(bag);
     const ::ros::Time begin_time = view.getBeginTime();
     const double duration_in_seconds = (view.getEndTime() - begin_time).toSec();
-    // While the bag is being processed, the message processing loop publishes
-    // the clock, so the clock republish timer is stopped.
-    clock_republish_timer.stop();
 
     // We make sure that tf_messages are published before any data messages, so
     // that tf lookups always work and that tf_buffer has a small cache size -
@@ -232,7 +229,11 @@ void Run(const std::vector<string>& bag_filenames) {
     // which might take a while.
     clock_republish_timer.start();
     node.FinishTrajectory(trajectory_id);
+    clock_republish_timer.stop();
   }
+
+  // Republish the clock after bag processing has been completed.
+  clock_republish_timer.start();
 
   const std::chrono::time_point<std::chrono::steady_clock> end_time =
       std::chrono::steady_clock::now();
