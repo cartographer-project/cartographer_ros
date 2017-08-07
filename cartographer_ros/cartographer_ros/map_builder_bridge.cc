@@ -169,13 +169,13 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
   visualization_msgs::MarkerArray trajectory_node_list;
   const auto all_trajectory_nodes =
       map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
-  int marker_id = 0;
   for (int trajectory_id = 0;
        trajectory_id < static_cast<int>(all_trajectory_nodes.size());
        ++trajectory_id) {
     const auto& single_trajectory_nodes = all_trajectory_nodes[trajectory_id];
     visualization_msgs::Marker marker;
-    marker.id = marker_id++;
+    marker.ns = "Trajectory " + std::to_string(trajectory_id);
+    marker.id = 0;
     marker.type = visualization_msgs::Marker::LINE_STRIP;
     marker.header.stamp = ::ros::Time::now();
     marker.header.frame_id = node_options_.map_frame;
@@ -198,7 +198,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
       // trajectory into multiple markers.
       if (marker.points.size() == 16384) {
         trajectory_node_list.markers.push_back(marker);
-        marker.id = marker_id++;
+        ++marker.id;
         marker.points.clear();
         // Push back the last point, so the two markers appear connected.
         marker.points.push_back(node_point);
