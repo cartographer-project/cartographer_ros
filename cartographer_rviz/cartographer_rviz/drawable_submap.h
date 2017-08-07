@@ -22,23 +22,20 @@
 
 #include "Eigen/Core"
 #include "Eigen/Geometry"
-#include "OgreManualObject.h"
-#include "OgreMaterial.h"
-#include "OgreQuaternion.h"
 #include "OgreSceneManager.h"
 #include "OgreSceneNode.h"
-#include "OgreTexture.h"
-#include "OgreVector3.h"
 #include "cartographer/common/mutex.h"
 #include "cartographer/mapping/id.h"
 #include "cartographer/transform/rigid_transform.h"
 #include "cartographer_ros/submap.h"
 #include "cartographer_ros_msgs/SubmapEntry.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
+#include "cartographer_rviz/ogre_submap.h"
 #include "ros/ros.h"
 #include "rviz/display_context.h"
 #include "rviz/frame_manager.h"
 #include "rviz/ogre_helpers/axes.h"
+#include "rviz/ogre_helpers/movable_text.h"
 #include "rviz/properties/bool_property.h"
 
 namespace cartographer_rviz {
@@ -51,8 +48,8 @@ class DrawableSubmap : public QObject {
  public:
   DrawableSubmap(const ::cartographer::mapping::SubmapId& submap_id,
                  ::rviz::DisplayContext* display_context,
-                 ::rviz::Property* submap_category, bool visible,
-                 float pose_axes_length, float pose_axes_radius);
+                 Ogre::SceneNode* map_node, ::rviz::Property* submap_category,
+                 bool visible, float pose_axes_length, float pose_axes_radius);
   ~DrawableSubmap() override;
   DrawableSubmap(const DrawableSubmap&) = delete;
   DrawableSubmap& operator=(const DrawableSubmap&) = delete;
@@ -60,8 +57,7 @@ class DrawableSubmap : public QObject {
   // Updates the 'metadata' for this submap. If necessary, the next call to
   // MaybeFetchTexture() will fetch a new submap texture.
   void Update(const ::std_msgs::Header& header,
-              const ::cartographer_ros_msgs::SubmapEntry& metadata,
-              ::rviz::FrameManager* frame_manager);
+              const ::cartographer_ros_msgs::SubmapEntry& metadata);
 
   // If an update is needed, it will send an RPC using 'client' to request the
   // new data for the submap and returns true.
@@ -91,19 +87,16 @@ class DrawableSubmap : public QObject {
   void ToggleVisibility();
 
  private:
-  float UpdateAlpha(float target_alpha);
-
   const ::cartographer::mapping::SubmapId id_;
 
   ::cartographer::common::Mutex mutex_;
   ::rviz::DisplayContext* const display_context_;
-  Ogre::SceneNode* const scene_node_;
   Ogre::SceneNode* const submap_node_;
-  Ogre::ManualObject* const manual_object_;
-  Ogre::TexturePtr texture_;
-  Ogre::MaterialPtr material_;
+  Ogre::SceneNode* const submap_id_text_node_;
+  OgreSubmap ogre_submap_;
   ::cartographer::transform::Rigid3d pose_ GUARDED_BY(mutex_);
   ::rviz::Axes pose_axes_;
+  ::rviz::MovableText submap_id_text_;
   std::chrono::milliseconds last_query_timestamp_ GUARDED_BY(mutex_);
   bool query_in_progress_ = false GUARDED_BY(mutex_);
   int metadata_version_ = -1 GUARDED_BY(mutex_);
