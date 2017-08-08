@@ -448,6 +448,11 @@ void Node::HandleOdometryMessage(const int trajectory_id,
                                  const string& sensor_id,
                                  const nav_msgs::Odometry::ConstPtr& msg) {
   carto::common::MutexLocker lock(&mutex_);
+  auto sensor_bridge_ptr = map_builder_bridge_.sensor_bridge(trajectory_id);
+  auto odometry_data_ptr = sensor_bridge_ptr->ToOdometryData(msg);
+  if (odometry_data_ptr != nullptr) {
+    extrapolators_.at(trajectory_id).AddOdometryData(*odometry_data_ptr);
+  }
   map_builder_bridge_.sensor_bridge(trajectory_id)
       ->HandleOdometryMessage(sensor_id, msg);
 }
