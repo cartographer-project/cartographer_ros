@@ -24,6 +24,7 @@ cache:
 env:
   - ROS_RELEASE=indigo DOCKER_CACHE_FILE=/home/travis/docker/indigo-cache.tar.gz
   - ROS_RELEASE=kinetic DOCKER_CACHE_FILE=/home/travis/docker/kinetic-cache.tar.gz
+  - ROS_RELEASE=lunar DOCKER_CACHE_FILE=/home/travis/docker/lunar-cache.tar.gz
 
 before_install: scripts/load_docker_cache.sh
 
