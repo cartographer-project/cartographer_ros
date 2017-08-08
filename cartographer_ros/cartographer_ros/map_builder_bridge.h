@@ -54,6 +54,7 @@ class MapBuilderBridge {
   int AddTrajectory(const std::unordered_set<string>& expected_sensor_ids,
                     const TrajectoryOptions& trajectory_options);
   void FinishTrajectory(int trajectory_id);
+  void RunFinalOptimization();
   void SerializeState(const string& filename);
 
   bool HandleSubmapQuery(
