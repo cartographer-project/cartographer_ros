@@ -453,8 +453,7 @@ void Node::HandleOdometryMessage(const int trajectory_id,
   if (odometry_data_ptr != nullptr) {
     extrapolators_.at(trajectory_id).AddOdometryData(*odometry_data_ptr);
   }
-  map_builder_bridge_.sensor_bridge(trajectory_id)
-      ->HandleOdometryMessage(sensor_id, msg);
+  sensor_bridge_ptr->HandleOdometryMessage(sensor_id, msg);
 }
 
 void Node::HandleImuMessage(const int trajectory_id, const string& sensor_id,
