@@ -47,15 +47,27 @@ SensorBridge::SensorBridge(
       tf_bridge_(tracking_frame, lookup_transform_timeout_sec, tf_buffer),
       trajectory_builder_(trajectory_builder) {}
 
-void SensorBridge::HandleOdometryMessage(
-    const string& sensor_id, const nav_msgs::Odometry::ConstPtr& msg) {
+std::unique_ptr<::cartographer::sensor::OdometryData>
+SensorBridge::ToOdometryData(const nav_msgs::Odometry::ConstPtr& msg) {
   const carto::common::Time time = FromRos(msg->header.stamp);
   const auto sensor_to_tracking = tf_bridge_.LookupToTracking(
       time, CheckNoLeadingSlash(msg->child_frame_id));
-  if (sensor_to_tracking != nullptr) {
-    trajectory_builder_->AddOdometerData(
-        sensor_id, time,
-        ToRigid3d(msg->pose.pose) * sensor_to_tracking->inverse());
+  if (sensor_to_tracking == nullptr) {
+    return nullptr;
+  }
+  return ::cartographer::common::make_unique<
+      ::cartographer::sensor::OdometryData>(
+      ::cartographer::sensor::OdometryData{
+          time, ToRigid3d(msg->pose.pose) * sensor_to_tracking->inverse()});
+}
+
+void SensorBridge::HandleOdometryMessage(
+    const string& sensor_id, const nav_msgs::Odometry::ConstPtr& msg) {
+  std::unique_ptr<::cartographer::sensor::OdometryData> odometry_data =
+      ToOdometryData(msg);
+  if (odometry_data != nullptr) {
+    trajectory_builder_->AddOdometerData(sensor_id, odometry_data->time,
+                                         odometry_data->pose);
   }
 }
 
