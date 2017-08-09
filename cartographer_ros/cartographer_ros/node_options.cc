@@ -58,4 +58,18 @@ std::tuple<NodeOptions, TrajectoryOptions> LoadOptions(
                          CreateTrajectoryOptions(&lua_parameter_dictionary));
 }
 
+NodeOptions LoadNodeOptions(
+    const string& configuration_directory,
+    const string& configuration_basename) {
+  auto file_resolver = cartographer::common::make_unique<
+      cartographer::common::ConfigurationFileResolver>(
+      std::vector<string>{configuration_directory});
+  const string code =
+      file_resolver->GetFileContentOrDie(configuration_basename);
+  cartographer::common::LuaParameterDictionary lua_parameter_dictionary(
+      code, std::move(file_resolver));
+
+  return CreateNodeOptions(&lua_parameter_dictionary);
+}
+
 }  // namespace cartographer_ros
