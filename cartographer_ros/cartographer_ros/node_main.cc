@@ -28,9 +28,9 @@ DEFINE_string(configuration_basename, "",
               "Basename, i.e. not containing any directory prefix, of the "
               "configuration file.");
 DEFINE_string(map_filename, "", "If non-empty, filename of a map to load.");
-DEFINE_bool(start_trajectory_with_default_topics, true,
-            "Enable/disable to start the first trajectory with default "
-            "topics.");
+DEFINE_bool(
+    start_trajectory_with_default_topics, true,
+    "Enable/disable to start the first trajectory with default topics.");
 
 namespace cartographer_ros {
 namespace {
@@ -42,10 +42,11 @@ void Run() {
   NodeOptions node_options;
   TrajectoryOptions trajectory_options;
   if (FLAGS_start_trajectory_with_default_topics) {
-    std::tie(node_options, trajectory_options) =
-      LoadOptions(FLAGS_configuration_directory, FLAGS_configuration_basename);
+    std::tie(node_options, trajectory_options) = LoadOptions(
+        FLAGS_configuration_directory, FLAGS_configuration_basename);
   } else {
-    node_options = LoadNodeOptions(FLAGS_configuration_directory, FLAGS_configuration_basename);
+    node_options = LoadNodeOptions(FLAGS_configuration_directory,
+                                   FLAGS_configuration_basename);
   }
   Node node(node_options, &tf_buffer);
   if (!FLAGS_map_filename.empty()) {
