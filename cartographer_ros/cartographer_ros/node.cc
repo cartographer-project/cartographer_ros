@@ -414,8 +414,7 @@ bool Node::HandleFinishTrajectory(
     LOG(INFO) << "Shutdown the subscriber of [" << entry.getTopic() << "]";
   }
   CHECK_EQ(subscribers_.erase(trajectory_id), 1);
-  map_builder_bridge_.FinishTrajectory(trajectory_id);
-  is_active_trajectory_[trajectory_id] = false;
+  FinishTrajectoryUnderLock(trajectory_id);
   return true;
 }
 
@@ -429,17 +428,20 @@ bool Node::HandleWriteState(
 
 void Node::FinishAllTrajectories() {
   carto::common::MutexLocker lock(&mutex_);
-  for (auto& entry : is_active_trajectory_) {
+  for (const auto& entry : is_active_trajectory_) {
     const int trajectory_id = entry.first;
     if (entry.second) {
-      map_builder_bridge_.FinishTrajectory(trajectory_id);
-      entry.second = false;
+      FinishTrajectoryUnderLock(trajectory_id);
     }
   }
 }
 
 void Node::FinishTrajectory(const int trajectory_id) {
   carto::common::MutexLocker lock(&mutex_);
+  FinishTrajectoryUnderLock(trajectory_id);
+}
+
+void Node::FinishTrajectoryUnderLock(const int trajectory_id) {
   CHECK(is_active_trajectory_.at(trajectory_id));
   map_builder_bridge_.FinishTrajectory(trajectory_id);
   is_active_trajectory_[trajectory_id] = false;
