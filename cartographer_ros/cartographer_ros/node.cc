@@ -428,20 +428,27 @@ bool Node::HandleWriteState(
 }
 
 void Node::FinishAllTrajectories() {
-  carto::common::MutexLocker lock(&mutex_);
-  for (const auto& entry : is_active_trajectory_) {
-    const int trajectory_id = entry.first;
-    if (entry.second) {
-      map_builder_bridge_.FinishTrajectory(trajectory_id);
+  {
+    carto::common::MutexLocker lock(&mutex_);
+    for (auto& entry : is_active_trajectory_) {
+      const int trajectory_id = entry.first;
+      if (entry.second) {
+        map_builder_bridge_.FinishTrajectory(trajectory_id);
+        entry.second = false;
+      }
     }
   }
+  map_builder_bridge_.RunFinalOptimization();
 }
 
 void Node::FinishTrajectory(const int trajectory_id) {
-  carto::common::MutexLocker lock(&mutex_);
-  CHECK(is_active_trajectory_.at(trajectory_id));
-  map_builder_bridge_.FinishTrajectory(trajectory_id);
-  is_active_trajectory_[trajectory_id] = false;
+  {
+    carto::common::MutexLocker lock(&mutex_);
+    CHECK(is_active_trajectory_.at(trajectory_id));
+    map_builder_bridge_.FinishTrajectory(trajectory_id);
+    is_active_trajectory_[trajectory_id] = false;
+  }
+  map_builder_bridge_.RunFinalOptimization();
 }
 
 void Node::HandleOdometryMessage(const int trajectory_id,
