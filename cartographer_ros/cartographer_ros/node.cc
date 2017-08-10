@@ -430,7 +430,7 @@ bool Node::HandleWriteState(
 void Node::FinishAllTrajectories() {
   {
     carto::common::MutexLocker lock(&mutex_);
-    for (auto &entry : is_active_trajectory_) {
+    for (auto& entry : is_active_trajectory_) {
       const int trajectory_id = entry.first;
       if (entry.second) {
         map_builder_bridge_.FinishTrajectory(trajectory_id);
