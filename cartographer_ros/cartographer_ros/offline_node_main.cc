@@ -234,7 +234,11 @@ void Run(const std::vector<string>& bag_filenames) {
             << (cpu_timespec.tv_sec + 1e-9 * cpu_timespec.tv_nsec) << " s";
 #endif
 
-  node.SerializeState(bag_filenames.front() + ".pbstream");
+  if (::ros::ok()) {
+    const string output_filename = bag_filenames.front() + ".pbstream";
+    LOG(INFO) << "Writing state to '" << output_filename << "'...";
+    node.SerializeState(output_filename);
+  }
   if (FLAGS_keep_running) {
     ::ros::waitForShutdown();
   }
