@@ -212,10 +212,9 @@ void Run(const std::vector<string>& bag_filenames) {
     node.FinishTrajectory(trajectory_id);
   }
 
-  // Ensure the clock is republished during the final optimization, which might
-  // take a while.
+  // Ensure the clock is republished after the bag has been finished, during the
+  // final optimization, serialization, and optional indefinite spinning at the end.
   clock_republish_timer.start();
-
   node.RunFinalOptimization();
 
   const std::chrono::time_point<std::chrono::steady_clock> end_time =
