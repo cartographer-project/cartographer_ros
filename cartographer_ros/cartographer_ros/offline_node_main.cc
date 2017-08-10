@@ -209,15 +209,13 @@ void Run(const std::vector<string>& bag_filenames) {
     }
 
     bag.close();
-    // Ensure the clock is republished also during trajectory finalization,
-    // which might take a while.
-    clock_republish_timer.start();
     node.FinishTrajectory(trajectory_id);
-    clock_republish_timer.stop();
   }
 
-  // Republish the clock after bag processing has been completed.
+  // Ensure the clock is republished after the bag has been finished, during the
+  // final optimization, serialization, and optional indefinite spinning at the end.
   clock_republish_timer.start();
+  node.RunFinalOptimization();
 
   const std::chrono::time_point<std::chrono::steady_clock> end_time =
       std::chrono::steady_clock::now();

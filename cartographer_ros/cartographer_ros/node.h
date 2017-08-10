@@ -56,6 +56,9 @@ class Node {
   // Finishes a single given trajectory.
   void FinishTrajectory(int trajectory_id);
 
+  // Runs final optimization. All trajectories have to be finished when calling.
+  void RunFinalOptimization();
+
   // Starts the first trajectory with the default topics.
   void StartTrajectoryWithDefaultTopics(const TrajectoryOptions& options);
 
