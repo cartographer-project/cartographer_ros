@@ -30,7 +30,7 @@ DEFINE_string(configuration_basename, "",
 DEFINE_string(map_filename, "", "If non-empty, filename of a map to load.");
 DEFINE_bool(
     start_trajectory_with_default_topics, true,
-    "Enable/disable to start the first trajectory with default topics.");
+    "Enable to immediately start the first trajectory with default topics.");
 
 namespace cartographer_ros {
 namespace {
