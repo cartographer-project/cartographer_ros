@@ -428,26 +428,32 @@ bool Node::HandleWriteState(
 }
 
 void Node::FinishAllTrajectories() {
-  {
-    carto::common::MutexLocker lock(&mutex_);
-    for (auto& entry : is_active_trajectory_) {
-      const int trajectory_id = entry.first;
-      if (entry.second) {
-        map_builder_bridge_.FinishTrajectory(trajectory_id);
-        entry.second = false;
-      }
+  carto::common::MutexLocker lock(&mutex_);
+  for (auto& entry : is_active_trajectory_) {
+    const int trajectory_id = entry.first;
+    if (entry.second) {
+      map_builder_bridge_.FinishTrajectory(trajectory_id);
+      entry.second = false;
     }
   }
-  map_builder_bridge_.RunFinalOptimization();
 }
 
 void Node::FinishTrajectory(const int trajectory_id) {
+  carto::common::MutexLocker lock(&mutex_);
+  CHECK(is_active_trajectory_.at(trajectory_id));
+  map_builder_bridge_.FinishTrajectory(trajectory_id);
+  is_active_trajectory_[trajectory_id] = false;
+}
+
+void Node::RunFinalOptimization() {
   {
     carto::common::MutexLocker lock(&mutex_);
-    CHECK(is_active_trajectory_.at(trajectory_id));
-    map_builder_bridge_.FinishTrajectory(trajectory_id);
-    is_active_trajectory_[trajectory_id] = false;
+    for (const auto& entry : is_active_trajectory_) {
+      CHECK(!entry.second);
+    }
   }
+  // Assuming we are not adding new data anymore, the final optimization
+  // can be performed without holding the mutex.
   map_builder_bridge_.RunFinalOptimization();
 }
 
