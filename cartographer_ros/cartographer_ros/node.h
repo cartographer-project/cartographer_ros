@@ -110,7 +110,6 @@ class Node {
       const cartographer_ros_msgs::SensorTopics& topics);
   int AddTrajectory(const TrajectoryOptions& options,
                     const cartographer_ros_msgs::SensorTopics& topics);
-  void FinishTrajectoryUnderLock(int trajectory_id);
   void LaunchSubscribers(const TrajectoryOptions& options,
                          const cartographer_ros_msgs::SensorTopics& topics,
                          int trajectory_id);
