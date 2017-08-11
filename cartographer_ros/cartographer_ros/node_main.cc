@@ -56,6 +56,7 @@ void Run() {
   ::ros::spin();
 
   node.FinishAllTrajectories();
+  node.RunFinalOptimization();
 }
 
 }  // namespace

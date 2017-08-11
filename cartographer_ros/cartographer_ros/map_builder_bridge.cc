@@ -77,8 +77,12 @@ void MapBuilderBridge::FinishTrajectory(const int trajectory_id) {
   // Make sure there is a trajectory with 'trajectory_id'.
   CHECK_EQ(sensor_bridges_.count(trajectory_id), 1);
   map_builder_.FinishTrajectory(trajectory_id);
-  map_builder_.sparse_pose_graph()->RunFinalOptimization();
   sensor_bridges_.erase(trajectory_id);
+}
+
+void MapBuilderBridge::RunFinalOptimization() {
+  LOG(INFO) << "Running final trajectory optimization...";
+  map_builder_.sparse_pose_graph()->RunFinalOptimization();
 }
 
 void MapBuilderBridge::SerializeState(const std::string& filename) {
