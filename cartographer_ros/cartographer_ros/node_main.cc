@@ -41,17 +41,14 @@ void Run() {
   tf2_ros::TransformListener tf(tf_buffer);
   NodeOptions node_options;
   TrajectoryOptions trajectory_options;
-  if (FLAGS_start_trajectory_with_default_topics) {
-    std::tie(node_options, trajectory_options) = LoadOptions(
-        FLAGS_configuration_directory, FLAGS_configuration_basename);
-  } else {
-    node_options = LoadNodeOptions(FLAGS_configuration_directory,
-                                   FLAGS_configuration_basename);
-  }
+  std::tie(node_options, trajectory_options) =
+      LoadOptions(FLAGS_configuration_directory, FLAGS_configuration_basename);
+
   Node node(node_options, &tf_buffer);
   if (!FLAGS_map_filename.empty()) {
     node.LoadMap(FLAGS_map_filename);
   }
+
   if (FLAGS_start_trajectory_with_default_topics) {
     node.StartTrajectoryWithDefaultTopics(trajectory_options);
   }
