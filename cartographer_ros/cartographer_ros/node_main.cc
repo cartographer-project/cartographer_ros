@@ -28,6 +28,9 @@ DEFINE_string(configuration_basename, "",
               "Basename, i.e. not containing any directory prefix, of the "
               "configuration file.");
 DEFINE_string(map_filename, "", "If non-empty, filename of a map to load.");
+DEFINE_bool(
+    start_trajectory_with_default_topics, true,
+    "Enable to immediately start the first trajectory with default topics.");
 
 namespace cartographer_ros {
 namespace {
@@ -45,7 +48,10 @@ void Run() {
   if (!FLAGS_map_filename.empty()) {
     node.LoadMap(FLAGS_map_filename);
   }
-  node.StartTrajectoryWithDefaultTopics(trajectory_options);
+
+  if (FLAGS_start_trajectory_with_default_topics) {
+    node.StartTrajectoryWithDefaultTopics(trajectory_options);
+  }
 
   ::ros::spin();
 
