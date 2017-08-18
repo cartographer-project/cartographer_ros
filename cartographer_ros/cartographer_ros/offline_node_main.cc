@@ -213,7 +213,8 @@ void Run(const std::vector<string>& bag_filenames) {
   }
 
   // Ensure the clock is republished after the bag has been finished, during the
-  // final optimization, serialization, and optional indefinite spinning at the end.
+  // final optimization, serialization, and optional indefinite spinning at the
+  // end.
   clock_republish_timer.start();
   node.RunFinalOptimization();
 

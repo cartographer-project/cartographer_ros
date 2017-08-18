@@ -196,9 +196,8 @@ void Run(const string& pose_graph_filename,
         ReadStaticTransformsFromUrdf(urdf_filename, &tf_buffer);
       }
 
-      const auto transform_interpolation_buffer =
-          carto::transform::TransformInterpolationBuffer::FromTrajectory(
-              trajectory_proto);
+      const carto::transform::TransformInterpolationBuffer
+          transform_interpolation_buffer(trajectory_proto);
       rosbag::Bag bag;
       bag.open(bag_filename, rosbag::bagmode::Read);
       rosbag::View view(bag);
@@ -211,15 +210,15 @@ void Run(const string& pose_graph_filename,
         if (message.isType<sensor_msgs::PointCloud2>()) {
           points_batch = HandleMessage(
               *message.instantiate<sensor_msgs::PointCloud2>(), tracking_frame,
-              tf_buffer, *transform_interpolation_buffer);
+              tf_buffer, transform_interpolation_buffer);
         } else if (message.isType<sensor_msgs::MultiEchoLaserScan>()) {
           points_batch = HandleMessage(
               *message.instantiate<sensor_msgs::MultiEchoLaserScan>(),
-              tracking_frame, tf_buffer, *transform_interpolation_buffer);
+              tracking_frame, tf_buffer, transform_interpolation_buffer);
         } else if (message.isType<sensor_msgs::LaserScan>()) {
           points_batch = HandleMessage(
               *message.instantiate<sensor_msgs::LaserScan>(), tracking_frame,
-              tf_buffer, *transform_interpolation_buffer);
+              tf_buffer, transform_interpolation_buffer);
         }
         if (points_batch != nullptr) {
           points_batch->trajectory_id = trajectory_id;
