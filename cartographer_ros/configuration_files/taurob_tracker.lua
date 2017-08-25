@@ -45,9 +45,6 @@ SPARSE_POSE_GRAPH.optimization_problem.huber_scale = 5e2
 SPARSE_POSE_GRAPH.optimize_every_n_scans = 40
 SPARSE_POSE_GRAPH.constraint_builder.sampling_ratio = 0.03
 SPARSE_POSE_GRAPH.optimization_problem.ceres_solver_options.max_num_iterations = 10
--- Reuse the coarser 3D voxel filter to speed up the computation of loop closure
--- constraints.
-SPARSE_POSE_GRAPH.constraint_builder.adaptive_voxel_filter = TRAJECTORY_BUILDER_3D.high_resolution_adaptive_voxel_filter
 SPARSE_POSE_GRAPH.constraint_builder.min_score = 0.62
 SPARSE_POSE_GRAPH.constraint_builder.log_matches = true
 
