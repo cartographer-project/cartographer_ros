@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+#include <errno.h>
+#include <string.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 #include <time.h>
 #include <chrono>
 #include <sstream>
@@ -231,6 +235,9 @@ void Run(const std::vector<string>& bag_filenames) {
   clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &cpu_timespec);
   LOG(INFO) << "Elapsed CPU time: "
             << (cpu_timespec.tv_sec + 1e-9 * cpu_timespec.tv_nsec) << " s";
+  rusage usage;
+  CHECK_EQ(getrusage(RUSAGE_SELF, &usage), 0) << strerror(errno);
+  LOG(INFO) << "Peak memory usage: " << usage.ru_maxrss << " KiB";
 #endif
 
   if (::ros::ok()) {
