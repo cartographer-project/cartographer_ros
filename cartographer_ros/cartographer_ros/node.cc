@@ -152,6 +152,16 @@ void Node::AddExtrapolator(const int trajectory_id,
           gravity_time_constant));
 }
 
+void Node::AddSensorSamplers(const int trajectory_id,
+                             const TrajectoryOptions& options) {
+  CHECK(sensor_samplers_.count(trajectory_id) == 0);
+  sensor_samplers_.emplace(std::piecewise_construct,
+                    std::forward_as_tuple(trajectory_id),
+                    std::forward_as_tuple(options.rangefinder_sampling_ratio,
+                                          options.odometry_sampling_ratio,
+                                          options.imu_sampling_ratio));
+}
+
 void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
   carto::common::MutexLocker lock(&mutex_);
   for (const auto& entry : map_builder_bridge_.GetTrajectoryStates()) {
@@ -272,6 +282,7 @@ int Node::AddTrajectory(const TrajectoryOptions& options,
   const int trajectory_id =
       map_builder_bridge_.AddTrajectory(expected_sensor_ids, options);
   AddExtrapolator(trajectory_id, options);
+  AddSensorSamplers(trajectory_id, options);
   LaunchSubscribers(options, topics, trajectory_id);
   is_active_trajectory_[trajectory_id] = true;
   subscribed_topics_.insert(expected_sensor_ids.begin(),
@@ -388,6 +399,7 @@ int Node::AddOfflineTrajectory(
   const int trajectory_id =
       map_builder_bridge_.AddTrajectory(expected_sensor_ids, options);
   AddExtrapolator(trajectory_id, options);
+  AddSensorSamplers(trajectory_id, options);
   is_active_trajectory_[trajectory_id] = true;
   return trajectory_id;
 }
@@ -461,6 +473,9 @@ void Node::HandleOdometryMessage(const int trajectory_id,
                                  const string& sensor_id,
                                  const nav_msgs::Odometry::ConstPtr& msg) {
   carto::common::MutexLocker lock(&mutex_);
+  if (!sensor_samplers_.at(trajectory_id).odometry_sampler.Pulse()) {
+    return;
+  }
   auto sensor_bridge_ptr = map_builder_bridge_.sensor_bridge(trajectory_id);
   auto odometry_data_ptr = sensor_bridge_ptr->ToOdometryData(msg);
   if (odometry_data_ptr != nullptr) {
@@ -472,6 +487,9 @@ void Node::HandleOdometryMessage(const int trajectory_id,
 void Node::HandleImuMessage(const int trajectory_id, const string& sensor_id,
                             const sensor_msgs::Imu::ConstPtr& msg) {
   carto::common::MutexLocker lock(&mutex_);
+  if (!sensor_samplers_.at(trajectory_id).imu_sampler.Pulse()) {
+    return;
+  }
   auto sensor_bridge_ptr = map_builder_bridge_.sensor_bridge(trajectory_id);
   auto imu_data_ptr = sensor_bridge_ptr->ToImuData(msg);
   if (imu_data_ptr != nullptr) {
@@ -484,6 +502,9 @@ void Node::HandleLaserScanMessage(const int trajectory_id,
                                   const string& sensor_id,
                                   const sensor_msgs::LaserScan::ConstPtr& msg) {
   carto::common::MutexLocker lock(&mutex_);
+  if (!sensor_samplers_.at(trajectory_id).rangefinder_sampler.Pulse()) {
+    return;
+  }
   map_builder_bridge_.sensor_bridge(trajectory_id)
       ->HandleLaserScanMessage(sensor_id, msg);
 }
@@ -492,6 +513,9 @@ void Node::HandleMultiEchoLaserScanMessage(
     int trajectory_id, const string& sensor_id,
     const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
   carto::common::MutexLocker lock(&mutex_);
+  if (!sensor_samplers_.at(trajectory_id).rangefinder_sampler.Pulse()) {
+    return;
+  }
   map_builder_bridge_.sensor_bridge(trajectory_id)
       ->HandleMultiEchoLaserScanMessage(sensor_id, msg);
 }
@@ -500,6 +524,9 @@ void Node::HandlePointCloud2Message(
     const int trajectory_id, const string& sensor_id,
     const sensor_msgs::PointCloud2::ConstPtr& msg) {
   carto::common::MutexLocker lock(&mutex_);
+  if (!sensor_samplers_.at(trajectory_id).rangefinder_sampler.Pulse()) {
+    return;
+  }
   map_builder_bridge_.sensor_bridge(trajectory_id)
       ->HandlePointCloud2Message(sensor_id, msg);
 }
