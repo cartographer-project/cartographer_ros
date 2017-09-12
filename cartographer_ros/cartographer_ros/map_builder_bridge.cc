@@ -36,8 +36,8 @@ constexpr double kConstraintMarkerScale = 0.025;
   return result;
 }
 
-visualization_msgs::Marker CreateMarker(int trajectory_id, int split,
-                                        const std::string& frame_id) {
+visualization_msgs::Marker CreateTrajectoryMarker(int trajectory_id, int split,
+                                                  const std::string& frame_id) {
   visualization_msgs::Marker marker;
   marker.ns = "Trajectory " + std::to_string(trajectory_id) + "." +
               std::to_string(split);
@@ -195,25 +195,21 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
     const auto& single_trajectory_nodes = all_trajectory_nodes[trajectory_id];
     bool jump = false;
     int num_splits = 0;
-    auto marker = CreateMarker(trajectory_id, num_splits, node_options_.map_frame);
+    auto marker = CreateTrajectoryMarker(trajectory_id, num_splits,
+                                         node_options_.map_frame);
 
     for (const auto& node : single_trajectory_nodes) {
       if (node.trimmed()) {
         jump = true;
         continue;
       }
-
       if (jump) {
         trajectory_node_list.markers.push_back(marker);
         num_splits++;
-        marker = CreateMarker(trajectory_id, num_splits, node_options_.map_frame);
+        marker = CreateTrajectoryMarker(trajectory_id, num_splits,
+                                        node_options_.map_frame);
         jump = false;
       }
-
-      // In 2D, the pose in node.pose is xy-aligned. Multiplying by
-      // node.constant_data->tracking_to_pose would give the full orientation,
-      // but that is not needed here since we are only interested in the
-      // translational part.
       const ::geometry_msgs::Point node_point =
           ToGeometryMsgPoint(node.pose.translation());
       marker.points.push_back(node_point);
