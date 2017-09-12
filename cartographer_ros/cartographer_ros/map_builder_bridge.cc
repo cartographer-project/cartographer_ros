@@ -105,13 +105,20 @@ bool MapBuilderBridge::HandleSubmapQuery(
   }
 
   response.submap_version = response_proto.submap_version();
-  response.cells.insert(response.cells.begin(), response_proto.cells().begin(),
-                        response_proto.cells().end());
-  response.width = response_proto.width();
-  response.height = response_proto.height();
-  response.resolution = response_proto.resolution();
+  if (response_proto.textures_size() == 0) {
+    LOG(WARNING) << "Empty textures given.";
+    return false;
+  }
+
+  // TODO(gaschler): Forward all textures, not just the first one.
+  const auto& texture_proto = *response_proto.textures().begin();
+  response.cells.insert(response.cells.begin(), texture_proto.cells().begin(),
+                        texture_proto.cells().end());
+  response.width = texture_proto.width();
+  response.height = texture_proto.height();
+  response.resolution = texture_proto.resolution();
   response.slice_pose = ToGeometryMsgPose(
-      cartographer::transform::ToRigid3(response_proto.slice_pose()));
+      cartographer::transform::ToRigid3(texture_proto.slice_pose()));
   return true;
 }
 
