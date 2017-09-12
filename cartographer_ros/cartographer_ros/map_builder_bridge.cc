@@ -106,7 +106,7 @@ bool MapBuilderBridge::HandleSubmapQuery(
 
   response.submap_version = response_proto.submap_version();
   if (response_proto.textures_size() == 0) {
-    LOG(WARNING) << "Empty textures given.";
+    LOG(ERROR) << "Empty textures given.";
     return false;
   }
 
