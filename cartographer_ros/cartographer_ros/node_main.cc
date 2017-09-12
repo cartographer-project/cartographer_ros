@@ -31,9 +31,8 @@ DEFINE_string(map_filename, "", "If non-empty, filename of a map to load.");
 DEFINE_bool(
     start_trajectory_with_default_topics, true,
     "Enable to immediately start the first trajectory with default topics.");
-DEFINE_string(
-    save_map_filename, "",
-    "Serialize state and save it before shutting down the node");
+DEFINE_string(save_map_filename, "",
+              "Serialize state and save it before shutting down the node");
 
 namespace cartographer_ros {
 namespace {
