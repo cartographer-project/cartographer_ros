@@ -99,7 +99,7 @@ void CairoDrawEachSubmap(
 class Node {
  public:
   explicit Node(double resolution, double publish_period_sec);
-  ~Node();
+  ~Node() {}
 
   Node(const Node&) = delete;
   Node& operator=(const Node&) = delete;
@@ -143,8 +143,6 @@ Node::Node(const double resolution, const double publish_period_sec)
       occupancy_grid_publisher_timer_(
           node_handle_.createWallTimer(::ros::WallDuration(publish_period_sec),
                                        &Node::DrawAndPublish, this)) {}
-
-Node::~Node() {}
 
 void Node::HandleSubmapList(
     const cartographer_ros_msgs::SubmapList::ConstPtr& msg) {
