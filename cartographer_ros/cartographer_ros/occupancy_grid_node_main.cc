@@ -162,13 +162,18 @@ void Node::HandleSubmapList(
       continue;
     }
 
-    auto fetched_texture = ::cartographer_ros::FetchSubmapTexture(id, &client_);
-    if (fetched_texture == nullptr) {
+    auto fetched_textures =
+        ::cartographer_ros::FetchSubmapTextures(id, &client_);
+    if (fetched_textures == nullptr) {
       continue;
     }
+    CHECK(!fetched_textures->textures.empty());
+    submap_state.version = fetched_textures->version;
+
+    // TODO(gaschler): Handle more textures than just the first one.
+    const auto fetched_texture = fetched_textures->textures.begin();
     submap_state.width = fetched_texture->width;
     submap_state.height = fetched_texture->height;
-    submap_state.version = fetched_texture->version;
     submap_state.slice_pose = fetched_texture->slice_pose;
     submap_state.resolution = fetched_texture->resolution;
 
