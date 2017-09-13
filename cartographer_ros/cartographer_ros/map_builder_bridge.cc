@@ -95,23 +95,28 @@ bool MapBuilderBridge::HandleSubmapQuery(
     cartographer_ros_msgs::SubmapQuery::Request& request,
     cartographer_ros_msgs::SubmapQuery::Response& response) {
   cartographer::mapping::proto::SubmapQuery::Response response_proto;
-  const std::string error = map_builder_.SubmapToProto(
-      cartographer::mapping::SubmapId{request.trajectory_id,
-                                      request.submap_index},
-      &response_proto);
+  cartographer::mapping::SubmapId submap_id{request.trajectory_id,
+                                            request.submap_index};
+  const std::string error =
+      map_builder_.SubmapToProto(submap_id, &response_proto);
   if (!error.empty()) {
     LOG(ERROR) << error;
     return false;
   }
 
   response.submap_version = response_proto.submap_version();
-  response.cells.insert(response.cells.begin(), response_proto.cells().begin(),
-                        response_proto.cells().end());
-  response.width = response_proto.width();
-  response.height = response_proto.height();
-  response.resolution = response_proto.resolution();
+  CHECK(response_proto.textures_size() > 0)
+      << "empty textures given for submap: " << submap_id;
+
+  // TODO(gaschler): Forward all textures, not just the first one.
+  const auto& texture_proto = *response_proto.textures().begin();
+  response.cells.insert(response.cells.begin(), texture_proto.cells().begin(),
+                        texture_proto.cells().end());
+  response.width = texture_proto.width();
+  response.height = texture_proto.height();
+  response.resolution = texture_proto.resolution();
   response.slice_pose = ToGeometryMsgPose(
-      cartographer::transform::ToRigid3(response_proto.slice_pose()));
+      cartographer::transform::ToRigid3(texture_proto.slice_pose()));
   return true;
 }
 
