@@ -105,10 +105,9 @@ bool MapBuilderBridge::HandleSubmapQuery(
   }
 
   response.submap_version = response_proto.submap_version();
-  if (response_proto.textures_size() == 0) {
-    LOG(ERROR) << "Empty textures given.";
-    return false;
-  }
+  CHECK(response_proto.textures_size() > 0)
+      << "empty textures given for trajectory_id " << request.trajectory_id
+      << " submap_index " << request.submap_index;
 
   // TODO(gaschler): Forward all textures, not just the first one.
   const auto& texture_proto = *response_proto.textures().begin();
