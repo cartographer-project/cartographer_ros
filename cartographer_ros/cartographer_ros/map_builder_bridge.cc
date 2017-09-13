@@ -53,10 +53,10 @@ visualization_msgs::Marker CreateTrajectoryMarker(const int trajectory_id,
 
 void PushAndResetLineMarker(visualization_msgs::Marker& marker,
                             std::vector<visualization_msgs::Marker>& markers) {
-  if (markers.size() > 1) {
+  if (marker.points.size() > 1) {
     markers.push_back(marker);
+    ++marker.id;
   }
-  ++marker.id;
   marker.points.clear();
 }
 
