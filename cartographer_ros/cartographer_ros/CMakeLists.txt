@@ -66,3 +66,14 @@ install(TARGETS cartographer_occupancy_grid_node
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
+
+google_binary(cartographer_occupancy_grid_exporter
+  SRCS
+    occupancy_grid_exporter.cc
+)
+
+install(TARGETS cartographer_occupancy_grid_exporter
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
