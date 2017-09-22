@@ -46,18 +46,18 @@ visualization_msgs::Marker CreateTrajectoryMarker(const int trajectory_id,
   marker.header.frame_id = frame_id;
   marker.color = ToMessage(cartographer::io::GetColor(trajectory_id));
   marker.scale.x = kTrajectoryLineStripMarkerScale;
-  marker.pose.orientation.w = 1.0;
+  marker.pose.orientation.w = 1.;
   marker.pose.position.z = 0.05;
   return marker;
 }
 
-void PushAndResetLineMarker(visualization_msgs::Marker& marker,
-                            std::vector<visualization_msgs::Marker>& markers) {
-  if (marker.points.size() > 1) {
-    markers.push_back(marker);
-    ++marker.id;
+void PushAndResetLineMarker(visualization_msgs::Marker* marker,
+                            std::vector<visualization_msgs::Marker>* markers) {
+  if (marker->points.size() > 1) {
+    markers->push_back(*marker);
+    ++marker->id;
   }
-  marker.points.clear();
+  marker->points.clear();
 }
 
 }  // namespace
@@ -206,12 +206,12 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
        trajectory_id < static_cast<int>(all_trajectory_nodes.size());
        ++trajectory_id) {
     const auto& single_trajectory_nodes = all_trajectory_nodes[trajectory_id];
-    auto marker =
+    visualization_msgs::Marker marker =
         CreateTrajectoryMarker(trajectory_id, node_options_.map_frame);
 
     for (const auto& node : single_trajectory_nodes) {
       if (node.trimmed()) {
-        PushAndResetLineMarker(marker, trajectory_node_list.markers);
+        PushAndResetLineMarker(&marker, &trajectory_node_list.markers);
         continue;
       }
       const ::geometry_msgs::Point node_point =
@@ -220,12 +220,12 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
       // Work around the 16384 point limit in RViz by splitting the
       // trajectory into multiple markers.
       if (marker.points.size() == 16384) {
-        PushAndResetLineMarker(marker, trajectory_node_list.markers);
+        PushAndResetLineMarker(&marker, &trajectory_node_list.markers);
         // Push back the last point, so the two markers appear connected.
         marker.points.push_back(node_point);
       }
     }
-    PushAndResetLineMarker(marker, trajectory_node_list.markers);
+    PushAndResetLineMarker(&marker, &trajectory_node_list.markers);
   }
   return trajectory_node_list;
 }
