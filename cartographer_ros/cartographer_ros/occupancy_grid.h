@@ -61,6 +61,7 @@ void WriteOccupancyGridInfoToYaml(const OccupancyGridState& grid_state,
                                   const double resolution,
                                   const std::string& map_filename,
                                   const std::string& filename);
-}
+
+}  // namespace cartographer_ros
 
 #endif  // CARTOGRAPHER_ROS_OCCUPANCY_GRID_H_
