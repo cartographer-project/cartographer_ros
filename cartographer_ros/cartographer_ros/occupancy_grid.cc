@@ -122,7 +122,7 @@ void WriteOccupancyGridToPgm(const OccupancyGridState& grid_state,
       CHECK_LE(-1, value);
       CHECK_GE(100, value);
       if (value >= 0 && value < 25) {
-        pgm_file.put(255);
+        pgm_file.put((unsigned char)254);
       } else if (value > 65) {
         pgm_file.put(000);
       } else {
