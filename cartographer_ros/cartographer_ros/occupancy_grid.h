@@ -1,8 +1,9 @@
 #ifndef CARTOGRAPHER_ROS_OCCUPANCY_GRID_H_
 #define CARTOGRAPHER_ROS_OCCUPANCY_GRID_H_
 
-#include "Eigen/Geometry"
+#include <fstream>
 
+#include "Eigen/Geometry"
 #include "cairo/cairo.h"
 #include "cartographer/io/image.h"
 #include "cartographer/mapping/id.h"

@@ -24,13 +24,10 @@
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 
-
 DEFINE_string(pbstream_filename, "",
               "Proto stream file containing the pose graph.");
-DEFINE_double(resolution, 0.05,
-              "Map Resolution");
-DEFINE_string(stem, "map",
-              "Prefix to export a map and meta data");
+DEFINE_double(resolution, 0.05, "Map Resolution");
+DEFINE_string(stem, "map", "Prefix to export a map and meta data");
 
 namespace cartographer_ros {
 
@@ -110,15 +107,17 @@ void FillSubmapState(const carto::transform::Rigid3d& submap_pose,
   return;
 }
 
-void Run(const string& pose_graph_filename, const string& stem, const double resolution) {
-  std::map<carto::mapping::SubmapId, SubmapState> submaps;
+void Run(const string& pbstream_filename, const string& stem,
+         const double resolution) {
+  carto::io::ProtoStreamReader reader(pbstream_filename);
 
-  LOG(INFO) << "Loading submaps from serialized data";
-
-  // Load submaps from pose graph file
-  carto::io::ProtoStreamReader reader(pose_graph_filename);
+  // Skip Pose graph
   carto::mapping::proto::SparsePoseGraph pose_graph;
   CHECK(reader.ReadProto(&pose_graph));
+
+  // Load submaps from pbstream
+  LOG(INFO) << "Loading submaps from serialized data";
+  std::map<carto::mapping::SubmapId, SubmapState> submaps;
   for (;;) {
     carto::mapping::proto::SerializedData proto;
     if (!reader.ReadProto(&proto)) {
@@ -148,6 +147,7 @@ void Run(const string& pose_graph_filename, const string& stem, const double res
   LOG(INFO) << "Generate Occupanct Grid from submaps";
   auto grid_state = DrawOccupancyGrid(&submaps, resolution);
 
+  // Export map and meta data
   ExportOccupancyGrid(grid_state, resolution, stem);
 }
 }
@@ -158,12 +158,12 @@ int main(int argc, char** argv) {
   FLAGS_logtostderr = true;
   google::ParseCommandLineFlags(&argc, &argv, true);
 
-  CHECK(!FLAGS_pbstream_filename.empty())
-      << "-pbstream_filename is missing.";
+  CHECK(!FLAGS_pbstream_filename.empty()) << "-pbstream_filename is missing.";
 
-  LOG(INFO) << "Pose Graph File : " << FLAGS_pbstream_filename;
-  LOG(INFO) << "To save : " << FLAGS_stem;
-  LOG(INFO) << "Resolution : " << FLAGS_resolution;
+  LOG(INFO) << "Pbstream: " << FLAGS_pbstream_filename;
+  LOG(INFO) << "Stem: " << FLAGS_stem;
+  LOG(INFO) << "Resolution: " << FLAGS_resolution;
 
-  ::cartographer_ros::Run(FLAGS_pbstream_filename, FLAGS_stem, FLAGS_resolution);
+  ::cartographer_ros::Run(FLAGS_pbstream_filename, FLAGS_stem,
+                          FLAGS_resolution);
 }
