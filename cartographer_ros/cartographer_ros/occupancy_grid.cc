@@ -1,6 +1,10 @@
 
 #include "cartographer_ros/occupancy_grid.h"
 
+#include <fstream>
+
+#include "yaml-cpp/yaml.h"
+
 Eigen::Affine3d ToEigen(const ::cartographer::transform::Rigid3d& rigid3) {
   return Eigen::Translation3d(rigid3.translation()) * rigid3.rotation();
 }
@@ -84,49 +88,94 @@ OccupancyGridState DrawOccupancyGrid(
   return OccupancyGridState(std::move(surface), origin, size);
 }
 
-void WriteOccupancyGridToPgm(const std::string& filename,
+void ExportOccupancyGrid(const OccupancyGridState& grid_state,
+                         const double resolution, const std::string& stem) {
+  // TODO(jihoonl): Support png format later.
+  const std::string map_filename = stem + ".pgm";
+  WriteOccupancyGridToPgm(grid_state, resolution, map_filename);
+  WriteOccupancyGridInfoToYaml(grid_state, resolution, map_filename,
+                               stem + ".yaml");
+}
+
+void WriteOccupancyGridToPgm(const OccupancyGridState& grid_state,
                              const double resolution,
-                             const OccupancyGridState& grid_state) {
+                             const std::string& filename) {
   LOG(INFO) << "Saving map to '" << filename << "'...";
   std::ofstream pgm_file(filename, std::ios::out | std::ios::binary);
   const std::string header = "P5\n# Cartographer map; " +
-                             std::to_string(resolution) +
-                             " m/pixel\n" + std::to_string(grid_state.size.x()) +
-                             " " + std::to_string(grid_state.size.y()) + "\n255\n";
+                             std::to_string(resolution) + " m/pixel\n" +
+                             std::to_string(grid_state.size.x()) + " " +
+                             std::to_string(grid_state.size.y()) + "\n255\n";
   pgm_file.write(header.data(), header.size());
 
-  const uint32* pixel_data =
-      reinterpret_cast<uint32*>(cairo_image_surface_get_data(grid_state.surface.get()));
+  const uint32* pixel_data = reinterpret_cast<uint32*>(
+      cairo_image_surface_get_data(grid_state.surface.get()));
 
   for (int y = 0; y < grid_state.size.y(); ++y) {
     for (int x = 0; x < grid_state.size.x(); ++x) {
       const uint32 packed = pixel_data[y * grid_state.size.x() + x];
       const unsigned char color = packed >> 16;
       const unsigned char observed = packed >> 8;
-      const int value = observed == 0 ? 128 : ::cartographer::common::RoundToInt(
+      const int value = observed == 0 ? -1 : ::cartographer::common::RoundToInt(
                                                  (1. - color / 255.) * 100.);
-      //CHECK_LE(-1, value);
-      //CHECK_GE(100, value);
-      pgm_file.put(255 - value);
+
+      CHECK_LE(-1, value);
+      CHECK_GE(100, value);
+      if (value >= 0 && value < 25) {
+        pgm_file.put(255);
+      } else if (value > 65) {
+        pgm_file.put(000);
+      } else {
+        pgm_file.put(100);
+      }
     }
   }
 
   pgm_file.close();
   CHECK(pgm_file) << "Writing '" << filename << "' failed.";
 }
+
+void WriteOccupancyGridInfoToYaml(const OccupancyGridState& grid_state,
+                                  const double resolution,
+                                  const std::string& map_filename,
+                                  const std::string& yaml_filename) {
+  LOG(INFO) << "Saving map info to '" << yaml_filename << "'...";
+  std::ofstream yaml_file(yaml_filename, std::ios::out | std::ios::binary);
+  {
+    YAML::Emitter out(yaml_file);
+    out << YAML::BeginMap;
+    // TODO(whess): Use basename only?
+    out << YAML::Key << "image" << YAML::Value << map_filename;
+    out << YAML::Key << "resolution" << YAML::Value << resolution;
+    // According to map_server documentation "many parts of the system currently
+    // ignore yaw" so it is good we use a zero value.
+    constexpr double kYawButMaybeIgnored = 0.;
+    out << YAML::Key << "origin" << YAML::Value << YAML::Flow << YAML::BeginSeq
+        << -grid_state.origin.x() * resolution
+        << (-grid_state.size.y() + grid_state.origin.y()) * resolution
+        << kYawButMaybeIgnored << YAML::EndSeq;
+    out << YAML::Key << "occupied_thresh" << YAML::Value << 0.65;
+    out << YAML::Key << "free_thresh" << YAML::Value << 0.196;
+    out << YAML::Key << "negate" << YAML::Value << 0;
+    out << YAML::EndMap;
+    CHECK(out.good()) << out.GetLastError();
+  }
+  yaml_file.close();
+  CHECK(yaml_file) << "Writing '" << yaml_filename << "' failed.";
+}
 }
 
-  /*
-  for (size_t y = 0; y < gridnfo.height; ++y) {
-    for (size_t x = 0; x < grid.info.width; ++x) {
-      const size_t i = x + (grid.info.height - y - 1) * grid.info.width;
-      if (grid.data[i] >= 0 && grid.data[i] <= 100) {
-        pgm_file.put((100 - grid.data[i]) * 255 / 100);
-      } else {
-        // We choose a value between the free and occupied threshold.
-        constexpr uint8_t kUnknownValue = 128;
-        pgm_file.put(kUnknownValue);
-      }
+/*
+for (size_t y = 0; y < gridnfo.height; ++y) {
+  for (size_t x = 0; x < grid.info.width; ++x) {
+    const size_t i = x + (grid.info.height - y - 1) * grid.info.width;
+    if (grid.data[i] >= 0 && grid.data[i] <= 100) {
+      pgm_file.put((100 - grid.data[i]) * 255 / 100);
+    } else {
+      // We choose a value between the free and occupied threshold.
+      constexpr uint8_t kUnknownValue = 128;
+      pgm_file.put(kUnknownValue);
     }
   }
-  */
+}
+*/

@@ -24,12 +24,13 @@
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 
+
+DEFINE_string(pbstream_filename, "",
+              "Proto stream file containing the pose graph.");
 DEFINE_double(resolution, 0.05,
-              "Proto stream file containing the pose graph.");
-DEFINE_string(pose_graph_filename, "",
-              "Proto stream file containing the pose graph.");
-DEFINE_string(map_filename, "map.pgm",
-              "Proto stream file containing the pose graph.");
+              "Map Resolution");
+DEFINE_string(stem, "map",
+              "Prefix to export a map and meta data");
 
 namespace cartographer_ros {
 
@@ -109,7 +110,7 @@ void FillSubmapState(const carto::transform::Rigid3d& submap_pose,
   return;
 }
 
-void Run(const string& pose_graph_filename, const string& map_filename, const double resolution) {
+void Run(const string& pose_graph_filename, const string& stem, const double resolution) {
   std::map<carto::mapping::SubmapId, SubmapState> submaps;
 
   LOG(INFO) << "Loading submaps from serialized data";
@@ -147,8 +148,7 @@ void Run(const string& pose_graph_filename, const string& map_filename, const do
   LOG(INFO) << "Generate Occupanct Grid from submaps";
   auto grid_state = DrawOccupancyGrid(&submaps, resolution);
 
-  LOG(INFO) << "Save into " << map_filename;
-  WriteOccupancyGridToPgm(map_filename, resolution, grid_state);
+  ExportOccupancyGrid(grid_state, resolution, stem);
 }
 }
 }
@@ -158,12 +158,12 @@ int main(int argc, char** argv) {
   FLAGS_logtostderr = true;
   google::ParseCommandLineFlags(&argc, &argv, true);
 
-  CHECK(!FLAGS_pose_graph_filename.empty())
-      << "-pose_graph_filename is missing.";
+  CHECK(!FLAGS_pbstream_filename.empty())
+      << "-pbstream_filename is missing.";
 
-  LOG(INFO) << "Pose Graph File : " << FLAGS_pose_graph_filename;
-  LOG(INFO) << "To save : " << FLAGS_map_filename;
+  LOG(INFO) << "Pose Graph File : " << FLAGS_pbstream_filename;
+  LOG(INFO) << "To save : " << FLAGS_stem;
   LOG(INFO) << "Resolution : " << FLAGS_resolution;
 
-  ::cartographer_ros::Run(FLAGS_pose_graph_filename, FLAGS_map_filename, FLAGS_resolution);
+  ::cartographer_ros::Run(FLAGS_pbstream_filename, FLAGS_stem, FLAGS_resolution);
 }

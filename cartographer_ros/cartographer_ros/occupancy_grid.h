@@ -49,9 +49,17 @@ OccupancyGridState DrawOccupancyGrid(
     std::map<::cartographer::mapping::SubmapId, SubmapState>* submaps,
     const double resolution);
 
-void WriteOccupancyGridToPgm(const std::string& filename,
+void ExportOccupancyGrid(const OccupancyGridState& grid_state,
+                         const double resolution, const std::string& stem);
+
+void WriteOccupancyGridToPgm(const OccupancyGridState& grid_state,
                              const double resolution,
-                             const OccupancyGridState& grid_state);
+                             const std::string& filename);
+
+void WriteOccupancyGridInfoToYaml(const OccupancyGridState& grid_state,
+                                  const double resolution,
+                                  const std::string& map_filename,
+                                  const std::string& filename);
 }
 
 #endif  // CARTOGRAPHER_ROS_OCCUPANCY_GRID_H_
