@@ -163,19 +163,5 @@ void WriteOccupancyGridInfoToYaml(const OccupancyGridState& grid_state,
   yaml_file.close();
   CHECK(yaml_file) << "Writing '" << yaml_filename << "' failed.";
 }
-}
 
-/*
-for (size_t y = 0; y < gridnfo.height; ++y) {
-  for (size_t x = 0; x < grid.info.width; ++x) {
-    const size_t i = x + (grid.info.height - y - 1) * grid.info.width;
-    if (grid.data[i] >= 0 && grid.data[i] <= 100) {
-      pgm_file.put((100 - grid.data[i]) * 255 / 100);
-    } else {
-      // We choose a value between the free and occupied threshold.
-      constexpr uint8_t kUnknownValue = 128;
-      pgm_file.put(kUnknownValue);
-    }
-  }
-}
-*/
+}  // namespace cartographer_ros
