@@ -23,6 +23,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "cartographer/common/fixed_ratio_sampler.h"
 #include "cartographer/common/mutex.h"
 #include "cartographer/mapping/pose_extrapolator.h"
 #include "cartographer_ros/map_builder_bridge.h"
@@ -115,6 +116,7 @@ class Node {
                          int trajectory_id);
   void PublishSubmapList(const ::ros::WallTimerEvent& timer_event);
   void AddExtrapolator(int trajectory_id, const TrajectoryOptions& options);
+  void AddSensorSamplers(int trajectory_id, const TrajectoryOptions& options);
   void PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event);
   void PublishTrajectoryNodeList(const ::ros::WallTimerEvent& timer_event);
   void PublishConstraintList(const ::ros::WallTimerEvent& timer_event);
@@ -138,8 +140,22 @@ class Node {
   std::vector<::ros::ServiceServer> service_servers_;
   ::ros::Publisher scan_matched_point_cloud_publisher_;
 
+  struct TrajectorySensorSamplers {
+    TrajectorySensorSamplers(double rangefinder_sampling_ratio,
+                             double odometry_sampling_ratio,
+                             double imu_sampling_ratio)
+        : rangefinder_sampler(rangefinder_sampling_ratio),
+          odometry_sampler(odometry_sampling_ratio),
+          imu_sampler(imu_sampling_ratio) {}
+
+    ::cartographer::common::FixedRatioSampler rangefinder_sampler;
+    ::cartographer::common::FixedRatioSampler odometry_sampler;
+    ::cartographer::common::FixedRatioSampler imu_sampler;
+  };
+
   // These are keyed with 'trajectory_id'.
   std::map<int, ::cartographer::mapping::PoseExtrapolator> extrapolators_;
+  std::unordered_map<int, TrajectorySensorSamplers> sensor_samplers_;
   std::unordered_map<int, std::vector<::ros::Subscriber>> subscribers_;
   std::unordered_set<std::string> subscribed_topics_;
   std::unordered_map<int, bool> is_active_trajectory_ GUARDED_BY(mutex_);
