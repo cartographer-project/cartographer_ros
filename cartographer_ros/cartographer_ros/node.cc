@@ -155,11 +155,11 @@ void Node::AddExtrapolator(const int trajectory_id,
 void Node::AddSensorSamplers(const int trajectory_id,
                              const TrajectoryOptions& options) {
   CHECK(sensor_samplers_.count(trajectory_id) == 0);
-  sensor_samplers_.emplace(std::piecewise_construct,
-                    std::forward_as_tuple(trajectory_id),
-                    std::forward_as_tuple(options.rangefinder_sampling_ratio,
-                                          options.odometry_sampling_ratio,
-                                          options.imu_sampling_ratio));
+  sensor_samplers_.emplace(
+      std::piecewise_construct, std::forward_as_tuple(trajectory_id),
+      std::forward_as_tuple(options.rangefinder_sampling_ratio,
+                            options.odometry_sampling_ratio,
+                            options.imu_sampling_ratio));
 }
 
 void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
@@ -285,8 +285,10 @@ int Node::AddTrajectory(const TrajectoryOptions& options,
   AddSensorSamplers(trajectory_id, options);
   LaunchSubscribers(options, topics, trajectory_id);
   is_active_trajectory_[trajectory_id] = true;
-  subscribed_topics_.insert(expected_sensor_ids.begin(),
-                            expected_sensor_ids.end());
+
+  for (auto id : expected_sensor_ids) {
+    subscribed_topics_.insert(node_handle_.resolveName(id));
+  }
   return trajectory_id;
 }
 
