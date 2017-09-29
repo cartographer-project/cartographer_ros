@@ -31,6 +31,8 @@ DEFINE_string(map_filename, "", "If non-empty, filename of a map to load.");
 DEFINE_bool(
     start_trajectory_with_default_topics, true,
     "Enable to immediately start the first trajectory with default topics.");
+DEFINE_string(save_map_filename, "",
+              "If non-empty, serialize state and write it to disk before shutting down.");
 
 namespace cartographer_ros {
 namespace {
@@ -57,6 +59,10 @@ void Run() {
 
   node.FinishAllTrajectories();
   node.RunFinalOptimization();
+
+  if (!FLAGS_save_map_filename.empty()) {
+    node.SerializeState(FLAGS_save_map_filename);
+  }
 }
 
 }  // namespace
