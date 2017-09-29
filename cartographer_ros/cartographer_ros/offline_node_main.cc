@@ -16,8 +16,8 @@
 
 #include <errno.h>
 #include <string.h>
-#include <sys/time.h>
 #include <sys/resource.h>
+#include <sys/time.h>
 #include <time.h>
 #include <chrono>
 #include <sstream>
@@ -53,8 +53,9 @@ DEFINE_string(
     "URDF file that contains static links for your sensor configuration.");
 DEFINE_bool(use_bag_transforms, true,
             "Whether to read, use and republish the transforms from the bag.");
-DEFINE_string(pbstream_filename, "",
-              "If non-empty, filename of a pbstream to load.");
+DEFINE_string(load_state_filename, "",
+              "If non-empty, filename of a .pbstream file to load, containing "
+              "a saved SLAM state.");
 DEFINE_bool(keep_running, false,
             "Keep running the offline node after all messages from the bag "
             "have been processed.");
@@ -91,10 +92,10 @@ void Run(const std::vector<string>& bag_filenames) {
   // remaining sensor data that cannot be transformed due to missing transforms.
   node_options.lookup_transform_timeout_sec = 0.;
   Node node(node_options, &tf_buffer);
-  if (!FLAGS_pbstream_filename.empty()) {
+  if (!FLAGS_load_state_filename.empty()) {
     // TODO(jihoonl): LoadMap should be replaced by some better deserialization
     // of full SLAM state as non-frozen trajectories once possible
-    node.LoadMap(FLAGS_pbstream_filename);
+    node.LoadMap(FLAGS_load_state_filename);
   }
 
   std::unordered_set<string> expected_sensor_ids;

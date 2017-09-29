@@ -105,7 +105,7 @@ the demo:
     # Run pure localization:
     roslaunch cartographer_ros demo_backpack_2d_localization.launch \
        bag_filename:=${HOME}/Downloads/b2-2016-04-27-12-31-41.bag \
-       map_filename:=${HOME}/Downloads/b2-2016-04-05-14-44-52.bag.pbstream
+       load_state_filename:=${HOME}/Downloads/b2-2016-04-05-14-44-52.bag.pbstream
 
     # Download the 3D backpack example bag.
     wget -P ~/Downloads https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-04-05-14-14-00.bag
