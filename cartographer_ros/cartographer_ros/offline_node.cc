@@ -52,8 +52,9 @@ DEFINE_string(urdf_filenames, "",
               "static links for the sensor configuration(s).");
 DEFINE_bool(use_bag_transforms, true,
             "Whether to read, use and republish transforms from bags.");
-DEFINE_string(pbstream_filename, "",
-              "If non-empty, filename of a pbstream to load.");
+DEFINE_string(load_state_filename, "",
+              "If non-empty, filename of a .pbstream file to load, containing "
+                  "a saved SLAM state.");
 DEFINE_bool(keep_running, false,
             "Keep running the offline node after all messages from the bag "
             "have been processed.");
@@ -122,10 +123,10 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
   tf_buffer.setUsingDedicatedThread(true);
 
   Node node(node_options, std::move(map_builder), &tf_buffer);
-  if (!FLAGS_pbstream_filename.empty()) {
+  if (!FLAGS_load_state_filename.empty()) {
     // TODO(jihoonl): LoadMap should be replaced by some better deserialization
     // of full SLAM state as non-frozen trajectories once possible
-    node.LoadMap(FLAGS_pbstream_filename);
+    node.LoadMap(FLAGS_load_state_filename);
   }
 
   ::ros::Publisher tf_publisher =
