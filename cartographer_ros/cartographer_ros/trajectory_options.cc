@@ -59,6 +59,12 @@ TrajectoryOptions CreateTrajectoryOptions(
           "num_subdivisions_per_laser_scan");
   options.num_point_clouds =
       lua_parameter_dictionary->GetNonNegativeInt("num_point_clouds");
+  options.rangefinder_sampling_ratio =
+      lua_parameter_dictionary->GetDouble("rangefinder_sampling_ratio");
+  options.odometry_sampling_ratio =
+      lua_parameter_dictionary->GetDouble("odometry_sampling_ratio");
+  options.imu_sampling_ratio =
+      lua_parameter_dictionary->GetDouble("imu_sampling_ratio");
   CheckTrajectoryOptions(options);
   return options;
 }
@@ -75,6 +81,9 @@ bool FromRosMessage(const cartographer_ros_msgs::TrajectoryOptions& msg,
   options->num_subdivisions_per_laser_scan =
       msg.num_subdivisions_per_laser_scan;
   options->num_point_clouds = msg.num_point_clouds;
+  options->rangefinder_sampling_ratio = msg.rangefinder_sampling_ratio;
+  options->odometry_sampling_ratio = msg.odometry_sampling_ratio;
+  options->imu_sampling_ratio = msg.imu_sampling_ratio;
   if (!options->trajectory_builder_options.ParseFromString(
           msg.trajectory_builder_options_proto)) {
     LOG(ERROR) << "Failed to parse protobuf";
@@ -96,6 +105,9 @@ cartographer_ros_msgs::TrajectoryOptions ToRosMessage(
   msg.num_multi_echo_laser_scans = options.num_multi_echo_laser_scans;
   msg.num_subdivisions_per_laser_scan = options.num_subdivisions_per_laser_scan;
   msg.num_point_clouds = options.num_point_clouds;
+  msg.rangefinder_sampling_ratio = options.rangefinder_sampling_ratio;
+  msg.odometry_sampling_ratio = options.odometry_sampling_ratio;
+  msg.imu_sampling_ratio = options.imu_sampling_ratio;
   options.trajectory_builder_options.SerializeToString(
       &msg.trajectory_builder_options_proto);
   return msg;

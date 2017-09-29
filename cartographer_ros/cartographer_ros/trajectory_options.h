@@ -38,6 +38,9 @@ struct TrajectoryOptions {
   int num_multi_echo_laser_scans;
   int num_subdivisions_per_laser_scan;
   int num_point_clouds;
+  double rangefinder_sampling_ratio;
+  double odometry_sampling_ratio;
+  double imu_sampling_ratio;
 };
 
 TrajectoryOptions CreateTrajectoryOptions(
