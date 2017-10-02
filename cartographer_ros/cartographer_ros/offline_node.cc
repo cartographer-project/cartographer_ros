@@ -78,7 +78,8 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
       << "-configuration_directory is missing.";
   CHECK(!FLAGS_configuration_basenames.empty())
       << "-configuration_basenames is missing.";
-  CHECK(!FLAGS_bag_filenames.empty()) << "-bag_filenames is missing.";
+  CHECK(!(FLAGS_bag_filenames.empty() && FLAGS_load_state_filename.empty()))
+  << "-bag_filenames and -load_state_filename cannot both be unspecified.";
   const auto bag_filenames =
       cartographer_ros::SplitString(FLAGS_bag_filenames, ',');
   cartographer_ros::NodeOptions node_options;
@@ -98,7 +99,9 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
     }
     bag_trajectory_options.push_back(current_trajectory_options);
   }
-  CHECK_EQ(bag_trajectory_options.size(), bag_filenames.size());
+  if (bag_filenames.size() > 0) {
+    CHECK_EQ(bag_trajectory_options.size(), bag_filenames.size());
+  }
 
   // Since we preload the transform buffer, we should never have to wait for a
   // transform. When we finish processing the bag, we will simply drop any
@@ -310,9 +313,21 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
 #endif
 
   if (::ros::ok()) {
-    const std::string output_filename = bag_filenames.front() + ".pbstream";
-    LOG(INFO) << "Writing state to '" << output_filename << "'...";
-    node.SerializeState(output_filename);
+    std::string output_filename;
+    const std::string suffix = ".pbstream";
+    if (bag_filenames.size() > 0) {
+      output_filename = bag_filenames.front();
+    } else {
+      // Reuse loaded state name, but avoid overwriting the same state file
+      // by appending "_new".
+      output_filename =
+          FLAGS_load_state_filename.substr(
+              0, FLAGS_load_state_filename.size() - suffix.size()) +
+              std::string("_new");
+    }
+    const std::string state_output_filename = output_filename + suffix;
+    LOG(INFO) << "Writing state to '" << state_output_filename << "'...";
+    node.SerializeState(state_output_filename);
   }
   if (FLAGS_keep_running) {
     ::ros::waitForShutdown();
