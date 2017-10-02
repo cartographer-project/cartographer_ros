@@ -286,9 +286,8 @@ int Node::AddTrajectory(const TrajectoryOptions& options,
   LaunchSubscribers(options, topics, trajectory_id);
   is_active_trajectory_[trajectory_id] = true;
 
-  for (auto id : expected_sensor_ids) {
-    subscribed_topics_.insert(id);
-  }
+  subscribed_topics_.insert(expected_sensor_ids.begin(),
+                            expected_sensor_ids.end());
   return trajectory_id;
 }
 
@@ -425,7 +424,8 @@ bool Node::HandleFinishTrajectory(
   for (auto& entry : subscribers_[trajectory_id]) {
     entry.second.shutdown();
     subscribed_topics_.erase(entry.first);
-    LOG(INFO) << "Shutdown the subscriber of [" << entry.first << "]";
+    LOG(INFO) << "Shutdown the subscriber of [" << entry.second.getTopic()
+              << "]";
   }
   CHECK_EQ(subscribers_.erase(trajectory_id), 1);
 
