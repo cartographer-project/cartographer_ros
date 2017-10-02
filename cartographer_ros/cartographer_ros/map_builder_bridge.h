@@ -52,7 +52,10 @@ class MapBuilderBridge {
 
   void LoadMap(const std::string& map_filename);
   int AddTrajectory(const std::unordered_set<string>& expected_sensor_ids,
-                    const TrajectoryOptions& trajectory_options);
+                    const TrajectoryOptions& trajectory_options,
+                    const cartographer::transform::Rigid3d& initialpose,
+                    const cartographer::common::Time& time);
+
   void FinishTrajectory(int trajectory_id);
   void RunFinalOptimization();
   void SerializeState(const string& filename);
