@@ -387,21 +387,27 @@ bool Node::HandleStartTrajectory(
     return false;
   }
 
-  auto msg_to_map_frame =
-      tf_bridge_.LookupToTracking(FromRos(request.initial_pose.header.stamp),
-                                  request.initial_pose.header.frame_id);
-  if (msg_to_map_frame) {
-    carto::transform::Rigid3d pose = ToRigid3d(request.initial_pose.pose.pose);
-    carto::common::Time time = FromRos(request.initial_pose.header.stamp);
-    LOG(INFO) << "Initialising Trajectory at " << pose << " in "
-              << request.initial_pose.header.frame_id;
-    response.trajectory_id = AddTrajectory(
-        options, request.topics, *msg_to_map_frame.get() * pose, time);
-  } else {
-    LOG(WARNING) << request.initial_pose.header.frame_id
-                 << "is not the same as map_frame(" << node_options_.map_frame
-                 << ")! Ignore and use default";
+  if (request.initial_pose.header.frame_id == "") {
     response.trajectory_id = AddTrajectory(options, request.topics);
+  } else {
+    auto msg_to_map_frame =
+        tf_bridge_.LookupToTracking(FromRos(request.initial_pose.header.stamp),
+                                    request.initial_pose.header.frame_id);
+    if (msg_to_map_frame) {
+      carto::transform::Rigid3d pose =
+          ToRigid3d(request.initial_pose.pose.pose);
+      carto::common::Time time = FromRos(request.initial_pose.header.stamp);
+      LOG(INFO) << "Initialising Trajectory at " << pose << " in "
+                << request.initial_pose.header.frame_id;
+      response.trajectory_id = AddTrajectory(
+          options, request.topics, *msg_to_map_frame.get() * pose, time);
+    } else {
+      LOG(WARNING) << request.initial_pose.header.frame_id << "in "
+                   << request.initial_pose.header.stamp.toSec()
+                   << " isn't available"
+                   << ". Ignore and use default";
+      response.trajectory_id = AddTrajectory(options, request.topics);
+    }
   }
   return true;
 }
