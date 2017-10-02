@@ -242,9 +242,21 @@ void Run(const std::vector<string>& bag_filenames) {
 #endif
 
   if (::ros::ok()) {
-    const string output_filename = bag_filenames.front() + ".pbstream";
-    LOG(INFO) << "Writing state to '" << output_filename << "'...";
-    node.SerializeState(output_filename);
+    string output_filename;
+    const string suffix = ".pbstream";
+    if (bag_filenames.size() > 0) {
+      output_filename = bag_filenames.front();
+    } else {
+      // Reuse loaded state name, but avoid overwriting the same state file
+      // by appending "_new".
+      output_filename =
+          FLAGS_load_state_filename.substr(
+              0, FLAGS_load_state_filename.size() - suffix.size()) +
+          string("_new");
+    }
+    const string state_output_filename = output_filename + suffix;
+    LOG(INFO) << "Writing state to '" << state_output_filename << "'...";
+    node.SerializeState(state_output_filename);
   }
   if (FLAGS_keep_running) {
     ::ros::waitForShutdown();
@@ -262,7 +274,8 @@ int main(int argc, char** argv) {
       << "-configuration_directory is missing.";
   CHECK(!FLAGS_configuration_basename.empty())
       << "-configuration_basename is missing.";
-  CHECK(!FLAGS_bag_filenames.empty()) << "-bag_filenames is missing.";
+  CHECK(!(FLAGS_bag_filenames.empty() && FLAGS_load_state_filename.empty()))
+      << "-bag_filenames and -load_state_filename cannot both be unspecified.";
 
   ::ros::init(argc, argv, "cartographer_offline_node");
   ::ros::start();
