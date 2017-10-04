@@ -56,6 +56,8 @@ DEFINE_bool(use_bag_transforms, true,
 DEFINE_string(load_state_filename, "",
               "If non-empty, filename of a .pbstream file to load, containing "
               "a saved SLAM state.");
+DEFINE_bool(load_frozen_state, true,
+            "Load the saved state as frozen (non-optimized) trajectories.");
 DEFINE_bool(keep_running, false,
             "Keep running the offline node after all messages from the bag "
             "have been processed.");
@@ -93,9 +95,7 @@ void Run(const std::vector<string>& bag_filenames) {
   node_options.lookup_transform_timeout_sec = 0.;
   Node node(node_options, &tf_buffer);
   if (!FLAGS_load_state_filename.empty()) {
-    // TODO(jihoonl): LoadMap should be replaced by some better deserialization
-    // of full SLAM state as non-frozen trajectories once possible
-    node.LoadMap(FLAGS_load_state_filename);
+    node.LoadState(FLAGS_load_state_filename, FLAGS_load_frozen_state);
   }
 
   std::unordered_set<string> expected_sensor_ids;

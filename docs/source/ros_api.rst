@@ -40,8 +40,12 @@ TODO(hrapp): Should these not be removed? It seems duplicated efforts documentin
 
 \-\-load_state_filename
   A Cartographer .pbstream state file that will be loaded from disk. This allows
-  to add new trajectories SLAMing from an earlier state, but the loaded state
-  is frozen.
+  to add new trajectories SLAMing from an earlier state.
+
+\-\-load_frozen_state
+  This boolean parameter controls if the saved state, specified using the option
+  \-\-load_state_filename, is going to be loaded as a set of frozen (not
+  optimized) trajectories.
 
 Subscribed Topics
 -----------------
