@@ -57,7 +57,7 @@ void Run() {
           node_options.map_builder_options);
   Node node(node_options, std::move(map_builder), &tf_buffer);
   if (!FLAGS_load_state_filename.empty()) {
-    node.LoadMap(FLAGS_load_state_filename);
+    node.LoadState(FLAGS_load_state_filename, FLAGS_load_frozen_state);
   }
 
   if (FLAGS_start_trajectory_with_default_topics) {

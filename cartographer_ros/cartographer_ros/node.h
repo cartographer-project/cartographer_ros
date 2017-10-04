@@ -109,7 +109,7 @@ class Node {
   void SerializeState(const std::string& filename);
 
   // Loads a persisted state to use as a map.
-  void LoadMap(const std::string& map_filename);
+  void LoadState(const std::string& state_filename, bool load_frozen_state);
 
   ::ros::NodeHandle* node_handle();
 
