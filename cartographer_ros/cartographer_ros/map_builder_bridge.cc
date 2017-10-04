@@ -104,7 +104,6 @@ bool MapBuilderBridge::HandleSubmapQuery(
     return false;
   }
 
-  response.submap_version = response_proto.submap_version();
   CHECK(response_proto.textures_size() > 0)
       << "empty textures given for submap: " << submap_id;
 

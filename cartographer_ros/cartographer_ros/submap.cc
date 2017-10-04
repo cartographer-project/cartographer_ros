@@ -30,9 +30,10 @@ std::unique_ptr<SubmapTexture> FetchSubmapTexture(
   ::cartographer_ros_msgs::SubmapQuery srv;
   srv.request.trajectory_id = submap_id.trajectory_id;
   srv.request.submap_index = submap_id.submap_index;
-  if (!client->call(srv) || srv.response.textures.empty()) {
+  if (!client->call(srv)) {
     return nullptr;
   }
+  CHECK(!srv.response.textures.empty()) << "Response contains no textures.";
   // TODO(gaschler): Forward all the textures.
   const auto& texture = srv.response.textures[0];
   std::string compressed_cells(texture.cells.begin(), texture.cells.end());
