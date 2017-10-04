@@ -33,7 +33,7 @@ std::unique_ptr<SubmapTexture> FetchSubmapTexture(
   if (!client->call(srv)) {
     return nullptr;
   }
-  CHECK(!srv.response.textures.empty()) << "Response contains no textures.";
+  CHECK(!srv.response.textures.empty());
   // TODO(gaschler): Forward all the textures.
   const auto& texture = srv.response.textures[0];
   std::string compressed_cells(texture.cells.begin(), texture.cells.end());
