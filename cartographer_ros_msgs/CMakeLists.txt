@@ -26,6 +26,7 @@ add_message_files(
   FILES
     SubmapList.msg
     SubmapEntry.msg
+    SubmapTexture.msg
     SensorTopics.msg
     TrajectoryOptions.msg
 )

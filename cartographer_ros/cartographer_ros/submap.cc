@@ -33,26 +33,27 @@ std::unique_ptr<SubmapTexture> FetchSubmapTexture(
   if (!client->call(srv)) {
     return nullptr;
   }
-  std::string compressed_cells(srv.response.cells.begin(),
-                               srv.response.cells.end());
+  CHECK(!srv.response.textures.empty());
+  // TODO(gaschler): Forward all the textures.
+  const auto& texture = srv.response.textures[0];
+  std::string compressed_cells(texture.cells.begin(), texture.cells.end());
   std::string cells;
   ::cartographer::common::FastGunzipString(compressed_cells, &cells);
-  const int num_pixels = srv.response.width * srv.response.height;
+  const int num_pixels = texture.width * texture.height;
   CHECK_EQ(cells.size(), 2 * num_pixels);
   std::vector<char> intensity;
   intensity.reserve(num_pixels);
   std::vector<char> alpha;
   alpha.reserve(num_pixels);
-  for (int i = 0; i < srv.response.height; ++i) {
-    for (int j = 0; j < srv.response.width; ++j) {
-      intensity.push_back(cells[(i * srv.response.width + j) * 2]);
-      alpha.push_back(cells[(i * srv.response.width + j) * 2 + 1]);
+  for (int i = 0; i < texture.height; ++i) {
+    for (int j = 0; j < texture.width; ++j) {
+      intensity.push_back(cells[(i * texture.width + j) * 2]);
+      alpha.push_back(cells[(i * texture.width + j) * 2 + 1]);
     }
   }
   return ::cartographer::common::make_unique<SubmapTexture>(SubmapTexture{
-      srv.response.submap_version, intensity, alpha, srv.response.width,
-      srv.response.height, srv.response.resolution,
-      ToRigid3d(srv.response.slice_pose)});
+      srv.response.submap_version, intensity, alpha, texture.width,
+      texture.height, texture.resolution, ToRigid3d(texture.slice_pose)});
 }
 
 }  // namespace cartographer_ros
