@@ -31,6 +31,7 @@
 #include "cartographer/sensor/point_cloud.h"
 #include "cartographer/sensor/range_data.h"
 #include "cartographer/transform/transform_interpolation_buffer.h"
+#include "cartographer_ros/frame_id_filtering_points_processor.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/split_string.h"
 #include "cartographer_ros/time_conversion.h"
@@ -170,6 +171,9 @@ void Run(const string& pose_graph_filename,
   carto::io::PointsProcessorPipelineBuilder builder;
   carto::io::RegisterBuiltInPointsProcessors(all_trajectories,
                                              file_writer_factory, &builder);
+  builder.Register(
+      FrameIdFilteringPointsProcessor::kConfigurationFileActionName,
+      FrameIdFilteringPointsProcessor::FromDictionary);
   std::vector<std::unique_ptr<carto::io::PointsProcessor>> pipeline =
       builder.CreatePipeline(
           lua_parameter_dictionary.GetDictionary("pipeline").get());
