@@ -38,6 +38,7 @@
 
 DEFINE_double(resolution, 0.05,
               "Resolution of a grid cell in the published occupancy grid.");
+DEFINE_double(publish_period_sec, 1.0, "OccupancyGrid publishing period.");
 
 namespace cartographer_ros {
 namespace {
@@ -97,7 +98,7 @@ void CairoDrawEachSubmap(
 
 class Node {
  public:
-  explicit Node(double resolution);
+  explicit Node(double resolution, double publish_period_sec);
   ~Node() {}
 
   Node(const Node&) = delete;
@@ -105,7 +106,7 @@ class Node {
 
  private:
   void HandleSubmapList(const cartographer_ros_msgs::SubmapList::ConstPtr& msg);
-  void DrawAndPublish(const string& frame_id, const ros::Time& time);
+  void DrawAndPublish(const ::ros::WallTimerEvent& timer_event);
   void PublishOccupancyGrid(const string& frame_id, const ros::Time& time,
                             const Eigen::Array2f& origin,
                             const Eigen::Array2i& size,
@@ -119,9 +120,12 @@ class Node {
   ::ros::Subscriber submap_list_subscriber_ GUARDED_BY(mutex_);
   ::ros::Publisher occupancy_grid_publisher_ GUARDED_BY(mutex_);
   std::map<SubmapId, SubmapState> submaps_ GUARDED_BY(mutex_);
+  ::ros::WallTimer occupancy_grid_publisher_timer_;
+  std::string last_frame_id_;
+  ros::Time last_timestamp_;
 };
 
-Node::Node(const double resolution)
+Node::Node(const double resolution, const double publish_period_sec)
     : resolution_(resolution),
       client_(node_handle_.serviceClient<::cartographer_ros_msgs::SubmapQuery>(
           kSubmapQueryServiceName)),
@@ -135,9 +139,10 @@ Node::Node(const double resolution)
       occupancy_grid_publisher_(
           node_handle_.advertise<::nav_msgs::OccupancyGrid>(
               kOccupancyGridTopic, kLatestOnlyPublisherQueueSize,
-              true /* latched */))
-
-{}
+              true /* latched */)),
+      occupancy_grid_publisher_timer_(
+          node_handle_.createWallTimer(::ros::WallDuration(publish_period_sec),
+                                       &Node::DrawAndPublish, this)) {}
 
 void Node::HandleSubmapList(
     const cartographer_ros_msgs::SubmapList::ConstPtr& msg) {
@@ -193,14 +198,16 @@ void Node::HandleSubmapList(
         << cairo_status_to_string(
                cairo_surface_status(submap_state.surface.get()));
   }
-  DrawAndPublish(msg->header.frame_id, msg->header.stamp);
+  last_timestamp_ = msg->header.stamp;
+  last_frame_id_ = msg->header.frame_id;
 }
 
-void Node::DrawAndPublish(const string& frame_id, const ros::Time& time) {
-  if (submaps_.empty()) {
+void Node::DrawAndPublish(const ::ros::WallTimerEvent& unused_timer_event) {
+  if (submaps_.empty() || last_frame_id_.empty()) {
     return;
   }
 
+  ::cartographer::common::MutexLocker locker(&mutex_);
   Eigen::AlignedBox2f bounding_box;
   {
     auto surface = ::cartographer::io::MakeUniqueCairoSurfacePtr(
@@ -244,7 +251,8 @@ void Node::DrawAndPublish(const string& frame_id, const ros::Time& time) {
                           cairo_paint(cr.get());
                         });
     cairo_surface_flush(surface.get());
-    PublishOccupancyGrid(frame_id, time, origin, size, surface.get());
+    PublishOccupancyGrid(last_frame_id_, last_timestamp_, origin, size,
+                         surface.get());
   }
 }
 
@@ -299,7 +307,7 @@ int main(int argc, char** argv) {
   ::ros::start();
 
   cartographer_ros::ScopedRosLogSink ros_log_sink;
-  ::cartographer_ros::Node node(FLAGS_resolution);
+  ::cartographer_ros::Node node(FLAGS_resolution, FLAGS_publish_period_sec);
 
   ::ros::spin();
   ::ros::shutdown();
