@@ -44,6 +44,7 @@ google_enable_testing()
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
 
 include(FindPkgConfig)
+pkg_search_module(YAMLCPP REQUIRED yaml-cpp>=0.5.1)
 
 find_package(LuaGoogle REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common io)
@@ -79,6 +80,7 @@ catkin_package(
     # TODO(damonkohler): This should be here but causes Catkin to abort because
     # protobuf specifies a library '-lpthread' instead of just 'pthread'.
     # CARTOGRAPHER
+    YAMLCPP
     PCL
     EIGEN3
     Boost
@@ -96,6 +98,10 @@ add_library(${PROJECT_NAME} ${ALL_SRCS})
 add_subdirectory("cartographer_ros")
 
 target_link_libraries(${PROJECT_NAME} PUBLIC cartographer)
+
+# YAML
+target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${YAMLCPP_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${YAMLCPP_LIBRARIES})
 
 # Lua
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${LUA_INCLUDE_DIR})

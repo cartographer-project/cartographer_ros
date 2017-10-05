@@ -28,6 +28,7 @@
 #include "cartographer/transform/rigid_transform.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/node_constants.h"
+#include "cartographer_ros/occupancy_grid.h"
 #include "cartographer_ros/ros_log_sink.h"
 #include "cartographer_ros/submap.h"
 #include "cartographer_ros_msgs/SubmapList.h"
@@ -44,57 +45,6 @@ namespace cartographer_ros {
 namespace {
 
 using ::cartographer::mapping::SubmapId;
-
-constexpr cairo_format_t kCairoFormat = CAIRO_FORMAT_ARGB32;
-
-Eigen::Affine3d ToEigen(const ::cartographer::transform::Rigid3d& rigid3) {
-  return Eigen::Translation3d(rigid3.translation()) * rigid3.rotation();
-}
-
-struct SubmapState {
-  SubmapState()
-      : surface(::cartographer::io::MakeUniqueCairoSurfacePtr(nullptr)) {}
-
-  // Texture data.
-  int width;
-  int height;
-  int version;
-  double resolution;
-  ::cartographer::transform::Rigid3d slice_pose;
-  ::cartographer::io::UniqueCairoSurfacePtr surface;
-  // Pixel data used by 'surface'. Must outlive 'surface'.
-  std::vector<uint32_t> cairo_data;
-
-  // Metadata.
-  ::cartographer::transform::Rigid3d pose;
-  int metadata_version = -1;
-};
-
-void CairoDrawEachSubmap(
-    const double scale, std::map<SubmapId, SubmapState>* submaps, cairo_t* cr,
-    std::function<void(const SubmapState&)> draw_callback) {
-  cairo_scale(cr, scale, scale);
-
-  for (auto& pair : *submaps) {
-    auto& submap_state = pair.second;
-    if (submap_state.surface == nullptr) {
-      return;
-    }
-    const Eigen::Matrix4d homo =
-        ToEigen(submap_state.pose * submap_state.slice_pose).matrix();
-
-    cairo_save(cr);
-    cairo_matrix_t matrix;
-    cairo_matrix_init(&matrix, homo(1, 0), homo(0, 0), -homo(1, 1), -homo(0, 1),
-                      homo(0, 3), -homo(1, 3));
-    cairo_transform(cr, &matrix);
-
-    const double submap_resolution = submap_state.resolution;
-    cairo_scale(cr, submap_resolution, submap_resolution);
-    draw_callback(submap_state);
-    cairo_restore(cr);
-  }
-}
 
 class Node {
  public:
