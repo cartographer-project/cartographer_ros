@@ -207,57 +207,52 @@ void Node::DrawAndPublish(const ::ros::WallTimerEvent& unused_timer_event) {
     return;
   }
 
+  ::cartographer::common::MutexLocker locker(&mutex_);
+  Eigen::AlignedBox2f bounding_box;
   {
-    ::cartographer::common::MutexLocker locker(&mutex_);
+    auto surface = ::cartographer::io::MakeUniqueCairoSurfacePtr(
+        cairo_image_surface_create(kCairoFormat, 1, 1));
+    auto cr =
+        ::cartographer::io::MakeUniqueCairoPtr(cairo_create(surface.get()));
+    const auto update_bounding_box = [&bounding_box, &cr](double x, double y) {
+      cairo_user_to_device(cr.get(), &x, &y);
+      bounding_box.extend(Eigen::Vector2f(x, y));
+    };
 
-    Eigen::AlignedBox2f bounding_box;
-    {
-      auto surface = ::cartographer::io::MakeUniqueCairoSurfacePtr(
-          cairo_image_surface_create(kCairoFormat, 1, 1));
-      auto cr =
-          ::cartographer::io::MakeUniqueCairoPtr(cairo_create(surface.get()));
-      const auto update_bounding_box = [&bounding_box, &cr](double x,
-                                                            double y) {
-        cairo_user_to_device(cr.get(), &x, &y);
-        bounding_box.extend(Eigen::Vector2f(x, y));
-      };
+    CairoDrawEachSubmap(
+        1. / resolution_, &submaps_, cr.get(),
+        [&update_bounding_box, &bounding_box](const SubmapState& submap_state) {
+          update_bounding_box(0, 0);
+          update_bounding_box(submap_state.width, 0);
+          update_bounding_box(0, submap_state.height);
+          update_bounding_box(submap_state.width, submap_state.height);
+        });
+  }
 
-      CairoDrawEachSubmap(1. / resolution_, &submaps_, cr.get(),
-                          [&update_bounding_box,
-                           &bounding_box](const SubmapState& submap_state) {
-                            update_bounding_box(0, 0);
-                            update_bounding_box(submap_state.width, 0);
-                            update_bounding_box(0, submap_state.height);
-                            update_bounding_box(submap_state.width,
-                                                submap_state.height);
-                          });
-    }
+  const int kPaddingPixel = 5;
+  const Eigen::Array2i size(
+      std::ceil(bounding_box.sizes().x()) + 2 * kPaddingPixel,
+      std::ceil(bounding_box.sizes().y()) + 2 * kPaddingPixel);
+  const Eigen::Array2f origin(-bounding_box.min().x() + kPaddingPixel,
+                              -bounding_box.min().y() + kPaddingPixel);
 
-    const int kPaddingPixel = 5;
-    const Eigen::Array2i size(
-        std::ceil(bounding_box.sizes().x()) + 2 * kPaddingPixel,
-        std::ceil(bounding_box.sizes().y()) + 2 * kPaddingPixel);
-    const Eigen::Array2f origin(-bounding_box.min().x() + kPaddingPixel,
-                                -bounding_box.min().y() + kPaddingPixel);
-
-    {
-      auto surface = ::cartographer::io::MakeUniqueCairoSurfacePtr(
-          cairo_image_surface_create(kCairoFormat, size.x(), size.y()));
-      auto cr =
-          ::cartographer::io::MakeUniqueCairoPtr(cairo_create(surface.get()));
-      cairo_set_source_rgba(cr.get(), 0.5, 0.0, 0.0, 1.);
-      cairo_paint(cr.get());
-      cairo_translate(cr.get(), origin.x(), origin.y());
-      CairoDrawEachSubmap(1. / resolution_, &submaps_, cr.get(),
-                          [&cr](const SubmapState& submap_state) {
-                            cairo_set_source_surface(
-                                cr.get(), submap_state.surface.get(), 0., 0.);
-                            cairo_paint(cr.get());
-                          });
-      cairo_surface_flush(surface.get());
-      PublishOccupancyGrid(last_frame_id_, last_timestamp_, origin, size,
-                           surface.get());
-    }
+  {
+    auto surface = ::cartographer::io::MakeUniqueCairoSurfacePtr(
+        cairo_image_surface_create(kCairoFormat, size.x(), size.y()));
+    auto cr =
+        ::cartographer::io::MakeUniqueCairoPtr(cairo_create(surface.get()));
+    cairo_set_source_rgba(cr.get(), 0.5, 0.0, 0.0, 1.);
+    cairo_paint(cr.get());
+    cairo_translate(cr.get(), origin.x(), origin.y());
+    CairoDrawEachSubmap(1. / resolution_, &submaps_, cr.get(),
+                        [&cr](const SubmapState& submap_state) {
+                          cairo_set_source_surface(
+                              cr.get(), submap_state.surface.get(), 0., 0.);
+                          cairo_paint(cr.get());
+                        });
+    cairo_surface_flush(surface.get());
+    PublishOccupancyGrid(last_frame_id_, last_timestamp_, origin, size,
+                         surface.get());
   }
 }
 
