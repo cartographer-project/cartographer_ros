@@ -172,6 +172,10 @@ void Run(const string& pose_graph_filename,
       // otherwise. We make sure that tf_messages are published before any data
       // messages, so that tf lookups always work.
       std::deque<rosbag::MessageInstance> delayed_messages;
+      // We publish tf messages one second earlier than other messages. Under
+      // the assumption of higher frequency tf this should ensure that tf can
+      // always interpolate.
+      const ::ros::Duration kDelay(1.);
       for (const rosbag::MessageInstance& message : view) {
         if (FLAGS_use_bag_transforms && message.isType<tf2_msgs::TFMessage>()) {
           auto tf_message = message.instantiate<tf2_msgs::TFMessage>();
@@ -187,7 +191,7 @@ void Run(const string& pose_graph_filename,
 
         while (!delayed_messages.empty() &&
                delayed_messages.front().getTime() <
-                   message.getTime() - ::ros::Duration(1.)) {
+                   message.getTime() - kDelay) {
           const rosbag::MessageInstance& delayed_message =
               delayed_messages.front();
 
