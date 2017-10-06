@@ -141,9 +141,9 @@ void Run(const std::vector<string>& bag_filenames) {
     const ::ros::Time begin_time = view.getBeginTime();
     const double duration_in_seconds = (view.getEndTime() - begin_time).toSec();
 
-    // We make sure that tf_messages are published before any data messages, so
-    // that tf lookups always work and that tf_buffer has a small cache size -
-    // because it gets very inefficient with a large one.
+    // We need to keep 'tf_buffer' small because it becomes very inefficient
+    // otherwise. We make sure that tf_messages are published before any data
+    // messages, so that tf lookups always work.
     std::deque<rosbag::MessageInstance> delayed_messages;
     for (const rosbag::MessageInstance& msg : view) {
       if (!::ros::ok()) {
