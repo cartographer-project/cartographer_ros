@@ -110,6 +110,7 @@ PointCloudWithIntensities LaserScanToPointCloudWithIntensities(
         const Eigen::AngleAxisf rotation(angle, Eigen::Vector3f::UnitZ());
         point_cloud.points.push_back(rotation *
                                      (first_echo * Eigen::Vector3f::UnitX()));
+        point_cloud.offset_seconds.push_back(i * msg.time_increment);
         if (msg.intensities.size() > 0) {
           CHECK_EQ(msg.intensities.size(), msg.ranges.size());
           const auto& echo_intensities = msg.intensities[i];
@@ -172,6 +173,7 @@ PointCloudWithIntensities ToPointCloudWithIntensities(
     for (const auto& point : pcl_point_cloud) {
       point_cloud.points.emplace_back(point.x, point.y, point.z);
       point_cloud.intensities.push_back(point.intensity);
+      point_cloud.offset_seconds.push_back(0.f);
     }
   } else {
     pcl::PointCloud<pcl::PointXYZ> pcl_point_cloud;
@@ -182,6 +184,7 @@ PointCloudWithIntensities ToPointCloudWithIntensities(
     for (const auto& point : pcl_point_cloud) {
       point_cloud.points.emplace_back(point.x, point.y, point.z);
       point_cloud.intensities.push_back(1.0);
+      point_cloud.offset_seconds.push_back(0.f);
     }
   }
   return point_cloud;

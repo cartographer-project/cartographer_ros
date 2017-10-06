@@ -114,16 +114,14 @@ void SensorBridge::HandleImuMessage(const string& sensor_id,
 void SensorBridge::HandleLaserScanMessage(
     const string& sensor_id, const sensor_msgs::LaserScan::ConstPtr& msg) {
   HandleLaserScan(sensor_id, FromRos(msg->header.stamp), msg->header.frame_id,
-                  ToPointCloudWithIntensities(*msg).points,
-                  msg->time_increment);
+                  ToPointCloudWithIntensities(*msg));
 }
 
 void SensorBridge::HandleMultiEchoLaserScanMessage(
     const string& sensor_id,
     const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
   HandleLaserScan(sensor_id, FromRos(msg->header.stamp), msg->header.frame_id,
-                  ToPointCloudWithIntensities(*msg).points,
-                  msg->time_increment);
+                  ToPointCloudWithIntensities(*msg));
 }
 
 void SensorBridge::HandlePointCloud2Message(
@@ -140,21 +138,21 @@ void SensorBridge::HandlePointCloud2Message(
 
 const TfBridge& SensorBridge::tf_bridge() const { return tf_bridge_; }
 
-void SensorBridge::HandleLaserScan(const string& sensor_id,
-                                   const carto::common::Time start_time,
-                                   const string& frame_id,
-                                   const carto::sensor::PointCloud& points,
-                                   const double seconds_between_points) {
+void SensorBridge::HandleLaserScan(
+    const string& sensor_id, const carto::common::Time start_time,
+    const string& frame_id,
+    const carto::sensor::PointCloudWithIntensities& points) {
   for (int i = 0; i != num_subdivisions_per_laser_scan_; ++i) {
     const size_t start_index =
-        points.size() * i / num_subdivisions_per_laser_scan_;
+        points.points.size() * i / num_subdivisions_per_laser_scan_;
     const size_t end_index =
-        points.size() * (i + 1) / num_subdivisions_per_laser_scan_;
-    const carto::sensor::PointCloud subdivision(points.begin() + start_index,
-                                                points.begin() + end_index);
+        points.points.size() * (i + 1) / num_subdivisions_per_laser_scan_;
+    const carto::sensor::PointCloud subdivision(
+        points.points.begin() + start_index, points.points.begin() + end_index);
+    const size_t middle_index = (start_index + end_index) / 2;
     const carto::common::Time subdivision_time =
-        start_time + carto::common::FromSeconds((start_index + end_index) / 2. *
-                                                seconds_between_points);
+        start_time +
+        carto::common::FromSeconds(points.offset_seconds.at(middle_index));
     HandleRangefinder(sensor_id, subdivision_time, frame_id, subdivision);
   }
 }
