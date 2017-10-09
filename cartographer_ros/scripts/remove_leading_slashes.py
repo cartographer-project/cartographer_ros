@@ -22,10 +22,10 @@ import rosbag
 
 
 def ParseArgs():
-  p = argparse.ArgumentParser(
+  argument_parser = argparse.ArgumentParser(
       description="Removes leading slashes from frame names.")
-  p.add_argument("input", type=str, help="Input bag")
-  return p.parse_args()
+  argument_parser.add_argument("input", type=str, help="Input bag")
+  return argument_parser.parse_args()
 
 
 def RewriteMsg(msg):
