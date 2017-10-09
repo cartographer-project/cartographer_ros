@@ -156,7 +156,8 @@ class Node {
   // These are keyed with 'trajectory_id'.
   std::map<int, ::cartographer::mapping::PoseExtrapolator> extrapolators_;
   std::unordered_map<int, TrajectorySensorSamplers> sensor_samplers_;
-  std::unordered_map<int, std::vector<std::pair<string, ::ros::Subscriber>>> subscribers_;
+  std::unordered_map<int, std::vector<std::pair<string, ::ros::Subscriber>>>
+      subscribers_;
   std::unordered_set<std::string> subscribed_topics_;
   std::unordered_map<int, bool> is_active_trajectory_ GUARDED_BY(mutex_);
 
