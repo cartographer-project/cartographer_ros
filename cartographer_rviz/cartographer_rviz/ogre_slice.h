@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_RVIZ_SRC_OGRE_SUBMAP_H_
-#define CARTOGRAPHER_RVIZ_SRC_OGRE_SUBMAP_H_
+#ifndef CARTOGRAPHER_RVIZ_SRC_OGRE_SLICE_H_
+#define CARTOGRAPHER_RVIZ_SRC_OGRE_SLICE_H_
 
 #include "Eigen/Core"
 #include "Eigen/Geometry"
@@ -34,19 +34,19 @@ namespace cartographer_rviz {
 Ogre::Vector3 ToOgre(const Eigen::Vector3d& v);
 Ogre::Quaternion ToOgre(const Eigen::Quaterniond& q);
 
-// A class containing the Ogre code to visualize submap data. Member functions
-// are expected to be called from the Ogre thread.
-class OgreSubmap {
+// A class containing the Ogre code to visualize a slice texture of a submap.
+// Member functions are expected to be called from the Ogre thread.
+class OgreSlice {
  public:
   // Attaches a node visualizing the submap 'id' to the 'submap_node' which is
   // expected to represent the submap frame.
-  OgreSubmap(const ::cartographer::mapping::SubmapId& id,
-             Ogre::SceneManager* const scene_manager,
-             Ogre::SceneNode* const submap_node);
-  ~OgreSubmap();
+  OgreSlice(const ::cartographer::mapping::SubmapId& id,
+            Ogre::SceneManager* const scene_manager,
+            Ogre::SceneNode* const submap_node);
+  ~OgreSlice();
 
-  OgreSubmap(const OgreSubmap&) = delete;
-  OgreSubmap& operator=(const OgreSubmap&) = delete;
+  OgreSlice(const OgreSlice&) = delete;
+  OgreSlice& operator=(const OgreSlice&) = delete;
 
   // Updates the texture and pose of the submap using new data from
   // 'submap_texture'.
@@ -67,4 +67,4 @@ class OgreSubmap {
 
 }  // namespace cartographer_rviz
 
-#endif  // CARTOGRAPHER_RVIZ_SRC_OGRE_SUBMAP_H_
+#endif  // CARTOGRAPHER_RVIZ_SRC_OGRE_SLICE_H_
