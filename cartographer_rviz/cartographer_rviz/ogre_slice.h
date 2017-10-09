@@ -40,7 +40,7 @@ class OgreSlice {
  public:
   // Attaches a node visualizing the submap 'id' to the 'submap_node' which is
   // expected to represent the submap frame.
-  OgreSlice(const ::cartographer::mapping::SubmapId& id,
+  OgreSlice(const ::cartographer::mapping::SubmapId& id, int slice_id,
             Ogre::SceneManager* const scene_manager,
             Ogre::SceneNode* const submap_node);
   ~OgreSlice();
@@ -57,6 +57,7 @@ class OgreSlice {
 
  private:
   const ::cartographer::mapping::SubmapId id_;
+  int slice_id_;
   Ogre::SceneManager* const scene_manager_;
   Ogre::SceneNode* const submap_node_;
   Ogre::SceneNode* const slice_node_;

@@ -58,7 +58,7 @@ DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
       display_context_(display_context),
       submap_node_(map_node->createChildSceneNode()),
       submap_id_text_node_(submap_node_->createChildSceneNode()),
-      ogre_slice_(id, display_context->getSceneManager(), submap_node_),
+      ogre_slice_(id, 0, display_context->getSceneManager(), submap_node_),
       pose_axes_(display_context->getSceneManager(), submap_node_,
                  pose_axes_length, pose_axes_radius),
       submap_id_text_(QString("(%1,%2)")
