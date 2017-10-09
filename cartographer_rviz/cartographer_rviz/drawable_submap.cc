@@ -134,7 +134,7 @@ bool DrawableSubmap::MaybeFetchTexture(ros::ServiceClient* const client) {
         ::cartographer_ros::FetchSubmapTextures(id_, client);
     ::cartographer::common::MutexLocker locker(&mutex_);
     query_in_progress_ = false;
-    if (submap_textures != nullptr && !submap_textures->textures.empty()) {
+    if (submap_textures != nullptr) {
       // We emit a signal to update in the right thread, and pass via the
       // 'submap_texture_' member to simplify the signal-slot connection
       // slightly.
@@ -168,7 +168,7 @@ void DrawableSubmap::SetAlpha(const double current_tracking_z) {
 
 void DrawableSubmap::UpdateSceneNode() {
   ::cartographer::common::MutexLocker locker(&mutex_);
-  // TODO(gaschler): Add UI feature to show different textures.
+  // TODO(gaschler): Add UI feature to show all textures.
   ogre_submap_.Update(submap_textures_->textures[0]);
   display_context_->queueRender();
 }
