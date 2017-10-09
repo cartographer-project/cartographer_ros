@@ -307,15 +307,17 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
                                  options.num_multi_echo_laser_scans)) {
     subscribers_[trajectory_id].push_back(
         {SubscribeWithHandler<sensor_msgs::MultiEchoLaserScan>(
-                    &Node::HandleMultiEchoLaserScanMessage, trajectory_id,
-                    topic, &node_handle_, this), topic});
+             &Node::HandleMultiEchoLaserScanMessage, trajectory_id, topic,
+             &node_handle_, this),
+         topic});
   }
   for (const string& topic : ComputeRepeatedTopicNames(
            topics.point_cloud2_topic, options.num_point_clouds)) {
     subscribers_[trajectory_id].push_back(
         {SubscribeWithHandler<sensor_msgs::PointCloud2>(
-                    &Node::HandlePointCloud2Message, trajectory_id, topic,
-                    &node_handle_, this), topic});
+             &Node::HandlePointCloud2Message, trajectory_id, topic,
+             &node_handle_, this),
+         topic});
   }
 
   // For 2D SLAM, subscribe to the IMU if we expect it. For 3D SLAM, the IMU is
