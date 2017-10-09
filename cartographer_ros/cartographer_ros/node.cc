@@ -285,7 +285,6 @@ int Node::AddTrajectory(const TrajectoryOptions& options,
   AddSensorSamplers(trajectory_id, options);
   LaunchSubscribers(options, topics, trajectory_id);
   is_active_trajectory_[trajectory_id] = true;
-
   subscribed_topics_.insert(expected_sensor_ids.begin(),
                             expected_sensor_ids.end());
   return trajectory_id;
@@ -432,7 +431,6 @@ bool Node::HandleFinishTrajectory(
     LOG(INFO) << "Shutdown the subscriber of [" << entry.topic << "]";
   }
   CHECK_EQ(subscribers_.erase(trajectory_id), 1);
-
   map_builder_bridge_.FinishTrajectory(trajectory_id);
   is_active_trajectory_[trajectory_id] = false;
   return true;
