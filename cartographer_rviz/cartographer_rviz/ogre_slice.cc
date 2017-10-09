@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cartographer_rviz/ogre_submap.h"
+#include "cartographer_rviz/ogre_slice.h"
 
 #include <string>
 #include <vector>
@@ -48,9 +48,9 @@ Ogre::Quaternion ToOgre(const Eigen::Quaterniond& q) {
   return Ogre::Quaternion(q.w(), q.x(), q.y(), q.z());
 }
 
-OgreSubmap::OgreSubmap(const ::cartographer::mapping::SubmapId& id,
-                       Ogre::SceneManager* const scene_manager,
-                       Ogre::SceneNode* const submap_node)
+OgreSlice::OgreSlice(const ::cartographer::mapping::SubmapId& id,
+                     Ogre::SceneManager* const scene_manager,
+                     Ogre::SceneNode* const submap_node)
     : id_(id),
       scene_manager_(scene_manager),
       submap_node_(submap_node),
@@ -69,7 +69,7 @@ OgreSubmap::OgreSubmap(const ::cartographer::mapping::SubmapId& id,
   slice_node_->attachObject(manual_object_);
 }
 
-OgreSubmap::~OgreSubmap() {
+OgreSlice::~OgreSlice() {
   Ogre::MaterialManager::getSingleton().remove(material_->getHandle());
   if (!texture_.isNull()) {
     Ogre::TextureManager::getSingleton().remove(texture_->getHandle());
@@ -79,7 +79,7 @@ OgreSubmap::~OgreSubmap() {
   scene_manager_->destroyManualObject(manual_object_);
 }
 
-void OgreSubmap::Update(
+void OgreSlice::Update(
     const ::cartographer_ros::SubmapTexture& submap_texture) {
   slice_node_->setPosition(ToOgre(submap_texture.slice_pose.translation()));
   slice_node_->setOrientation(ToOgre(submap_texture.slice_pose.rotation()));
@@ -136,7 +136,7 @@ void OgreSubmap::Update(
   texture_unit->setTextureFiltering(Ogre::TFO_NONE);
 }
 
-void OgreSubmap::SetAlpha(const float alpha) {
+void OgreSlice::SetAlpha(const float alpha) {
   const Ogre::GpuProgramParametersSharedPtr parameters =
       material_->getTechnique(0)->getPass(0)->getFragmentProgramParameters();
   parameters->setNamedConstant("u_alpha", alpha);

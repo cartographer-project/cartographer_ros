@@ -58,7 +58,7 @@ DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
       display_context_(display_context),
       submap_node_(map_node->createChildSceneNode()),
       submap_id_text_node_(submap_node_->createChildSceneNode()),
-      ogre_submap_(id, display_context->getSceneManager(), submap_node_),
+      ogre_slice_(id, display_context->getSceneManager(), submap_node_),
       pose_axes_(display_context->getSceneManager(), submap_node_,
                  pose_axes_length, pose_axes_radius),
       submap_id_text_(QString("(%1,%2)")
@@ -162,14 +162,14 @@ void DrawableSubmap::SetAlpha(const double current_tracking_z) {
       target_alpha == 0.f || target_alpha == 1.f) {
     current_alpha_ = target_alpha;
   }
-  ogre_submap_.SetAlpha(current_alpha_);
+  ogre_slice_.SetAlpha(current_alpha_);
   display_context_->queueRender();
 }
 
 void DrawableSubmap::UpdateSceneNode() {
   ::cartographer::common::MutexLocker locker(&mutex_);
   // TODO(gaschler): Add UI feature to show all textures.
-  ogre_submap_.Update(submap_textures_->textures[0]);
+  ogre_slice_.Update(submap_textures_->textures[0]);
   display_context_->queueRender();
 }
 

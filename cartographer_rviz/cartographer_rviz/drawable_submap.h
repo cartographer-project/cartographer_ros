@@ -30,7 +30,7 @@
 #include "cartographer_ros/submap.h"
 #include "cartographer_ros_msgs/SubmapEntry.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
-#include "cartographer_rviz/ogre_submap.h"
+#include "cartographer_rviz/ogre_slice.h"
 #include "ros/ros.h"
 #include "rviz/display_context.h"
 #include "rviz/frame_manager.h"
@@ -93,7 +93,7 @@ class DrawableSubmap : public QObject {
   ::rviz::DisplayContext* const display_context_;
   Ogre::SceneNode* const submap_node_;
   Ogre::SceneNode* const submap_id_text_node_;
-  OgreSubmap ogre_submap_;
+  OgreSlice ogre_slice_;
   ::cartographer::transform::Rigid3d pose_ GUARDED_BY(mutex_);
   ::rviz::Axes pose_axes_;
   ::rviz::MovableText submap_id_text_;
