@@ -94,6 +94,15 @@ class Node {
   ::ros::NodeHandle* node_handle();
 
  private:
+  struct Subscriber {
+    ::ros::Subscriber subscriber;
+
+    // ::ros::Subscriber::getTopic() does not necessarily return the same string
+    // it was given in its constructor. Since we rely on the topic name as the
+    // unique identifier of a subscriber, we remember it ourselves.
+    string topic;
+  };
+
   bool HandleSubmapQuery(
       cartographer_ros_msgs::SubmapQuery::Request& request,
       cartographer_ros_msgs::SubmapQuery::Response& response);
@@ -156,7 +165,7 @@ class Node {
   // These are keyed with 'trajectory_id'.
   std::map<int, ::cartographer::mapping::PoseExtrapolator> extrapolators_;
   std::unordered_map<int, TrajectorySensorSamplers> sensor_samplers_;
-  std::unordered_map<int, std::vector<::ros::Subscriber>> subscribers_;
+  std::unordered_map<int, std::vector<Subscriber>> subscribers_;
   std::unordered_set<std::string> subscribed_topics_;
   std::unordered_map<int, bool> is_active_trajectory_ GUARDED_BY(mutex_);
 

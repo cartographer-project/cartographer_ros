@@ -155,11 +155,11 @@ void Node::AddExtrapolator(const int trajectory_id,
 void Node::AddSensorSamplers(const int trajectory_id,
                              const TrajectoryOptions& options) {
   CHECK(sensor_samplers_.count(trajectory_id) == 0);
-  sensor_samplers_.emplace(std::piecewise_construct,
-                    std::forward_as_tuple(trajectory_id),
-                    std::forward_as_tuple(options.rangefinder_sampling_ratio,
-                                          options.odometry_sampling_ratio,
-                                          options.imu_sampling_ratio));
+  sensor_samplers_.emplace(
+      std::piecewise_construct, std::forward_as_tuple(trajectory_id),
+      std::forward_as_tuple(options.rangefinder_sampling_ratio,
+                            options.odometry_sampling_ratio,
+                            options.imu_sampling_ratio));
 }
 
 void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
@@ -296,24 +296,27 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
   for (const string& topic : ComputeRepeatedTopicNames(
            topics.laser_scan_topic, options.num_laser_scans)) {
     subscribers_[trajectory_id].push_back(
-        SubscribeWithHandler<sensor_msgs::LaserScan>(
-            &Node::HandleLaserScanMessage, trajectory_id, topic, &node_handle_,
-            this));
+        {SubscribeWithHandler<sensor_msgs::LaserScan>(
+             &Node::HandleLaserScanMessage, trajectory_id, topic, &node_handle_,
+             this),
+         topic});
   }
   for (const string& topic :
        ComputeRepeatedTopicNames(topics.multi_echo_laser_scan_topic,
                                  options.num_multi_echo_laser_scans)) {
     subscribers_[trajectory_id].push_back(
-        SubscribeWithHandler<sensor_msgs::MultiEchoLaserScan>(
-            &Node::HandleMultiEchoLaserScanMessage, trajectory_id, topic,
-            &node_handle_, this));
+        {SubscribeWithHandler<sensor_msgs::MultiEchoLaserScan>(
+             &Node::HandleMultiEchoLaserScanMessage, trajectory_id, topic,
+             &node_handle_, this),
+         topic});
   }
   for (const string& topic : ComputeRepeatedTopicNames(
            topics.point_cloud2_topic, options.num_point_clouds)) {
     subscribers_[trajectory_id].push_back(
-        SubscribeWithHandler<sensor_msgs::PointCloud2>(
-            &Node::HandlePointCloud2Message, trajectory_id, topic,
-            &node_handle_, this));
+        {SubscribeWithHandler<sensor_msgs::PointCloud2>(
+             &Node::HandlePointCloud2Message, trajectory_id, topic,
+             &node_handle_, this),
+         topic});
   }
 
   // For 2D SLAM, subscribe to the IMU if we expect it. For 3D SLAM, the IMU is
@@ -324,17 +327,19 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
            .use_imu_data())) {
     string topic = topics.imu_topic;
     subscribers_[trajectory_id].push_back(
-        SubscribeWithHandler<sensor_msgs::Imu>(&Node::HandleImuMessage,
-                                               trajectory_id, topic,
-                                               &node_handle_, this));
+        {SubscribeWithHandler<sensor_msgs::Imu>(&Node::HandleImuMessage,
+                                                trajectory_id, topic,
+                                                &node_handle_, this),
+         topic});
   }
 
   if (options.use_odometry) {
     string topic = topics.odometry_topic;
     subscribers_[trajectory_id].push_back(
-        SubscribeWithHandler<nav_msgs::Odometry>(&Node::HandleOdometryMessage,
-                                                 trajectory_id, topic,
-                                                 &node_handle_, this));
+        {SubscribeWithHandler<nav_msgs::Odometry>(&Node::HandleOdometryMessage,
+                                                  trajectory_id, topic,
+                                                  &node_handle_, this),
+         topic});
   }
 }
 
@@ -421,9 +426,9 @@ bool Node::HandleFinishTrajectory(
 
   // Shutdown the subscribers of this trajectory.
   for (auto& entry : subscribers_[trajectory_id]) {
-    entry.shutdown();
-    subscribed_topics_.erase(entry.getTopic());
-    LOG(INFO) << "Shutdown the subscriber of [" << entry.getTopic() << "]";
+    entry.subscriber.shutdown();
+    subscribed_topics_.erase(entry.topic);
+    LOG(INFO) << "Shutdown the subscriber of [" << entry.topic << "]";
   }
   CHECK_EQ(subscribers_.erase(trajectory_id), 1);
   map_builder_bridge_.FinishTrajectory(trajectory_id);
