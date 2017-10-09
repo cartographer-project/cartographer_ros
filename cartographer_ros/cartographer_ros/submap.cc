@@ -24,7 +24,7 @@
 
 namespace cartographer_ros {
 
-std::unique_ptr<SubmapTexture> FetchSubmapTexture(
+std::unique_ptr<SubmapTextures> FetchSubmapTextures(
     const ::cartographer::mapping::SubmapId& submap_id,
     ros::ServiceClient* client) {
   ::cartographer_ros_msgs::SubmapQuery srv;
@@ -34,26 +34,29 @@ std::unique_ptr<SubmapTexture> FetchSubmapTexture(
     return nullptr;
   }
   CHECK(!srv.response.textures.empty());
-  // TODO(gaschler): Forward all the textures.
-  const auto& texture = srv.response.textures[0];
-  std::string compressed_cells(texture.cells.begin(), texture.cells.end());
-  std::string cells;
-  ::cartographer::common::FastGunzipString(compressed_cells, &cells);
-  const int num_pixels = texture.width * texture.height;
-  CHECK_EQ(cells.size(), 2 * num_pixels);
-  std::vector<char> intensity;
-  intensity.reserve(num_pixels);
-  std::vector<char> alpha;
-  alpha.reserve(num_pixels);
-  for (int i = 0; i < texture.height; ++i) {
-    for (int j = 0; j < texture.width; ++j) {
-      intensity.push_back(cells[(i * texture.width + j) * 2]);
-      alpha.push_back(cells[(i * texture.width + j) * 2 + 1]);
+  auto response = ::cartographer::common::make_unique<SubmapTextures>();
+  response->version = srv.response.submap_version;
+  for (const auto& texture : srv.response.textures) {
+    std::string compressed_cells(texture.cells.begin(), texture.cells.end());
+    std::string cells;
+    ::cartographer::common::FastGunzipString(compressed_cells, &cells);
+    const int num_pixels = texture.width * texture.height;
+    CHECK_EQ(cells.size(), 2 * num_pixels);
+    std::vector<char> intensity;
+    intensity.reserve(num_pixels);
+    std::vector<char> alpha;
+    alpha.reserve(num_pixels);
+    for (int i = 0; i < texture.height; ++i) {
+      for (int j = 0; j < texture.width; ++j) {
+        intensity.push_back(cells[(i * texture.width + j) * 2]);
+        alpha.push_back(cells[(i * texture.width + j) * 2 + 1]);
+      }
     }
+    response->textures.emplace_back(
+        SubmapTexture{intensity, alpha, texture.width, texture.height,
+                      texture.resolution, ToRigid3d(texture.slice_pose)});
   }
-  return ::cartographer::common::make_unique<SubmapTexture>(SubmapTexture{
-      srv.response.submap_version, intensity, alpha, texture.width,
-      texture.height, texture.resolution, ToRigid3d(texture.slice_pose)});
+  return response;
 }
 
 }  // namespace cartographer_ros

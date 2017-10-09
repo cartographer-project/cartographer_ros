@@ -117,8 +117,8 @@ bool DrawableSubmap::MaybeFetchTexture(ros::ServiceClient* const client) {
   ::cartographer::common::MutexLocker locker(&mutex_);
   // Received metadata version can also be lower if we restarted Cartographer.
   const bool newer_version_available =
-      submap_texture_ == nullptr ||
-      submap_texture_->version != metadata_version_;
+      submap_textures_ == nullptr ||
+      submap_textures_->version != metadata_version_;
   const std::chrono::milliseconds now =
       std::chrono::duration_cast<std::chrono::milliseconds>(
           std::chrono::system_clock::now().time_since_epoch());
@@ -130,15 +130,15 @@ bool DrawableSubmap::MaybeFetchTexture(ros::ServiceClient* const client) {
   query_in_progress_ = true;
   last_query_timestamp_ = now;
   rpc_request_future_ = std::async(std::launch::async, [this, client]() {
-    std::unique_ptr<::cartographer_ros::SubmapTexture> submap_texture =
-        ::cartographer_ros::FetchSubmapTexture(id_, client);
+    std::unique_ptr<::cartographer_ros::SubmapTextures> submap_textures =
+        ::cartographer_ros::FetchSubmapTextures(id_, client);
     ::cartographer::common::MutexLocker locker(&mutex_);
     query_in_progress_ = false;
-    if (submap_texture != nullptr) {
+    if (submap_textures != nullptr) {
       // We emit a signal to update in the right thread, and pass via the
       // 'submap_texture_' member to simplify the signal-slot connection
       // slightly.
-      submap_texture_ = std::move(submap_texture);
+      submap_textures_ = std::move(submap_textures);
       Q_EMIT RequestSucceeded();
     }
   });
@@ -168,7 +168,8 @@ void DrawableSubmap::SetAlpha(const double current_tracking_z) {
 
 void DrawableSubmap::UpdateSceneNode() {
   ::cartographer::common::MutexLocker locker(&mutex_);
-  ogre_submap_.Update(*submap_texture_);
+  // TODO(gaschler): Add UI feature to show all textures.
+  ogre_submap_.Update(submap_textures_->textures[0]);
   display_context_->queueRender();
 }
 
