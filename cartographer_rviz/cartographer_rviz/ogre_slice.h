@@ -55,6 +55,8 @@ class OgreSlice {
   // Changes the opacity of the submap to 'alpha'.
   void SetAlpha(float alpha);
 
+  void SetVisibility(bool visible);
+
  private:
   const ::cartographer::mapping::SubmapId id_;
   int slice_id_;

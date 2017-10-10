@@ -70,6 +70,10 @@ class DrawableSubmap : public QObject {
   // 'current_tracking_z'.
   void SetAlpha(double current_tracking_z);
 
+  // Sets the visibility of a slice. It will be drawn if the parent submap
+  // is also visible.
+  void SetSliceVisibility(size_t slice_index, bool visible);
+
   ::cartographer::mapping::SubmapId id() const { return id_; }
   int version() const { return metadata_version_; }
   bool visibility() const { return visibility_->getBool(); }
@@ -93,7 +97,7 @@ class DrawableSubmap : public QObject {
   ::rviz::DisplayContext* const display_context_;
   Ogre::SceneNode* const submap_node_;
   Ogre::SceneNode* const submap_id_text_node_;
-  OgreSlice ogre_slice_;
+  std::vector<std::unique_ptr<OgreSlice>> ogre_slices_;
   ::cartographer::transform::Rigid3d pose_ GUARDED_BY(mutex_);
   ::rviz::Axes pose_axes_;
   ::rviz::MovableText submap_id_text_;
@@ -105,6 +109,7 @@ class DrawableSubmap : public QObject {
       GUARDED_BY(mutex_);
   float current_alpha_ = 0.f;
   std::unique_ptr<::rviz::BoolProperty> visibility_;
+  std::vector<bool> slices_visibility_;
 };
 
 }  // namespace cartographer_rviz

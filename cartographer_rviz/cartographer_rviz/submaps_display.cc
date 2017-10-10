@@ -52,12 +52,18 @@ SubmapsDisplay::SubmapsDisplay() : tf_listener_(tf_buffer_) {
   tracking_frame_property_ = new ::rviz::StringProperty(
       "Tracking frame", kDefaultTrackingFrame,
       "Tracking frame, used for fading out submaps.", this);
+  slice_high_resolution_enabled_ = new ::rviz::BoolProperty(
+      "High Resolution", true, "Display high resolution slices.", this,
+      SLOT(ResolutionToggled()), this);
+  slice_low_resolution_enabled_ = new ::rviz::BoolProperty(
+      "Low Resolution", false, "Display low resolution slices.", this,
+      SLOT(ResolutionToggled()), this);
   client_ = update_nh_.serviceClient<::cartographer_ros_msgs::SubmapQuery>("");
   trajectories_category_ = new ::rviz::Property(
       "Submaps", QVariant(), "List of all submaps, organized by trajectories.",
       this);
   visibility_all_enabled_ = new ::rviz::BoolProperty(
-      "All Enabled", true,
+      "All", true,
       "Whether submaps from all trajectories should be displayed or not.",
       trajectories_category_, SLOT(AllEnabledToggled()), this);
   const std::string package_path = ::ros::package::getPath(ROS_PACKAGE_NAME);
@@ -148,6 +154,10 @@ void SubmapsDisplay::processMessage(
               id, context_, map_node_, trajectory_visibility.get(),
               trajectory_visibility->getBool(), kSubmapPoseAxesLength,
               kSubmapPoseAxesRadius));
+      trajectory_submaps.at(id.submap_index)
+          ->SetSliceVisibility(0, slice_high_resolution_enabled_->getBool());
+      trajectory_submaps.at(id.submap_index)
+          ->SetSliceVisibility(1, slice_low_resolution_enabled_->getBool());
     }
     trajectory_submaps.at(id.submap_index)->Update(msg->header, submap_entry);
   }
@@ -220,6 +230,18 @@ void SubmapsDisplay::AllEnabledToggled() {
   const bool visible = visibility_all_enabled_->getBool();
   for (auto& trajectory : trajectories_) {
     trajectory->visibility->setBool(visible);
+  }
+}
+
+void SubmapsDisplay::ResolutionToggled() {
+  ::cartographer::common::MutexLocker locker(&mutex_);
+  for (auto& trajectory : trajectories_) {
+    for (auto& submap_entry : trajectory->submaps) {
+      submap_entry.second->SetSliceVisibility(
+          0, slice_high_resolution_enabled_->getBool());
+      submap_entry.second->SetSliceVisibility(
+          1, slice_low_resolution_enabled_->getBool());
+    }
   }
 }
 

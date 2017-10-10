@@ -144,4 +144,8 @@ void OgreSlice::SetAlpha(const float alpha) {
   parameters->setNamedConstant("u_alpha", alpha);
 }
 
+void OgreSlice::SetVisibility(bool visible) {
+  slice_node_->setVisible(visible);
+}
+
 }  // namespace cartographer_rviz
