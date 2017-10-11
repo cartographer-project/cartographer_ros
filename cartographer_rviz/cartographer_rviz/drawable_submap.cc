@@ -173,8 +173,7 @@ void DrawableSubmap::SetAlpha(const double current_tracking_z) {
 }
 
 void DrawableSubmap::SetSliceVisibility(size_t slice_index, bool visible) {
-  CHECK(slice_index < ogre_slices_.size());
-  ogre_slices_[slice_index]->SetVisibility(visible);
+  ogre_slices_.at(slice_index)->SetVisibility(visible);
   ToggleVisibility();
 }
 
