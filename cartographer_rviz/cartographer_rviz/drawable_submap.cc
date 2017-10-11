@@ -65,8 +65,7 @@ DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
                           .arg(id.trajectory_id)
                           .arg(id.submap_index)
                           .toStdString()),
-      last_query_timestamp_(0),
-      slices_visibility_(kNumberOfSlicesPerSubmap, true) {
+      last_query_timestamp_(0) {
   for (int slice_index = 0; slice_index < kNumberOfSlicesPerSubmap;
        ++slice_index) {
     ogre_slices_.emplace_back(::cartographer::common::make_unique<OgreSlice>(
@@ -174,9 +173,8 @@ void DrawableSubmap::SetAlpha(const double current_tracking_z) {
 }
 
 void DrawableSubmap::SetSliceVisibility(size_t slice_index, bool visible) {
-  if (slice_index < slices_visibility_.size()) {
-    slices_visibility_[slice_index] = visible;
-  }
+  CHECK(slice_index < ogre_slices_.size());
+  ogre_slices_[slice_index]->SetVisibility(visible);
   ToggleVisibility();
 }
 
@@ -191,11 +189,8 @@ void DrawableSubmap::UpdateSceneNode() {
 }
 
 void DrawableSubmap::ToggleVisibility() {
-  for (size_t slice_index = 0; slice_index < ogre_slices_.size() &&
-                               slice_index < slices_visibility_.size();
-       ++slice_index) {
-    ogre_slices_[slice_index]->SetVisibility(visibility_->getBool() &&
-                                             slices_visibility_[slice_index]);
+  for (auto& ogre_slice : ogre_slices_) {
+    ogre_slice->UpdateOgreNodeVisibility(visibility_->getBool());
   }
   display_context_->queueRender();
 }

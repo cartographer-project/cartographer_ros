@@ -55,17 +55,24 @@ class OgreSlice {
   // Changes the opacity of the submap to 'alpha'.
   void SetAlpha(float alpha);
 
-  void SetVisibility(bool visible);
+  // Sets the local visibility of this slice.
+  void SetVisibility(bool visibility);
+
+  // Updates the SceneNode to be visible if the submap and this slice are
+  // visible.
+  void UpdateOgreNodeVisibility(bool submap_visibility);
 
  private:
+  // TODO(gaschler): Pack both ids into a struct.
   const ::cartographer::mapping::SubmapId id_;
-  int slice_id_;
+  const int slice_id_;
   Ogre::SceneManager* const scene_manager_;
   Ogre::SceneNode* const submap_node_;
   Ogre::SceneNode* const slice_node_;
   Ogre::ManualObject* const manual_object_;
   Ogre::TexturePtr texture_;
   Ogre::MaterialPtr material_;
+  bool visibility_ = true;
 };
 
 }  // namespace cartographer_rviz

@@ -109,7 +109,6 @@ class DrawableSubmap : public QObject {
       GUARDED_BY(mutex_);
   float current_alpha_ = 0.f;
   std::unique_ptr<::rviz::BoolProperty> visibility_;
-  std::vector<bool> slices_visibility_;
 };
 
 }  // namespace cartographer_rviz
