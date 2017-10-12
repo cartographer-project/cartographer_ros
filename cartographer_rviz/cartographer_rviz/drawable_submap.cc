@@ -45,6 +45,7 @@ constexpr float kAlphaUpdateThreshold = 0.2f;
 const Ogre::ColourValue kSubmapIdColor(Ogre::ColourValue::Red);
 const Eigen::Vector3d kSubmapIdPosition(0.0, 0.0, 0.3);
 constexpr float kSubmapIdCharHeight = 0.2f;
+constexpr int kNumberOfSlicesPerSubmap = 2;
 
 }  // namespace
 
@@ -58,7 +59,6 @@ DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
       display_context_(display_context),
       submap_node_(map_node->createChildSceneNode()),
       submap_id_text_node_(submap_node_->createChildSceneNode()),
-      ogre_slice_(id, display_context->getSceneManager(), submap_node_),
       pose_axes_(display_context->getSceneManager(), submap_node_,
                  pose_axes_length, pose_axes_radius),
       submap_id_text_(QString("(%1,%2)")
@@ -66,6 +66,11 @@ DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
                           .arg(id.submap_index)
                           .toStdString()),
       last_query_timestamp_(0) {
+  for (int slice_index = 0; slice_index < kNumberOfSlicesPerSubmap;
+       ++slice_index) {
+    ogre_slices_.emplace_back(::cartographer::common::make_unique<OgreSlice>(
+        id, slice_index, display_context->getSceneManager(), submap_node_));
+  }
   // DrawableSubmap creates and manages its visibility property object
   // (a unique_ptr is needed because the Qt parent of the visibility
   // property is the submap_category object - the BoolProperty needs
@@ -80,7 +85,6 @@ DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
   // TODO(jihoonl): Make it toggleable.
   submap_id_text_node_->setPosition(ToOgre(kSubmapIdPosition));
   submap_id_text_node_->attachObject(&submap_id_text_);
-  submap_node_->setVisible(visible);
   connect(this, SIGNAL(RequestSucceeded()), this, SLOT(UpdateSceneNode()));
 }
 
@@ -162,19 +166,31 @@ void DrawableSubmap::SetAlpha(const double current_tracking_z) {
       target_alpha == 0.f || target_alpha == 1.f) {
     current_alpha_ = target_alpha;
   }
-  ogre_slice_.SetAlpha(current_alpha_);
+  for (auto& slice : ogre_slices_) {
+    slice->SetAlpha(current_alpha_);
+  }
   display_context_->queueRender();
+}
+
+void DrawableSubmap::SetSliceVisibility(size_t slice_index, bool visible) {
+  ogre_slices_.at(slice_index)->SetVisibility(visible);
+  ToggleVisibility();
 }
 
 void DrawableSubmap::UpdateSceneNode() {
   ::cartographer::common::MutexLocker locker(&mutex_);
-  // TODO(gaschler): Add UI feature to show all textures.
-  ogre_slice_.Update(submap_textures_->textures[0]);
+  for (size_t slice_index = 0; slice_index < ogre_slices_.size() &&
+                               slice_index < submap_textures_->textures.size();
+       ++slice_index) {
+    ogre_slices_[slice_index]->Update(submap_textures_->textures[slice_index]);
+  }
   display_context_->queueRender();
 }
 
 void DrawableSubmap::ToggleVisibility() {
-  submap_node_->setVisible(visibility_->getBool());
+  for (auto& ogre_slice : ogre_slices_) {
+    ogre_slice->UpdateOgreNodeVisibility(visibility_->getBool());
+  }
   display_context_->queueRender();
 }
 

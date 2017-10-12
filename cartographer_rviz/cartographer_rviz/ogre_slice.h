@@ -40,7 +40,7 @@ class OgreSlice {
  public:
   // Attaches a node visualizing the submap 'id' to the 'submap_node' which is
   // expected to represent the submap frame.
-  OgreSlice(const ::cartographer::mapping::SubmapId& id,
+  OgreSlice(const ::cartographer::mapping::SubmapId& id, int slice_id,
             Ogre::SceneManager* const scene_manager,
             Ogre::SceneNode* const submap_node);
   ~OgreSlice();
@@ -55,14 +55,24 @@ class OgreSlice {
   // Changes the opacity of the submap to 'alpha'.
   void SetAlpha(float alpha);
 
+  // Sets the local visibility of this slice.
+  void SetVisibility(bool visibility);
+
+  // Updates the SceneNode to be visible if the submap and this slice are
+  // visible.
+  void UpdateOgreNodeVisibility(bool submap_visibility);
+
  private:
+  // TODO(gaschler): Pack both ids into a struct.
   const ::cartographer::mapping::SubmapId id_;
+  const int slice_id_;
   Ogre::SceneManager* const scene_manager_;
   Ogre::SceneNode* const submap_node_;
   Ogre::SceneNode* const slice_node_;
   Ogre::ManualObject* const manual_object_;
   Ogre::TexturePtr texture_;
   Ogre::MaterialPtr material_;
+  bool visibility_ = true;
 };
 
 }  // namespace cartographer_rviz
