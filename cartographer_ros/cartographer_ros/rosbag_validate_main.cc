@@ -42,6 +42,7 @@ namespace {
 
 struct TimestampData {
   ros::Time last_timestamp;
+  string topic;
   ::cartographer::common::Histogram histogram;
 };
 
@@ -50,10 +51,8 @@ void Run(const string& bag_filename) {
   bag.open(bag_filename, rosbag::bagmode::Read);
   rosbag::View view(bag);
   const ::ros::Time begin_time = view.getBeginTime();
-  const double duration_in_seconds = (view.getEndTime() - begin_time).toSec();
 
   std::map<string, TimestampData> timestamp_data;
-
   for (const rosbag::MessageInstance& message : view) {
     string frame_id;
     ros::Time time;
@@ -83,9 +82,15 @@ void Run(const string& bag_filename) {
 
     if (!timestamp_data.count(frame_id)) {
       timestamp_data.emplace(
-          frame_id, TimestampData{time, ::cartographer::common::Histogram()});
+          frame_id, TimestampData{time, message.getTopic(),
+                                  ::cartographer::common::Histogram()});
     } else {
       auto& entry = timestamp_data.at(frame_id);
+      if (entry.topic != message.getTopic()) {
+        LOG(ERROR) << "frame_id \"" << frame_id
+                   << "\" is send on multiple topics. It was seen at least on "
+                   << entry.topic << " and " << message.getTopic();
+      }
       const double delta_t_sec = (time - entry.last_timestamp).toSec();
       if (delta_t_sec < 0) {
         LOG(ERROR) << "Sensor with frame_id \"" << frame_id
@@ -102,8 +107,9 @@ void Run(const string& bag_filename) {
 
   constexpr int kNumBucketsForHistogram = 10;
   for (const auto& entry_pair : timestamp_data) {
-    LOG(INFO) << "Time delta histogram for consecutive messages of \""
-              << entry_pair.first << "\":\n"
+    LOG(INFO) << "Time delta histogram for consecutive messages on topic \""
+              << entry_pair.second.topic << "\" (frame_id: \""
+              << entry_pair.first << "\"):\n"
               << entry_pair.second.histogram.ToString(kNumBucketsForHistogram);
   }
 }
