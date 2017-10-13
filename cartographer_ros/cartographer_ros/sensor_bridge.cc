@@ -130,7 +130,7 @@ void SensorBridge::HandlePointCloud2Message(
   pcl::fromROSMsg(*msg, pcl_point_cloud);
   carto::sensor::PointCloud point_cloud;
   for (const auto& point : pcl_point_cloud) {
-    point_cloud.emplace_back(point.x, point.y, point.z);
+    point_cloud.emplace_back(point.x, point.y, point.z, 0.f);
   }
   HandleRangefinder(sensor_id, FromRos(msg->header.stamp), msg->header.frame_id,
                     point_cloud);
