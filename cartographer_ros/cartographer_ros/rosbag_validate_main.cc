@@ -35,7 +35,7 @@
 #include "tf2_ros/buffer.h"
 #include "urdf/model.h"
 
-DEFINE_string(bag_filename, "", "Bag to process");
+DEFINE_string(bag_filename, "", "Bag to process.");
 
 namespace cartographer_ros {
 namespace {

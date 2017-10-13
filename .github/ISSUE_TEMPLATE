@@ -4,11 +4,12 @@ It would help us tremendously if you run through the following checklist. This e
 
 Please
 
-1. run `rosbag_wtf` which does some checks on your sensor data. This
+1. run `rosbag_validate` which does some checks on your sensor data. This
    tool often finds issues that can explain poor performance and must be fixed
-   at recording time. Please post the full output of the tool in the issue,
-   even if it does not report anything. Run it using `rosrun cartographer_ros
-   cartographer_rosbag_wtf -bag_filename <bag filename>`.
+   at recording time. Please post the full output of the tool into a
+   [Gist](https://gist.github.com/) and link it in the issue, even if it does
+   not report anything. Run it using `rosrun cartographer_ros
+   cartographer_rosbag_validate -bag_filename <bag filename>`.
 2. post a link to a Git repository containing a branch of
    `cartographer_ros` containing all the configuration, launch, and URDF files
    required to reproduce your issue.

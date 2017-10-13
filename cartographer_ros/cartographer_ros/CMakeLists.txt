@@ -67,12 +67,12 @@ install(TARGETS cartographer_occupancy_grid_node
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-google_binary(cartographer_rosbag_wtf
+google_binary(cartographer_rosbag_validate
   SRCS
-    rosbag_wtf_main.cc
+    rosbag_validate_main.cc
 )
 
-install(TARGETS cartographer_rosbag_wtf
+install(TARGETS cartographer_rosbag_validate
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
