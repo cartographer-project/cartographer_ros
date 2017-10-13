@@ -70,7 +70,8 @@ Now we run the assets writer with the `sample configuration file`_ for the 3D ba
       bag_filenames:=${HOME}/Downloads/b3-2016-04-05-14-14-00.bag \
       pose_graph_filename:=${HOME}/Downloads/b3-2016-04-05-14-14-00.bag.pbstream
 
-At the time of writing, the generated assets end up in ``~/.ros``.
+All output files are prefixed by ``--output_file_prefix`` which defaults to the filename of the first bag.
+For the last example, if you specify ``points.ply`` in the pipeline configuration file, this will translate to ``${HOME}/Downloads/b3-2016-04-05-14-14-00.bag_points.ply``.
 
 Configuration
 -------------
