@@ -63,6 +63,10 @@ DEFINE_string(pose_graph_filename, "",
               "Proto stream file containing the pose graph.");
 DEFINE_bool(use_bag_transforms, true,
             "Whether to read and use the transforms from the bag.");
+DEFINE_string(output_file_prefix, "",
+              "Will be prefixed to all output file names and can be used to "
+              "define the output directory. If empty, the first bag filename "
+              "will be used.");
 
 namespace cartographer_ros {
 namespace {
@@ -114,7 +118,8 @@ std::unique_ptr<carto::io::PointsBatch> HandleMessage(
 void Run(const string& pose_graph_filename,
          const std::vector<string>& bag_filenames,
          const string& configuration_directory,
-         const string& configuration_basename, const string& urdf_filename) {
+         const string& configuration_basename, const string& urdf_filename,
+         const string& output_file_prefix) {
   auto file_resolver =
       carto::common::make_unique<carto::common::ConfigurationFileResolver>(
           std::vector<string>{configuration_directory});
@@ -133,8 +138,12 @@ void Run(const string& pose_graph_filename,
          "trajectory in the same order as the correponding trajectories in the "
          "pose graph proto.";
 
-  const auto file_writer_factory = [](const string& filename) {
-    return carto::common::make_unique<carto::io::StreamFileWriter>(filename);
+  const string file_prefix = !output_file_prefix.empty()
+                                 ? output_file_prefix
+                                 : bag_filenames.front() + "_";
+  const auto file_writer_factory = [file_prefix](const string& filename) {
+    return carto::common::make_unique<carto::io::StreamFileWriter>(file_prefix +
+                                                                   filename);
   };
 
   // This vector must outlive the pipeline.
@@ -253,5 +262,5 @@ int main(int argc, char** argv) {
       FLAGS_pose_graph_filename,
       cartographer_ros::SplitString(FLAGS_bag_filenames, ','),
       FLAGS_configuration_directory, FLAGS_configuration_basename,
-      FLAGS_urdf_filename);
+      FLAGS_urdf_filename, FLAGS_output_file_prefix);
 }
