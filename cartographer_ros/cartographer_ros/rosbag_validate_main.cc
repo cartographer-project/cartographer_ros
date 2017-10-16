@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <string>
 
 #include "cartographer/common/histogram.h"
+#include "cartographer/common/make_unique.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 #include "nav_msgs/Odometry.h"
@@ -36,24 +38,52 @@
 #include "urdf/model.h"
 
 DEFINE_string(bag_filename, "", "Bag to process.");
+DEFINE_bool(dump_timing, false,
+            "Dump per-sensor timing information in files called "
+            "timing_<frame_id>.csv in the current directory.");
 
 namespace cartographer_ros {
 namespace {
 
-struct TimestampData {
+struct PerFrameId {
   ros::Time last_timestamp;
   string topic;
   ::cartographer::common::Histogram histogram;
+  std::unique_ptr<std::ofstream> timing_file;
 };
 
-void Run(const string& bag_filename) {
+std::unique_ptr<std::ofstream> CreateTimingFile(const string& frame_id) {
+  auto timing_file = ::cartographer::common::make_unique<std::ofstream>(
+      std::string("timing_") + frame_id + ".csv", std::ios_base::out);
+
+  (*timing_file) << "# Timing information for sensor with frame id: "
+                 << frame_id << std::endl
+                 << "# Columns are in order" << std::endl
+                 << "# - packet index of the packet in the bag, first packet is 1"
+                 << std::endl
+                 << "# - timestamp when rosbag wrote the packet, i.e. "
+                    "rosbag::MessageInstance::getTime().toNSec()"
+                 << std::endl
+                 << "# - timestamp when data was acquired, i.e. "
+                    "message.header.stamp.toNSec()"
+                 << std::endl
+                 << "#" << std::endl
+                 << "# The data can be read in python using" << std::endl
+                 << "# import numpy" << std::endl
+                 << "# np.loadtxt(<filename>, dtype='uint64')" << std::endl;
+
+  return timing_file;
+}
+
+void Run(const string& bag_filename, const bool dump_timing) {
   rosbag::Bag bag;
   bag.open(bag_filename, rosbag::bagmode::Read);
   rosbag::View view(bag);
-  const ::ros::Time begin_time = view.getBeginTime();
 
-  std::map<string, TimestampData> timestamp_data;
+  std::map<string, PerFrameId> per_frame_id;
+  size_t message_index = 0;
   for (const rosbag::MessageInstance& message : view) {
+    ++message_index;
     string frame_id;
     ros::Time time;
     if (message.isType<sensor_msgs::PointCloud2>()) {
@@ -80,17 +110,18 @@ void Run(const string& bag_filename) {
       continue;
     }
 
-    if (!timestamp_data.count(frame_id)) {
-      timestamp_data.emplace(
-          frame_id, TimestampData{time, message.getTopic(),
-                                  ::cartographer::common::Histogram()});
-    } else {
-      auto& entry = timestamp_data.at(frame_id);
-      if (entry.topic != message.getTopic()) {
-        LOG(ERROR) << "frame_id \"" << frame_id
-                   << "\" is send on multiple topics. It was seen at least on "
-                   << entry.topic << " and " << message.getTopic();
-      }
+    bool first_packet = false;
+    if (!per_frame_id.count(frame_id)) {
+      per_frame_id.emplace(
+          frame_id,
+          PerFrameId{time, message.getTopic(),
+                     ::cartographer::common::Histogram(),
+                     dump_timing ? CreateTimingFile(frame_id) : nullptr});
+      first_packet = true;
+    }
+
+    auto& entry = per_frame_id.at(frame_id);
+    if (!first_packet) {
       const double delta_t_sec = (time - entry.last_timestamp).toSec();
       if (delta_t_sec < 0) {
         LOG(ERROR) << "Sensor with frame_id \"" << frame_id
@@ -100,17 +131,39 @@ void Run(const string& bag_filename) {
                       "acquired from the sensor.";
       }
       entry.histogram.Add(delta_t_sec);
-      entry.last_timestamp = time;
+    }
+
+    if (entry.topic != message.getTopic()) {
+      LOG(ERROR) << "frame_id \"" << frame_id
+                 << "\" is send on multiple topics. It was seen at least on "
+                 << entry.topic << " and " << message.getTopic();
+    }
+    entry.last_timestamp = time;
+
+    if (dump_timing) {
+      CHECK(entry.timing_file != nullptr);
+      (*entry.timing_file) << message_index << "\t"
+                           << message.getTime().toNSec() << "\t"
+                           << time.toNSec() << std::endl;
     }
   }
   bag.close();
 
   constexpr int kNumBucketsForHistogram = 10;
-  for (const auto& entry_pair : timestamp_data) {
+  for (const auto& entry_pair : per_frame_id) {
     LOG(INFO) << "Time delta histogram for consecutive messages on topic \""
               << entry_pair.second.topic << "\" (frame_id: \""
               << entry_pair.first << "\"):\n"
               << entry_pair.second.histogram.ToString(kNumBucketsForHistogram);
+  }
+
+  if (dump_timing) {
+    for (const auto& entry_pair : per_frame_id) {
+      entry_pair.second.timing_file->close();
+      CHECK(*entry_pair.second.timing_file)
+          << "Could not write timing information for \"" << entry_pair.first
+          << "\"";
+    }
   }
 }
 
@@ -123,5 +176,5 @@ int main(int argc, char** argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
 
   CHECK(!FLAGS_bag_filename.empty()) << "-bag_filename is missing.";
-  ::cartographer_ros::Run(FLAGS_bag_filename);
+  ::cartographer_ros::Run(FLAGS_bag_filename, FLAGS_dump_timing);
 }
