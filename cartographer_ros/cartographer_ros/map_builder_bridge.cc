@@ -199,7 +199,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
         continue;
       }
       const ::geometry_msgs::Point node_point =
-          ToGeometryMsgPoint(node.pose.translation());
+          ToGeometryMsgPoint(node.global_pose.translation());
       marker.points.push_back(node_point);
       // Work around the 16384 point limit in RViz by splitting the
       // trajectory into multiple markers.
@@ -290,7 +290,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintList() {
     const auto& trajectory_node_pose =
         all_trajectory_nodes[constraint.node_id.trajectory_id]
                             [constraint.node_id.node_index]
-                                .pose;
+                                .global_pose;
     const cartographer::transform::Rigid3d constraint_pose =
         submap_pose * constraint.pose.zbar_ij;
 
