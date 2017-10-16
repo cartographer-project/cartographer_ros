@@ -59,7 +59,7 @@ std::unique_ptr<std::ofstream> CreateTimingFile(const string& frame_id) {
   (*timing_file) << "# Timing information for sensor with frame id: "
                  << frame_id << std::endl
                  << "# Columns are in order" << std::endl
-                 << "# - one based packet index of the packet in the bag"
+                 << "# - packet index of the packet in the bag, first packet is 1"
                  << std::endl
                  << "# - timestamp when rosbag wrote the packet, i.e. "
                     "rosbag::MessageInstance::getTime().toNSec()"
