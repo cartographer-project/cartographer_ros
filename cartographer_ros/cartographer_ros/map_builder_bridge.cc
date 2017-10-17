@@ -36,6 +36,30 @@ constexpr double kConstraintMarkerScale = 0.025;
   return result;
 }
 
+visualization_msgs::Marker CreateTrajectoryMarker(const int trajectory_id,
+                                                  const std::string& frame_id) {
+  visualization_msgs::Marker marker;
+  marker.ns = "Trajectory " + std::to_string(trajectory_id);
+  marker.id = 0;
+  marker.type = visualization_msgs::Marker::LINE_STRIP;
+  marker.header.stamp = ::ros::Time::now();
+  marker.header.frame_id = frame_id;
+  marker.color = ToMessage(cartographer::io::GetColor(trajectory_id));
+  marker.scale.x = kTrajectoryLineStripMarkerScale;
+  marker.pose.orientation.w = 1.;
+  marker.pose.position.z = 0.05;
+  return marker;
+}
+
+void PushAndResetLineMarker(visualization_msgs::Marker* marker,
+                            std::vector<visualization_msgs::Marker>* markers) {
+  if (marker->points.size() > 1) {
+    markers->push_back(*marker);
+    ++marker->id;
+  }
+  marker->points.clear();
+}
+
 }  // namespace
 
 MapBuilderBridge::MapBuilderBridge(const NodeOptions& node_options,
@@ -184,18 +208,12 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
        trajectory_id < static_cast<int>(all_trajectory_nodes.size());
        ++trajectory_id) {
     const auto& single_trajectory_nodes = all_trajectory_nodes[trajectory_id];
-    visualization_msgs::Marker marker;
-    marker.ns = "Trajectory " + std::to_string(trajectory_id);
-    marker.id = 0;
-    marker.type = visualization_msgs::Marker::LINE_STRIP;
-    marker.header.stamp = ::ros::Time::now();
-    marker.header.frame_id = node_options_.map_frame;
-    marker.color = ToMessage(cartographer::io::GetColor(trajectory_id));
-    marker.scale.x = kTrajectoryLineStripMarkerScale;
-    marker.pose.orientation.w = 1.0;
-    marker.pose.position.z = 0.05;
+    visualization_msgs::Marker marker =
+        CreateTrajectoryMarker(trajectory_id, node_options_.map_frame);
+
     for (const auto& node : single_trajectory_nodes) {
       if (node.trimmed()) {
+        PushAndResetLineMarker(&marker, &trajectory_node_list.markers);
         continue;
       }
       const ::geometry_msgs::Point node_point =
@@ -204,14 +222,12 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
       // Work around the 16384 point limit in RViz by splitting the
       // trajectory into multiple markers.
       if (marker.points.size() == 16384) {
-        trajectory_node_list.markers.push_back(marker);
-        ++marker.id;
-        marker.points.clear();
+        PushAndResetLineMarker(&marker, &trajectory_node_list.markers);
         // Push back the last point, so the two markers appear connected.
         marker.points.push_back(node_point);
       }
     }
-    trajectory_node_list.markers.push_back(marker);
+    PushAndResetLineMarker(&marker, &trajectory_node_list.markers);
   }
   return trajectory_node_list;
 }
