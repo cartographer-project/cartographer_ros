@@ -66,11 +66,10 @@ class SensorBridge {
   const TfBridge& tf_bridge() const;
 
  private:
-  void HandleLaserScan(const string& sensor_id,
-                       ::cartographer::common::Time start_time,
-                       const string& frame_id,
-                       const ::cartographer::sensor::PointCloud& points,
-                       double seconds_between_points);
+  void HandleLaserScan(
+      const string& sensor_id, ::cartographer::common::Time start_time,
+      const string& frame_id,
+      const ::cartographer::sensor::PointCloudWithIntensities& points);
   void HandleRangefinder(const string& sensor_id,
                          ::cartographer::common::Time time,
                          const string& frame_id,

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cartographer_rviz/ogre_submap.h"
+#include "cartographer_rviz/ogre_slice.h"
 
 #include <string>
 #include <vector>
@@ -32,10 +32,11 @@ constexpr char kSubmapSourceMaterialName[] = "cartographer_ros/Submap";
 constexpr char kSubmapMaterialPrefix[] = "SubmapMaterial";
 constexpr char kSubmapTexturePrefix[] = "SubmapTexture";
 
-std::string GetSubmapIdentifier(
-    const ::cartographer::mapping::SubmapId& submap_id) {
+std::string GetSliceIdentifier(
+    const ::cartographer::mapping::SubmapId& submap_id, const int slice_id) {
   return std::to_string(submap_id.trajectory_id) + "-" +
-         std::to_string(submap_id.submap_index);
+         std::to_string(submap_id.submap_index) + "-" +
+         std::to_string(slice_id);
 }
 
 }  // namespace
@@ -48,19 +49,20 @@ Ogre::Quaternion ToOgre(const Eigen::Quaterniond& q) {
   return Ogre::Quaternion(q.w(), q.x(), q.y(), q.z());
 }
 
-OgreSubmap::OgreSubmap(const ::cartographer::mapping::SubmapId& id,
-                       Ogre::SceneManager* const scene_manager,
-                       Ogre::SceneNode* const submap_node)
+OgreSlice::OgreSlice(const ::cartographer::mapping::SubmapId& id, int slice_id,
+                     Ogre::SceneManager* const scene_manager,
+                     Ogre::SceneNode* const submap_node)
     : id_(id),
+      slice_id_(slice_id),
       scene_manager_(scene_manager),
       submap_node_(submap_node),
       slice_node_(submap_node_->createChildSceneNode()),
       manual_object_(scene_manager_->createManualObject(
-          kManualObjectPrefix + GetSubmapIdentifier(id))) {
+          kManualObjectPrefix + GetSliceIdentifier(id, slice_id))) {
   material_ = Ogre::MaterialManager::getSingleton().getByName(
       kSubmapSourceMaterialName);
-  material_ =
-      material_->clone(kSubmapMaterialPrefix + GetSubmapIdentifier(id_));
+  material_ = material_->clone(kSubmapMaterialPrefix +
+                               GetSliceIdentifier(id_, slice_id_));
   material_->setReceiveShadows(false);
   material_->getTechnique(0)->setLightingEnabled(false);
   material_->setCullingMode(Ogre::CULL_NONE);
@@ -69,7 +71,7 @@ OgreSubmap::OgreSubmap(const ::cartographer::mapping::SubmapId& id,
   slice_node_->attachObject(manual_object_);
 }
 
-OgreSubmap::~OgreSubmap() {
+OgreSlice::~OgreSlice() {
   Ogre::MaterialManager::getSingleton().remove(material_->getHandle());
   if (!texture_.isNull()) {
     Ogre::TextureManager::getSingleton().remove(texture_->getHandle());
@@ -79,7 +81,7 @@ OgreSubmap::~OgreSubmap() {
   scene_manager_->destroyManualObject(manual_object_);
 }
 
-void OgreSubmap::Update(
+void OgreSlice::Update(
     const ::cartographer_ros::SubmapTexture& submap_texture) {
   slice_node_->setPosition(ToOgre(submap_texture.slice_pose.translation()));
   slice_node_->setOrientation(ToOgre(submap_texture.slice_pose.rotation()));
@@ -120,7 +122,7 @@ void OgreSubmap::Update(
     texture_.setNull();
   }
   const std::string texture_name =
-      kSubmapTexturePrefix + GetSubmapIdentifier(id_);
+      kSubmapTexturePrefix + GetSliceIdentifier(id_, slice_id_);
   texture_ = Ogre::TextureManager::getSingleton().loadRawData(
       texture_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
       pixel_stream, submap_texture.width, submap_texture.height,
@@ -136,10 +138,16 @@ void OgreSubmap::Update(
   texture_unit->setTextureFiltering(Ogre::TFO_NONE);
 }
 
-void OgreSubmap::SetAlpha(const float alpha) {
+void OgreSlice::SetAlpha(const float alpha) {
   const Ogre::GpuProgramParametersSharedPtr parameters =
       material_->getTechnique(0)->getPass(0)->getFragmentProgramParameters();
   parameters->setNamedConstant("u_alpha", alpha);
+}
+
+void OgreSlice::SetVisibility(bool visibility) { visibility_ = visibility; }
+
+void OgreSlice::UpdateOgreNodeVisibility(bool submap_visibility) {
+  slice_node_->setVisible(submap_visibility && visibility_);
 }
 
 }  // namespace cartographer_rviz

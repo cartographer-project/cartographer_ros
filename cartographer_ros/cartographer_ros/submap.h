@@ -27,7 +27,6 @@
 namespace cartographer_ros {
 
 struct SubmapTexture {
-  int version;
   std::vector<char> intensity;
   std::vector<char> alpha;
   int width;
@@ -36,9 +35,14 @@ struct SubmapTexture {
   ::cartographer::transform::Rigid3d slice_pose;
 };
 
+struct SubmapTextures {
+  int version;
+  std::vector<SubmapTexture> textures;
+};
+
 // Fetch 'submap_id' using the 'client' and returning the response or 'nullptr'
 // on error.
-std::unique_ptr<SubmapTexture> FetchSubmapTexture(
+std::unique_ptr<SubmapTextures> FetchSubmapTextures(
     const ::cartographer::mapping::SubmapId& submap_id,
     ros::ServiceClient* client);
 

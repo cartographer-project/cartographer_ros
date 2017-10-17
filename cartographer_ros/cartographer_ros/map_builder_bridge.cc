@@ -128,19 +128,21 @@ bool MapBuilderBridge::HandleSubmapQuery(
     return false;
   }
 
-  response.submap_version = response_proto.submap_version();
   CHECK(response_proto.textures_size() > 0)
       << "empty textures given for submap: " << submap_id;
 
-  // TODO(gaschler): Forward all textures, not just the first one.
-  const auto& texture_proto = *response_proto.textures().begin();
-  response.cells.insert(response.cells.begin(), texture_proto.cells().begin(),
-                        texture_proto.cells().end());
-  response.width = texture_proto.width();
-  response.height = texture_proto.height();
-  response.resolution = texture_proto.resolution();
-  response.slice_pose = ToGeometryMsgPose(
-      cartographer::transform::ToRigid3(texture_proto.slice_pose()));
+  response.submap_version = response_proto.submap_version();
+  for (const auto& texture_proto : response_proto.textures()) {
+    response.textures.emplace_back();
+    auto& texture = response.textures.back();
+    texture.cells.insert(texture.cells.begin(), texture_proto.cells().begin(),
+                         texture_proto.cells().end());
+    texture.width = texture_proto.width();
+    texture.height = texture_proto.height();
+    texture.resolution = texture_proto.resolution();
+    texture.slice_pose = ToGeometryMsgPose(
+        cartographer::transform::ToRigid3(texture_proto.slice_pose()));
+  }
   return true;
 }
 
@@ -215,7 +217,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
         continue;
       }
       const ::geometry_msgs::Point node_point =
-          ToGeometryMsgPoint(node.pose.translation());
+          ToGeometryMsgPoint(node.global_pose.translation());
       marker.points.push_back(node_point);
       // Work around the 16384 point limit in RViz by splitting the
       // trajectory into multiple markers.
@@ -304,7 +306,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintList() {
     const auto& trajectory_node_pose =
         all_trajectory_nodes[constraint.node_id.trajectory_id]
                             [constraint.node_id.node_index]
-                                .pose;
+                                .global_pose;
     const cartographer::transform::Rigid3d constraint_pose =
         submap_pose * constraint.pose.zbar_ij;
 

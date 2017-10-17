@@ -141,10 +141,14 @@ void Run(const std::vector<string>& bag_filenames) {
     const ::ros::Time begin_time = view.getBeginTime();
     const double duration_in_seconds = (view.getEndTime() - begin_time).toSec();
 
-    // We make sure that tf_messages are published before any data messages, so
-    // that tf lookups always work and that tf_buffer has a small cache size -
-    // because it gets very inefficient with a large one.
+    // We need to keep 'tf_buffer' small because it becomes very inefficient
+    // otherwise. We make sure that tf_messages are published before any data
+    // messages, so that tf lookups always work.
     std::deque<rosbag::MessageInstance> delayed_messages;
+    // We publish tf messages one second earlier than other messages. Under
+    // the assumption of higher frequency tf this should ensure that tf can
+    // always interpolate.
+    const ::ros::Duration kDelay(1.);
     for (const rosbag::MessageInstance& msg : view) {
       if (!::ros::ok()) {
         break;
@@ -166,7 +170,7 @@ void Run(const std::vector<string>& bag_filenames) {
 
       while (!delayed_messages.empty() &&
              delayed_messages.front().getTime() <
-                 msg.getTime() - ::ros::Duration(1.)) {
+                 msg.getTime() - kDelay) {
         const rosbag::MessageInstance& delayed_msg = delayed_messages.front();
         const string topic = node.node_handle()->resolveName(
             delayed_msg.getTopic(), false /* resolve */);

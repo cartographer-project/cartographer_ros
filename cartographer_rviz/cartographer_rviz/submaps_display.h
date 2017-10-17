@@ -32,8 +32,9 @@
 
 namespace cartographer_rviz {
 
-// This should be a private class in SubmapsDisplay, unfortunately, QT does not
-// allow for this.
+// TODO(gaschler): This should be a private class in SubmapsDisplay,
+// unfortunately, QT does not allow for this. Move the logic out of the struct
+// and use just one slot for all changes.
 struct Trajectory : public QObject {
   Q_OBJECT
 
@@ -67,6 +68,7 @@ class SubmapsDisplay
  private Q_SLOTS:
   void Reset();
   void AllEnabledToggled();
+  void ResolutionToggled();
 
  private:
   void CreateClient();
@@ -87,6 +89,8 @@ class SubmapsDisplay
   Ogre::SceneNode* map_node_ = nullptr;  // Represents the map frame.
   std::vector<std::unique_ptr<Trajectory>> trajectories_ GUARDED_BY(mutex_);
   ::cartographer::common::Mutex mutex_;
+  ::rviz::BoolProperty* slice_high_resolution_enabled_;
+  ::rviz::BoolProperty* slice_low_resolution_enabled_;
   ::rviz::Property* trajectories_category_;
   ::rviz::BoolProperty* visibility_all_enabled_;
 };
