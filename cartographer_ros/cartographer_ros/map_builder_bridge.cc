@@ -195,7 +195,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
     marker.pose.orientation.w = 1.0;
     marker.pose.position.z = 0.05;
     for (const auto& node : single_trajectory_nodes) {
-      if (node.trimmed()) {
+      if (node.constant_data != nullptr) {
         continue;
       }
       const ::geometry_msgs::Point node_point =
