@@ -212,7 +212,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
         CreateTrajectoryMarker(trajectory_id, node_options_.map_frame);
 
     for (const auto& node : single_trajectory_nodes) {
-      if (node.trimmed()) {
+      if (node.constant_data == nullptr) {
         PushAndResetLineMarker(&marker, &trajectory_node_list.markers);
         continue;
       }
