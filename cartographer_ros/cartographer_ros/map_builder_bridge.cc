@@ -150,23 +150,13 @@ cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
   cartographer_ros_msgs::SubmapList submap_list;
   submap_list.header.stamp = ::ros::Time::now();
   submap_list.header.frame_id = node_options_.map_frame;
-  const auto all_submap_data =
-      map_builder_.sparse_pose_graph()->GetAllSubmapData();
-  for (size_t trajectory_id = 0; trajectory_id < all_submap_data.size();
-       ++trajectory_id) {
-    for (size_t submap_index = 0;
-         submap_index < all_submap_data[trajectory_id].size(); ++submap_index) {
-      const auto& submap_data = all_submap_data[trajectory_id][submap_index];
-      if (submap_data.submap == nullptr) {
-        continue;
-      }
-      cartographer_ros_msgs::SubmapEntry submap_entry;
-      submap_entry.trajectory_id = trajectory_id;
-      submap_entry.submap_index = submap_index;
-      submap_entry.submap_version = submap_data.submap->num_range_data();
-      submap_entry.pose = ToGeometryMsgPose(submap_data.pose);
-      submap_list.submap.push_back(submap_entry);
-    }
+  for (const auto& submap_id_data : map_builder_.sparse_pose_graph()->GetAllSubmapData()) {
+    cartographer_ros_msgs::SubmapEntry submap_entry;
+    submap_entry.trajectory_id = submap_id_data.id.trajectory_id;
+    submap_entry.submap_index = submap_id_data.id.submap_index;
+    submap_entry.submap_version = submap_id_data.data.submap->num_range_data();
+    submap_entry.pose = ToGeometryMsgPose(submap_id_data.data.pose);
+    submap_list.submap.push_back(submap_entry);
   }
   return submap_list;
 }
@@ -264,7 +254,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintList() {
 
   const auto all_trajectory_nodes =
       map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
-  const auto all_submap_data =
+  const auto submap_data =
       map_builder_.sparse_pose_graph()->GetAllSubmapData();
   const auto constraints = map_builder_.sparse_pose_graph()->constraints();
 
@@ -299,10 +289,11 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintList() {
       residual_marker->colors.push_back(color_residual);
     }
 
-    const auto& submap_data =
-        all_submap_data[constraint.submap_id.trajectory_id]
-                       [constraint.submap_id.submap_index];
-    const auto& submap_pose = submap_data.pose;
+    const auto submap_it = submap_data.find(constraint.submap_id);
+    if (submap_it == submap_data.end()) {
+      continue;
+    }
+    const auto& submap_pose = submap_it->data.pose;
     const auto& trajectory_node_pose =
         all_trajectory_nodes[constraint.node_id.trajectory_id]
                             [constraint.node_id.node_index]
