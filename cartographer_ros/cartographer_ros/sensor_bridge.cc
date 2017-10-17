@@ -149,6 +149,9 @@ void SensorBridge::HandleLaserScan(
         points.points.size() * (i + 1) / num_subdivisions_per_laser_scan_;
     const carto::sensor::PointCloud subdivision(
         points.points.begin() + start_index, points.points.begin() + end_index);
+    if (start_index == end_index) {
+      continue;
+    }
     const size_t middle_index = (start_index + end_index) / 2;
     const carto::common::Time subdivision_time =
         start_time +
