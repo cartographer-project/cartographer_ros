@@ -150,7 +150,8 @@ cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
   cartographer_ros_msgs::SubmapList submap_list;
   submap_list.header.stamp = ::ros::Time::now();
   submap_list.header.frame_id = node_options_.map_frame;
-  for (const auto& submap_id_data : map_builder_.sparse_pose_graph()->GetAllSubmapData()) {
+  for (const auto &submap_id_data :
+       map_builder_.sparse_pose_graph()->GetAllSubmapData()) {
     cartographer_ros_msgs::SubmapEntry submap_entry;
     submap_entry.trajectory_id = submap_id_data.id.trajectory_id;
     submap_entry.submap_index = submap_id_data.id.submap_index;
@@ -193,7 +194,7 @@ MapBuilderBridge::GetTrajectoryStates() {
 visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
   visualization_msgs::MarkerArray trajectory_node_list;
   const auto nodes = map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
-  for(const int trajectory_id : nodes.trajectory_ids()) {
+  for (const int trajectory_id : nodes.trajectory_ids()) {
     visualization_msgs::Marker marker =
         CreateTrajectoryMarker(trajectory_id, node_options_.map_frame);
 
@@ -250,8 +251,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintList() {
 
   const auto trajectory_nodes =
       map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
-  const auto submap_data =
-      map_builder_.sparse_pose_graph()->GetAllSubmapData();
+  const auto submap_data = map_builder_.sparse_pose_graph()->GetAllSubmapData();
   const auto constraints = map_builder_.sparse_pose_graph()->constraints();
 
   for (const auto& constraint : constraints) {
