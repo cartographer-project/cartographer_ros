@@ -421,7 +421,28 @@ bool Node::HandleFinishTrajectory(
     ::cartographer_ros_msgs::FinishTrajectory::Request& request,
     ::cartographer_ros_msgs::FinishTrajectory::Response& response) {
   carto::common::MutexLocker lock(&mutex_);
-  const int trajectory_id = request.trajectory_id;
+  return FinishTrajectory(request.trajectory_id);
+}
+
+bool Node::HandleWriteState(
+    ::cartographer_ros_msgs::WriteState::Request& request,
+    ::cartographer_ros_msgs::WriteState::Response& response) {
+  carto::common::MutexLocker lock(&mutex_);
+  map_builder_bridge_.SerializeState(request.filename);
+  return true;
+}
+
+void Node::FinishAllTrajectories() {
+  carto::common::MutexLocker lock(&mutex_);
+  for (auto& entry : is_active_trajectory_) {
+    const int trajectory_id = entry.first;
+    if (entry.second) {
+      CHECK(FinishTrajectory(trajectory_id));
+    }
+  }
+}
+
+bool Node::FinishTrajectory(const int trajectory_id) {
   if (is_active_trajectory_.count(trajectory_id) == 0) {
     LOG(INFO) << "Trajectory_id " << trajectory_id << " is not created yet.";
     return false;
@@ -438,36 +459,10 @@ bool Node::HandleFinishTrajectory(
     subscribed_topics_.erase(entry.topic);
     LOG(INFO) << "Shutdown the subscriber of [" << entry.topic << "]";
   }
-  CHECK_EQ(subscribers_.erase(trajectory_id), 1);
-  map_builder_bridge_.FinishTrajectory(trajectory_id);
-  is_active_trajectory_[trajectory_id] = false;
-  return true;
-}
-
-bool Node::HandleWriteState(
-    ::cartographer_ros_msgs::WriteState::Request& request,
-    ::cartographer_ros_msgs::WriteState::Response& response) {
-  carto::common::MutexLocker lock(&mutex_);
-  map_builder_bridge_.SerializeState(request.filename);
-  return true;
-}
-
-void Node::FinishAllTrajectories() {
-  carto::common::MutexLocker lock(&mutex_);
-  for (auto& entry : is_active_trajectory_) {
-    const int trajectory_id = entry.first;
-    if (entry.second) {
-      map_builder_bridge_.FinishTrajectory(trajectory_id);
-      entry.second = false;
-    }
-  }
-}
-
-void Node::FinishTrajectory(const int trajectory_id) {
-  carto::common::MutexLocker lock(&mutex_);
   CHECK(is_active_trajectory_.at(trajectory_id));
   map_builder_bridge_.FinishTrajectory(trajectory_id);
   is_active_trajectory_[trajectory_id] = false;
+  return true;
 }
 
 void Node::RunFinalOptimization() {

@@ -55,7 +55,7 @@ class Node {
   // Finishes all yet active trajectories.
   void FinishAllTrajectories();
   // Finishes a single given trajectory.
-  void FinishTrajectory(int trajectory_id);
+  bool FinishTrajectory(int trajectory_id);
 
   // Runs final optimization. All trajectories have to be finished when calling.
   void RunFinalOptimization();
