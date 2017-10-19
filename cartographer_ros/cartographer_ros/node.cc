@@ -452,6 +452,11 @@ bool Node::HandleFinishTrajectory(
 bool Node::HandleWriteState(
     ::cartographer_ros_msgs::WriteState::Request& request,
     ::cartographer_ros_msgs::WriteState::Response& response) {
+  if (request.finalize) {
+    FinishAllTrajectories();
+    RunFinalOptimization();
+  }
+
   carto::common::MutexLocker lock(&mutex_);
   map_builder_bridge_.SerializeState(request.filename);
   return true;
