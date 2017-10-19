@@ -128,7 +128,7 @@ void SensorBridge::HandlePointCloud2Message(
     const string& sensor_id, const sensor_msgs::PointCloud2::ConstPtr& msg) {
   pcl::PointCloud<pcl::PointXYZ> pcl_point_cloud;
   pcl::fromROSMsg(*msg, pcl_point_cloud);
-  carto::sensor::PointCloud point_cloud;
+  carto::sensor::TimedPointCloud point_cloud;
   for (const auto& point : pcl_point_cloud) {
     point_cloud.emplace_back(point.x, point.y, point.z, 0.f);
   }
@@ -147,7 +147,7 @@ void SensorBridge::HandleLaserScan(
         points.points.size() * i / num_subdivisions_per_laser_scan_;
     const size_t end_index =
         points.points.size() * (i + 1) / num_subdivisions_per_laser_scan_;
-    const carto::sensor::PointCloud subdivision(
+    const carto::sensor::TimedPointCloud subdivision(
         points.points.begin() + start_index, points.points.begin() + end_index);
     if (start_index == end_index) {
       continue;
@@ -160,10 +160,9 @@ void SensorBridge::HandleLaserScan(
   }
 }
 
-void SensorBridge::HandleRangefinder(const string& sensor_id,
-                                     const carto::common::Time time,
-                                     const string& frame_id,
-                                     const carto::sensor::PointCloud& ranges) {
+void SensorBridge::HandleRangefinder(
+    const string& sensor_id, const carto::common::Time time,
+    const string& frame_id, const carto::sensor::TimedPointCloud& ranges) {
   const auto sensor_to_tracking =
       tf_bridge_.LookupToTracking(time, CheckNoLeadingSlash(frame_id));
   if (sensor_to_tracking != nullptr) {

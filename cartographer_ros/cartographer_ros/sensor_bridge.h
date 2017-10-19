@@ -73,7 +73,7 @@ class SensorBridge {
   void HandleRangefinder(const string& sensor_id,
                          ::cartographer::common::Time time,
                          const string& frame_id,
-                         const ::cartographer::sensor::PointCloud& ranges);
+                         const ::cartographer::sensor::TimedPointCloud& ranges);
 
   const int num_subdivisions_per_laser_scan_;
   const TfBridge tf_bridge_;

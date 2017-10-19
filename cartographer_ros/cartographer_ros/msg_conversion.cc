@@ -141,7 +141,7 @@ bool PointCloud2HasField(const sensor_msgs::PointCloud2& pc2,
 
 sensor_msgs::PointCloud2 ToPointCloud2Message(
     const int64 timestamp, const string& frame_id,
-    const ::cartographer::sensor::PointCloud& point_cloud) {
+    const ::cartographer::sensor::TimedPointCloud& point_cloud) {
   auto msg = PreparePointCloud2Message(timestamp, frame_id, point_cloud.size());
   ::ros::serialization::OStream stream(msg.data.data(), msg.data.size());
   for (const auto& point : point_cloud) {
