@@ -89,11 +89,10 @@ std::unique_ptr<carto::io::PointsBatch> HandleMessage(
   carto::sensor::PointCloudWithIntensities point_cloud =
       ToPointCloudWithIntensities(message);
   CHECK_EQ(point_cloud.intensities.size(), point_cloud.points.size());
-  CHECK_EQ(point_cloud.offset_seconds.size(), point_cloud.points.size());
 
   for (size_t i = 0; i < point_cloud.points.size(); ++i) {
     const carto::common::Time time =
-        start_time + carto::common::FromSeconds(point_cloud.offset_seconds[i]);
+        start_time + carto::common::FromSeconds(point_cloud.points[i][3]);
     if (!transform_interpolation_buffer.Has(time)) {
       continue;
     }

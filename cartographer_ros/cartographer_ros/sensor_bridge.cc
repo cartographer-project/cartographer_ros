@@ -155,7 +155,7 @@ void SensorBridge::HandleLaserScan(
     const size_t middle_index = (start_index + end_index) / 2;
     const carto::common::Time subdivision_time =
         start_time +
-        carto::common::FromSeconds(points.offset_seconds.at(middle_index));
+        carto::common::FromSeconds(points.points.at(middle_index)[3]);
     HandleRangefinder(sensor_id, subdivision_time, frame_id, subdivision);
   }
 }
