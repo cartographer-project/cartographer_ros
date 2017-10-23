@@ -49,6 +49,8 @@ void WriteYaml(const ::cartographer::io::Image& image,
       limits.max().x() - (offset.y() + image.height()) * resolution;
   const double y_offset =
       limits.max().y() - (offset.x() + image.width()) * resolution;
+  // Magic constants taken directly from ros map_saver code:
+  // https://github.com/ros-planning/navigation/blob/ac41d2480c4cf1602daf39a6e9629142731d92b0/map_server/src/map_saver.cpp#L114
   const std::string output =
       "image: " + pgm_filename + "\n" +
       "resolution: " + std::to_string(resolution) + "\n" + "origin: [" +

@@ -35,7 +35,7 @@ class RosMapWritingPointsProcessor
       double resolution,
       const ::cartographer::mapping_2d::proto::RangeDataInserterOptions&
           range_data_inserter_options,
-      ::cartographer::io::FileWriterFactory file_factory,
+      ::cartographer::io::FileWriterFactory file_writer_factory,
       const string& filestem, PointsProcessor* next);
   RosMapWritingPointsProcessor(const RosMapWritingPointsProcessor&) = delete;
   RosMapWritingPointsProcessor& operator=(const RosMapWritingPointsProcessor&) =
