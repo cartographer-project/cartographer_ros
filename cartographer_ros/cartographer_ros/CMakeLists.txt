@@ -15,6 +15,8 @@
 google_binary(cartographer_assets_writer
   SRCS
     assets_writer_main.cc
+    ros_map_writing_points_processor.h
+    ros_map_writing_points_processor.cc
 )
 
 install(TARGETS cartographer_assets_writer

@@ -32,6 +32,7 @@
 #include "cartographer/sensor/range_data.h"
 #include "cartographer/transform/transform_interpolation_buffer.h"
 #include "cartographer_ros/msg_conversion.h"
+#include "cartographer_ros/ros_map_writing_points_processor.h"
 #include "cartographer_ros/split_string.h"
 #include "cartographer_ros/time_conversion.h"
 #include "cartographer_ros/urdf_reader.h"
@@ -154,6 +155,16 @@ void Run(const string& pose_graph_filename,
   carto::io::PointsProcessorPipelineBuilder builder;
   carto::io::RegisterBuiltInPointsProcessors(all_trajectories,
                                              file_writer_factory, &builder);
+  builder.Register(
+      RosMapWritingPointsProcessor::kConfigurationFileActionName,
+      [file_writer_factory](
+          ::cartographer::common::LuaParameterDictionary* const dictionary,
+          ::cartographer::io::PointsProcessor* const next)
+          -> std::unique_ptr<::cartographer::io::PointsProcessor> {
+        return RosMapWritingPointsProcessor::FromDictionary(file_writer_factory,
+                                                            dictionary, next);
+      });
+
   std::vector<std::unique_ptr<carto::io::PointsProcessor>> pipeline =
       builder.CreatePipeline(
           lua_parameter_dictionary.GetDictionary("pipeline").get());
