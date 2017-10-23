@@ -168,8 +168,8 @@ void SensorBridge::HandleRangefinder(
   if (sensor_to_tracking != nullptr) {
     trajectory_builder_->AddRangefinderData(
         sensor_id, time, sensor_to_tracking->translation().cast<float>(),
-        carto::sensor::TransformPointCloud(ranges,
-                                           sensor_to_tracking->cast<float>()));
+        carto::sensor::TransformTimedPointCloud(
+            ranges, sensor_to_tracking->cast<float>()));
   }
 }
 

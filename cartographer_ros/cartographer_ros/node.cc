@@ -183,7 +183,7 @@ void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
       scan_matched_point_cloud_publisher_.publish(ToPointCloud2Message(
           carto::common::ToUniversal(trajectory_state.pose_estimate.time),
           node_options_.map_frame,
-          carto::sensor::TransformPointCloud(
+          carto::sensor::TransformTimedPointCloud(
               point_cloud, trajectory_state.local_to_map.cast<float>())));
       extrapolator.AddPose(trajectory_state.pose_estimate.time,
                            trajectory_state.pose_estimate.pose);
