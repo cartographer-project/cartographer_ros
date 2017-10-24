@@ -108,9 +108,10 @@ PointCloudWithIntensities LaserScanToPointCloudWithIntensities(
       const float first_echo = GetFirstEcho(echoes);
       if (msg.range_min <= first_echo && first_echo <= msg.range_max) {
         const Eigen::AngleAxisf rotation(angle, Eigen::Vector3f::UnitZ());
-        point_cloud.points.push_back(rotation *
-                                     (first_echo * Eigen::Vector3f::UnitX()));
-        point_cloud.offset_seconds.push_back(i * msg.time_increment);
+        Eigen::Vector4f point;
+        point << rotation * (first_echo * Eigen::Vector3f::UnitX()),
+            i * msg.time_increment;
+        point_cloud.points.push_back(point);
         if (msg.intensities.size() > 0) {
           CHECK_EQ(msg.intensities.size(), msg.ranges.size());
           const auto& echo_intensities = msg.intensities[i];
@@ -140,7 +141,7 @@ bool PointCloud2HasField(const sensor_msgs::PointCloud2& pc2,
 
 sensor_msgs::PointCloud2 ToPointCloud2Message(
     const int64 timestamp, const string& frame_id,
-    const ::cartographer::sensor::PointCloud& point_cloud) {
+    const ::cartographer::sensor::TimedPointCloud& point_cloud) {
   auto msg = PreparePointCloud2Message(timestamp, frame_id, point_cloud.size());
   ::ros::serialization::OStream stream(msg.data.data(), msg.data.size());
   for (const auto& point : point_cloud) {
@@ -171,9 +172,8 @@ PointCloudWithIntensities ToPointCloudWithIntensities(
     pcl::PointCloud<pcl::PointXYZI> pcl_point_cloud;
     pcl::fromROSMsg(message, pcl_point_cloud);
     for (const auto& point : pcl_point_cloud) {
-      point_cloud.points.emplace_back(point.x, point.y, point.z);
+      point_cloud.points.emplace_back(point.x, point.y, point.z, 0.f);
       point_cloud.intensities.push_back(point.intensity);
-      point_cloud.offset_seconds.push_back(0.f);
     }
   } else {
     pcl::PointCloud<pcl::PointXYZ> pcl_point_cloud;
@@ -182,9 +182,8 @@ PointCloudWithIntensities ToPointCloudWithIntensities(
     // If we don't have an intensity field, just copy XYZ and fill in
     // 1.0.
     for (const auto& point : pcl_point_cloud) {
-      point_cloud.points.emplace_back(point.x, point.y, point.z);
+      point_cloud.points.emplace_back(point.x, point.y, point.z, 0.f);
       point_cloud.intensities.push_back(1.0);
-      point_cloud.offset_seconds.push_back(0.f);
     }
   }
   return point_cloud;
