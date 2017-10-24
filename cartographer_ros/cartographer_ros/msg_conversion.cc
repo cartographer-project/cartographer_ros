@@ -109,7 +109,6 @@ PointCloudWithIntensities LaserScanToPointCloudWithIntensities(
       if (msg.range_min <= first_echo && first_echo <= msg.range_max) {
         const Eigen::AngleAxisf rotation(angle, Eigen::Vector3f::UnitZ());
         Eigen::Vector4f point;
-        // TODO(gaschler): Store time such that newest is zero, not oldest.
         point << rotation * (first_echo * Eigen::Vector3f::UnitX()),
             i * msg.time_increment;
         point_cloud.points.push_back(point);
