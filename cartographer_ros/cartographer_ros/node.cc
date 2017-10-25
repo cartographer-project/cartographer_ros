@@ -168,25 +168,37 @@ void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
     const auto& trajectory_state = entry.second;
 
     auto& extrapolator = extrapolators_.at(entry.first);
+    const auto& last_range_data = trajectory_state.data.last_range_data;
+    const auto& last_constant_data = trajectory_state.data.last_constant_data;
+    CHECK(last_constant_data != nullptr);
+    CHECK(last_range_data != nullptr);
+
+    const auto& time = last_constant_data->time;
     // We only publish a point cloud if it has changed. It is not needed at high
     // frequency, and republishing it would be computationally wasteful.
-    if (trajectory_state.pose_estimate.time != extrapolator.GetLastPoseTime()) {
+    if (time != extrapolator.GetLastPoseTime()) {
+      const carto::sensor::PointCloud original_point_cloud =
+          carto::sensor::TransformPointCloud(
+              last_range_data->returns,
+              (last_constant_data->local_pose
+               // THIS IS CURRENTLY BROKEN FOR 3D. THE FOLLOWING MULTIPLICATION
+               // SHOULD BE APPLIED ONLY FOR 2D!
+               * carto::transform::Rigid3d::Rotation(last_constant_data->gravity_alignment.inverse())
+              )
+                  .cast<float>());
       // TODO(gaschler): Consider using other message without time information.
       carto::sensor::TimedPointCloud point_cloud;
-      point_cloud.reserve(trajectory_state.pose_estimate.point_cloud.size());
-      for (const Eigen::Vector3f point :
-           trajectory_state.pose_estimate.point_cloud) {
+      point_cloud.reserve(original_point_cloud.size());
+      for (const Eigen::Vector3f point : original_point_cloud) {
         Eigen::Vector4f point_time;
         point_time << point, 0.f;
         point_cloud.push_back(point_time);
       }
       scan_matched_point_cloud_publisher_.publish(ToPointCloud2Message(
-          carto::common::ToUniversal(trajectory_state.pose_estimate.time),
-          node_options_.map_frame,
+          carto::common::ToUniversal(time), node_options_.map_frame,
           carto::sensor::TransformTimedPointCloud(
               point_cloud, trajectory_state.local_to_map.cast<float>())));
-      extrapolator.AddPose(trajectory_state.pose_estimate.time,
-                           trajectory_state.pose_estimate.pose);
+      extrapolator.AddPose(time, last_constant_data->local_pose);
     }
 
     geometry_msgs::TransformStamped stamped_transform;

@@ -65,7 +65,22 @@ void PushAndResetLineMarker(visualization_msgs::Marker* marker,
 MapBuilderBridge::MapBuilderBridge(const NodeOptions& node_options,
                                    tf2_ros::Buffer* const tf_buffer)
     : node_options_(node_options),
-      map_builder_(node_options.map_builder_options, {}),
+      map_builder_(
+          node_options.map_builder_options,
+          cartographer::mapping::MapBuilder::AccumulatedRangeDataCallback(
+              [this](
+                  const int trajectory_id,
+                  const std::shared_ptr<const cartographer::sensor::RangeData>
+                      range_data,
+                  const std::shared_ptr<
+                      const cartographer::mapping::TrajectoryNode::Data>
+                      constant_data,
+                  const std::unique_ptr<const cartographer::mapping::NodeId>)
+                  EXCLUDES(mutex_) {
+                    cartographer::common::MutexLocker lock(&mutex_);
+                    trajectory_state_data_[trajectory_id] = {range_data,
+                                                             constant_data};
+                  })),
       tf_buffer_(tf_buffer) {}
 
 void MapBuilderBridge::LoadMap(const std::string& map_filename) {
@@ -169,26 +184,32 @@ MapBuilderBridge::GetTrajectoryStates() {
     const int trajectory_id = entry.first;
     const SensorBridge& sensor_bridge = *entry.second;
 
-    const cartographer::mapping::TrajectoryBuilder* const trajectory_builder =
-        map_builder_.GetTrajectoryBuilder(trajectory_id);
-    if (trajectory_builder == nullptr) {
+    std::unique_ptr<const TrajectoryState::Data> current_trajectory_state_data;
+    {
+      cartographer::common::MutexLocker lock(&mutex_);
+      current_trajectory_state_data =
+          cartographer::common::make_unique<TrajectoryState::Data>(
+              trajectory_state_data_[trajectory_id]);
+    }
+
+    if (current_trajectory_state_data->last_constant_data == nullptr ||
+        current_trajectory_state_data->last_range_data == nullptr) {
       continue;
     }
-    const cartographer::mapping::TrajectoryBuilder::PoseEstimate pose_estimate =
-        trajectory_builder->pose_estimate();
-    if (cartographer::common::ToUniversal(pose_estimate.time) < 0) {
+    const ::cartographer::common::Time& time =
+        current_trajectory_state_data->last_constant_data->time;
+    if (cartographer::common::ToUniversal(time) < 0) {
       continue;
     }
 
     // Make sure there is a trajectory with 'trajectory_id'.
     CHECK_EQ(trajectory_options_.count(trajectory_id), 1);
     trajectory_states[trajectory_id] = {
-        pose_estimate,
+        *current_trajectory_state_data,
         map_builder_.sparse_pose_graph()->GetLocalToGlobalTransform(
             trajectory_id),
         sensor_bridge.tf_bridge().LookupToTracking(
-            pose_estimate.time,
-            trajectory_options_[trajectory_id].published_frame),
+            time, trajectory_options_[trajectory_id].published_frame),
         trajectory_options_[trajectory_id]};
   }
   return trajectory_states;
