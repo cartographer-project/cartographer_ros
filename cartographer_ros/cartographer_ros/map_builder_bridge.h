@@ -39,7 +39,12 @@ namespace cartographer_ros {
 class MapBuilderBridge {
  public:
   struct TrajectoryState {
-    cartographer::mapping::TrajectoryBuilder::PoseEstimate pose_estimate;
+    struct Data {
+      std::shared_ptr<const cartographer::sensor::RangeData> last_range_data;
+      std::shared_ptr<const cartographer::mapping::TrajectoryNode::Data>
+          last_constant_data;
+    };
+    Data data;
     cartographer::transform::Rigid3d local_to_map;
     std::unique_ptr<cartographer::transform::Rigid3d> published_to_tracking;
     TrajectoryOptions trajectory_options;
@@ -62,13 +67,15 @@ class MapBuilderBridge {
       cartographer_ros_msgs::SubmapQuery::Response& response);
 
   cartographer_ros_msgs::SubmapList GetSubmapList();
-  std::unordered_map<int, TrajectoryState> GetTrajectoryStates();
+  std::unordered_map<int, TrajectoryState> GetTrajectoryStates()
+      EXCLUDES(mutex_);
   visualization_msgs::MarkerArray GetTrajectoryNodeList();
   visualization_msgs::MarkerArray GetConstraintList();
 
   SensorBridge* sensor_bridge(int trajectory_id);
 
  private:
+  cartographer::common::Mutex mutex_;
   const NodeOptions node_options_;
   cartographer::mapping::MapBuilder map_builder_;
   tf2_ros::Buffer* const tf_buffer_;
@@ -76,6 +83,9 @@ class MapBuilderBridge {
   // These are keyed with 'trajectory_id'.
   std::unordered_map<int, TrajectoryOptions> trajectory_options_;
   std::unordered_map<int, std::unique_ptr<SensorBridge>> sensor_bridges_;
+  // Updated by a callback passed to libcartographer.
+  std::unordered_map<int, TrajectoryState::Data> trajectory_state_data_
+      GUARDED_BY(mutex_);
 };
 
 }  // namespace cartographer_ros
