@@ -32,8 +32,6 @@ options = {
     {
       action = "dump_num_points",
     },
-
-    -- Gray X-Rays. These only use geometry to color pixels.
     {
       action = "write_xray_image",
       voxel_size = VOXEL_SIZE,
