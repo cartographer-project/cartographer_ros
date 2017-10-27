@@ -95,7 +95,6 @@ VOLUME ${AGENT_WORKDIR}
 WORKDIR /home/jenkins
 
 COPY jenkins-slave /usr/local/bin/jenkins-slave
-COPY env.sh /env.sh
 
 ENV CLOUDSDK_CORE_DISABLE_PROMPTS 1
 ENV PATH /opt/google-cloud-sdk/bin:$PATH
