@@ -17,7 +17,8 @@ FROM ros:kinetic
 ARG CARTOGRAPHER_VERSION=master
 
 # Xenial's base image doesn't ship with sudo.
-RUN apt-get update && apt-get install -y sudo time && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y sudo && rm -rf /var/lib/apt/lists/*
+
 # First, we invalidate the entire cache if googlecartographer/cartographer has
 # changed. This file's content changes whenever master changes. See:
 # http://stackoverflow.com/questions/36996046/how-to-prevent-dockerfile-caching-git-clone
@@ -66,44 +67,7 @@ RUN cartographer_ros/scripts/install.sh --pkg cartographer_rviz && \
         --catkin-make-args run_tests && \
     cartographer_ros/scripts/catkin_test_results.sh build_isolated/cartographer_rviz
 
-COPY scripts/ros_entrypoint.sh /ros_entrypoint.sh
+COPY scripts/ros_entrypoint.sh /
 # A BTRFS bug may prevent us from cleaning up these directories.
 # https://btrfs.wiki.kernel.org/index.php/Problem_FAQ#I_cannot_delete_an_empty_directory
 RUN rm -rf cartographer_ros catkin_ws || true
-
-RUN sudo apt-get update
-RUN sudo apt-get -y install openjdk-8-jdk
-
-ENV HOME /home/jenkins
-RUN addgroup --system --gid 10000 jenkins
-RUN adduser --system --ingroup jenkins --home $HOME --uid 10000 jenkins
-
-LABEL Description="This is a base image, which provides the Jenkins agent executable (slave.jar)" Vendor="Jenkins project" Version="3.10"
-
-ARG VERSION=3.10
-ARG AGENT_WORKDIR=/home/jenkins/agent
-
-RUN curl --create-dirs -sSLo /usr/share/jenkins/slave.jar https://repo.jenkins-ci.org/public/org/jenkins-ci/main/remoting/${VERSION}/remoting-${VERSION}.jar \
- && chmod 755 /usr/share/jenkins \
- && chmod 644 /usr/share/jenkins/slave.jar
-# USER jenkins
-ENV AGENT_WORKDIR=${AGENT_WORKDIR}
-RUN mkdir /home/jenkins/.jenkins && mkdir -p ${AGENT_WORKDIR}
-
-VOLUME /home/jenkins/.jenkins
-VOLUME ${AGENT_WORKDIR}
-WORKDIR /home/jenkins
-
-COPY jenkins-slave /usr/local/bin/jenkins-slave
-
-ENV CLOUDSDK_CORE_DISABLE_PROMPTS 1
-ENV PATH /opt/google-cloud-sdk/bin:$PATH
-
-USER root
-
-# Install Google Cloud Components
-RUN curl https://sdk.cloud.google.com | bash && mv google-cloud-sdk /opt
-RUN gcloud components install kubectl
-
-# USER root
-ENTRYPOINT ["jenkins-slave"]
