@@ -19,20 +19,7 @@
 -- of a pixel in a X-Ray.
 VOXEL_SIZE = 5e-2
 
-XY_TRANSFORM =  {
-  translation = { 0., 0., 0. },
-  rotation = { 0., -math.pi / 2., 0., },
-}
-
-XZ_TRANSFORM =  {
-  translation = { 0., 0., 0. },
-  rotation = { 0. , 0., -math.pi / 2, },
-}
-
-YZ_TRANSFORM =  {
-  translation = { 0., 0., 0. },
-  rotation = { 0. , 0., math.pi, },
-}
+include "transform.lua"
 
 options = {
   tracking_frame = "base_link",
