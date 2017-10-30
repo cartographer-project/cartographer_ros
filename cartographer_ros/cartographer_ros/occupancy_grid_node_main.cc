@@ -44,7 +44,7 @@ DEFINE_double(publish_period_sec, 1.0, "OccupancyGrid publishing period.");
 namespace cartographer_ros {
 namespace {
 
-using ::cartographer::io::kCairoFormat;
+using ::cartographer::io::PaintSubmapSlicesResult;
 using ::cartographer::io::SubmapSlice;
 using ::cartographer::mapping::SubmapId;
 
@@ -61,7 +61,6 @@ class Node {
   void DrawAndPublish(const ::ros::WallTimerEvent& timer_event);
   void PublishOccupancyGrid(const std::string& frame_id, const ros::Time& time,
                             const Eigen::Array2f& origin,
-                            const Eigen::Array2i& size,
                             cairo_surface_t* surface);
 
   ::ros::NodeHandle node_handle_;
@@ -132,8 +131,10 @@ void Node::HandleSubmapList(
     // Properly dealing with a non-common stride would make this code much more
     // complicated. Let's check that it is not needed.
     const int expected_stride = 4 * submap_slice.width;
+    // TODO(jihoonl): Refactor here out to remove kCairoFormat dependency
     CHECK_EQ(expected_stride,
-             cairo_format_stride_for_width(kCairoFormat, submap_slice.width));
+             cairo_format_stride_for_width(
+                 PaintSubmapSlicesResult::kCairoFormat, submap_slice.width));
     submap_slice.cairo_data.clear();
     for (size_t i = 0; i < fetched_texture->intensity.size(); ++i) {
       // We use the red channel to track intensity information. The green
@@ -148,8 +149,8 @@ void Node::HandleSubmapList(
     submap_slice.surface = ::cartographer::io::MakeUniqueCairoSurfacePtr(
         cairo_image_surface_create_for_data(
             reinterpret_cast<unsigned char*>(submap_slice.cairo_data.data()),
-            kCairoFormat, submap_slice.width, submap_slice.height,
-            expected_stride));
+            PaintSubmapSlicesResult::kCairoFormat, submap_slice.width,
+            submap_slice.height, expected_stride));
     CHECK_EQ(cairo_surface_status(submap_slice.surface.get()),
              CAIRO_STATUS_SUCCESS)
         << cairo_status_to_string(
@@ -165,38 +166,38 @@ void Node::DrawAndPublish(const ::ros::WallTimerEvent& unused_timer_event) {
   }
 
   ::cartographer::common::MutexLocker locker(&mutex_);
-  auto painted_slices = DrawOccupancyGrid(&submaps_, resolution_);
+  auto painted_slices = PaintSubmapSlices(&submaps_, resolution_);
   PublishOccupancyGrid(last_frame_id_, last_timestamp_, painted_slices.origin,
-                       painted_slices.size, painted_slices.surface.get());
+                       painted_slices.surface.get());
 }
 
 void Node::PublishOccupancyGrid(const std::string& frame_id,
                                 const ros::Time& time,
                                 const Eigen::Array2f& origin,
-                                const Eigen::Array2i& size,
                                 cairo_surface_t* surface) {
   nav_msgs::OccupancyGrid occupancy_grid;
+  const int width = cairo_image_surface_get_width(surface);
+  const int height = cairo_image_surface_get_height(surface);
   occupancy_grid.header.stamp = time;
   occupancy_grid.header.frame_id = frame_id;
   occupancy_grid.info.map_load_time = time;
   occupancy_grid.info.resolution = resolution_;
-  occupancy_grid.info.width = size.x();
-  occupancy_grid.info.height = size.y();
+  occupancy_grid.info.width = width;
+  occupancy_grid.info.height = height;
   occupancy_grid.info.origin.position.x = -origin.x() * resolution_;
   occupancy_grid.info.origin.position.y =
-      (-size.y() + origin.y()) * resolution_;
+      (-height + origin.y()) * resolution_;
   occupancy_grid.info.origin.position.z = 0.;
   occupancy_grid.info.origin.orientation.w = 1.;
   occupancy_grid.info.origin.orientation.x = 0.;
   occupancy_grid.info.origin.orientation.y = 0.;
   occupancy_grid.info.origin.orientation.z = 0.;
 
-  const uint32_t* pixel_data =
-      reinterpret_cast<uint32_t*>(cairo_image_surface_get_data(surface));
-  occupancy_grid.data.reserve(size.x() * size.y());
-  for (int y = size.y() - 1; y >= 0; --y) {
-    for (int x = 0; x < size.x(); ++x) {
-      const uint32_t packed = pixel_data[y * size.x() + x];
+  const uint32_t* pixel_data = reinterpret_cast<uint32_t*>(cairo_image_surface_get_data(surface));
+  occupancy_grid.data.reserve(width * height);
+  for (int y = height - 1; y >= 0; --y) {
+    for (int x = 0; x < width; ++x) {
+      const uint32_t packed = pixel_data[y * width + x];
       const unsigned char color = packed >> 16;
       const unsigned char observed = packed >> 8;
       const int value = observed == 0 ? -1 : ::cartographer::common::RoundToInt(
