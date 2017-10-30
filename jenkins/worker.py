@@ -42,6 +42,10 @@ WALL_TIME_PATTERN = Pattern(
     r'((?P<hours>\d{1,2}):|)(?P<minutes>\d{1,2}):(?P<seconds>\d{2}\.\d{2})')
 MAX_RES_SET_SIZE_PATTERN = Pattern(
     r'^\s*Maximum resident set size \(kbytes\): (?P<max_set_size>\d+)')
+CONSTRAINT_STATS_PATTERN = Pattern(
+    r'(?s:.*)Score histogram:\nCount:\s+(?P<count>\d+)\s+Min:\s+'
+    r'(?P<score_min>\d+\.\d+)\s+Max:\s+(?P<score_max>\d+\.\d+)\s+'
+    r'Mean:\s+(?P<score_mean>\d+\.\d+)')
 
 # Pattern matcher for extracting the HEAD commit SHA-1 hash.
 GIT_SHA1_PATTERN = Pattern(r'^(?P<sha1>[0-9a-f]{40})\s+HEAD')
@@ -73,6 +77,12 @@ def extract_stats(inp):
 
   parsed = MAX_RES_SET_SIZE_PATTERN.extract(inp)
   result['max_set_size_kbytes'] = int(parsed['max_set_size'])
+
+  parsed = CONSTRAINT_STATS_PATTERN.extract(inp)
+  result['constraints_count'] = int(parsed['count'])
+  result['constraints_score_min'] = float(parsed['score_min'])
+  result['constraints_score_max'] = float(parsed['score_max'])
+  result['constraints_score_mean'] = float(parsed['score_mean'])
 
   return result
 
@@ -203,11 +213,19 @@ def publish_stats_to_big_query(stats_dict, now, head_sha1):
             {},
             {},
             {},
+            {},
+            {},
+            {},
+            {},
             {}
         ]""".format(now.year, now.month, now.day, head_sha1, job_identifier,
                     job_info['rosbag'], job_info['user_time_secs'],
                     job_info['system_time_secs'], job_info['wall_time_secs'],
-                    job_info['max_set_size_kbytes'])
+                    job_info['max_set_size_kbytes'],
+                    job_info['constraints_count'],
+                    job_info['constraints_score_min'],
+                    job_info['constraints_score_max'],
+                    job_info['constraints_score_mean'])
     data = json.loads(data_string)
     rows.append(data)
 
