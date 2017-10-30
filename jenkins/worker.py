@@ -18,9 +18,14 @@ class Pattern(object):
   def __init__(self, pattern):
     self.regex = re.compile(pattern, re.MULTILINE)
 
-  # Returns a dictionary of named capture groups to extracted output. Returns an
-  # empty dict of no match was found.
   def extract(self, inp):
+    """Returns a dictionary of named capture groups to extracted output.
+
+    Args:
+      inp: input to parse
+
+    Returns an empty dict of no match was found.
+    """
     match = self.regex.search(inp)
     if match is None:
       return {}
@@ -63,7 +68,7 @@ def extract_stats(inp):
   result['system_time_secs'] = float(parsed['system_time'])
 
   parsed = WALL_TIME_PATTERN.extract(inp)
-  result['wall_time_secs'] = float(parsed.get('hours', 0.)) * 3600 + float(
+  result['wall_time_secs'] = float(parsed['hours'] or 0.) * 3600 + float(
       parsed['minutes']) * 60 + float(parsed['seconds'])
 
   parsed = MAX_RES_SET_SIZE_PATTERN.extract(inp)
@@ -87,16 +92,16 @@ def run_cmd(cmd):
   """Runs command both printing its stdout output and returning it as string."""
   p = subprocess.Popen(
       cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-  output = ''
-  while p.poll() is None:
-    l = p.stdout.readline()
-    output += l + '\n'
-    print l
+  run_cmd.output = []
 
-  l = p.stdout.read()
-  output += l
-  print l
-  return output
+  def process(line):
+    run_cmd.output.append(line)
+    print line.rstrip()
+
+  while p.poll() is None:
+    process(p.stdout.readline())
+  process(p.stdout.read())
+  return '\n'.join(run_cmd.output)
 
 
 class Job(object):
@@ -143,7 +148,7 @@ class Job(object):
                 rosbag_filename, scratch_dir, rosbag_filename,
                 self.assets_writer_config_file))
 
-    # Copy assets to bucket.
+    # Copies assets to bucket.
     run_cmd('gsutil cp {}/{}.pbstream '
             'gs://cartographer-ci-artifacts/{}/{}/{}.pbstream'.format(
                 scratch_dir, rosbag_filename, run_id, self.id, rosbag_filename))
