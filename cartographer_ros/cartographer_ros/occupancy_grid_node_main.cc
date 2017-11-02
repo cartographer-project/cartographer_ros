@@ -70,7 +70,7 @@ class Node {
   ::ros::ServiceClient client_ GUARDED_BY(mutex_);
   ::ros::Subscriber submap_list_subscriber_ GUARDED_BY(mutex_);
   ::ros::Publisher occupancy_grid_publisher_ GUARDED_BY(mutex_);
-  std::map<SubmapId, SubmapSlice> submaps_ GUARDED_BY(mutex_);
+  std::map<SubmapId, SubmapSlice> submap_slices_ GUARDED_BY(mutex_);
   ::ros::WallTimer occupancy_grid_publisher_timer_;
   std::string last_frame_id_;
   ros::Time last_timestamp_;
@@ -105,7 +105,7 @@ void Node::HandleSubmapList(
   }
   for (const auto& submap_msg : msg->submap) {
     const SubmapId id{submap_msg.trajectory_id, submap_msg.submap_index};
-    SubmapSlice& submap_slice = submaps_[id];
+    SubmapSlice& submap_slice = submap_slices_[id];
     submap_slice.pose = ToRigid3d(submap_msg.pose);
     submap_slice.metadata_version = submap_msg.submap_version;
     if (submap_slice.surface != nullptr &&
@@ -121,7 +121,9 @@ void Node::HandleSubmapList(
     CHECK(!fetched_textures->textures.empty());
     submap_slice.version = fetched_textures->version;
 
-    // TODO(gaschler): Handle more textures than just the first one.
+    // We use the first texture only. By convention this is the highest
+    // resolution texture and that is the one we want to use to construct the
+    // map for ROS.
     const auto fetched_texture = fetched_textures->textures.begin();
     submap_slice.width = fetched_texture->width;
     submap_slice.height = fetched_texture->height;
@@ -161,12 +163,12 @@ void Node::HandleSubmapList(
 }
 
 void Node::DrawAndPublish(const ::ros::WallTimerEvent& unused_timer_event) {
-  if (submaps_.empty() || last_frame_id_.empty()) {
+  if (submap_slices_.empty() || last_frame_id_.empty()) {
     return;
   }
 
   ::cartographer::common::MutexLocker locker(&mutex_);
-  auto painted_slices = PaintSubmapSlices(&submaps_, resolution_);
+  auto painted_slices = PaintSubmapSlices(&submap_slices_, resolution_);
   PublishOccupancyGrid(last_frame_id_, last_timestamp_, painted_slices.origin,
                        painted_slices.surface.get());
 }
