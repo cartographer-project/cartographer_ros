@@ -40,7 +40,7 @@ class Pattern(object):
     None if no match was found.
     """
     matches = self.regex.findall(text)
-    if matches:
+    if not matches:
       return None
     return matches[-1]
 
