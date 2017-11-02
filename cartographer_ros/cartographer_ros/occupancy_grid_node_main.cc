@@ -156,7 +156,7 @@ void Node::HandleSubmapList(
     CHECK_EQ(cairo_surface_status(submap_slice.surface.get()),
              CAIRO_STATUS_SUCCESS)
         << cairo_status_to_string(
-            cairo_surface_status(submap_slice.surface.get()));
+               cairo_surface_status(submap_slice.surface.get()));
   }
   last_timestamp_ = msg->header.stamp;
   last_frame_id_ = msg->header.frame_id;
@@ -187,8 +187,7 @@ void Node::PublishOccupancyGrid(const std::string& frame_id,
   occupancy_grid.info.width = width;
   occupancy_grid.info.height = height;
   occupancy_grid.info.origin.position.x = -origin.x() * resolution_;
-  occupancy_grid.info.origin.position.y =
-      (-height + origin.y()) * resolution_;
+  occupancy_grid.info.origin.position.y = (-height + origin.y()) * resolution_;
   occupancy_grid.info.origin.position.z = 0.;
   occupancy_grid.info.origin.orientation.w = 1.;
   occupancy_grid.info.origin.orientation.x = 0.;
@@ -202,8 +201,10 @@ void Node::PublishOccupancyGrid(const std::string& frame_id,
       const uint32_t packed = pixel_data[y * width + x];
       const unsigned char color = packed >> 16;
       const unsigned char observed = packed >> 8;
-      const int value = observed == 0 ? -1 : ::cartographer::common::RoundToInt(
-                                                 (1. - color / 255.) * 100.);
+      const int value =
+          observed == 0
+              ? -1
+              : ::cartographer::common::RoundToInt((1. - color / 255.) * 100.);
       CHECK_LE(-1, value);
       CHECK_GE(100, value);
       occupancy_grid.data.push_back(value);
