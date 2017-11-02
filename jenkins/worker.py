@@ -2,7 +2,6 @@
 
 import argparse
 import datetime
-import json
 from os.path import basename
 from pprint import pprint
 import re
@@ -18,19 +17,49 @@ class Pattern(object):
   def __init__(self, pattern):
     self.regex = re.compile(pattern, re.MULTILINE)
 
-  def extract(self, inp):
+  def extract(self, text):
     """Returns a dictionary of named capture groups to extracted output.
 
     Args:
-      inp: input to parse
+      text: input to parse
 
-    Returns an empty dict of no match was found.
+    Returns an empty dict if no match was found.
     """
-    match = self.regex.search(inp)
+    match = self.regex.search(text)
     if match is None:
       return {}
     return match.groupdict()
 
+  def extract_last_occurence(self, text):
+    """Returns tuple of extracted outputs.
+
+    Args:
+      text: input to parse
+
+    Returns the information extracted from the last match. Returns
+    None if no match was found.
+    """
+    matches = self.regex.findall(text)
+    if matches:
+      return None
+    return matches[-1]
+
+
+# BigQuery table schema
+SCHEMA = [
+    bigquery.SchemaField('date', 'DATE'),
+    bigquery.SchemaField('commit_sha1', 'STRING'),
+    bigquery.SchemaField('job_id', 'INTEGER'),
+    bigquery.SchemaField('rosbag', 'STRING'),
+    bigquery.SchemaField('user_time_secs', 'FLOAT'),
+    bigquery.SchemaField('system_time_secs', 'FLOAT'),
+    bigquery.SchemaField('wall_time_secs', 'FLOAT'),
+    bigquery.SchemaField('max_set_size_kbytes', 'INTEGER'),
+    bigquery.SchemaField('constraints_count', 'INTEGER'),
+    bigquery.SchemaField('constraints_score_minimum', 'FLOAT'),
+    bigquery.SchemaField('constraints_score_maximum', 'FLOAT'),
+    bigquery.SchemaField('constraints_score_mean', 'FLOAT')
+]
 
 # Pattern matchers for the various fields of the '/usr/bin/time -v' output
 USER_TIME_PATTERN = Pattern(
@@ -42,6 +71,12 @@ WALL_TIME_PATTERN = Pattern(
     r'((?P<hours>\d{1,2}):|)(?P<minutes>\d{1,2}):(?P<seconds>\d{2}\.\d{2})')
 MAX_RES_SET_SIZE_PATTERN = Pattern(
     r'^\s*Maximum resident set size \(kbytes\): (?P<max_set_size>\d+)')
+CONSTRAINT_STATS_PATTERN = Pattern(
+    r'Score histogram:[\n\r]+'
+    r'Count:\s+(?P<constraints_count>\d+)\s+'
+    r'Min:\s+(?P<constraints_score_min>\d+\.\d+)\s+'
+    r'Max:\s+(?P<constraints_score_max>\d+\.\d+)\s+'
+    r'Mean:\s+(?P<constraints_score_mean>\d+\.\d+)')
 
 # Pattern matcher for extracting the HEAD commit SHA-1 hash.
 GIT_SHA1_PATTERN = Pattern(r'^(?P<sha1>[0-9a-f]{40})\s+HEAD')
@@ -73,6 +108,13 @@ def extract_stats(inp):
 
   parsed = MAX_RES_SET_SIZE_PATTERN.extract(inp)
   result['max_set_size_kbytes'] = int(parsed['max_set_size'])
+
+  parsed = CONSTRAINT_STATS_PATTERN.extract_last_occurence(inp)
+  print parsed
+  result['constraints_count'] = int(parsed[0])
+  result['constraints_score_min'] = float(parsed[1])
+  result['constraints_score_max'] = float(parsed[2])
+  result['constraints_score_mean'] = float(parsed[3])
 
   return result
 
@@ -193,28 +235,24 @@ def publish_stats_to_big_query(stats_dict, now, head_sha1):
   bigquery_client = bigquery.Client()
   dataset = bigquery_client.dataset('Cartographer')
   table = dataset.table('metrics')
-  rows = []
+  rows_to_insert = []
   for job_identifier, job_info in stats_dict.iteritems():
-    data_string = """[
-            \"{}-{}-{}\",
-            \"{}\",
-            {},
-            \"{}\",
-            {},
-            {},
-            {},
-            {}
-        ]""".format(now.year, now.month, now.day, head_sha1, job_identifier,
-                    job_info['rosbag'], job_info['user_time_secs'],
-                    job_info['system_time_secs'], job_info['wall_time_secs'],
-                    job_info['max_set_size_kbytes'])
-    data = json.loads(data_string)
-    rows.append(data)
+    print job_info
+    data = ('{}-{}-{}'.format(
+        now.year, now.month,
+        now.day), head_sha1, job_identifier, job_info['rosbag'],
+            job_info['user_time_secs'], job_info['system_time_secs'],
+            job_info['wall_time_secs'], job_info['max_set_size_kbytes'],
+            job_info['constraints_count'], job_info['constraints_score_min'],
+            job_info['constraints_score_max'],
+            job_info['constraints_score_mean'])
+    rows_to_insert.append(data)
 
-  table.reload()
-  errors = table.insert_data(rows)
+  errors = bigquery_client.create_rows(
+      table, rows_to_insert, selected_fields=SCHEMA)
   if not errors:
-    print 'Pushed {} row(s) into Cartographer:metrics'.format(len(rows))
+    print 'Pushed {} row(s) into Cartographer:metrics'.format(
+        len(rows_to_insert))
   else:
     print 'Errors:'
     pprint(errors)
