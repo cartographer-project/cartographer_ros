@@ -17,29 +17,29 @@ class Pattern(object):
   def __init__(self, pattern):
     self.regex = re.compile(pattern, re.MULTILINE)
 
-  def extract(self, inp):
+  def extract(self, text):
     """Returns a dictionary of named capture groups to extracted output.
 
     Args:
-      inp: input to parse
+      text: input to parse
 
-    Returns an empty dict of no match was found.
+    Returns an empty dict if no match was found.
     """
-    match = self.regex.search(inp)
+    match = self.regex.search(text)
     if match is None:
       return {}
     return match.groupdict()
 
-  def extract_last_occurence(self, inp):
+  def extract_last_occurence(self, text):
     """Returns tuple of extracted outputs.
 
     Args:
-      inp: input to parse
+      text: input to parse
 
     Returns the information extracted from the last match. Returns
     None if no match was found.
     """
-    matches = self.regex.findall(inp)
+    matches = self.regex.findall(text)
     if matches:
       return None
     return matches[-1]
