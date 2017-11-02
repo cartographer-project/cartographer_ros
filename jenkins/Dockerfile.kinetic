@@ -72,7 +72,7 @@ COPY scripts/ros_entrypoint.sh /
 RUN rm -rf cartographer_ros catkin_ws || true
 
 RUN sudo apt-get update
-RUN sudo apt-get -y install openjdk-8-jdk
+RUN sudo apt-get -y install openjdk-8-jdk python-pip
 
 ENV HOME /home/jenkins
 RUN addgroup --system --gid 10000 jenkins
@@ -104,6 +104,10 @@ USER root
 # Install Google Cloud Components
 RUN curl https://sdk.cloud.google.com | bash && mv google-cloud-sdk /opt
 RUN gcloud components install kubectl
+
+RUN pip install --upgrade google-cloud-datastore
+RUN pip install --upgrade google-cloud-bigquery
+COPY jenkins/worker.py /worker.py
 
 # USER root
 ENTRYPOINT ["jenkins-slave"]
