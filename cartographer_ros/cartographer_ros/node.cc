@@ -171,12 +171,20 @@ void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
     // We only publish a point cloud if it has changed. It is not needed at high
     // frequency, and republishing it would be computationally wasteful.
     if (trajectory_state.pose_estimate.time != extrapolator.GetLastPoseTime()) {
+      // TODO(gaschler): Consider using other message without time information.
+      carto::sensor::TimedPointCloud point_cloud;
+      point_cloud.reserve(trajectory_state.pose_estimate.point_cloud.size());
+      for (const Eigen::Vector3f point :
+           trajectory_state.pose_estimate.point_cloud) {
+        Eigen::Vector4f point_time;
+        point_time << point, 0.f;
+        point_cloud.push_back(point_time);
+      }
       scan_matched_point_cloud_publisher_.publish(ToPointCloud2Message(
           carto::common::ToUniversal(trajectory_state.pose_estimate.time),
           node_options_.map_frame,
-          carto::sensor::TransformPointCloud(
-              trajectory_state.pose_estimate.point_cloud,
-              trajectory_state.local_to_map.cast<float>())));
+          carto::sensor::TransformTimedPointCloud(
+              point_cloud, trajectory_state.local_to_map.cast<float>())));
       extrapolator.AddPose(trajectory_state.pose_estimate.time,
                            trajectory_state.pose_estimate.pose);
     }

@@ -90,11 +90,10 @@ std::unique_ptr<carto::io::PointsBatch> HandleMessage(
   carto::sensor::PointCloudWithIntensities point_cloud =
       ToPointCloudWithIntensities(message);
   CHECK_EQ(point_cloud.intensities.size(), point_cloud.points.size());
-  CHECK_EQ(point_cloud.offset_seconds.size(), point_cloud.points.size());
 
   for (size_t i = 0; i < point_cloud.points.size(); ++i) {
     const carto::common::Time time =
-        start_time + carto::common::FromSeconds(point_cloud.offset_seconds[i]);
+        start_time + carto::common::FromSeconds(point_cloud.points[i][3]);
     if (!transform_interpolation_buffer.Has(time)) {
       continue;
     }
@@ -105,7 +104,8 @@ std::unique_ptr<carto::io::PointsBatch> HandleMessage(
             tracking_frame, message.header.frame_id, ToRos(time)));
     const carto::transform::Rigid3f sensor_to_map =
         (tracking_to_map * sensor_to_tracking).cast<float>();
-    points_batch->points.push_back(sensor_to_map * point_cloud.points[i]);
+    points_batch->points.push_back(sensor_to_map *
+                                   point_cloud.points[i].head<3>());
     points_batch->intensities.push_back(point_cloud.intensities[i]);
     // We use the last transform for the origin, which is approximately correct.
     points_batch->origin = sensor_to_map * Eigen::Vector3f::Zero();

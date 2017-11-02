@@ -36,19 +36,26 @@ TEST(MsgConversion, LaserScanToPointCloud) {
   laser_scan.range_max = 10.f;
 
   const auto point_cloud = ToPointCloudWithIntensities(laser_scan).points;
-  EXPECT_TRUE(point_cloud[0].isApprox(Eigen::Vector3f(1.f, 0.f, 0.f), 1e-6));
+  EXPECT_TRUE(
+      point_cloud[0].isApprox(Eigen::Vector4f(1.f, 0.f, 0.f, 0.f), 1e-6));
   EXPECT_TRUE(point_cloud[1].isApprox(
-      Eigen::Vector3f(1.f / std::sqrt(2.f), 1.f / std::sqrt(2.f), 0.f), 1e-6));
-  EXPECT_TRUE(point_cloud[2].isApprox(Eigen::Vector3f(0.f, 1.f, 0.f), 1e-6));
-  EXPECT_TRUE(point_cloud[3].isApprox(
-      Eigen::Vector3f(-1.f / std::sqrt(2.f), 1.f / std::sqrt(2.f), 0.f), 1e-6));
-  EXPECT_TRUE(point_cloud[4].isApprox(Eigen::Vector3f(-1.f, 0.f, 0.f), 1e-6));
-  EXPECT_TRUE(point_cloud[5].isApprox(
-      Eigen::Vector3f(-1.f / std::sqrt(2.f), -1.f / std::sqrt(2.f), 0.f),
+      Eigen::Vector4f(1.f / std::sqrt(2.f), 1.f / std::sqrt(2.f), 0.f, 0.f),
       1e-6));
-  EXPECT_TRUE(point_cloud[6].isApprox(Eigen::Vector3f(0.f, -1.f, 0.f), 1e-6));
+  EXPECT_TRUE(
+      point_cloud[2].isApprox(Eigen::Vector4f(0.f, 1.f, 0.f, 0.f), 1e-6));
+  EXPECT_TRUE(point_cloud[3].isApprox(
+      Eigen::Vector4f(-1.f / std::sqrt(2.f), 1.f / std::sqrt(2.f), 0.f, 0.f),
+      1e-6));
+  EXPECT_TRUE(
+      point_cloud[4].isApprox(Eigen::Vector4f(-1.f, 0.f, 0.f, 0.f), 1e-6));
+  EXPECT_TRUE(point_cloud[5].isApprox(
+      Eigen::Vector4f(-1.f / std::sqrt(2.f), -1.f / std::sqrt(2.f), 0.f, 0.f),
+      1e-6));
+  EXPECT_TRUE(
+      point_cloud[6].isApprox(Eigen::Vector4f(0.f, -1.f, 0.f, 0.f), 1e-6));
   EXPECT_TRUE(point_cloud[7].isApprox(
-      Eigen::Vector3f(1.f / std::sqrt(2.f), -1.f / std::sqrt(2.f), 0.f), 1e-6));
+      Eigen::Vector4f(1.f / std::sqrt(2.f), -1.f / std::sqrt(2.f), 0.f, 0.f),
+      1e-6));
 }
 
 TEST(MsgConversion, LaserScanToPointCloudWithInfinityAndNaN) {
@@ -66,8 +73,10 @@ TEST(MsgConversion, LaserScanToPointCloudWithInfinityAndNaN) {
 
   const auto point_cloud = ToPointCloudWithIntensities(laser_scan).points;
   ASSERT_EQ(2, point_cloud.size());
-  EXPECT_TRUE(point_cloud[0].isApprox(Eigen::Vector3f(0.f, 2.f, 0.f), 1e-6));
-  EXPECT_TRUE(point_cloud[1].isApprox(Eigen::Vector3f(-3.f, 0.f, 0.f), 1e-6));
+  EXPECT_TRUE(
+      point_cloud[0].isApprox(Eigen::Vector4f(0.f, 2.f, 0.f, 0.f), 1e-6));
+  EXPECT_TRUE(
+      point_cloud[1].isApprox(Eigen::Vector4f(-3.f, 0.f, 0.f, 0.f), 1e-6));
 }
 
 }  // namespace

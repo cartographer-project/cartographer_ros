@@ -15,10 +15,11 @@
 -->
 
 <launch>
+  <arg name="config_file" default="assets_writer_backpack_2d.lua"/>
   <node name="cartographer_assets_writer" pkg="cartographer_ros" required="true"
       type="cartographer_assets_writer" args="
           -configuration_directory $(find cartographer_ros)/configuration_files
-          -configuration_basename assets_writer_backpack_2d.lua
+          -configuration_basename $(arg config_file)
           -urdf_filename $(find cartographer_ros)/urdf/backpack_2d.urdf
           -bag_filenames $(arg bag_filenames)
           -pose_graph_filename $(arg pose_graph_filename)"
