@@ -68,10 +68,16 @@ MapBuilderBridge::MapBuilderBridge(const NodeOptions& node_options,
       map_builder_(node_options.map_builder_options),
       tf_buffer_(tf_buffer) {}
 
-void MapBuilderBridge::LoadMap(const std::string& map_filename) {
-  LOG(INFO) << "Loading map '" << map_filename << "'...";
-  cartographer::io::ProtoStreamReader stream(map_filename);
-  map_builder_.LoadMap(&stream);
+void MapBuilderBridge::LoadState(const std::string& state_filename,
+                                 bool load_frozen_state) {
+  // Check if suffix of the state file is ".pbstream".
+  const string suffix = ".pbstream";
+  CHECK_EQ(state_filename.substr(
+               std::max<int>(state_filename.size() - suffix.size(), 0)),
+           suffix);
+  LOG(INFO) << "Loading saved state '" << state_filename << "'...";
+  cartographer::io::ProtoStreamReader stream(state_filename);
+  map_builder_.LoadState(&stream, load_frozen_state);
 }
 
 int MapBuilderBridge::AddTrajectory(

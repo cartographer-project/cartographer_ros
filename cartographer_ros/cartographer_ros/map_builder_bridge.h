@@ -50,7 +50,7 @@ class MapBuilderBridge {
   MapBuilderBridge(const MapBuilderBridge&) = delete;
   MapBuilderBridge& operator=(const MapBuilderBridge&) = delete;
 
-  void LoadMap(const std::string& map_filename);
+  void LoadState(const std::string& state_filename, bool load_frozen_state);
   int AddTrajectory(const std::unordered_set<string>& expected_sensor_ids,
                     const TrajectoryOptions& trajectory_options);
   void FinishTrajectory(int trajectory_id);

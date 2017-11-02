@@ -16,8 +16,8 @@
 
 #include <errno.h>
 #include <string.h>
-#include <sys/time.h>
 #include <sys/resource.h>
+#include <sys/time.h>
 #include <time.h>
 #include <chrono>
 #include <sstream>
@@ -53,8 +53,11 @@ DEFINE_string(
     "URDF file that contains static links for your sensor configuration.");
 DEFINE_bool(use_bag_transforms, true,
             "Whether to read, use and republish the transforms from the bag.");
-DEFINE_string(pbstream_filename, "",
-              "If non-empty, filename of a pbstream to load.");
+DEFINE_string(load_state_filename, "",
+              "If non-empty, filename of a .pbstream file to load, containing "
+              "a saved SLAM state.");
+DEFINE_bool(load_frozen_state, true,
+            "Load the saved state as frozen (non-optimized) trajectories.");
 DEFINE_bool(keep_running, false,
             "Keep running the offline node after all messages from the bag "
             "have been processed.");
@@ -91,10 +94,8 @@ void Run(const std::vector<string>& bag_filenames) {
   // remaining sensor data that cannot be transformed due to missing transforms.
   node_options.lookup_transform_timeout_sec = 0.;
   Node node(node_options, &tf_buffer);
-  if (!FLAGS_pbstream_filename.empty()) {
-    // TODO(jihoonl): LoadMap should be replaced by some better deserialization
-    // of full SLAM state as non-frozen trajectories once possible
-    node.LoadMap(FLAGS_pbstream_filename);
+  if (!FLAGS_load_state_filename.empty()) {
+    node.LoadState(FLAGS_load_state_filename, FLAGS_load_frozen_state);
   }
 
   std::unordered_set<string> expected_sensor_ids;
@@ -245,9 +246,21 @@ void Run(const std::vector<string>& bag_filenames) {
 #endif
 
   if (::ros::ok()) {
-    const string output_filename = bag_filenames.front() + ".pbstream";
-    LOG(INFO) << "Writing state to '" << output_filename << "'...";
-    node.SerializeState(output_filename);
+    string output_filename;
+    const string suffix = ".pbstream";
+    if (bag_filenames.size() > 0) {
+      output_filename = bag_filenames.front();
+    } else {
+      // Reuse loaded state name, but avoid overwriting the same state file
+      // by appending "_new".
+      output_filename =
+          FLAGS_load_state_filename.substr(
+              0, FLAGS_load_state_filename.size() - suffix.size()) +
+          string("_new");
+    }
+    const string state_output_filename = output_filename + suffix;
+    LOG(INFO) << "Writing state to '" << state_output_filename << "'...";
+    node.SerializeState(state_output_filename);
   }
   if (FLAGS_keep_running) {
     ::ros::waitForShutdown();
@@ -265,7 +278,8 @@ int main(int argc, char** argv) {
       << "-configuration_directory is missing.";
   CHECK(!FLAGS_configuration_basename.empty())
       << "-configuration_basename is missing.";
-  CHECK(!FLAGS_bag_filenames.empty()) << "-bag_filenames is missing.";
+  CHECK(!(FLAGS_bag_filenames.empty() && FLAGS_load_state_filename.empty()))
+      << "-bag_filenames and -load_state_filename cannot both be unspecified.";
 
   ::ros::init(argc, argv, "cartographer_offline_node");
   ::ros::start();
