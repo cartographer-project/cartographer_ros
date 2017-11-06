@@ -113,15 +113,19 @@ void SensorBridge::HandleImuMessage(const string& sensor_id,
 
 void SensorBridge::HandleLaserScanMessage(
     const string& sensor_id, const sensor_msgs::LaserScan::ConstPtr& msg) {
-  HandleLaserScan(sensor_id, FromRos(msg->header.stamp), msg->header.frame_id,
-                  ToPointCloudWithIntensities(*msg));
+  ::cartographer::sensor::PointCloudWithIntensities point_cloud;
+  ::cartographer::common::Time time;
+  std::tie(point_cloud, time) = ToPointCloudWithIntensities(*msg);
+  HandleLaserScan(sensor_id, time, msg->header.frame_id, point_cloud);
 }
 
 void SensorBridge::HandleMultiEchoLaserScanMessage(
     const string& sensor_id,
     const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
-  HandleLaserScan(sensor_id, FromRos(msg->header.stamp), msg->header.frame_id,
-                  ToPointCloudWithIntensities(*msg));
+  ::cartographer::sensor::PointCloudWithIntensities point_cloud;
+  ::cartographer::common::Time time;
+  std::tie(point_cloud, time) = ToPointCloudWithIntensities(*msg);
+  HandleLaserScan(sensor_id, time, msg->header.frame_id, point_cloud);
 }
 
 void SensorBridge::HandlePointCloud2Message(
@@ -139,10 +143,10 @@ void SensorBridge::HandlePointCloud2Message(
 const TfBridge& SensorBridge::tf_bridge() const { return tf_bridge_; }
 
 void SensorBridge::HandleLaserScan(
-    const string& sensor_id, const carto::common::Time start_time,
+    const string& sensor_id, const carto::common::Time time,
     const string& frame_id,
     const carto::sensor::PointCloudWithIntensities& points) {
-  CHECK_GE(points.points.front()[3], 0);
+  CHECK_LE(points.points.back()[3], 0);
   // TODO(gaschler): Use per-point time instead of subdivisions.
   for (int i = 0; i != num_subdivisions_per_laser_scan_; ++i) {
     const size_t start_index =
@@ -158,7 +162,7 @@ void SensorBridge::HandleLaserScan(
     // `subdivision_time` is the end of the measurement so sensor::Collator will
     // send all other sensor data first.
     const carto::common::Time subdivision_time =
-        start_time + carto::common::FromSeconds(time_to_subdivision_end);
+        time + carto::common::FromSeconds(time_to_subdivision_end);
     for (auto& point : subdivision) {
       point[3] -= time_to_subdivision_end;
     }

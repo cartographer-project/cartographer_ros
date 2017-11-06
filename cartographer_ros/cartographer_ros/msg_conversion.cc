@@ -91,8 +91,8 @@ float GetFirstEcho(const sensor_msgs::LaserEcho& echo) {
 
 // For sensor_msgs::LaserScan and sensor_msgs::MultiEchoLaserScan.
 template <typename LaserMessageType>
-PointCloudWithIntensities LaserScanToPointCloudWithIntensities(
-    const LaserMessageType& msg) {
+std::tuple<PointCloudWithIntensities, ::cartographer::common::Time>
+LaserScanToPointCloudWithIntensities(const LaserMessageType& msg) {
   CHECK_GE(msg.range_min, 0.f);
   CHECK_GE(msg.range_max, msg.range_min);
   if (msg.angle_increment > 0.f) {
@@ -124,7 +124,8 @@ PointCloudWithIntensities LaserScanToPointCloudWithIntensities(
     }
     angle += msg.angle_increment;
   }
-  return point_cloud;
+  // TODO(gaschler): Correct timestamp.
+  return std::make_tuple(point_cloud, FromRos(msg.header.stamp));
 }
 
 bool PointCloud2HasField(const sensor_msgs::PointCloud2& pc2,
@@ -153,18 +154,21 @@ sensor_msgs::PointCloud2 ToPointCloud2Message(
   return msg;
 }
 
-PointCloudWithIntensities ToPointCloudWithIntensities(
-    const sensor_msgs::LaserScan& msg) {
+std::tuple<::cartographer::sensor::PointCloudWithIntensities,
+           ::cartographer::common::Time>
+ToPointCloudWithIntensities(const sensor_msgs::LaserScan& msg) {
   return LaserScanToPointCloudWithIntensities(msg);
 }
 
-PointCloudWithIntensities ToPointCloudWithIntensities(
-    const sensor_msgs::MultiEchoLaserScan& msg) {
+std::tuple<::cartographer::sensor::PointCloudWithIntensities,
+           ::cartographer::common::Time>
+ToPointCloudWithIntensities(const sensor_msgs::MultiEchoLaserScan& msg) {
   return LaserScanToPointCloudWithIntensities(msg);
 }
 
-PointCloudWithIntensities ToPointCloudWithIntensities(
-    const sensor_msgs::PointCloud2& message) {
+std::tuple<::cartographer::sensor::PointCloudWithIntensities,
+           ::cartographer::common::Time>
+ToPointCloudWithIntensities(const sensor_msgs::PointCloud2& message) {
   PointCloudWithIntensities point_cloud;
   // We check for intensity field here to avoid run-time warnings if we pass in
   // a PointCloud2 without intensity.
@@ -186,7 +190,7 @@ PointCloudWithIntensities ToPointCloudWithIntensities(
       point_cloud.intensities.push_back(1.0);
     }
   }
-  return point_cloud;
+  return std::make_tuple(point_cloud, FromRos(message.header.stamp));
 }
 
 Rigid3d ToRigid3d(const geometry_msgs::TransformStamped& transform) {
