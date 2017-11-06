@@ -194,8 +194,8 @@ void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
     // published poses to advance. If we already know a newer pose, we use its
     // time instead. Since tf knows how to interpolate, providing newer
     // information is better.
-    const ::cartographer::common::Time now =
-        std::max(FromRos(ros::Time::now()), extrapolator.GetLastPoseTime());
+    const ::cartographer::common::Time now = std::max(
+        FromRos(ros::Time::now()), extrapolator.GetLastExtrapolatedTime());
     stamped_transform.header.stamp = ToRos(now);
     const Rigid3d tracking_to_local = extrapolator.ExtrapolatePose(now);
     const Rigid3d tracking_to_map =
