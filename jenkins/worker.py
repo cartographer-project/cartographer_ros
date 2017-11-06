@@ -169,7 +169,7 @@ class Job(object):
     print 'running job {}'.format(self.id)
 
     # Garbage collect any left-overs from previous runs.
-    run_cmd('rm -Rf /data/*')
+    run_cmd('rm -rf /data/*')
 
     # Copy the rosbag to scratch space
     scratch_dir = '/data/{}'.format(self.id)
