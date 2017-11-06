@@ -167,6 +167,10 @@ class Job(object):
   def run(self, ros_distro, run_id):
     """Runs the job with ROS distro 'ros_distro'."""
     print 'running job {}'.format(self.id)
+
+    # Garbage collect any left-overs from previous runs.
+    run_cmd('rm -rf /data/*')
+
     # Copy the rosbag to scratch space
     scratch_dir = '/data/{}'.format(self.id)
     rosbag_filename = basename(self.rosbag)
