@@ -124,8 +124,15 @@ LaserScanToPointCloudWithIntensities(const LaserMessageType& msg) {
     }
     angle += msg.angle_increment;
   }
-  // TODO(gaschler): Correct timestamp.
-  return std::make_tuple(point_cloud, FromRos(msg.header.stamp));
+  ::cartographer::common::Time timestamp = FromRos(msg.header.stamp);
+  if (!point_cloud.points.empty()) {
+    const double duration = point_cloud.points.back()[3];
+    timestamp += cartographer::common::FromSeconds(duration);
+    for (auto& point : point_cloud.points) {
+      point[3] -= duration;
+    }
+  }
+  return std::make_tuple(point_cloud, timestamp);
 }
 
 bool PointCloud2HasField(const sensor_msgs::PointCloud2& pc2,

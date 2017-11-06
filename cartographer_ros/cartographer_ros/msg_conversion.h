@@ -46,6 +46,9 @@ geometry_msgs::Pose ToGeometryMsgPose(
 
 geometry_msgs::Point ToGeometryMsgPoint(const Eigen::Vector3d& vector3d);
 
+// Converts ROS message to point cloud. Returns the time when the last point
+// was acquired (different from the ROS timestamp). Timing of points is given in
+// the fourth component of each point relative to `Time`.
 std::tuple<::cartographer::sensor::PointCloudWithIntensities,
            ::cartographer::common::Time>
 ToPointCloudWithIntensities(const sensor_msgs::LaserScan& msg);
