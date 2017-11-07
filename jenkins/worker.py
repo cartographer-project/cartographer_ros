@@ -141,19 +141,10 @@ def extract_ground_truth_stats(input_text):
   """Returns a dictionary of ground truth stats."""
   result = {}
   parsed = GROUND_TRUTH_STATS_PATTERN.extract(input_text)
-
-  result['ground_truth_abs_trans_err'] = float(parsed['abs_trans_err'])
-  result['ground_truth_abs_trans_err_dev'] = float(parsed['abs_trans_err_dev'])
-
-  result['ground_truth_sqr_trans_err'] = float(parsed['sqr_trans_err'])
-  result['ground_truth_sqr_trans_err_dev'] = float(parsed['sqr_trans_err_dev'])
-
-  result['ground_truth_abs_rot_err'] = float(parsed['abs_rot_err'])
-  result['ground_truth_abs_rot_err_dev'] = float(parsed['abs_rot_err_dev'])
-
-  result['ground_truth_sqr_rot_err'] = float(parsed['sqr_rot_err'])
-  result['ground_truth_sqr_rot_err_dev'] = float(parsed['sqr_rot_err_dev'])
-
+  for name in ('abs_trans_err', 'sqr_trans_err', 'abs_rot_err', 'sqr_rot_err'):
+    result['ground_truth_{}'.format(name)] = float(parsed[name])
+    result['ground_truth_{}_dev'.format(name)] = float(
+        parsed['{}_dev'.format(name)])
   return result
 
 
@@ -170,6 +161,7 @@ def create_job_selector(worker_id, num_workers):
 
 def run_cmd(cmd):
   """Runs command both printing its stdout output and returning it as string."""
+  print cmd
   p = subprocess.Popen(
       cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
   run_cmd.output = []
@@ -182,6 +174,14 @@ def run_cmd(cmd):
     process(p.stdout.readline())
   process(p.stdout.read())
   return '\n'.join(run_cmd.output)
+
+
+def run_ros_cmd(ros_distro, ros_cmd):
+  """Runs command similar to run_cmd but sets ROS environment variables."""
+  cmd = ('/bin/bash -c \"source /opt/ros/{}/setup.bash && source '
+         '/opt/cartographer_ros/setup.bash && {}\"').format(
+             ros_distro, ros_cmd)
+  return run_cmd(cmd)
 
 
 class Job(object):
@@ -217,21 +217,19 @@ class Job(object):
                                              rosbag_filename))
 
     # Creates pbstream
-    output = run_cmd(
-        '/bin/bash -c \"source /opt/ros/{}/setup.bash && source '
-        '/opt/cartographer_ros/setup.bash && /usr/bin/time -v roslaunch '
-        'cartographer_ros {} bag_filenames:={}/{} no_rviz:=true\"'.format(
-            ros_distro, self.launch_file, scratch_dir, rosbag_filename))
+    output = run_ros_cmd(ros_distro,
+                         '/usr/bin/time -v roslaunch cartographer_ros {} '
+                         'bag_filenames:={}/{} no_rviz:=true'.format(
+                             self.launch_file, scratch_dir, rosbag_filename))
     info = extract_stats(output)
 
     # Creates assets.
-    run_cmd('/bin/bash -c \"source /opt/ros/{}/setup.bash && source '
-            '/opt/cartographer_ros/setup.bash && /usr/bin/time -v roslaunch '
-            'cartographer_ros {} bag_filenames:={}/{} '
-            'pose_graph_filename:={}/{}.pbstream config_file:={}\"'.format(
-                ros_distro, self.assets_writer_launch_file, scratch_dir,
-                rosbag_filename, scratch_dir, rosbag_filename,
-                self.assets_writer_config_file))
+    run_ros_cmd(
+        ros_distro, '/usr/bin/time -v roslaunch cartographer_ros {} '
+        'bag_filenames:={}/{} pose_graph_filename:='
+        '{}/{}.pbstream config_file:={}'.format(
+            self.assets_writer_launch_file, scratch_dir, rosbag_filename,
+            scratch_dir, rosbag_filename, self.assets_writer_config_file))
 
     # Copies assets to bucket.
     run_cmd('gsutil cp {}/{}.pbstream '
@@ -245,12 +243,10 @@ class Job(object):
             '{}/relations.pb'.format(self.id, scratch_dir))
 
     # Calculate metrics.
-    output = run_cmd(
-        '/bin/bash -c \"source /opt/ros/{}/setup.bash && source '
-        '/opt/cartographer_ros/setup.bash && '
-        'cartographer_compute_relations_metrics -relations_filename '
-        '{}/relations.pb -pose_graph_filename {}/{}.pbstream\"'.format(
-            ros_distro, scratch_dir, scratch_dir, rosbag_filename))
+    output = run_ros_cmd(ros_distro, 'cartographer_compute_relations_metrics '
+                         '-relations_filename {}/relations.pb '
+                         '-pose_graph_filename {}/{}.pbstream'.format(
+                             scratch_dir, scratch_dir, rosbag_filename))
 
     # Add ground truth stats.
     info.update(extract_ground_truth_stats(output))
