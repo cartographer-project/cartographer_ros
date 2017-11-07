@@ -58,7 +58,15 @@ SCHEMA = [
     bigquery.SchemaField('constraints_count', 'INTEGER'),
     bigquery.SchemaField('constraints_score_minimum', 'FLOAT'),
     bigquery.SchemaField('constraints_score_maximum', 'FLOAT'),
-    bigquery.SchemaField('constraints_score_mean', 'FLOAT')
+    bigquery.SchemaField('constraints_score_mean', 'FLOAT'),
+    bigquery.SchemaField('ground_truth_abs_trans_err', 'FLOAT'),
+    bigquery.SchemaField('ground_truth_abs_trans_err_dev', 'FLOAT'),
+    bigquery.SchemaField('ground_truth_sqr_trans_err', 'FLOAT'),
+    bigquery.SchemaField('ground_truth_sqr_trans_err_dev', 'FLOAT'),
+    bigquery.SchemaField('ground_truth_abs_rot_err', 'FLOAT'),
+    bigquery.SchemaField('ground_truth_abs_rot_err_dev', 'FLOAT'),
+    bigquery.SchemaField('ground_truth_sqr_rot_err', 'FLOAT'),
+    bigquery.SchemaField('ground_truth_sqr_rot_err_dev', 'FLOAT')
 ]
 
 # Pattern matchers for the various fields of the '/usr/bin/time -v' output
@@ -77,6 +85,16 @@ CONSTRAINT_STATS_PATTERN = Pattern(
     r'Min:\s+(?P<constraints_score_min>\d+\.\d+)\s+'
     r'Max:\s+(?P<constraints_score_max>\d+\.\d+)\s+'
     r'Mean:\s+(?P<constraints_score_mean>\d+\.\d+)')
+GROUND_TRUTH_STATS_PATTERN = Pattern(
+    r'Result:[\n\r]+'
+    r'Abs translational error (?P<abs_trans_err>\d+\.\d+) '
+    r'\+/- (?P<abs_trans_err_dev>\d+\.\d+) m[\n\r]+'
+    r'Sqr translational error (?P<sqr_trans_err>\d+\.\d+) '
+    r'\+/- (?P<sqr_trans_err_dev>\d+\.\d+) m\^2[\n\r]+'
+    r'Abs rotational error (?P<abs_rot_err>\d+\.\d+) '
+    r'\+/- (?P<abs_rot_err_dev>\d+\.\d+) deg[\n\r]+'
+    r'Sqr rotational error (?P<sqr_rot_err>\d+\.\d+) '
+    r'\+/- (?P<sqr_rot_err_dev>\d+\.\d+) deg\^2')
 
 # Pattern matcher for extracting the HEAD commit SHA-1 hash.
 GIT_SHA1_PATTERN = Pattern(r'^(?P<sha1>[0-9a-f]{40})\s+HEAD')
@@ -115,6 +133,26 @@ def extract_stats(inp):
   result['constraints_score_min'] = float(parsed[1])
   result['constraints_score_max'] = float(parsed[2])
   result['constraints_score_mean'] = float(parsed[3])
+
+  return result
+
+
+def extract_ground_truth_stats(input_text):
+  """Returns a dictionary of ground truth stats."""
+  result = {}
+  parsed = GROUND_TRUTH_STATS_PATTERN.extract(input_text)
+
+  result['ground_truth_abs_trans_err'] = float(parsed['abs_trans_err'])
+  result['ground_truth_abs_trans_err_dev'] = float(parsed['abs_trans_err_dev'])
+
+  result['ground_truth_sqr_trans_err'] = float(parsed['sqr_trans_err'])
+  result['ground_truth_sqr_trans_err_dev'] = float(parsed['sqr_trans_err_dev'])
+
+  result['ground_truth_abs_rot_err'] = float(parsed['abs_rot_err'])
+  result['ground_truth_abs_rot_err_dev'] = float(parsed['abs_rot_err_dev'])
+
+  result['ground_truth_sqr_rot_err'] = float(parsed['sqr_rot_err'])
+  result['ground_truth_sqr_rot_err_dev'] = float(parsed['sqr_rot_err_dev'])
 
   return result
 
@@ -184,6 +222,7 @@ class Job(object):
         '/opt/cartographer_ros/setup.bash && /usr/bin/time -v roslaunch '
         'cartographer_ros {} bag_filenames:={}/{} no_rviz:=true\"'.format(
             ros_distro, self.launch_file, scratch_dir, rosbag_filename))
+    info = extract_stats(output)
 
     # Creates assets.
     run_cmd('/bin/bash -c \"source /opt/ros/{}/setup.bash && source '
@@ -201,7 +240,21 @@ class Job(object):
     run_cmd('gsutil cp {}/{}_* gs://cartographer-ci-artifacts/{}/{}/'.format(
         scratch_dir, rosbag_filename, run_id, self.id))
 
-    info = extract_stats(output)
+    # Download ground truth relations file.
+    run_cmd('gsutil cp gs://cartographer-ci-ground-truth/{}/relations.pb '
+            '{}/relations.pb'.format(self.id, scratch_dir))
+
+    # Calculate metrics.
+    output = run_cmd(
+        '/bin/bash -c \"source /opt/ros/{}/setup.bash && source '
+        '/opt/cartographer_ros/setup.bash && '
+        'cartographer_compute_relations_metrics -relations_filename '
+        '{}/relations.pb -pose_graph_filename {}/{}.pbstream\"'.format(
+            ros_distro, scratch_dir, scratch_dir, rosbag_filename))
+
+    # Add ground truth stats.
+    info.update(extract_ground_truth_stats(output))
+
     info['rosbag'] = rosbag_filename
     return info
 
@@ -249,7 +302,16 @@ def publish_stats_to_big_query(stats_dict, now, head_sha1):
             job_info['wall_time_secs'], job_info['max_set_size_kbytes'],
             job_info['constraints_count'], job_info['constraints_score_min'],
             job_info['constraints_score_max'],
-            job_info['constraints_score_mean'])
+            job_info['constraints_score_mean'],
+            job_info['ground_truth_abs_trans_err'],
+            job_info['ground_truth_abs_trans_err_dev'],
+            job_info['ground_truth_sqr_trans_err'],
+            job_info['ground_truth_sqr_trans_err_dev'],
+            job_info['ground_truth_abs_rot_err'],
+            job_info['ground_truth_abs_rot_err_dev'],
+            job_info['ground_truth_sqr_rot_err'],
+            job_info['ground_truth_sqr_rot_err_dev'])
+
     rows_to_insert.append(data)
 
   errors = bigquery_client.create_rows(
