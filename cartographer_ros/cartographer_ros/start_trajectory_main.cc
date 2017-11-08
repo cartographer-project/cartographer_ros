@@ -59,6 +59,7 @@ bool Run() {
           kStartTrajectoryServiceName);
   cartographer_ros_msgs::StartTrajectory srv;
   srv.request.options = ToRosMessage(LoadOptions());
+  srv.request.options.initial_trajectory_pose.stamp = ros::Time::now();
   srv.request.topics.laser_scan_topic = kLaserScanTopic;
   srv.request.topics.multi_echo_laser_scan_topic = kMultiEchoLaserScanTopic;
   srv.request.topics.point_cloud2_topic = kPointCloud2Topic;

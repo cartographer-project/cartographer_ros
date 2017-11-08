@@ -14,6 +14,7 @@
 
 include "map_builder.lua"
 include "trajectory_builder.lua"
+include "initial_trajectory_pose.lua"
 
 options = {
   map_builder = MAP_BUILDER,
@@ -35,6 +36,7 @@ options = {
   rangefinder_sampling_ratio = 1.,
   odometry_sampling_ratio = 1.,
   imu_sampling_ratio = 1.,
+  initial_trajectory_pose = INITIAL_TRAJECTORY_POSE,
 }
 
 MAP_BUILDER.use_trajectory_builder_2d = true

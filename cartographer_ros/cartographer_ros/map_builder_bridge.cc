@@ -75,10 +75,23 @@ void MapBuilderBridge::LoadMap(const std::string& map_filename) {
 }
 
 int MapBuilderBridge::AddTrajectory(
-    const std::unordered_set<string>& expected_sensor_ids,
-    const TrajectoryOptions& trajectory_options) {
-  const int trajectory_id = map_builder_.AddTrajectoryBuilder(
-      expected_sensor_ids, trajectory_options.trajectory_builder_options);
+  const std::unordered_set<string>& expected_sensor_ids,
+  const TrajectoryOptions& trajectory_options) {
+  const auto to_trajectory_id = trajectory_options.initial_trajectory_pose.to_trajectory_id;
+  const auto time = trajectory_options.initial_trajectory_pose.time;
+  bool initial_trajectory_pose_valid =
+      to_trajectory_id >= 0 && time > ::cartographer::common::Time::min();
+  const int trajectory_id =
+      initial_trajectory_pose_valid
+          ? map_builder_.AddTrajectoryBuilder(
+                expected_sensor_ids,
+                trajectory_options.trajectory_builder_options,
+                trajectory_options.initial_trajectory_pose.relative_pose,
+                to_trajectory_id,
+                trajectory_options.initial_trajectory_pose.time)
+          : map_builder_.AddTrajectoryBuilder(
+                expected_sensor_ids,
+                trajectory_options.trajectory_builder_options);
   LOG(INFO) << "Added trajectory with ID '" << trajectory_id << "'.";
 
   // Make sure there is no trajectory with 'trajectory_id' yet.
