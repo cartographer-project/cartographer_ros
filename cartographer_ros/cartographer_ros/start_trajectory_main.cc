@@ -60,7 +60,7 @@ bool Run() {
   cartographer_ros_msgs::StartTrajectory srv;
   srv.request.options = ToRosMessage(LoadOptions());
   srv.request.topics.laser_scan_topic =
-      ros::names::resolve(kLaserScanTopic, true);
+      ros::names::resolve(kLaserScanTopic, true /* apply topic remapping */);
   srv.request.topics.multi_echo_laser_scan_topic =
       ros::names::resolve(kMultiEchoLaserScanTopic, true);
   srv.request.topics.point_cloud2_topic =
