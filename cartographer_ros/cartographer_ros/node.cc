@@ -81,6 +81,8 @@ using carto::transform::Rigid3d;
 
 Node::Node(const NodeOptions& node_options, tf2_ros::Buffer* const tf_buffer)
     : node_options_(node_options),
+      tf_bridge_(node_options_.map_frame,
+                 node_options_.lookup_transform_timeout_sec, tf_buffer),
       map_builder_bridge_(node_options_, tf_buffer) {
   carto::common::MutexLocker lock(&mutex_);
   submap_list_publisher_ =
@@ -285,10 +287,18 @@ std::unordered_set<string> Node::ComputeExpectedTopics(
 
 int Node::AddTrajectory(const TrajectoryOptions& options,
                         const cartographer_ros_msgs::SensorTopics& topics) {
+  return AddTrajectory(options, topics, cartographer::transform::Rigid3d(),
+                       cartographer::common::FromUniversal(0));
+}
+
+int Node::AddTrajectory(const TrajectoryOptions& options,
+                        const cartographer_ros_msgs::SensorTopics& topics,
+                        const cartographer::transform::Rigid3d& initialpose,
+                        const cartographer::common::Time& time) {
   const std::unordered_set<string> expected_sensor_ids =
       ComputeExpectedTopics(options, topics);
-  const int trajectory_id =
-      map_builder_bridge_.AddTrajectory(expected_sensor_ids, options);
+  const int trajectory_id = map_builder_bridge_.AddTrajectory(
+      expected_sensor_ids, options, initialpose, time);
   AddExtrapolator(trajectory_id, options);
   AddSensorSamplers(trajectory_id, options);
   LaunchSubscribers(options, topics, trajectory_id);
@@ -389,7 +399,29 @@ bool Node::HandleStartTrajectory(
     LOG(ERROR) << "Invalid topics.";
     return false;
   }
-  response.trajectory_id = AddTrajectory(options, request.topics);
+
+  if (request.initial_pose.header.frame_id == "") {
+    response.trajectory_id = AddTrajectory(options, request.topics);
+  } else {
+    auto msg_to_map_frame =
+        tf_bridge_.LookupToTracking(FromRos(request.initial_pose.header.stamp),
+                                    request.initial_pose.header.frame_id);
+    if (msg_to_map_frame) {
+      carto::transform::Rigid3d pose =
+          ToRigid3d(request.initial_pose.pose.pose);
+      carto::common::Time time = FromRos(request.initial_pose.header.stamp);
+      LOG(INFO) << "Initialising Trajectory at " << pose << " in "
+                << request.initial_pose.header.frame_id;
+      response.trajectory_id = AddTrajectory(
+          options, request.topics, *msg_to_map_frame.get() * pose, time);
+    } else {
+      LOG(WARNING) << request.initial_pose.header.frame_id << "in "
+                   << request.initial_pose.header.stamp.toSec()
+                   << " isn't available"
+                   << ". Ignore and use default";
+      response.trajectory_id = AddTrajectory(options, request.topics);
+    }
+  }
   return true;
 }
 
@@ -409,8 +441,10 @@ int Node::AddOfflineTrajectory(
     const std::unordered_set<string>& expected_sensor_ids,
     const TrajectoryOptions& options) {
   carto::common::MutexLocker lock(&mutex_);
-  const int trajectory_id =
-      map_builder_bridge_.AddTrajectory(expected_sensor_ids, options);
+  const int trajectory_id = map_builder_bridge_.AddTrajectory(
+      expected_sensor_ids, options, cartographer::transform::Rigid3d(),
+      cartographer::common::FromUniversal(0));
+
   AddExtrapolator(trajectory_id, options);
   AddSensorSamplers(trajectory_id, options);
   is_active_trajectory_[trajectory_id] = true;

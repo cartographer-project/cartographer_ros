@@ -120,6 +120,10 @@ class Node {
       const cartographer_ros_msgs::SensorTopics& topics);
   int AddTrajectory(const TrajectoryOptions& options,
                     const cartographer_ros_msgs::SensorTopics& topics);
+  int AddTrajectory(const TrajectoryOptions& options,
+                    const cartographer_ros_msgs::SensorTopics& topics,
+                    const cartographer::transform::Rigid3d& initialpose,
+                    const cartographer::common::Time& time);
   void LaunchSubscribers(const TrajectoryOptions& options,
                          const cartographer_ros_msgs::SensorTopics& topics,
                          int trajectory_id);
@@ -135,6 +139,7 @@ class Node {
                           const TrajectoryOptions& options);
 
   const NodeOptions node_options_;
+  const TfBridge tf_bridge_;
 
   tf2_ros::TransformBroadcaster tf_broadcaster_;
 

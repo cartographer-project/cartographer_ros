@@ -14,5 +14,8 @@
 
 cartographer_ros_msgs/TrajectoryOptions options
 cartographer_ros_msgs/SensorTopics topics
+
+# Initial pose of tracking frame
+geometry_msgs/PoseWithCovarianceStamped initial_pose
 ---
 int32 trajectory_id
