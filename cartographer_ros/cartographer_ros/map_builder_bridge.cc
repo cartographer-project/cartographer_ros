@@ -150,7 +150,7 @@ cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
   cartographer_ros_msgs::SubmapList submap_list;
   submap_list.header.stamp = ::ros::Time::now();
   submap_list.header.frame_id = node_options_.map_frame;
-  for (const auto &submap_id_data :
+  for (const auto& submap_id_data :
        map_builder_.sparse_pose_graph()->GetAllSubmapData()) {
     cartographer_ros_msgs::SubmapEntry submap_entry;
     submap_entry.trajectory_id = submap_id_data.id.trajectory_id;

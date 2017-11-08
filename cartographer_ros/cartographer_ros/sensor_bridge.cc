@@ -40,7 +40,8 @@ const std::string& CheckNoLeadingSlash(const std::string& frame_id) {
 }  // namespace
 
 SensorBridge::SensorBridge(
-    const int num_subdivisions_per_laser_scan, const std::string& tracking_frame,
+    const int num_subdivisions_per_laser_scan,
+    const std::string& tracking_frame,
     const double lookup_transform_timeout_sec, tf2_ros::Buffer* const tf_buffer,
     carto::mapping::TrajectoryBuilder* const trajectory_builder)
     : num_subdivisions_per_laser_scan_(num_subdivisions_per_laser_scan),
@@ -125,7 +126,8 @@ void SensorBridge::HandleMultiEchoLaserScanMessage(
 }
 
 void SensorBridge::HandlePointCloud2Message(
-    const std::string& sensor_id, const sensor_msgs::PointCloud2::ConstPtr& msg) {
+    const std::string& sensor_id,
+    const sensor_msgs::PointCloud2::ConstPtr& msg) {
   pcl::PointCloud<pcl::PointXYZ> pcl_point_cloud;
   pcl::fromROSMsg(*msg, pcl_point_cloud);
   carto::sensor::TimedPointCloud point_cloud;

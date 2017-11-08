@@ -66,7 +66,8 @@ RosMapWritingPointsProcessor::RosMapWritingPointsProcessor(
     const ::cartographer::mapping_2d::proto::RangeDataInserterOptions&
         range_data_inserter_options,
     ::cartographer::io::FileWriterFactory file_writer_factory,
-    const std::string& filestem, ::cartographer::io::PointsProcessor* const next)
+    const std::string& filestem,
+    ::cartographer::io::PointsProcessor* const next)
     : filestem_(filestem),
       next_(next),
       file_writer_factory_(file_writer_factory),

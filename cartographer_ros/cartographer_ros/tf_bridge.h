@@ -28,8 +28,8 @@ namespace cartographer_ros {
 
 class TfBridge {
  public:
-  TfBridge(const std::string& tracking_frame, double lookup_transform_timeout_sec,
-           const tf2_ros::Buffer* buffer);
+  TfBridge(const std::string& tracking_frame,
+           double lookup_transform_timeout_sec, const tf2_ros::Buffer* buffer);
   ~TfBridge() {}
 
   TfBridge(const TfBridge&) = delete;

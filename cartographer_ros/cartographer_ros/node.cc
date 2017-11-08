@@ -497,7 +497,8 @@ void Node::HandleOdometryMessage(const int trajectory_id,
   sensor_bridge_ptr->HandleOdometryMessage(sensor_id, msg);
 }
 
-void Node::HandleImuMessage(const int trajectory_id, const std::string& sensor_id,
+void Node::HandleImuMessage(const int trajectory_id,
+                            const std::string& sensor_id,
                             const sensor_msgs::Imu::ConstPtr& msg) {
   carto::common::MutexLocker lock(&mutex_);
   if (!sensor_samplers_.at(trajectory_id).imu_sampler.Pulse()) {

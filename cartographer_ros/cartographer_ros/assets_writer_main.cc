@@ -119,7 +119,8 @@ std::unique_ptr<carto::io::PointsBatch> HandleMessage(
 void Run(const std::string& pose_graph_filename,
          const std::vector<std::string>& bag_filenames,
          const std::string& configuration_directory,
-         const std::string& configuration_basename, const std::string& urdf_filename,
+         const std::string& configuration_basename,
+         const std::string& urdf_filename,
          const std::string& output_file_prefix) {
   auto file_resolver =
       carto::common::make_unique<carto::common::ConfigurationFileResolver>(
@@ -140,8 +141,8 @@ void Run(const std::string& pose_graph_filename,
          "pose graph proto.";
 
   const std::string file_prefix = !output_file_prefix.empty()
-                                 ? output_file_prefix
-                                 : bag_filenames.front() + "_";
+                                      ? output_file_prefix
+                                      : bag_filenames.front() + "_";
   const auto file_writer_factory = [file_prefix](const std::string& filename) {
     return carto::common::make_unique<carto::io::StreamFileWriter>(file_prefix +
                                                                    filename);

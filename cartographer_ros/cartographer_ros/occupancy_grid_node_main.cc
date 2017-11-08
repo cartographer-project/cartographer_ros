@@ -261,7 +261,8 @@ void Node::DrawAndPublish(const ::ros::WallTimerEvent& unused_timer_event) {
   }
 }
 
-void Node::PublishOccupancyGrid(const std::string& frame_id, const ros::Time& time,
+void Node::PublishOccupancyGrid(const std::string& frame_id,
+                                const ros::Time& time,
                                 const Eigen::Array2f& origin,
                                 const Eigen::Array2i& size,
                                 cairo_surface_t* surface) {

@@ -56,21 +56,22 @@ std::unique_ptr<std::ofstream> CreateTimingFile(const std::string& frame_id) {
   auto timing_file = ::cartographer::common::make_unique<std::ofstream>(
       std::string("timing_") + frame_id + ".csv", std::ios_base::out);
 
-  (*timing_file) << "# Timing information for sensor with frame id: "
-                 << frame_id << std::endl
-                 << "# Columns are in order" << std::endl
-                 << "# - packet index of the packet in the bag, first packet is 1"
-                 << std::endl
-                 << "# - timestamp when rosbag wrote the packet, i.e. "
-                    "rosbag::MessageInstance::getTime().toNSec()"
-                 << std::endl
-                 << "# - timestamp when data was acquired, i.e. "
-                    "message.header.stamp.toNSec()"
-                 << std::endl
-                 << "#" << std::endl
-                 << "# The data can be read in python using" << std::endl
-                 << "# import numpy" << std::endl
-                 << "# np.loadtxt(<filename>, dtype='uint64')" << std::endl;
+  (*timing_file)
+      << "# Timing information for sensor with frame id: " << frame_id
+      << std::endl
+      << "# Columns are in order" << std::endl
+      << "# - packet index of the packet in the bag, first packet is 1"
+      << std::endl
+      << "# - timestamp when rosbag wrote the packet, i.e. "
+         "rosbag::MessageInstance::getTime().toNSec()"
+      << std::endl
+      << "# - timestamp when data was acquired, i.e. "
+         "message.header.stamp.toNSec()"
+      << std::endl
+      << "#" << std::endl
+      << "# The data can be read in python using" << std::endl
+      << "# import numpy" << std::endl
+      << "# np.loadtxt(<filename>, dtype='uint64')" << std::endl;
 
   return timing_file;
 }

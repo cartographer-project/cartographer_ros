@@ -16,8 +16,8 @@
 
 #include <errno.h>
 #include <string.h>
-#include <sys/time.h>
 #include <sys/resource.h>
+#include <sys/time.h>
 #include <time.h>
 #include <chrono>
 #include <sstream>
@@ -98,7 +98,8 @@ void Run(const std::vector<std::string>& bag_filenames) {
   }
 
   std::unordered_set<std::string> expected_sensor_ids;
-  for (const std::string& topic : node.ComputeDefaultTopics(trajectory_options)) {
+  for (const std::string& topic :
+       node.ComputeDefaultTopics(trajectory_options)) {
     CHECK(expected_sensor_ids.insert(node.node_handle()->resolveName(topic))
               .second);
   }
@@ -169,8 +170,7 @@ void Run(const std::vector<std::string>& bag_filenames) {
       }
 
       while (!delayed_messages.empty() &&
-             delayed_messages.front().getTime() <
-                 msg.getTime() - kDelay) {
+             delayed_messages.front().getTime() < msg.getTime() - kDelay) {
         const rosbag::MessageInstance& delayed_msg = delayed_messages.front();
         const std::string topic = node.node_handle()->resolveName(
             delayed_msg.getTopic(), false /* resolve */);
