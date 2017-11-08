@@ -44,12 +44,12 @@ NodeOptions CreateNodeOptions(
 }
 
 std::tuple<NodeOptions, TrajectoryOptions> LoadOptions(
-    const string& configuration_directory,
-    const string& configuration_basename) {
+    const std::string& configuration_directory,
+    const std::string& configuration_basename) {
   auto file_resolver = cartographer::common::make_unique<
       cartographer::common::ConfigurationFileResolver>(
-      std::vector<string>{configuration_directory});
-  const string code =
+      std::vector<std::string>{configuration_directory});
+  const std::string code =
       file_resolver->GetFileContentOrDie(configuration_basename);
   cartographer::common::LuaParameterDictionary lua_parameter_dictionary(
       code, std::move(file_resolver));

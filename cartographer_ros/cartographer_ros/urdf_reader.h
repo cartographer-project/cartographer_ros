@@ -25,7 +25,7 @@
 namespace cartographer_ros {
 
 std::vector<geometry_msgs::TransformStamped> ReadStaticTransformsFromUrdf(
-    const string& urdf_filename, tf2_ros::Buffer* tf_buffer);
+    const std::string& urdf_filename, tf2_ros::Buffer* tf_buffer);
 
 }  // namespace cartographer_ros
 
