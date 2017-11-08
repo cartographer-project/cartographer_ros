@@ -34,7 +34,7 @@
 namespace cartographer_ros {
 
 sensor_msgs::PointCloud2 ToPointCloud2Message(
-    int64 timestamp, const string& frame_id,
+    int64_t timestamp, const std::string& frame_id,
     const ::cartographer::sensor::TimedPointCloud& point_cloud);
 
 geometry_msgs::Transform ToGeometryMsgTransform(

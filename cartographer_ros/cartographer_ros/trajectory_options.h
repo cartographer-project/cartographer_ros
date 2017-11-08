@@ -29,9 +29,9 @@ namespace cartographer_ros {
 struct TrajectoryOptions {
   ::cartographer::mapping::proto::TrajectoryBuilderOptions
       trajectory_builder_options;
-  string tracking_frame;
-  string published_frame;
-  string odom_frame;
+  std::string tracking_frame;
+  std::string published_frame;
+  std::string odom_frame;
   bool provide_odom_frame;
   bool use_odometry;
   int num_laser_scans;

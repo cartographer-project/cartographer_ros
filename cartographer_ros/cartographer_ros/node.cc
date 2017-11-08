@@ -60,9 +60,9 @@ cartographer_ros_msgs::SensorTopics DefaultSensorTopics() {
 // calls 'handler' on the 'node' to handle messages. Returns the subscriber.
 template <typename MessageType>
 ::ros::Subscriber SubscribeWithHandler(
-    void (Node::*handler)(int, const string&,
+    void (Node::*handler)(int, const std::string&,
                           const typename MessageType::ConstPtr&),
-    const int trajectory_id, const string& topic,
+    const int trajectory_id, const std::string& topic,
     ::ros::NodeHandle* const node_handle, Node* const node) {
   return node_handle->subscribe<MessageType>(
       topic, kInfiniteSubscriberQueueSize,
@@ -250,21 +250,21 @@ void Node::PublishConstraintList(
   }
 }
 
-std::unordered_set<string> Node::ComputeExpectedTopics(
+std::unordered_set<std::string> Node::ComputeExpectedTopics(
     const TrajectoryOptions& options,
     const cartographer_ros_msgs::SensorTopics& topics) {
-  std::unordered_set<string> expected_topics;
+  std::unordered_set<std::string> expected_topics;
   // Subscribe to all laser scan, multi echo laser scan, and point cloud topics.
-  for (const string& topic : ComputeRepeatedTopicNames(
+  for (const std::string& topic : ComputeRepeatedTopicNames(
            topics.laser_scan_topic, options.num_laser_scans)) {
     expected_topics.insert(topic);
   }
-  for (const string& topic :
+  for (const std::string& topic :
        ComputeRepeatedTopicNames(topics.multi_echo_laser_scan_topic,
                                  options.num_multi_echo_laser_scans)) {
     expected_topics.insert(topic);
   }
-  for (const string& topic : ComputeRepeatedTopicNames(
+  for (const std::string& topic : ComputeRepeatedTopicNames(
            topics.point_cloud2_topic, options.num_point_clouds)) {
     expected_topics.insert(topic);
   }
@@ -285,7 +285,7 @@ std::unordered_set<string> Node::ComputeExpectedTopics(
 
 int Node::AddTrajectory(const TrajectoryOptions& options,
                         const cartographer_ros_msgs::SensorTopics& topics) {
-  const std::unordered_set<string> expected_sensor_ids =
+  const std::unordered_set<std::string> expected_sensor_ids =
       ComputeExpectedTopics(options, topics);
   const int trajectory_id =
       map_builder_bridge_.AddTrajectory(expected_sensor_ids, options);
@@ -301,7 +301,7 @@ int Node::AddTrajectory(const TrajectoryOptions& options,
 void Node::LaunchSubscribers(const TrajectoryOptions& options,
                              const cartographer_ros_msgs::SensorTopics& topics,
                              const int trajectory_id) {
-  for (const string& topic : ComputeRepeatedTopicNames(
+  for (const std::string& topic : ComputeRepeatedTopicNames(
            topics.laser_scan_topic, options.num_laser_scans)) {
     subscribers_[trajectory_id].push_back(
         {SubscribeWithHandler<sensor_msgs::LaserScan>(
@@ -309,7 +309,7 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
              this),
          topic});
   }
-  for (const string& topic :
+  for (const std::string& topic :
        ComputeRepeatedTopicNames(topics.multi_echo_laser_scan_topic,
                                  options.num_multi_echo_laser_scans)) {
     subscribers_[trajectory_id].push_back(
@@ -318,7 +318,7 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
              &node_handle_, this),
          topic});
   }
-  for (const string& topic : ComputeRepeatedTopicNames(
+  for (const std::string& topic : ComputeRepeatedTopicNames(
            topics.point_cloud2_topic, options.num_point_clouds)) {
     subscribers_[trajectory_id].push_back(
         {SubscribeWithHandler<sensor_msgs::PointCloud2>(
@@ -333,7 +333,7 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
       (node_options_.map_builder_options.use_trajectory_builder_2d() &&
        options.trajectory_builder_options.trajectory_builder_2d_options()
            .use_imu_data())) {
-    string topic = topics.imu_topic;
+    std::string topic = topics.imu_topic;
     subscribers_[trajectory_id].push_back(
         {SubscribeWithHandler<sensor_msgs::Imu>(&Node::HandleImuMessage,
                                                 trajectory_id, topic,
@@ -342,7 +342,7 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
   }
 
   if (options.use_odometry) {
-    string topic = topics.odometry_topic;
+    std::string topic = topics.odometry_topic;
     subscribers_[trajectory_id].push_back(
         {SubscribeWithHandler<nav_msgs::Odometry>(&Node::HandleOdometryMessage,
                                                   trajectory_id, topic,
@@ -399,14 +399,14 @@ void Node::StartTrajectoryWithDefaultTopics(const TrajectoryOptions& options) {
   AddTrajectory(options, DefaultSensorTopics());
 }
 
-std::unordered_set<string> Node::ComputeDefaultTopics(
+std::unordered_set<std::string> Node::ComputeDefaultTopics(
     const TrajectoryOptions& options) {
   carto::common::MutexLocker lock(&mutex_);
   return ComputeExpectedTopics(options, DefaultSensorTopics());
 }
 
 int Node::AddOfflineTrajectory(
-    const std::unordered_set<string>& expected_sensor_ids,
+    const std::unordered_set<std::string>& expected_sensor_ids,
     const TrajectoryOptions& options) {
   carto::common::MutexLocker lock(&mutex_);
   const int trajectory_id =
@@ -483,7 +483,7 @@ void Node::RunFinalOptimization() {
 }
 
 void Node::HandleOdometryMessage(const int trajectory_id,
-                                 const string& sensor_id,
+                                 const std::string& sensor_id,
                                  const nav_msgs::Odometry::ConstPtr& msg) {
   carto::common::MutexLocker lock(&mutex_);
   if (!sensor_samplers_.at(trajectory_id).odometry_sampler.Pulse()) {
@@ -497,7 +497,8 @@ void Node::HandleOdometryMessage(const int trajectory_id,
   sensor_bridge_ptr->HandleOdometryMessage(sensor_id, msg);
 }
 
-void Node::HandleImuMessage(const int trajectory_id, const string& sensor_id,
+void Node::HandleImuMessage(const int trajectory_id,
+                            const std::string& sensor_id,
                             const sensor_msgs::Imu::ConstPtr& msg) {
   carto::common::MutexLocker lock(&mutex_);
   if (!sensor_samplers_.at(trajectory_id).imu_sampler.Pulse()) {
@@ -512,7 +513,7 @@ void Node::HandleImuMessage(const int trajectory_id, const string& sensor_id,
 }
 
 void Node::HandleLaserScanMessage(const int trajectory_id,
-                                  const string& sensor_id,
+                                  const std::string& sensor_id,
                                   const sensor_msgs::LaserScan::ConstPtr& msg) {
   carto::common::MutexLocker lock(&mutex_);
   if (!sensor_samplers_.at(trajectory_id).rangefinder_sampler.Pulse()) {
@@ -523,7 +524,7 @@ void Node::HandleLaserScanMessage(const int trajectory_id,
 }
 
 void Node::HandleMultiEchoLaserScanMessage(
-    int trajectory_id, const string& sensor_id,
+    int trajectory_id, const std::string& sensor_id,
     const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
   carto::common::MutexLocker lock(&mutex_);
   if (!sensor_samplers_.at(trajectory_id).rangefinder_sampler.Pulse()) {
@@ -534,7 +535,7 @@ void Node::HandleMultiEchoLaserScanMessage(
 }
 
 void Node::HandlePointCloud2Message(
-    const int trajectory_id, const string& sensor_id,
+    const int trajectory_id, const std::string& sensor_id,
     const sensor_msgs::PointCloud2::ConstPtr& msg) {
   carto::common::MutexLocker lock(&mutex_);
   if (!sensor_samplers_.at(trajectory_id).rangefinder_sampler.Pulse()) {
@@ -544,7 +545,7 @@ void Node::HandlePointCloud2Message(
       ->HandlePointCloud2Message(sensor_id, msg);
 }
 
-void Node::SerializeState(const string& filename) {
+void Node::SerializeState(const std::string& filename) {
   carto::common::MutexLocker lock(&mutex_);
   map_builder_bridge_.SerializeState(filename);
 }

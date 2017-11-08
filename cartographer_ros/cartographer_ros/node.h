@@ -64,29 +64,29 @@ class Node {
   void StartTrajectoryWithDefaultTopics(const TrajectoryOptions& options);
 
   // Compute the default topics for the given 'options'.
-  std::unordered_set<string> ComputeDefaultTopics(
+  std::unordered_set<std::string> ComputeDefaultTopics(
       const TrajectoryOptions& options);
 
   // Adds a trajectory for offline processing, i.e. not listening to topics.
   int AddOfflineTrajectory(
-      const std::unordered_set<string>& expected_sensor_ids,
+      const std::unordered_set<std::string>& expected_sensor_ids,
       const TrajectoryOptions& options);
 
   // The following functions handle adding sensor data to a trajectory.
-  void HandleOdometryMessage(int trajectory_id, const string& sensor_id,
+  void HandleOdometryMessage(int trajectory_id, const std::string& sensor_id,
                              const nav_msgs::Odometry::ConstPtr& msg);
-  void HandleImuMessage(int trajectory_id, const string& sensor_id,
+  void HandleImuMessage(int trajectory_id, const std::string& sensor_id,
                         const sensor_msgs::Imu::ConstPtr& msg);
-  void HandleLaserScanMessage(int trajectory_id, const string& sensor_id,
+  void HandleLaserScanMessage(int trajectory_id, const std::string& sensor_id,
                               const sensor_msgs::LaserScan::ConstPtr& msg);
   void HandleMultiEchoLaserScanMessage(
-      int trajectory_id, const string& sensor_id,
+      int trajectory_id, const std::string& sensor_id,
       const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg);
-  void HandlePointCloud2Message(int trajectory_id, const string& sensor_id,
+  void HandlePointCloud2Message(int trajectory_id, const std::string& sensor_id,
                                 const sensor_msgs::PointCloud2::ConstPtr& msg);
 
   // Serializes the complete Node state.
-  void SerializeState(const string& filename);
+  void SerializeState(const std::string& filename);
 
   // Loads a persisted state to use as a map.
   void LoadMap(const std::string& map_filename);
@@ -97,10 +97,11 @@ class Node {
   struct Subscriber {
     ::ros::Subscriber subscriber;
 
-    // ::ros::Subscriber::getTopic() does not necessarily return the same string
+    // ::ros::Subscriber::getTopic() does not necessarily return the same
+    // std::string
     // it was given in its constructor. Since we rely on the topic name as the
     // unique identifier of a subscriber, we remember it ourselves.
-    string topic;
+    std::string topic;
   };
 
   bool HandleSubmapQuery(
@@ -115,7 +116,7 @@ class Node {
   bool HandleWriteState(cartographer_ros_msgs::WriteState::Request& request,
                         cartographer_ros_msgs::WriteState::Response& response);
   // Returns the set of topic names we want to subscribe to.
-  std::unordered_set<string> ComputeExpectedTopics(
+  std::unordered_set<std::string> ComputeExpectedTopics(
       const TrajectoryOptions& options,
       const cartographer_ros_msgs::SensorTopics& topics);
   int AddTrajectory(const TrajectoryOptions& options,

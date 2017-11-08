@@ -43,8 +43,8 @@ namespace {
 TrajectoryOptions LoadOptions() {
   auto file_resolver = cartographer::common::make_unique<
       cartographer::common::ConfigurationFileResolver>(
-      std::vector<string>{FLAGS_configuration_directory});
-  const string code =
+      std::vector<std::string>{FLAGS_configuration_directory});
+  const std::string code =
       file_resolver->GetFileContentOrDie(FLAGS_configuration_basename);
   auto lua_parameter_dictionary =
       cartographer::common::LuaParameterDictionary::NonReferenceCounted(
