@@ -17,6 +17,8 @@
 #include "cartographer_ros/trajectory_options.h"
 
 #include "cartographer/mapping/trajectory_builder.h"
+#include "cartographer_ros/msg_conversion.h"
+#include "cartographer_ros/time_conversion.h"
 #include "glog/logging.h"
 
 namespace cartographer_ros {
@@ -65,6 +67,21 @@ TrajectoryOptions CreateTrajectoryOptions(
       lua_parameter_dictionary->GetDouble("odometry_sampling_ratio");
   options.imu_sampling_ratio =
       lua_parameter_dictionary->GetDouble("imu_sampling_ratio");
+  if (lua_parameter_dictionary->HasKey("initial_trajectory_pose"))
+  {
+    auto initial_pose_dictionnary =
+      lua_parameter_dictionary->GetDictionary("initial_trajectory_pose").get();
+    options.initial_trajectory_pose.to_trajectory_id =
+      initial_pose_dictionnary->GetInt("to_trajectory_id");
+    options.initial_trajectory_pose.relative_pose =
+      cartographer::transform::FromDictionary(initial_pose_dictionnary);
+  }
+  else
+  {
+    options.initial_trajectory_pose.to_trajectory_id = -1;
+    options.initial_trajectory_pose.relative_pose = ::cartographer::transform::Rigid3d::Identity();
+  }
+  options.initial_trajectory_pose.time = ::cartographer::common::Time::min();
   CheckTrajectoryOptions(options);
   return options;
 }
@@ -84,6 +101,12 @@ bool FromRosMessage(const cartographer_ros_msgs::TrajectoryOptions& msg,
   options->rangefinder_sampling_ratio = msg.rangefinder_sampling_ratio;
   options->odometry_sampling_ratio = msg.odometry_sampling_ratio;
   options->imu_sampling_ratio = msg.imu_sampling_ratio;
+  options->initial_trajectory_pose.to_trajectory_id =
+      msg.initial_trajectory_pose.to_trajectory_id;
+  options->initial_trajectory_pose.relative_pose =
+    ToRigid3d(msg.initial_trajectory_pose.relative_pose);
+  options->initial_trajectory_pose.time =
+    FromRos(msg.initial_trajectory_pose.stamp);
   if (!options->trajectory_builder_options.ParseFromString(
           msg.trajectory_builder_options_proto)) {
     LOG(ERROR) << "Failed to parse protobuf";
@@ -108,6 +131,12 @@ cartographer_ros_msgs::TrajectoryOptions ToRosMessage(
   msg.rangefinder_sampling_ratio = options.rangefinder_sampling_ratio;
   msg.odometry_sampling_ratio = options.odometry_sampling_ratio;
   msg.imu_sampling_ratio = options.imu_sampling_ratio;
+  msg.initial_trajectory_pose.to_trajectory_id =
+    options.initial_trajectory_pose.to_trajectory_id;
+  msg.initial_trajectory_pose.relative_pose =
+    ToGeometryMsgPose(options.initial_trajectory_pose.relative_pose);
+  msg.initial_trajectory_pose.stamp =
+    ToRos(options.initial_trajectory_pose.time);
   options.trajectory_builder_options.SerializeToString(
       &msg.trajectory_builder_options_proto);
   return msg;

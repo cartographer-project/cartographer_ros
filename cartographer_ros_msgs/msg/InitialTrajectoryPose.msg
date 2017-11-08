@@ -12,20 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-string tracking_frame
-string published_frame
-string odom_frame
-bool provide_odom_frame
-bool use_odometry
-int32 num_laser_scans
-int32 num_multi_echo_laser_scans
-int32 num_subdivisions_per_laser_scan
-int32 num_point_clouds
-float64 rangefinder_sampling_ratio
-float64 odometry_sampling_ratio
-float64 imu_sampling_ratio
-InitialTrajectoryPose initial_trajectory_pose
-
-# This is a binary-encoded
-# 'cartographer.mapping.proto.TrajectoryBuilderOptions' proto.
-string trajectory_builder_options_proto
+int32 to_trajectory_id
+geometry_msgs/Pose relative_pose
+time stamp

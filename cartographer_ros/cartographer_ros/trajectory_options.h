@@ -22,6 +22,7 @@
 #include "cartographer/common/lua_parameter_dictionary.h"
 #include "cartographer/common/port.h"
 #include "cartographer/mapping/proto/trajectory_builder_options.pb.h"
+#include "cartographer/mapping/sparse_pose_graph.h"
 #include "cartographer_ros_msgs/TrajectoryOptions.h"
 
 namespace cartographer_ros {
@@ -41,6 +42,7 @@ struct TrajectoryOptions {
   double rangefinder_sampling_ratio;
   double odometry_sampling_ratio;
   double imu_sampling_ratio;
+  ::cartographer::mapping::SparsePoseGraph::InitialTrajectoryPose initial_trajectory_pose;
 };
 
 TrajectoryOptions CreateTrajectoryOptions(
