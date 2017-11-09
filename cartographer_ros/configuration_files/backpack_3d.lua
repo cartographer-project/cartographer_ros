@@ -46,5 +46,6 @@ SPARSE_POSE_GRAPH.optimize_every_n_scans = 320
 SPARSE_POSE_GRAPH.constraint_builder.sampling_ratio = 0.03
 SPARSE_POSE_GRAPH.optimization_problem.ceres_solver_options.max_num_iterations = 10
 SPARSE_POSE_GRAPH.constraint_builder.min_score = 0.62
+SPARSE_POSE_GRAPH.constraint_builder.global_localization_min_score = 0.66
 
 return options

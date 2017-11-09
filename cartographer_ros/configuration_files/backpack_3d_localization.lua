@@ -17,7 +17,4 @@ include "backpack_3d.lua"
 TRAJECTORY_BUILDER.pure_localization = true
 SPARSE_POSE_GRAPH.optimize_every_n_scans = 100
 
--- 3D localization is not working that well, so we choose a low min score.
-SPARSE_POSE_GRAPH.constraint_builder.global_localization_min_score = 0.45
-
 return options
