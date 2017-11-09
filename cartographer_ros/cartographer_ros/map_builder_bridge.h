@@ -51,11 +51,11 @@ class MapBuilderBridge {
   MapBuilderBridge& operator=(const MapBuilderBridge&) = delete;
 
   void LoadMap(const std::string& map_filename);
-  int AddTrajectory(const std::unordered_set<string>& expected_sensor_ids,
+  int AddTrajectory(const std::unordered_set<std::string>& expected_sensor_ids,
                     const TrajectoryOptions& trajectory_options);
   void FinishTrajectory(int trajectory_id);
   void RunFinalOptimization();
-  void SerializeState(const string& filename);
+  void SerializeState(const std::string& filename);
 
   bool HandleSubmapQuery(
       cartographer_ros_msgs::SubmapQuery::Request& request,

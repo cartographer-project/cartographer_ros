@@ -43,8 +43,8 @@ namespace {
 TrajectoryOptions LoadOptions() {
   auto file_resolver = cartographer::common::make_unique<
       cartographer::common::ConfigurationFileResolver>(
-      std::vector<string>{FLAGS_configuration_directory});
-  const string code =
+      std::vector<std::string>{FLAGS_configuration_directory});
+  const std::string code =
       file_resolver->GetFileContentOrDie(FLAGS_configuration_basename);
   auto lua_parameter_dictionary =
       cartographer::common::LuaParameterDictionary::NonReferenceCounted(
@@ -59,11 +59,14 @@ bool Run() {
           kStartTrajectoryServiceName);
   cartographer_ros_msgs::StartTrajectory srv;
   srv.request.options = ToRosMessage(LoadOptions());
-  srv.request.topics.laser_scan_topic = kLaserScanTopic;
-  srv.request.topics.multi_echo_laser_scan_topic = kMultiEchoLaserScanTopic;
-  srv.request.topics.point_cloud2_topic = kPointCloud2Topic;
-  srv.request.topics.imu_topic = kImuTopic;
-  srv.request.topics.odometry_topic = kOdometryTopic;
+  srv.request.topics.laser_scan_topic =
+      ros::names::resolve(kLaserScanTopic, true /* apply topic remapping */);
+  srv.request.topics.multi_echo_laser_scan_topic =
+      ros::names::resolve(kMultiEchoLaserScanTopic, true);
+  srv.request.topics.point_cloud2_topic =
+      ros::names::resolve(kPointCloud2Topic, true);
+  srv.request.topics.imu_topic = ros::names::resolve(kImuTopic, true);
+  srv.request.topics.odometry_topic = ros::names::resolve(kOdometryTopic, true);
 
   if (!client.call(srv)) {
     LOG(ERROR) << "Error starting trajectory.";

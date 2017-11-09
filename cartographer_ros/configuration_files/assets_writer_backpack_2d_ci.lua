@@ -12,6 +12,11 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+-- WARNING: we create a lot of X-Rays of a potentially large space in this
+-- pipeline. For example, running over the
+-- cartographer_paper_deutsches_museum.bag requires ~25GiB of memory. You can
+-- reduce this by writing fewer X-Rays or upping VOXEL_SIZE - which is the size
+-- of a pixel in a X-Ray.
 VOXEL_SIZE = 5e-2
 
 include "transform.lua"
@@ -27,8 +32,6 @@ options = {
     {
       action = "dump_num_points",
     },
-
-    -- Gray X-Rays. These only use geometry to color pixels.
     {
       action = "write_xray_image",
       voxel_size = VOXEL_SIZE,
@@ -45,39 +48,6 @@ options = {
       action = "write_xray_image",
       voxel_size = VOXEL_SIZE,
       filename = "xray_xz_all",
-      transform = XZ_TRANSFORM,
-    },
-
-    -- Now we recolor our points by frame and write another batch of X-Rays. It
-    -- is visible in them what was seen by the horizontal and the vertical
-    -- laser.
-    {
-      action = "color_points",
-      frame_id = "horizontal_vlp16_link",
-      color = { 255., 0., 0. },
-    },
-    {
-      action = "color_points",
-      frame_id = "vertical_vlp16_link",
-      color = { 0., 255., 0. },
-    },
-
-    {
-      action = "write_xray_image",
-      voxel_size = VOXEL_SIZE,
-      filename = "xray_yz_all_color",
-      transform = YZ_TRANSFORM,
-    },
-    {
-      action = "write_xray_image",
-      voxel_size = VOXEL_SIZE,
-      filename = "xray_xy_all_color",
-      transform = XY_TRANSFORM,
-    },
-    {
-      action = "write_xray_image",
-      voxel_size = VOXEL_SIZE,
-      filename = "xray_xz_all_color",
       transform = XZ_TRANSFORM,
     },
   }

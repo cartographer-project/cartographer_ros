@@ -107,7 +107,7 @@ class Node {
  private:
   void HandleSubmapList(const cartographer_ros_msgs::SubmapList::ConstPtr& msg);
   void DrawAndPublish(const ::ros::WallTimerEvent& timer_event);
-  void PublishOccupancyGrid(const string& frame_id, const ros::Time& time,
+  void PublishOccupancyGrid(const std::string& frame_id, const ros::Time& time,
                             const Eigen::Array2f& origin,
                             const Eigen::Array2i& size,
                             cairo_surface_t* surface);
@@ -261,7 +261,8 @@ void Node::DrawAndPublish(const ::ros::WallTimerEvent& unused_timer_event) {
   }
 }
 
-void Node::PublishOccupancyGrid(const string& frame_id, const ros::Time& time,
+void Node::PublishOccupancyGrid(const std::string& frame_id,
+                                const ros::Time& time,
                                 const Eigen::Array2f& origin,
                                 const Eigen::Array2i& size,
                                 cairo_surface_t* surface) {
@@ -281,12 +282,12 @@ void Node::PublishOccupancyGrid(const string& frame_id, const ros::Time& time,
   occupancy_grid.info.origin.orientation.y = 0.;
   occupancy_grid.info.origin.orientation.z = 0.;
 
-  const uint32* pixel_data =
-      reinterpret_cast<uint32*>(cairo_image_surface_get_data(surface));
+  const uint32_t* pixel_data =
+      reinterpret_cast<uint32_t*>(cairo_image_surface_get_data(surface));
   occupancy_grid.data.reserve(size.x() * size.y());
   for (int y = size.y() - 1; y >= 0; --y) {
     for (int x = 0; x < size.x(); ++x) {
-      const uint32 packed = pixel_data[y * size.x() + x];
+      const uint32_t packed = pixel_data[y * size.x() + x];
       const unsigned char color = packed >> 16;
       const unsigned char observed = packed >> 8;
       const int value =

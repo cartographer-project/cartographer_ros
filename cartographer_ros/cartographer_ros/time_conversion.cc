@@ -22,8 +22,8 @@
 namespace cartographer_ros {
 
 ::ros::Time ToRos(::cartographer::common::Time time) {
-  int64 uts_timestamp = ::cartographer::common::ToUniversal(time);
-  int64 ns_since_unix_epoch =
+  int64_t uts_timestamp = ::cartographer::common::ToUniversal(time);
+  int64_t ns_since_unix_epoch =
       (uts_timestamp -
        ::cartographer::common::kUtsEpochOffsetFromUnixEpochInSeconds *
            10000000ll) *

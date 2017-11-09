@@ -16,8 +16,8 @@
 
 #include <errno.h>
 #include <string.h>
-#include <sys/time.h>
 #include <sys/resource.h>
+#include <sys/time.h>
 #include <time.h>
 #include <chrono>
 #include <sstream>
@@ -68,7 +68,7 @@ constexpr char kTfTopic[] = "tf";
 constexpr double kClockPublishFrequencySec = 1. / 30.;
 constexpr int kSingleThreaded = 1;
 
-void Run(const std::vector<string>& bag_filenames) {
+void Run(const std::vector<std::string>& bag_filenames) {
   const std::chrono::time_point<std::chrono::steady_clock> start_time =
       std::chrono::steady_clock::now();
   NodeOptions node_options;
@@ -97,8 +97,9 @@ void Run(const std::vector<string>& bag_filenames) {
     node.LoadMap(FLAGS_pbstream_filename);
   }
 
-  std::unordered_set<string> expected_sensor_ids;
-  for (const string& topic : node.ComputeDefaultTopics(trajectory_options)) {
+  std::unordered_set<std::string> expected_sensor_ids;
+  for (const std::string& topic :
+       node.ComputeDefaultTopics(trajectory_options)) {
     CHECK(expected_sensor_ids.insert(node.node_handle()->resolveName(topic))
               .second);
   }
@@ -127,7 +128,7 @@ void Run(const std::vector<string>& bag_filenames) {
       },
       false /* oneshot */, false /* autostart */);
 
-  for (const string& bag_filename : bag_filenames) {
+  for (const std::string& bag_filename : bag_filenames) {
     if (!::ros::ok()) {
       break;
     }
@@ -169,10 +170,9 @@ void Run(const std::vector<string>& bag_filenames) {
       }
 
       while (!delayed_messages.empty() &&
-             delayed_messages.front().getTime() <
-                 msg.getTime() - kDelay) {
+             delayed_messages.front().getTime() < msg.getTime() - kDelay) {
         const rosbag::MessageInstance& delayed_msg = delayed_messages.front();
-        const string topic = node.node_handle()->resolveName(
+        const std::string topic = node.node_handle()->resolveName(
             delayed_msg.getTopic(), false /* resolve */);
         if (delayed_msg.isType<sensor_msgs::LaserScan>()) {
           node.HandleLaserScanMessage(
@@ -208,7 +208,7 @@ void Run(const std::vector<string>& bag_filenames) {
         delayed_messages.pop_front();
       }
 
-      const string topic =
+      const std::string topic =
           node.node_handle()->resolveName(msg.getTopic(), false /* resolve */);
       if (expected_sensor_ids.count(topic) == 0) {
         continue;
@@ -245,7 +245,7 @@ void Run(const std::vector<string>& bag_filenames) {
 #endif
 
   if (::ros::ok()) {
-    const string output_filename = bag_filenames.front() + ".pbstream";
+    const std::string output_filename = bag_filenames.front() + ".pbstream";
     LOG(INFO) << "Writing state to '" << output_filename << "'...";
     node.SerializeState(output_filename);
   }

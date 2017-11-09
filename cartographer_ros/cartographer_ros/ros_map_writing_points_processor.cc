@@ -42,7 +42,7 @@ void WritePgm(const ::cartographer::io::Image& image, const double resolution,
 
 void WriteYaml(const ::cartographer::io::Image& image,
                const ::cartographer::mapping_2d::MapLimits& limits,
-               const string& pgm_filename, const Eigen::Array2i& offset,
+               const std::string& pgm_filename, const Eigen::Array2i& offset,
                ::cartographer::io::FileWriter* file_writer) {
   const double resolution = limits.resolution();
   const double x_offset =
@@ -66,7 +66,8 @@ RosMapWritingPointsProcessor::RosMapWritingPointsProcessor(
     const ::cartographer::mapping_2d::proto::RangeDataInserterOptions&
         range_data_inserter_options,
     ::cartographer::io::FileWriterFactory file_writer_factory,
-    const string& filestem, ::cartographer::io::PointsProcessor* const next)
+    const std::string& filestem,
+    ::cartographer::io::PointsProcessor* const next)
     : filestem_(filestem),
       next_(next),
       file_writer_factory_(file_writer_factory),
@@ -119,6 +120,9 @@ RosMapWritingPointsProcessor::Flush() {
       return FlushResult::kFinished;
   }
   LOG(FATAL);
+  // The following unreachable return statement is needed to avoid a GCC bug
+  // described at https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81508
+  return FlushResult::kFinished;
 }
 
 }  // namespace cartographer_ros

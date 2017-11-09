@@ -36,7 +36,7 @@ class RosMapWritingPointsProcessor
       const ::cartographer::mapping_2d::proto::RangeDataInserterOptions&
           range_data_inserter_options,
       ::cartographer::io::FileWriterFactory file_writer_factory,
-      const string& filestem, PointsProcessor* next);
+      const std::string& filestem, PointsProcessor* next);
   RosMapWritingPointsProcessor(const RosMapWritingPointsProcessor&) = delete;
   RosMapWritingPointsProcessor& operator=(const RosMapWritingPointsProcessor&) =
       delete;
@@ -52,7 +52,7 @@ class RosMapWritingPointsProcessor
   FlushResult Flush() override;
 
  private:
-  const string filestem_;
+  const std::string filestem_;
   PointsProcessor* const next_;
   ::cartographer::io::FileWriterFactory file_writer_factory_;
   ::cartographer::mapping_2d::RangeDataInserter range_data_inserter_;

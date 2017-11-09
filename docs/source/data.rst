@@ -47,11 +47,11 @@ Data
 =================================================================================================================================== ======== ====== ===== ============================
 `ROS Bag <http://wiki.ros.org/Bags>`_                                                                                               Duration Size   Floor Known Issues
 =================================================================================================================================== ======== ====== ===== ============================
-`b0-2014-07-11-10-58-16.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b0-2014-07-11-10-58-16.bag>`_ 149 s    38 MB  1. OG 
+`b0-2014-07-11-10-58-16.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b0-2014-07-11-10-58-16.bag>`_ 149 s    38 MB  1. OG
 `b0-2014-07-11-11-00-49.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b0-2014-07-11-11-00-49.bag>`_ 513 s    135 MB 1. OG
 `b0-2014-07-21-12-42-53.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b0-2014-07-21-12-42-53.bag>`_ 244 s    64 MB  1. OG
 `b0-2014-07-21-12-49-19.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b0-2014-07-21-12-49-19.bag>`_ 344 s    93 MB  EG    1 gap in vertical laser data
-`b0-2014-07-21-12-55-35.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b0-2014-07-21-12-55-35.bag>`_ 892 s    237 MB EG   
+`b0-2014-07-21-12-55-35.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b0-2014-07-21-12-55-35.bag>`_ 892 s    237 MB EG
 `b0-2014-07-21-13-11-35.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b0-2014-07-21-13-11-35.bag>`_ 615 s    162 MB EG
 `b0-2014-08-14-13-23-01.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b0-2014-08-14-13-23-01.bag>`_ 768 s    204 MB 1. OG
 `b0-2014-08-14-13-36-48.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b0-2014-08-14-13-36-48.bag>`_ 331 s    87 MB  1. OG
@@ -140,7 +140,7 @@ Data
 `b3-2015-12-10-12-41-07.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2015-12-10-12-41-07.bag>`_                  1466 s   7.3 GB 1 large gap in data, no intensities
 `b3-2015-12-10-13-10-17.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2015-12-10-13-10-17.bag>`_                  718 s    5.5 GB 1 gap in data, no intensities
 `b3-2015-12-10-13-31-28.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2015-12-10-13-31-28.bag>`_                  720 s    5.2 GB 2 large gaps in data, no intensities
-`b3-2015-12-10-13-55-20.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/with_intensities/b3-2015-12-10-13-55-20.bag>`_ 429 s    3.3 GB 
+`b3-2015-12-10-13-55-20.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/with_intensities/b3-2015-12-10-13-55-20.bag>`_ 429 s    3.3 GB
 `b3-2015-12-14-15-13-53.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2015-12-14-15-13-53.bag>`_                  916 s    7.1 GB no intensities
 `b3-2016-01-19-13-26-24.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-01-19-13-26-24.bag>`_                  1098 s   8.1 GB no intensities
 `b3-2016-01-19-13-50-11.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-01-19-13-50-11.bag>`_                  318 s    2.5 GB no intensities
@@ -158,7 +158,8 @@ Data
 `b3-2016-04-05-15-51-36.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/with_intensities/b3-2016-04-05-15-51-36.bag>`_ 30 s     231 MB
 `b3-2016-04-05-15-52-20.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-04-05-15-52-20.bag>`_                  377 s    2.7 GB no intensities
 `b3-2016-04-05-16-00-55.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-04-05-16-00-55.bag>`_                  940 s    6.9 GB no intensities
-`b3-2016-04-27-12-56-11.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-04-27-12-56-11.bag>`_                  2905 s   21 GB  no intensities
+`b3-2016-04-27-12-25-00.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/with_intensities/b3-2016-04-27-12-25-00.bag>`_ 2793 s   23 GB
+`b3-2016-04-27-12-56-11.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/with_intensities/b3-2016-04-27-12-56-11.bag>`_ 2905 s   21 GB
 `b3-2016-05-10-12-56-33.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/with_intensities/b3-2016-05-10-12-56-33.bag>`_ 1767 s   13 GB
 `b3-2016-06-07-12-42-49.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-06-07-12-42-49.bag>`_                  596 s    3.9 GB 3 gaps in horizontal laser data, no intensities
 ==================================================================================================================================================== ======== ====== ================================================
