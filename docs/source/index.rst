@@ -68,6 +68,9 @@ We recommend using `wstool <http://wiki.ros.org/wstool>`_ and `rosdep
     wstool merge -t src https://raw.githubusercontent.com/googlecartographer/cartographer_ros/master/cartographer_ros.rosinstall
     wstool update -t src
 
+    # Install proto3.
+    src/cartographer/scripts/install_proto3.sh
+
     # Install deb dependencies.
     # The command 'sudo rosdep init' will print an error if you have already
     # executed it since installing ROS. This error can be ignored.
