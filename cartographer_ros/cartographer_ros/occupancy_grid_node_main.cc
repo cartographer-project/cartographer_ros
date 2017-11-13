@@ -194,7 +194,8 @@ void Node::PublishOccupancyGrid(const std::string& frame_id,
   occupancy_grid.info.origin.orientation.y = 0.;
   occupancy_grid.info.origin.orientation.z = 0.;
 
-  const uint32_t* pixel_data = reinterpret_cast<uint32_t*>(cairo_image_surface_get_data(surface));
+  const uint32_t* pixel_data =
+      reinterpret_cast<uint32_t*>(cairo_image_surface_get_data(surface));
   occupancy_grid.data.reserve(width * height);
   for (int y = height - 1; y >= 0; --y) {
     for (int x = 0; x < width; ++x) {
