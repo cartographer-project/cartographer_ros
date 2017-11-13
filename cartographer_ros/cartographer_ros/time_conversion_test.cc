@@ -27,7 +27,7 @@ namespace {
 
 TEST(TimeConversion, testToRos) {
   std::vector<int64_t> values = {0, 1469091375, 1466481821, 1462101382,
-                               1468238899};
+                                 1468238899};
   for (int64_t seconds_since_epoch : values) {
     ::ros::Time ros_now;
     ros_now.fromSec(seconds_since_epoch);
