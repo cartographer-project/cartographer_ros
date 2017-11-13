@@ -59,19 +59,6 @@ We recommend using `wstool <http://wiki.ros.org/wstool>`_ and `rosdep
     sudo apt-get update
     sudo apt-get install -y python-wstool python-rosdep ninja-build
 
-    # Install proto3.
-    git clone https://github.com/google/protobuf.git
-    cd protobuf
-    git checkout tags/v3.4.1
-    mkdir build
-    cd build
-    cmake -G Ninja \
-      -DCMAKE_BUILD_TYPE=Release \
-      -Dprotobuf_BUILD_TESTS=OFF \
-      ../cmake
-    ninja
-    sudo ninja install
-    
     # Create a new workspace in 'catkin_ws'.
     mkdir catkin_ws
     cd catkin_ws
@@ -80,6 +67,9 @@ We recommend using `wstool <http://wiki.ros.org/wstool>`_ and `rosdep
     # Merge the cartographer_ros.rosinstall file and fetch code for dependencies.
     wstool merge -t src https://raw.githubusercontent.com/googlecartographer/cartographer_ros/master/cartographer_ros.rosinstall
     wstool update -t src
+
+    # Install proto3.
+    src/cartographer/scripts/install_proto3.sh
 
     # Install deb dependencies.
     # The command 'sudo rosdep init' will print an error if you have already
