@@ -59,6 +59,19 @@ We recommend using `wstool <http://wiki.ros.org/wstool>`_ and `rosdep
     sudo apt-get update
     sudo apt-get install -y python-wstool python-rosdep ninja-build
 
+    # Install proto3.
+    git clone https://github.com/google/protobuf.git
+    cd protobuf
+    git checkout tags/v3.4.1
+    mkdir build
+    cd build
+    cmake -G Ninja \
+      -DCMAKE_BUILD_TYPE=Release \
+      -Dprotobuf_BUILD_TESTS=OFF \
+      ../cmake
+    ninja
+    sudo ninja install
+    
     # Create a new workspace in 'catkin_ws'.
     mkdir catkin_ws
     cd catkin_ws
