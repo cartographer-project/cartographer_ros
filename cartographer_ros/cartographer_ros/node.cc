@@ -375,6 +375,29 @@ bool Node::ValidateTopicNames(
   return true;
 }
 
+bool Node::FinishTrajectoryUnderLock(const int trajectory_id) {
+  if (is_active_trajectory_.count(trajectory_id) == 0) {
+    LOG(INFO) << "Trajectory_id " << trajectory_id << " is not created yet.";
+    return false;
+  }
+  if (!is_active_trajectory_[trajectory_id]) {
+    LOG(INFO) << "Trajectory_id " << trajectory_id
+              << " has already been finished.";
+    return false;
+  }
+
+  // Shutdown the subscribers of this trajectory.
+  for (auto& entry : subscribers_[trajectory_id]) {
+    entry.subscriber.shutdown();
+    subscribed_topics_.erase(entry.topic);
+    LOG(INFO) << "Shutdown the subscriber of [" << entry.topic << "]";
+  }
+  CHECK(is_active_trajectory_.at(trajectory_id));
+  map_builder_bridge_.FinishTrajectory(trajectory_id);
+  is_active_trajectory_[trajectory_id] = false;
+  return true;
+}
+
 bool Node::HandleStartTrajectory(
     ::cartographer_ros_msgs::StartTrajectory::Request& request,
     ::cartographer_ros_msgs::StartTrajectory::Response& response) {
@@ -421,7 +444,7 @@ bool Node::HandleFinishTrajectory(
     ::cartographer_ros_msgs::FinishTrajectory::Request& request,
     ::cartographer_ros_msgs::FinishTrajectory::Response& response) {
   carto::common::MutexLocker lock(&mutex_);
-  return FinishTrajectory(request.trajectory_id);
+  return FinishTrajectoryUnderLock(request.trajectory_id);
 }
 
 bool Node::HandleWriteState(
@@ -437,32 +460,14 @@ void Node::FinishAllTrajectories() {
   for (auto& entry : is_active_trajectory_) {
     const int trajectory_id = entry.first;
     if (entry.second) {
-      CHECK(FinishTrajectory(trajectory_id));
+      CHECK(FinishTrajectoryUnderLock(trajectory_id));
     }
   }
 }
 
 bool Node::FinishTrajectory(const int trajectory_id) {
-  if (is_active_trajectory_.count(trajectory_id) == 0) {
-    LOG(INFO) << "Trajectory_id " << trajectory_id << " is not created yet.";
-    return false;
-  }
-  if (!is_active_trajectory_[trajectory_id]) {
-    LOG(INFO) << "Trajectory_id " << trajectory_id
-              << " has already been finished.";
-    return false;
-  }
-
-  // Shutdown the subscribers of this trajectory.
-  for (auto& entry : subscribers_[trajectory_id]) {
-    entry.subscriber.shutdown();
-    subscribed_topics_.erase(entry.topic);
-    LOG(INFO) << "Shutdown the subscriber of [" << entry.topic << "]";
-  }
-  CHECK(is_active_trajectory_.at(trajectory_id));
-  map_builder_bridge_.FinishTrajectory(trajectory_id);
-  is_active_trajectory_[trajectory_id] = false;
-  return true;
+  carto::common::MutexLocker lock(&mutex_);
+  return FinishTrajectoryUnderLock(trajectory_id);
 }
 
 void Node::RunFinalOptimization() {
