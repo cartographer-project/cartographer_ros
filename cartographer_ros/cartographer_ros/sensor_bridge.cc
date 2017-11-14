@@ -67,7 +67,7 @@ void SensorBridge::HandleOdometryMessage(
   std::unique_ptr<::cartographer::sensor::OdometryData> odometry_data =
       ToOdometryData(msg);
   if (odometry_data != nullptr) {
-    trajectory_builder_->AddOdometerData(sensor_id, odometry_data->time,
+    trajectory_builder_->AddOdometryData(sensor_id, odometry_data->time,
                                          odometry_data->pose);
   }
 }
