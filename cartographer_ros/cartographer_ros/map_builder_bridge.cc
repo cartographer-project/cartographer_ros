@@ -65,7 +65,7 @@ void PushAndResetLineMarker(visualization_msgs::Marker* marker,
 MapBuilderBridge::MapBuilderBridge(const NodeOptions& node_options,
                                    tf2_ros::Buffer* const tf_buffer)
     : node_options_(node_options),
-      map_builder_(node_options.map_builder_options),
+      map_builder_(node_options.map_builder_options, {}),
       tf_buffer_(tf_buffer) {}
 
 void MapBuilderBridge::LoadMap(const std::string& map_filename) {
