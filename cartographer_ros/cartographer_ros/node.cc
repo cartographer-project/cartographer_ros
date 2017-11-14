@@ -392,6 +392,7 @@ bool Node::FinishTrajectoryUnderLock(const int trajectory_id) {
     subscribed_topics_.erase(entry.topic);
     LOG(INFO) << "Shutdown the subscriber of [" << entry.topic << "]";
   }
+  CHECK_EQ(subscribers_.erase(trajectory_id), 1);
   CHECK(is_active_trajectory_.at(trajectory_id));
   map_builder_bridge_.FinishTrajectory(trajectory_id);
   is_active_trajectory_[trajectory_id] = false;
