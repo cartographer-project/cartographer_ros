@@ -103,8 +103,16 @@ void Node::HandleSubmapList(
   if (occupancy_grid_publisher_.getNumSubscribers() == 0) {
     return;
   }
+
+  // Keep track of submap IDs that don't appear in the message anymore.
+  std::set<SubmapId> submap_ids_to_delete;
+  for (const auto& pair : submap_slices_) {
+    submap_ids_to_delete.insert(pair.first);
+  }
+
   for (const auto& submap_msg : msg->submap) {
     const SubmapId id{submap_msg.trajectory_id, submap_msg.submap_index};
+    submap_ids_to_delete.erase(id);
     SubmapSlice& submap_slice = submap_slices_[id];
     submap_slice.pose = ToRigid3d(submap_msg.pose);
     submap_slice.metadata_version = submap_msg.submap_version;
@@ -158,6 +166,12 @@ void Node::HandleSubmapList(
         << cairo_status_to_string(
                cairo_surface_status(submap_slice.surface.get()));
   }
+
+  // Delete all submaps that didn't appear in the message.
+  for (const auto& id : submap_ids_to_delete) {
+    submap_slices_.erase(id);
+  }
+
   last_timestamp_ = msg->header.stamp;
   last_frame_id_ = msg->header.frame_id;
 }
