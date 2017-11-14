@@ -39,12 +39,12 @@ namespace cartographer_ros {
 class MapBuilderBridge {
  public:
   struct TrajectoryState {
-    struct Data {
-      std::shared_ptr<const cartographer::sensor::RangeData> last_range_data;
-      std::shared_ptr<const cartographer::mapping::TrajectoryNode::Data>
-          last_constant_data;
+    struct LocalSlamData {
+      ::cartographer::common::Time time;
+      ::cartographer::transform::Rigid3d local_pose;
+      ::cartographer::sensor::RangeData range_data_in_local;
     };
-    Data data;
+    LocalSlamData data;
     cartographer::transform::Rigid3d local_to_map;
     std::unique_ptr<cartographer::transform::Rigid3d> published_to_tracking;
     TrajectoryOptions trajectory_options;
@@ -83,8 +83,9 @@ class MapBuilderBridge {
   // These are keyed with 'trajectory_id'.
   std::unordered_map<int, TrajectoryOptions> trajectory_options_;
   std::unordered_map<int, std::unique_ptr<SensorBridge>> sensor_bridges_;
+
   // Updated by a callback passed to libcartographer.
-  std::unordered_map<int, TrajectoryState::Data> trajectory_state_data_
+  std::unordered_map<int, TrajectoryState::LocalSlamData> trajectory_state_data_
       GUARDED_BY(mutex_);
 };
 

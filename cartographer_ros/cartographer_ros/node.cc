@@ -168,24 +168,12 @@ void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
     const auto& trajectory_state = entry.second;
 
     auto& extrapolator = extrapolators_.at(entry.first);
-    const auto& last_range_data = trajectory_state.data.last_range_data;
-    const auto& last_constant_data = trajectory_state.data.last_constant_data;
-    CHECK(last_constant_data != nullptr);
-    CHECK(last_range_data != nullptr);
-
-    const auto& time = last_constant_data->time;
+    const auto& time = trajectory_state.data.time;
     // We only publish a point cloud if it has changed. It is not needed at high
     // frequency, and republishing it would be computationally wasteful.
     if (time != extrapolator.GetLastPoseTime()) {
-      const carto::sensor::PointCloud original_point_cloud =
-          carto::sensor::TransformPointCloud(
-              last_range_data->returns,
-              (last_constant_data->local_pose
-               // THIS IS CURRENTLY BROKEN FOR 3D. THE FOLLOWING MULTIPLICATION
-               // SHOULD BE APPLIED ONLY FOR 2D!
-               * carto::transform::Rigid3d::Rotation(last_constant_data->gravity_alignment.inverse())
-              )
-                  .cast<float>());
+      const carto::sensor::PointCloud& original_point_cloud =
+          trajectory_state.data.range_data_in_local.returns;
       // TODO(gaschler): Consider using other message without time information.
       carto::sensor::TimedPointCloud point_cloud;
       point_cloud.reserve(original_point_cloud.size());
@@ -198,7 +186,7 @@ void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
           carto::common::ToUniversal(time), node_options_.map_frame,
           carto::sensor::TransformTimedPointCloud(
               point_cloud, trajectory_state.local_to_map.cast<float>())));
-      extrapolator.AddPose(time, last_constant_data->local_pose);
+      extrapolator.AddPose(time, trajectory_state.data.local_pose);
     }
 
     geometry_msgs::TransformStamped stamped_transform;
