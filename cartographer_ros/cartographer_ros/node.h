@@ -54,8 +54,9 @@ class Node {
 
   // Finishes all yet active trajectories.
   void FinishAllTrajectories();
-  // Finishes a single given trajectory.
-  void FinishTrajectory(int trajectory_id);
+  // Finishes a single given trajectory. Returns false if the trajectory did not
+  // exist or was already finished.
+  bool FinishTrajectory(int trajectory_id);
 
   // Runs final optimization. All trajectories have to be finished when calling.
   void RunFinalOptimization();
@@ -134,6 +135,7 @@ class Node {
   bool ValidateTrajectoryOptions(const TrajectoryOptions& options);
   bool ValidateTopicNames(const ::cartographer_ros_msgs::SensorTopics& topics,
                           const TrajectoryOptions& options);
+  bool FinishTrajectoryUnderLock(int trajectory_id) REQUIRES(mutex_);
 
   const NodeOptions node_options_;
 
