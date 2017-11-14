@@ -106,7 +106,7 @@ void Node::HandleSubmapList(
 
   // Keep track of submap IDs that don't appear in the message anymore.
   std::set<SubmapId> submap_ids_to_delete;
-  for (const auto& pair : submaps_) {
+  for (const auto& pair : submap_slices_) {
     submap_ids_to_delete.insert(pair.first);
   }
 
@@ -169,7 +169,7 @@ void Node::HandleSubmapList(
 
   // Delete all submaps that didn't appear in the message.
   for (const auto& id : submap_ids_to_delete) {
-    submaps_.erase(id);
+    submap_slices_.erase(id);
   }
 
   last_timestamp_ = msg->header.stamp;
