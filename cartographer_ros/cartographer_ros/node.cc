@@ -381,8 +381,7 @@ bool Node::FinishTrajectoryUnderLock(const int trajectory_id) {
     return false;
   }
   if (!is_active_trajectory_[trajectory_id]) {
-    LOG(INFO) << "Trajectory_id " << trajectory_id
-              << " has already been finished.";
+    LOG(INFO) << "Trajectory_id " << trajectory_id << " has already been finished.";
     return false;
   }
 
