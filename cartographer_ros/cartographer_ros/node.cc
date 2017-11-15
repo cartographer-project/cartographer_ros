@@ -27,7 +27,6 @@
 #include "cartographer/common/port.h"
 #include "cartographer/common/time.h"
 #include "cartographer/mapping/proto/submap_visualization.pb.h"
-#include "cartographer/mapping/sparse_pose_graph.h"
 #include "cartographer/sensor/point_cloud.h"
 #include "cartographer/transform/rigid_transform.h"
 #include "cartographer/transform/transform.h"
