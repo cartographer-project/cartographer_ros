@@ -80,15 +80,14 @@ class MapBuilderBridge {
  private:
   cartographer::common::Mutex mutex_;
   const NodeOptions node_options_;
+  std::unordered_map<int, std::shared_ptr<const TrajectoryState::LocalSlamData>>
+      trajectory_state_data_ GUARDED_BY(mutex_);
   cartographer::mapping::MapBuilder map_builder_;
   tf2_ros::Buffer* const tf_buffer_;
 
   // These are keyed with 'trajectory_id'.
   std::unordered_map<int, TrajectoryOptions> trajectory_options_;
   std::unordered_map<int, std::unique_ptr<SensorBridge>> sensor_bridges_;
-
-  std::unordered_map<int, std::shared_ptr<const TrajectoryState::LocalSlamData>>
-      trajectory_state_data_ GUARDED_BY(mutex_);
 };
 
 }  // namespace cartographer_ros
