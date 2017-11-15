@@ -47,7 +47,7 @@ class MapBuilderBridge {
       ::cartographer::transform::Rigid3d local_pose;
       ::cartographer::sensor::RangeData range_data_in_local;
     };
-    std::shared_ptr<const LocalSlamData> data;
+    std::shared_ptr<const LocalSlamData> local_slam_data;
     cartographer::transform::Rigid3d local_to_map;
     std::unique_ptr<cartographer::transform::Rigid3d> published_to_tracking;
     TrajectoryOptions trajectory_options;
@@ -70,13 +70,15 @@ class MapBuilderBridge {
       cartographer_ros_msgs::SubmapQuery::Response& response);
 
   cartographer_ros_msgs::SubmapList GetSubmapList();
-  std::unordered_map<int, TrajectoryState> GetTrajectoryStates();
+  std::unordered_map<int, TrajectoryState> GetTrajectoryStates()
+      EXCLUDES(mutex_);
   visualization_msgs::MarkerArray GetTrajectoryNodeList();
   visualization_msgs::MarkerArray GetConstraintList();
 
   SensorBridge* sensor_bridge(int trajectory_id);
 
  private:
+  cartographer::common::Mutex mutex_;
   const NodeOptions node_options_;
   cartographer::mapping::MapBuilder map_builder_;
   tf2_ros::Buffer* const tf_buffer_;
@@ -86,7 +88,7 @@ class MapBuilderBridge {
   std::unordered_map<int, std::unique_ptr<SensorBridge>> sensor_bridges_;
 
   std::unordered_map<int, std::shared_ptr<const TrajectoryState::LocalSlamData>>
-      trajectory_state_data_;
+      trajectory_state_data_ GUARDED_BY(mutex_);
 };
 
 }  // namespace cartographer_ros
