@@ -27,7 +27,7 @@
 #include "cartographer/io/points_processor.h"
 #include "cartographer/io/points_processor_pipeline_builder.h"
 #include "cartographer/io/proto_stream.h"
-#include "cartographer/mapping/proto/sparse_pose_graph.pb.h"
+#include "cartographer/mapping/proto/pose_graph.pb.h"
 #include "cartographer/sensor/point_cloud.h"
 #include "cartographer/sensor/range_data.h"
 #include "cartographer/transform/transform_interpolation_buffer.h"
@@ -131,7 +131,7 @@ void Run(const std::string& pose_graph_filename,
       code, std::move(file_resolver));
 
   carto::io::ProtoStreamReader reader(pose_graph_filename);
-  carto::mapping::proto::SparsePoseGraph pose_graph_proto;
+  carto::mapping::proto::PoseGraph pose_graph_proto;
   CHECK(reader.ReadProto(&pose_graph_proto));
   CHECK_EQ(pose_graph_proto.trajectory_size(), bag_filenames.size())
       << "Pose graphs contains " << pose_graph_proto.trajectory_size()
