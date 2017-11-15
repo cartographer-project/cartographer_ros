@@ -167,10 +167,10 @@ void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
     const auto& trajectory_state = entry.second;
 
     auto& extrapolator = extrapolators_.at(entry.first);
-    const auto& time = trajectory_state.local_slam_data->time;
     // We only publish a point cloud if it has changed. It is not needed at high
     // frequency, and republishing it would be computationally wasteful.
-    if (time != extrapolator.GetLastPoseTime()) {
+    if (trajectory_state.local_slam_data->time !=
+        extrapolator.GetLastPoseTime()) {
       // TODO(gaschler): Consider using other message without time information.
       carto::sensor::TimedPointCloud point_cloud;
       point_cloud.reserve(
@@ -182,10 +182,12 @@ void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
         point_cloud.push_back(point_time);
       }
       scan_matched_point_cloud_publisher_.publish(ToPointCloud2Message(
-          carto::common::ToUniversal(time), node_options_.map_frame,
+          carto::common::ToUniversal(trajectory_state.local_slam_data->time),
+          node_options_.map_frame,
           carto::sensor::TransformTimedPointCloud(
               point_cloud, trajectory_state.local_to_map.cast<float>())));
-      extrapolator.AddPose(time, trajectory_state.local_slam_data->local_pose);
+      extrapolator.AddPose(trajectory_state.local_slam_data->time,
+                           trajectory_state.local_slam_data->local_pose);
     }
 
     geometry_msgs::TransformStamped stamped_transform;
