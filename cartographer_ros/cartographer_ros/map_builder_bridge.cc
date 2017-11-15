@@ -183,7 +183,7 @@ MapBuilderBridge::GetTrajectoryStates() {
     if (trajectory_state_data_.count(trajectory_id) == 0) {
       continue;
     }
-    std::shared_ptr<TrajectoryState::LocalSlamData>
+    std::shared_ptr<const TrajectoryState::LocalSlamData>
         current_trajectory_state_data =
             trajectory_state_data_.at(trajectory_id);
 

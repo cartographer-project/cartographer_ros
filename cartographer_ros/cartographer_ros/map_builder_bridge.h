@@ -47,7 +47,7 @@ class MapBuilderBridge {
       ::cartographer::transform::Rigid3d local_pose;
       ::cartographer::sensor::RangeData range_data_in_local;
     };
-    std::shared_ptr<LocalSlamData> data;
+    std::shared_ptr<const LocalSlamData> data;
     cartographer::transform::Rigid3d local_to_map;
     std::unique_ptr<cartographer::transform::Rigid3d> published_to_tracking;
     TrajectoryOptions trajectory_options;
@@ -85,7 +85,7 @@ class MapBuilderBridge {
   std::unordered_map<int, TrajectoryOptions> trajectory_options_;
   std::unordered_map<int, std::unique_ptr<SensorBridge>> sensor_bridges_;
 
-  std::unordered_map<int, std::shared_ptr<TrajectoryState::LocalSlamData>>
+  std::unordered_map<int, std::shared_ptr<const TrajectoryState::LocalSlamData>>
       trajectory_state_data_;
 };
 
