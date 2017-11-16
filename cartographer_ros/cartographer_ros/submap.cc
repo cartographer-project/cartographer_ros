@@ -24,26 +24,30 @@
 
 namespace cartographer_ros {
 
-void UnpackTextureData(const std::string& compressed_cells, int width,
-                       int height, std::vector<char>* intensity,
-                       std::vector<char>* alpha) {
+SubmapTexture::Pixels UnpackTextureData(const std::string& compressed_cells,
+                                        const int width, const int height) {
+  SubmapTexture::Pixels pixels;
   std::string cells;
   ::cartographer::common::FastGunzipString(compressed_cells, &cells);
   const int num_pixels = width * height;
   CHECK_EQ(cells.size(), 2 * num_pixels);
-  intensity->reserve(num_pixels);
-  alpha->reserve(num_pixels);
+  pixels.intensity.reserve(num_pixels);
+  pixels.alpha.reserve(num_pixels);
   for (int i = 0; i < height; ++i) {
     for (int j = 0; j < width; ++j) {
-      intensity->push_back(cells[(i * width + j) * 2]);
-      alpha->push_back(cells[(i * width + j) * 2 + 1]);
+      pixels.intensity.push_back(cells[(i * width + j) * 2]);
+      pixels.alpha.push_back(cells[(i * width + j) * 2 + 1]);
     }
   }
+  return pixels;
 }
 
 ::cartographer::io::UniqueCairoSurfacePtr DrawTexture(
     const std::vector<char>& intensity, const std::vector<char>& alpha,
-    const int width, const int height, std::vector<uint32_t>* cairo_data) {
+    const int width, const int height,
+    std::vector<uint32_t>* const cairo_data) {
+  CHECK(cairo_data->empty());
+
   // Properly dealing with a non-common stride would make this code much more
   // complicated. Let's check that it is not needed.
   const int expected_stride = 4 * width;
@@ -82,14 +86,11 @@ std::unique_ptr<SubmapTextures> FetchSubmapTextures(
   auto response = ::cartographer::common::make_unique<SubmapTextures>();
   response->version = srv.response.submap_version;
   for (const auto& texture : srv.response.textures) {
-    std::vector<char> intensity;
-    std::vector<char> alpha;
-    std::string compressed_cells(texture.cells.begin(), texture.cells.end());
-    UnpackTextureData(compressed_cells, texture.width, texture.height,
-                      &intensity, &alpha);
-    response->textures.emplace_back(
-        SubmapTexture{intensity, alpha, texture.width, texture.height,
-                      texture.resolution, ToRigid3d(texture.slice_pose)});
+    const std::string compressed_cells(texture.cells.begin(), texture.cells.end());
+    response->textures.emplace_back(SubmapTexture{
+        UnpackTextureData(compressed_cells, texture.width, texture.height),
+        texture.width, texture.height, texture.resolution,
+        ToRigid3d(texture.slice_pose)});
   }
   return response;
 }

@@ -29,8 +29,11 @@
 namespace cartographer_ros {
 
 struct SubmapTexture {
-  std::vector<char> intensity;
-  std::vector<char> alpha;
+  struct Pixels {
+    std::vector<char> intensity;
+    std::vector<char> alpha;
+  };
+  Pixels pixels;
   int width;
   int height;
   double resolution;
@@ -49,9 +52,8 @@ std::unique_ptr<SubmapTextures> FetchSubmapTextures(
     ros::ServiceClient* client);
 
 // Unpacks cell data as provided by the backend into 'intensity' and 'alpha'.
-void UnpackTextureData(const std::string& compressed_cells, int width,
-                       int height, std::vector<char>* intensity,
-                       std::vector<char>* alpha);
+SubmapTexture::Pixels UnpackTextureData(const std::string& compressed_cells,
+                                        int width, int height);
 
 // Draw a texture into a cairo surface. 'cairo_data' will store the pixel data
 // for the surface and must therefore outlive the use of the surface.

@@ -139,9 +139,9 @@ void Node::HandleSubmapList(
     submap_slice.resolution = fetched_texture->resolution;
     submap_slice.cairo_data.clear();
     submap_slice.surface =
-        DrawTexture(fetched_texture->intensity, fetched_texture->alpha,
-                    fetched_texture->width, fetched_texture->height,
-                    &submap_slice.cairo_data);
+        DrawTexture(fetched_texture->pixels.intensity,
+                    fetched_texture->pixels.alpha, fetched_texture->width,
+                    fetched_texture->height, &submap_slice.cairo_data);
   }
 
   // Delete all submaps that didn't appear in the message.
