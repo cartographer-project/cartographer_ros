@@ -24,25 +24,16 @@ namespace cartographer_ros {
 
 namespace {
 
-void WritePgm(const double resolution, ::cartographer::io::Image* image,
+void WritePgm(const ::cartographer::io::Image& image, const double resolution,
               ::cartographer::io::FileWriter* file_writer) {
-  ::cartographer::io::UniqueCairoSurfacePtr surface = image->GetCairoSurface();
-  CHECK_EQ(cairo_image_surface_get_format(surface.get()),
-           ::cartographer::io::kCairoFormat);
-
-  const uint32_t* pixel_data =
-      reinterpret_cast<uint32_t*>(cairo_image_surface_get_data(surface.get()));
-
-  // Flipping the image into ROS coordinate frame.
   const std::string header = "P5\n# Cartographer map; " +
                              std::to_string(resolution) + " m/pixel\n" +
-                             std::to_string(image->width()) + " " +
-                             std::to_string(image->height()) + "\n255\n";
+                             std::to_string(image.width()) + " " +
+                             std::to_string(image.height()) + "\n255\n";
   file_writer->Write(header.data(), header.size());
-  for (int y = 0; y < image->height(); ++y) {
-    for (int x = 0; x < image->width(); ++x) {
-      const uint32_t packed = pixel_data[y * image->width() + x];
-      const char color = packed >> 16;
+  for (int y = 0; y < image.height(); ++y) {
+    for (int x = 0; x < image.width(); ++x) {
+      const char color = image.GetPixel(x, y)[0];
       file_writer->Write(&color, 1);
     }
   }
@@ -107,7 +98,7 @@ RosMapWritingPointsProcessor::Flush() {
     const auto& limits = probability_grid_.limits();
     image->Rotate90DegreesClockwise();
 
-    WritePgm(limits.resolution(), image.get(), pgm_writer.get());
+    WritePgm(*image, limits.resolution(), pgm_writer.get());
     CHECK(pgm_writer->Close());
 
     const Eigen::Vector2d origin(
