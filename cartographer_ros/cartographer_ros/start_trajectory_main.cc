@@ -59,14 +59,15 @@ bool Run() {
           kStartTrajectoryServiceName);
   cartographer_ros_msgs::StartTrajectory srv;
   srv.request.options = ToRosMessage(LoadOptions());
-  srv.request.topics.laser_scan_topic =
-      ros::names::resolve(kLaserScanTopic, true /* apply topic remapping */);
+  srv.request.topics.laser_scan_topic = node_handle.resolveName(
+      kLaserScanTopic, true /* apply topic remapping */);
   srv.request.topics.multi_echo_laser_scan_topic =
-      ros::names::resolve(kMultiEchoLaserScanTopic, true);
+      node_handle.resolveName(kMultiEchoLaserScanTopic, true);
   srv.request.topics.point_cloud2_topic =
-      ros::names::resolve(kPointCloud2Topic, true);
-  srv.request.topics.imu_topic = ros::names::resolve(kImuTopic, true);
-  srv.request.topics.odometry_topic = ros::names::resolve(kOdometryTopic, true);
+      node_handle.resolveName(kPointCloud2Topic, true);
+  srv.request.topics.imu_topic = node_handle.resolveName(kImuTopic, true);
+  srv.request.topics.odometry_topic =
+      node_handle.resolveName(kOdometryTopic, true);
 
   if (!client.call(srv)) {
     LOG(ERROR) << "Error starting trajectory.";
