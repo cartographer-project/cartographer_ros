@@ -86,7 +86,8 @@ std::unique_ptr<SubmapTextures> FetchSubmapTextures(
   auto response = ::cartographer::common::make_unique<SubmapTextures>();
   response->version = srv.response.submap_version;
   for (const auto& texture : srv.response.textures) {
-    const std::string compressed_cells(texture.cells.begin(), texture.cells.end());
+    const std::string compressed_cells(texture.cells.begin(),
+                                       texture.cells.end());
     response->textures.emplace_back(SubmapTexture{
         UnpackTextureData(compressed_cells, texture.width, texture.height),
         texture.width, texture.height, texture.resolution,

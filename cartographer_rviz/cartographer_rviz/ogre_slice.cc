@@ -88,7 +88,8 @@ void OgreSlice::Update(
   // The call to Ogre's loadRawData below does not work with an RG texture,
   // therefore we create an RGB one whose blue channel is always 0.
   std::vector<char> rgb;
-  CHECK_EQ(submap_texture.pixels.intensity.size(), submap_texture.pixels.alpha.size());
+  CHECK_EQ(submap_texture.pixels.intensity.size(),
+           submap_texture.pixels.alpha.size());
   for (size_t i = 0; i < submap_texture.pixels.intensity.size(); ++i) {
     rgb.push_back(submap_texture.pixels.intensity[i]);
     rgb.push_back(submap_texture.pixels.alpha[i]);
