@@ -65,7 +65,26 @@ void PushAndResetLineMarker(visualization_msgs::Marker* marker,
 MapBuilderBridge::MapBuilderBridge(const NodeOptions& node_options,
                                    tf2_ros::Buffer* const tf_buffer)
     : node_options_(node_options),
-      map_builder_(node_options.map_builder_options, {}),
+      map_builder_(
+          node_options.map_builder_options,
+          cartographer::mapping::MapBuilder::LocalSlamResultCallback(
+              [this](
+                  const int trajectory_id,
+                  const ::cartographer::common::Time time,
+                  const ::cartographer::transform::Rigid3d local_pose,
+                  ::cartographer::sensor::RangeData range_data_in_local,
+                  const std::unique_ptr<const ::cartographer::mapping::NodeId>)
+                  EXCLUDES(mutex_) {
+                    std::shared_ptr<const TrajectoryState::LocalSlamData>
+                        local_slam_data =
+                            std::make_shared<TrajectoryState::LocalSlamData>(
+                                TrajectoryState::LocalSlamData{
+                                    time, local_pose,
+                                    std::move(range_data_in_local)});
+                    cartographer::common::MutexLocker lock(&mutex_);
+                    trajectory_state_data_[trajectory_id] =
+                        std::move(local_slam_data);
+                  })),
       tf_buffer_(tf_buffer) {}
 
 void MapBuilderBridge::LoadMap(const std::string& map_filename) {
@@ -169,24 +188,22 @@ MapBuilderBridge::GetTrajectoryStates() {
     const int trajectory_id = entry.first;
     const SensorBridge& sensor_bridge = *entry.second;
 
-    const cartographer::mapping::TrajectoryBuilder* const trajectory_builder =
-        map_builder_.GetTrajectoryBuilder(trajectory_id);
-    if (trajectory_builder == nullptr) {
-      continue;
-    }
-    const cartographer::mapping::TrajectoryBuilder::PoseEstimate pose_estimate =
-        trajectory_builder->pose_estimate();
-    if (cartographer::common::ToUniversal(pose_estimate.time) < 0) {
-      continue;
+    std::shared_ptr<const TrajectoryState::LocalSlamData> local_slam_data;
+    {
+      cartographer::common::MutexLocker lock(&mutex_);
+      if (trajectory_state_data_.count(trajectory_id) == 0) {
+        continue;
+      }
+      local_slam_data = trajectory_state_data_.at(trajectory_id);
     }
 
     // Make sure there is a trajectory with 'trajectory_id'.
     CHECK_EQ(trajectory_options_.count(trajectory_id), 1);
     trajectory_states[trajectory_id] = {
-        pose_estimate,
+        local_slam_data,
         map_builder_.pose_graph()->GetLocalToGlobalTransform(trajectory_id),
         sensor_bridge.tf_bridge().LookupToTracking(
-            pose_estimate.time,
+            local_slam_data->time,
             trajectory_options_[trajectory_id].published_frame),
         trajectory_options_[trajectory_id]};
   }
