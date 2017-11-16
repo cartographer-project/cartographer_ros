@@ -27,7 +27,7 @@
 #include "cartographer/io/points_processor.h"
 #include "cartographer/io/points_processor_pipeline_builder.h"
 #include "cartographer/io/proto_stream.h"
-#include "cartographer/mapping/proto/sparse_pose_graph.pb.h"
+#include "cartographer/mapping/proto/pose_graph.pb.h"
 #include "cartographer/sensor/point_cloud.h"
 #include "cartographer/sensor/range_data.h"
 #include "cartographer/transform/transform_interpolation_buffer.h"
@@ -77,7 +77,7 @@ namespace carto = ::cartographer;
 
 template <typename T>
 std::unique_ptr<carto::io::PointsBatch> HandleMessage(
-    const T& message, const string& tracking_frame,
+    const T& message, const std::string& tracking_frame,
     const tf2_ros::Buffer& tf_buffer,
     const carto::transform::TransformInterpolationBuffer&
         transform_interpolation_buffer) {
@@ -118,21 +118,22 @@ std::unique_ptr<carto::io::PointsBatch> HandleMessage(
   return points_batch;
 }
 
-void Run(const string& pose_graph_filename,
-         const std::vector<string>& bag_filenames,
-         const string& configuration_directory,
-         const string& configuration_basename, const string& urdf_filename,
-         const string& output_file_prefix) {
+void Run(const std::string& pose_graph_filename,
+         const std::vector<std::string>& bag_filenames,
+         const std::string& configuration_directory,
+         const std::string& configuration_basename,
+         const std::string& urdf_filename,
+         const std::string& output_file_prefix) {
   auto file_resolver =
       carto::common::make_unique<carto::common::ConfigurationFileResolver>(
-          std::vector<string>{configuration_directory});
-  const string code =
+          std::vector<std::string>{configuration_directory});
+  const std::string code =
       file_resolver->GetFileContentOrDie(configuration_basename);
   carto::common::LuaParameterDictionary lua_parameter_dictionary(
       code, std::move(file_resolver));
 
   carto::io::ProtoStreamReader reader(pose_graph_filename);
-  carto::mapping::proto::SparsePoseGraph pose_graph_proto;
+  carto::mapping::proto::PoseGraph pose_graph_proto;
   CHECK(reader.ReadProto(&pose_graph_proto));
   CHECK_EQ(pose_graph_proto.trajectory_size(), bag_filenames.size())
       << "Pose graphs contains " << pose_graph_proto.trajectory_size()
@@ -141,10 +142,10 @@ void Run(const string& pose_graph_filename,
          "trajectory in the same order as the correponding trajectories in the "
          "pose graph proto.";
 
-  const string file_prefix = !output_file_prefix.empty()
-                                 ? output_file_prefix
-                                 : bag_filenames.front() + "_";
-  const auto file_writer_factory = [file_prefix](const string& filename) {
+  const std::string file_prefix = !output_file_prefix.empty()
+                                      ? output_file_prefix
+                                      : bag_filenames.front() + "_";
+  const auto file_writer_factory = [file_prefix](const std::string& filename) {
     return carto::common::make_unique<carto::io::StreamFileWriter>(file_prefix +
                                                                    filename);
   };
@@ -171,14 +172,14 @@ void Run(const string& pose_graph_filename,
       builder.CreatePipeline(
           lua_parameter_dictionary.GetDictionary("pipeline").get());
 
-  const string tracking_frame =
+  const std::string tracking_frame =
       lua_parameter_dictionary.GetString("tracking_frame");
   do {
     for (size_t trajectory_id = 0; trajectory_id < bag_filenames.size();
          ++trajectory_id) {
       const carto::mapping::proto::Trajectory& trajectory_proto =
           pose_graph_proto.trajectory(trajectory_id);
-      const string& bag_filename = bag_filenames[trajectory_id];
+      const std::string& bag_filename = bag_filenames[trajectory_id];
       LOG(INFO) << "Processing " << bag_filename << "...";
       if (trajectory_proto.node_size() == 0) {
         continue;

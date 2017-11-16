@@ -44,11 +44,11 @@ TRAJECTORY_BUILDER_3D.submaps.num_range_data = 40.
 
 MAP_BUILDER.use_trajectory_builder_3d = true
 MAP_BUILDER.num_background_threads = 7
-SPARSE_POSE_GRAPH.optimization_problem.huber_scale = 5e2
-SPARSE_POSE_GRAPH.optimize_every_n_scans = 40
-SPARSE_POSE_GRAPH.constraint_builder.sampling_ratio = 0.03
-SPARSE_POSE_GRAPH.optimization_problem.ceres_solver_options.max_num_iterations = 10
-SPARSE_POSE_GRAPH.constraint_builder.min_score = 0.62
-SPARSE_POSE_GRAPH.constraint_builder.log_matches = true
+POSE_GRAPH.optimization_problem.huber_scale = 5e2
+POSE_GRAPH.optimize_every_n_scans = 40
+POSE_GRAPH.constraint_builder.sampling_ratio = 0.03
+POSE_GRAPH.optimization_problem.ceres_solver_options.max_num_iterations = 10
+POSE_GRAPH.constraint_builder.min_score = 0.62
+POSE_GRAPH.constraint_builder.log_matches = true
 
 return options

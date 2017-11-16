@@ -65,7 +65,7 @@ void PushAndResetLineMarker(visualization_msgs::Marker* marker,
 MapBuilderBridge::MapBuilderBridge(const NodeOptions& node_options,
                                    tf2_ros::Buffer* const tf_buffer)
     : node_options_(node_options),
-      map_builder_(node_options.map_builder_options),
+      map_builder_(node_options.map_builder_options, {}),
       tf_buffer_(tf_buffer) {}
 
 void MapBuilderBridge::LoadMap(const std::string& map_filename) {
@@ -75,7 +75,7 @@ void MapBuilderBridge::LoadMap(const std::string& map_filename) {
 }
 
 int MapBuilderBridge::AddTrajectory(
-    const std::unordered_set<string>& expected_sensor_ids,
+    const std::unordered_set<std::string>& expected_sensor_ids,
     const TrajectoryOptions& trajectory_options) {
   const int trajectory_id = map_builder_.AddTrajectoryBuilder(
       expected_sensor_ids, trajectory_options.trajectory_builder_options);
@@ -106,7 +106,7 @@ void MapBuilderBridge::FinishTrajectory(const int trajectory_id) {
 
 void MapBuilderBridge::RunFinalOptimization() {
   LOG(INFO) << "Running final trajectory optimization...";
-  map_builder_.sparse_pose_graph()->RunFinalOptimization();
+  map_builder_.pose_graph()->RunFinalOptimization();
 }
 
 void MapBuilderBridge::SerializeState(const std::string& filename) {
@@ -150,8 +150,8 @@ cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
   cartographer_ros_msgs::SubmapList submap_list;
   submap_list.header.stamp = ::ros::Time::now();
   submap_list.header.frame_id = node_options_.map_frame;
-  for (const auto &submap_id_data :
-       map_builder_.sparse_pose_graph()->GetAllSubmapData()) {
+  for (const auto& submap_id_data :
+       map_builder_.pose_graph()->GetAllSubmapData()) {
     cartographer_ros_msgs::SubmapEntry submap_entry;
     submap_entry.trajectory_id = submap_id_data.id.trajectory_id;
     submap_entry.submap_index = submap_id_data.id.submap_index;
@@ -184,8 +184,7 @@ MapBuilderBridge::GetTrajectoryStates() {
     CHECK_EQ(trajectory_options_.count(trajectory_id), 1);
     trajectory_states[trajectory_id] = {
         pose_estimate,
-        map_builder_.sparse_pose_graph()->GetLocalToGlobalTransform(
-            trajectory_id),
+        map_builder_.pose_graph()->GetLocalToGlobalTransform(trajectory_id),
         sensor_bridge.tf_bridge().LookupToTracking(
             pose_estimate.time,
             trajectory_options_[trajectory_id].published_frame),
@@ -196,7 +195,7 @@ MapBuilderBridge::GetTrajectoryStates() {
 
 visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
   visualization_msgs::MarkerArray trajectory_node_list;
-  const auto nodes = map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
+  const auto nodes = map_builder_.pose_graph()->GetTrajectoryNodes();
   for (const int trajectory_id : nodes.trajectory_ids()) {
     visualization_msgs::Marker marker =
         CreateTrajectoryMarker(trajectory_id, node_options_.map_frame);
@@ -252,16 +251,15 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintList() {
   residual_inter_marker.ns = "Inter residuals";
   residual_inter_marker.pose.position.z = 0.1;
 
-  const auto trajectory_nodes =
-      map_builder_.sparse_pose_graph()->GetTrajectoryNodes();
-  const auto submap_data = map_builder_.sparse_pose_graph()->GetAllSubmapData();
-  const auto constraints = map_builder_.sparse_pose_graph()->constraints();
+  const auto trajectory_nodes = map_builder_.pose_graph()->GetTrajectoryNodes();
+  const auto submap_data = map_builder_.pose_graph()->GetAllSubmapData();
+  const auto constraints = map_builder_.pose_graph()->constraints();
 
   for (const auto& constraint : constraints) {
     visualization_msgs::Marker *constraint_marker, *residual_marker;
     std_msgs::ColorRGBA color_constraint, color_residual;
     if (constraint.tag ==
-        cartographer::mapping::SparsePoseGraph::Constraint::INTRA_SUBMAP) {
+        cartographer::mapping::PoseGraph::Constraint::INTRA_SUBMAP) {
       constraint_marker = &constraint_intra_marker;
       residual_marker = &residual_intra_marker;
       // Color mapping for submaps of various trajectories - add trajectory id
