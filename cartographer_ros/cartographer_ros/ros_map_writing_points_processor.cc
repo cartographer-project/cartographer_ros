@@ -24,37 +24,39 @@ namespace cartographer_ros {
 
 namespace {
 
-void WritePgm(const ::cartographer::io::Image& image, const double resolution,
+void WritePgm(const double resolution, ::cartographer::io::Image* image,
               ::cartographer::io::FileWriter* file_writer) {
+  ::cartographer::io::UniqueCairoSurfacePtr surface = image->GetCairoSurface();
+  CHECK_EQ(cairo_image_surface_get_format(surface.get()),
+           ::cartographer::io::kCairoFormat);
+
+  const uint32_t* pixel_data =
+      reinterpret_cast<uint32_t*>(cairo_image_surface_get_data(surface.get()));
+
   // Flipping the image into ROS coordinate frame.
   const std::string header = "P5\n# Cartographer map; " +
                              std::to_string(resolution) + " m/pixel\n" +
-                             std::to_string(image.height()) + " " +
-                             std::to_string(image.width()) + "\n255\n";
+                             std::to_string(image->width()) + " " +
+                             std::to_string(image->height()) + "\n255\n";
   file_writer->Write(header.data(), header.size());
-  for (int x = 0; x < image.width(); ++x) {
-    for (int y = image.height() - 1; y >= 0; --y) {
-      const char color = image.GetPixel(x, y)[0];
+  for (int y = 0; y < image->height(); ++y) {
+    for (int x = 0; x < image->width(); ++x) {
+      const uint32_t packed = pixel_data[y * image->width() + x];
+      const char color = packed >> 16;
       file_writer->Write(&color, 1);
     }
   }
 }
 
-void WriteYaml(const ::cartographer::io::Image& image,
-               const ::cartographer::mapping_2d::MapLimits& limits,
-               const std::string& pgm_filename, const Eigen::Array2i& offset,
+void WriteYaml(const double resolution, const Eigen::Vector2d& origin,
+               const std::string& pgm_filename,
                ::cartographer::io::FileWriter* file_writer) {
-  const double resolution = limits.resolution();
-  const double x_offset =
-      limits.max().x() - (offset.y() + image.height()) * resolution;
-  const double y_offset =
-      limits.max().y() - (offset.x() + image.width()) * resolution;
   // Magic constants taken directly from ros map_saver code:
   // https://github.com/ros-planning/navigation/blob/ac41d2480c4cf1602daf39a6e9629142731d92b0/map_server/src/map_saver.cpp#L114
   const std::string output =
       "image: " + pgm_filename + "\n" +
       "resolution: " + std::to_string(resolution) + "\n" + "origin: [" +
-      std::to_string(x_offset) + ", " + std::to_string(y_offset) +
+      std::to_string(origin.x()) + ", " + std::to_string(origin.y()) +
       ", 0.]\nnegate: 0\noccupied_thresh: 0.65\nfree_thresh: 0.196\n";
   file_writer->Write(output.data(), output.size());
 }
@@ -102,12 +104,18 @@ RosMapWritingPointsProcessor::Flush() {
   if (image != nullptr) {
     auto pgm_writer = file_writer_factory_(filestem_ + ".pgm");
     const std::string pgm_filename = pgm_writer->GetFilename();
-    WritePgm(*image, probability_grid_.limits().resolution(), pgm_writer.get());
+    const auto& limits = probability_grid_.limits();
+    image->Rotate90DegreesClockwise();
+
+    WritePgm(limits.resolution(), image.get(), pgm_writer.get());
     CHECK(pgm_writer->Close());
 
+    const Eigen::Vector2d origin(
+        limits.max().x() - (offset.y() + image->width()) * limits.resolution(),
+        limits.max().y() -
+            (offset.x() + image->height()) * limits.resolution());
     auto yaml_writer = file_writer_factory_(filestem_ + ".yaml");
-    WriteYaml(*image, probability_grid_.limits(), pgm_filename, offset,
-              yaml_writer.get());
+    WriteYaml(limits.resolution(), origin, pgm_filename, yaml_writer.get());
     CHECK(yaml_writer->Close());
   }
 
