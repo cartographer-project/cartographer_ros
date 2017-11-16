@@ -18,8 +18,10 @@
 #define CARTOGRAPHER_ROS_SUBMAP_H_
 
 #include <memory>
+#include <string>
 #include <vector>
 
+#include "cartographer/io/image.h"
 #include "cartographer/mapping/id.h"
 #include "cartographer/transform/rigid_transform.h"
 #include "ros/ros.h"
@@ -45,6 +47,17 @@ struct SubmapTextures {
 std::unique_ptr<SubmapTextures> FetchSubmapTextures(
     const ::cartographer::mapping::SubmapId& submap_id,
     ros::ServiceClient* client);
+
+// Unpacks cell data as provided by the backend into 'intensity' and 'alpha'.
+void UnpackTextureData(const std::string& compressed_cells, int width,
+                       int height, std::vector<char>* intensity,
+                       std::vector<char>* alpha);
+
+// Draw a texture into a cairo surface. 'cairo_data' will store the pixel data
+// for the surface and must therefore outlive the use of the surface.
+::cartographer::io::UniqueCairoSurfacePtr DrawTexture(
+    const std::vector<char>& intensity, const std::vector<char>& alpha,
+    int width, int height, std::vector<uint32_t>* cairo_data);
 
 }  // namespace cartographer_ros
 
