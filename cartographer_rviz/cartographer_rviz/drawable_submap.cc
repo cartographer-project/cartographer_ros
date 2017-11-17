@@ -110,9 +110,8 @@ void DrawableSubmap::Update(
   visibility_->setName(
       QString("%1.%2").arg(id_.submap_index).arg(metadata_version_));
   visibility_->setDescription(
-      QString(
-          "Toggle visibility of this individual submap.<br><br>"
-          "Trajectory %1, submap %2, submap version %3")
+      QString("Toggle visibility of this individual submap.<br><br>"
+              "Trajectory %1, submap %2, submap version %3")
           .arg(id_.trajectory_id)
           .arg(id_.submap_index)
           .arg(metadata_version_));
