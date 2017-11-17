@@ -39,7 +39,7 @@ DEFINE_double(resolution, 0.05, "Resolution of a grid cell in the drawn map.");
 namespace cartographer_ros {
 namespace {
 
-void FillSubmapState(const ::cartographer::transform::Rigid3d& submap_pose,
+void FillSubmapSlice(const ::cartographer::transform::Rigid3d& global_submap_pose,
                      const ::cartographer::mapping::proto::Submap& proto,
                      ::cartographer::io::SubmapSlice* submap_slice) {
   ::cartographer::mapping::proto::SubmapQuery::Response response;
@@ -47,17 +47,17 @@ void FillSubmapState(const ::cartographer::transform::Rigid3d& submap_pose,
   if (proto.has_submap_3d()) {
     ::cartographer::mapping_3d::Submap submap(proto.submap_3d());
     local_pose = submap.local_pose();
-    submap.ToResponseProto(submap_pose, &response);
+    submap.ToResponseProto(global_submap_pose, &response);
   } else {
     ::cartographer::mapping_2d::Submap submap(proto.submap_2d());
     local_pose = submap.local_pose();
-    submap.ToResponseProto(submap_pose, &response);
+    submap.ToResponseProto(global_submap_pose, &response);
   }
-  submap_slice->pose = submap_pose;
+  submap_slice->pose = global_submap_pose;
 
   auto& texture_proto = response.textures(0);
-  const SubmapTexture::Pixels pixels = UnpackTextureData(
-      texture_proto.cells(), texture_proto.width(), texture_proto.height());
+  const SubmapTexture::Pixels pixels = UnpackTextureData(texture_proto.cells(), texture_proto.width(),
+                                  texture_proto.height());
   submap_slice->width = texture_proto.width();
   submap_slice->height = texture_proto.height();
   submap_slice->resolution = texture_proto.resolution();
@@ -72,12 +72,11 @@ void Run(const std::string& pbstream_filename, const std::string& map_filestem,
          const double resolution) {
   ::cartographer::io::ProtoStreamReader reader(pbstream_filename);
 
-  // Skip Pose graph
   ::cartographer::mapping::proto::PoseGraph pose_graph;
   CHECK(reader.ReadProto(&pose_graph));
 
-  // Load submap_slices from pbstream
-  LOG(INFO) << "Loading submap_slices from serialized data.";
+  // Load 'submap_slices' from pbstream.
+  LOG(INFO) << "Loading submap slices from serialized data.";
   std::map<::cartographer::mapping::SubmapId, ::cartographer::io::SubmapSlice>
       submap_slices;
   for (;;) {
@@ -87,20 +86,20 @@ void Run(const std::string& pbstream_filename, const std::string& map_filestem,
     }
     if (proto.has_submap()) {
       const auto& submap = proto.submap();
-
-      ::cartographer::mapping::SubmapId id{submap.submap_id().trajectory_id(),
-                                           submap.submap_id().submap_index()};
-      const ::cartographer::transform::Rigid3d submap_pose =
+      const ::cartographer::mapping::SubmapId id{
+          submap.submap_id().trajectory_id(),
+          submap.submap_id().submap_index()};
+      const ::cartographer::transform::Rigid3d global_submap_pose =
           ::cartographer::transform::ToRigid3(
-              pose_graph.trajectory(submap.submap_id().trajectory_id())
-                  .submap(submap.submap_id().submap_index())
+              pose_graph.trajectory(id.trajectory_id)
+                  .submap(id.submap_index)
                   .pose());
-      FillSubmapState(submap_pose, submap, &submap_slices[id]);
+      FillSubmapSlice(global_submap_pose, submap, &submap_slices[id]);
     }
   }
   CHECK(reader.eof());
 
-  LOG(INFO) << "Generate combined map image from submap_slices.";
+  LOG(INFO) << "Generating combined map image from submap slices.";
   auto result =
       ::cartographer::io::PaintSubmapSlices(submap_slices, resolution);
 
@@ -111,7 +110,7 @@ void Run(const std::string& pbstream_filename, const std::string& map_filestem,
 
   const Eigen::Vector2d origin(
       -result.origin.x() * resolution,
-      (-image.height() + result.origin.y()) * resolution);
+      (result.origin.y() - image.height()) * resolution);
 
   ::cartographer::io::StreamFileWriter yaml_writer(map_filestem + ".yaml");
   WriteYaml(resolution, origin, pgm_writer.GetFilename(), &yaml_writer);
