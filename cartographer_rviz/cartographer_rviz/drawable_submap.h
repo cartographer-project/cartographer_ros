@@ -81,10 +81,9 @@ class DrawableSubmap : public QObject {
     visibility_->setBool(visibility);
   }
 
-  Q_SIGNALS :
-      // RPC request succeeded.
-      void
-      RequestSucceeded();
+ Q_SIGNALS:
+  // RPC request succeeded.
+  void RequestSucceeded();
 
  private Q_SLOTS:
   // Callback when an rpc request succeeded.
