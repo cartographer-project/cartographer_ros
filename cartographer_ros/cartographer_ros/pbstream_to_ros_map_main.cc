@@ -39,9 +39,10 @@ DEFINE_double(resolution, 0.05, "Resolution of a grid cell in the drawn map.");
 namespace cartographer_ros {
 namespace {
 
-void FillSubmapSlice(const ::cartographer::transform::Rigid3d& global_submap_pose,
-                     const ::cartographer::mapping::proto::Submap& proto,
-                     ::cartographer::io::SubmapSlice* submap_slice) {
+void FillSubmapSlice(
+    const ::cartographer::transform::Rigid3d& global_submap_pose,
+    const ::cartographer::mapping::proto::Submap& proto,
+    ::cartographer::io::SubmapSlice* submap_slice) {
   ::cartographer::mapping::proto::SubmapQuery::Response response;
   ::cartographer::transform::Rigid3d local_pose;
   if (proto.has_submap_3d()) {
@@ -56,8 +57,8 @@ void FillSubmapSlice(const ::cartographer::transform::Rigid3d& global_submap_pos
   submap_slice->pose = global_submap_pose;
 
   auto& texture_proto = response.textures(0);
-  const SubmapTexture::Pixels pixels = UnpackTextureData(texture_proto.cells(), texture_proto.width(),
-                                  texture_proto.height());
+  const SubmapTexture::Pixels pixels = UnpackTextureData(
+      texture_proto.cells(), texture_proto.width(), texture_proto.height());
   submap_slice->width = texture_proto.width();
   submap_slice->height = texture_proto.height();
   submap_slice->resolution = texture_proto.resolution();
