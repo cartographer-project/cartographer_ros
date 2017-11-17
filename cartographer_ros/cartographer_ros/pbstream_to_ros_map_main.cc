@@ -42,7 +42,7 @@ namespace {
 void FillSubmapSlice(
     const ::cartographer::transform::Rigid3d& global_submap_pose,
     const ::cartographer::mapping::proto::Submap& proto,
-    ::cartographer::io::SubmapSlice* submap_slice) {
+    ::cartographer::io::SubmapSlice* const submap_slice) {
   ::cartographer::mapping::proto::SubmapQuery::Response response;
   ::cartographer::transform::Rigid3d local_pose;
   if (proto.has_submap_3d()) {
@@ -76,7 +76,6 @@ void Run(const std::string& pbstream_filename, const std::string& map_filestem,
   ::cartographer::mapping::proto::PoseGraph pose_graph;
   CHECK(reader.ReadProto(&pose_graph));
 
-  // Load 'submap_slices' from pbstream.
   LOG(INFO) << "Loading submap slices from serialized data.";
   std::map<::cartographer::mapping::SubmapId, ::cartographer::io::SubmapSlice>
       submap_slices;
