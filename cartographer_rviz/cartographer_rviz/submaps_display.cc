@@ -136,9 +136,10 @@ void SubmapsDisplay::processMessage(
           ::cartographer::common::make_unique<::rviz::BoolProperty>(
               QString("Trajectory %1").arg(id.trajectory_id),
               visibility_all_enabled_->getBool(),
-              QString("List of all submaps in Trajectory %1. The checkbox "
-                      "controls whether all submaps in this trajectory should "
-                      "be displayed or not.")
+              QString(
+                  "List of all submaps in Trajectory %1. The checkbox "
+                  "controls whether all submaps in this trajectory should "
+                  "be displayed or not.")
                   .arg(id.trajectory_id),
               trajectories_category_)));
     }
