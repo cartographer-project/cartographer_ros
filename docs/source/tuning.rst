@@ -12,8 +12,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-.. cartographer SHA: 16d62f45f0e77db7c3b49276808725f3a06bcbf4
-.. cartographer_ros SHA: d2bb8b3d0166809bde0fffc050222f08aba00e2e
+.. cartographer SHA: aba4575d937df4c9697f61529200c084f2562584
+.. cartographer_ros SHA: 99c23b6ac7874f7974e9ed808ace841da6f2c8b0
 .. TODO(hrapp): mention insert_free_space somewhere
 
 Tuning
@@ -31,8 +31,8 @@ The first one is local SLAM (sometimes also called frontend).
 Its job is build a locally consistent set of submaps and tie them together, but it will drift over time.
 Most of its options can be found in `trajectory_builder_2d.lua`_ for 2D and `trajectory_builder_3d.lua`_ for 3D.
 
-.. _trajectory_builder_2d.lua: https://github.com/googlecartographer/cartographer/blob/16d62f45f0e77db7c3b49276808725f3a06bcbf4/configuration_files/trajectory_builder_2d.lua
-.. _trajectory_builder_3d.lua: https://github.com/googlecartographer/cartographer/blob/16d62f45f0e77db7c3b49276808725f3a06bcbf4/configuration_files/trajectory_builder_3d.lua
+.. _trajectory_builder_2d.lua: https://github.com/googlecartographer/cartographer/blob/aba4575d937df4c9697f61529200c084f2562584/configuration_files/trajectory_builder_2d.lua
+.. _trajectory_builder_3d.lua: https://github.com/googlecartographer/cartographer/blob/aba4575d937df4c9697f61529200c084f2562584/configuration_files/trajectory_builder_3d.lua
 
 The other system is global SLAM (sometimes called the backend).
 It runs in background threads and its main job is to find loop closure constraints.
@@ -41,14 +41,14 @@ It also incorporates other sensor data to get a higher level view and identify t
 In 3D, it also tries to find the direction of gravity.
 Most of its options can be found in `pose_graph.lua`_
 
-.. _pose_graph.lua: https://github.com/googlecartographer/cartographer/blob/16d62f45f0e77db7c3b49276808725f3a06bcbf4/configuration_files/pose_graph.lua
+.. _pose_graph.lua: https://github.com/googlecartographer/cartographer/blob/aba4575d937df4c9697f61529200c084f2562584/configuration_files/pose_graph.lua
 
 On a higher abstraction, the job of local SLAM is to generate good submaps and the job of global SLAM is to tie them most consistently together.
 
 Tuning local SLAM
 -----------------
 
-For this example we'll start at ``cartographer`` commit `16d62f4`_ and ``cartographer_ros`` commit `d2bb8b3`_ and look at the bag ``b2-2016-04-27-12-31-41.bag`` from our test data set.
+For this example we'll start at ``cartographer`` commit `aba4575`_ and ``cartographer_ros`` commit `99c23b6`_ and look at the bag ``b2-2016-04-27-12-31-41.bag`` from our test data set.
 
 At our starting configuration, we see some slipping pretty early in the bag.
 The backpack passed over a ramp in the Deutsches Museum which violates the 2D assumption of a flat floor.
@@ -56,8 +56,8 @@ It is visible in the laser scan data that contradicting information is passed to
 But the slipping also indicates that we trust the point cloud matching too much and disregard the other sensors quite strongly.
 Our aim is to improve the situation through tuning.
 
-.. _16d62f4: https://github.com/googlecartographer/cartographer/commit/16d62f45f0e77db7c3b49276808725f3a06bcbf4
-.. _d2bb8b3: https://github.com/googlecartographer/cartographer_ros/commit/d2bb8b3d0166809bde0fffc050222f08aba00e2e
+.. _aba4575: https://github.com/googlecartographer/cartographer/commit/aba4575d937df4c9697f61529200c084f2562584
+.. _99c23b6: https://github.com/googlecartographer/cartographer_ros/commit/99c23b6ac7874f7974e9ed808ace841da6f2c8b0
 
 If we only look at this particular submap, that the error is fully contained in one submap.
 We also see that over time, global SLAM figures out that something weird happened and partially corrects for it.
@@ -70,7 +70,7 @@ So let's turn off global SLAM to not mess with our tuning.
 
 .. code-block:: lua
 
-   POSE_GRAPH.optimize_every_n_scans = 0
+   POSE_GRAPH.optimize_every_n_nodes = 0
 
 Correct size of submaps
 ^^^^^^^^^^^^^^^^^^^^^^^
