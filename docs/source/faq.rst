@@ -27,8 +27,8 @@ per UDP packet, not one per revolution.
 __ http://www.ros.org/doc/api/sensor_msgs/html/msg/PointCloud2.html
 
 In the `corresponding Cartographer configuration file`__ you see
-`TRAJECTORY_BUILDER_3D.scans_per_accumulation = 160` which means we accumulate
-160 per-UDP-packet point clouds into one larger point cloud, which
+`TRAJECTORY_BUILDER_3D.num_accumulated_range_data = 160` which means we
+accumulate 160 per-UDP-packet point clouds into one larger point cloud, which
 incorporates motion estimation by combining constant velocity and IMU
 measurements, for matching. Since there are two VLP-16s, 160 UDP packets is
 enough for roughly 2 revolutions, one per VLP-16.
