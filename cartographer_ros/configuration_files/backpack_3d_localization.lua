@@ -15,6 +15,6 @@
 include "backpack_3d.lua"
 
 TRAJECTORY_BUILDER.pure_localization = true
-POSE_GRAPH.optimize_every_n_scans = 100
+POSE_GRAPH.optimize_every_n_nodes = 100
 
 return options
