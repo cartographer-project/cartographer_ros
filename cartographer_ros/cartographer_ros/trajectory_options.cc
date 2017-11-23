@@ -90,7 +90,8 @@ CreateInitialTrajectoryPose(
   *pose.mutable_relative_pose() =
       cartographer::transform::ToProto(cartographer::transform::FromDictionary(
           lua_parameter_dictionary->GetDictionary("relative_pose").get()));
-  pose.set_timestamp(cartographer::common::ToUniversal(FromRos(ros::Time::now())));
+  pose.set_timestamp(
+      cartographer::common::ToUniversal(FromRos(ros::Time::now())));
   return pose;
 }
 
