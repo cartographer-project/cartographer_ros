@@ -52,11 +52,16 @@ TrajectoryOptions LoadOptions() {
   auto lua_parameter_dictionary =
       cartographer::common::LuaParameterDictionary::NonReferenceCounted(
           code, std::move(file_resolver));
-  auto initial_trajectory_pose =
-      cartographer::common::LuaParameterDictionary::NonReferenceCounted(
-          "return " + FLAGS_initial_pose, std::move(file_resolver));
-  return CreateTrajectoryOptions(lua_parameter_dictionary.get(),
-                                 initial_trajectory_pose.get());
+  if(!FLAGS_initial_pose.empty()) {
+    auto initial_trajectory_pose =
+        cartographer::common::LuaParameterDictionary::NonReferenceCounted(
+            "return " + FLAGS_initial_pose, std::move(file_resolver));
+    return CreateTrajectoryOptions(lua_parameter_dictionary.get(),
+                                   initial_trajectory_pose.get());
+  }
+  else {
+    return CreateTrajectoryOptions(lua_parameter_dictionary.get());
+  }
 }
 
 bool Run() {
