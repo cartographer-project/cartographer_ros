@@ -37,6 +37,8 @@ DEFINE_string(configuration_basename, "",
               "Basename, i.e. not containing any directory prefix, of the "
               "configuration file.");
 
+DEFINE_string(initial_pose, "", "Initial pose.");
+
 namespace cartographer_ros {
 namespace {
 
@@ -46,10 +48,15 @@ TrajectoryOptions LoadOptions() {
       std::vector<std::string>{FLAGS_configuration_directory});
   const std::string code =
       file_resolver->GetFileContentOrDie(FLAGS_configuration_basename);
+  LOG(INFO) << code;
   auto lua_parameter_dictionary =
       cartographer::common::LuaParameterDictionary::NonReferenceCounted(
           code, std::move(file_resolver));
-  return CreateTrajectoryOptions(lua_parameter_dictionary.get());
+  auto initial_trajectory_pose =
+      cartographer::common::LuaParameterDictionary::NonReferenceCounted(
+          "return " + FLAGS_initial_pose, std::move(file_resolver));
+  return CreateTrajectoryOptions(lua_parameter_dictionary.get(),
+                                 initial_trajectory_pose.get());
 }
 
 bool Run() {
