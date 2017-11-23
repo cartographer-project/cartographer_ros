@@ -37,7 +37,7 @@ DEFINE_string(configuration_basename, "",
               "Basename, i.e. not containing any directory prefix, of the "
               "configuration file.");
 
-DEFINE_string(initial_pose, "", "Initial pose.");
+DEFINE_string(initial_pose, "", "Starting pose of a new trajectory");
 
 namespace cartographer_ros {
 namespace {
