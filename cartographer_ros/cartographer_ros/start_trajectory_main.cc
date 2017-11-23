@@ -48,7 +48,6 @@ TrajectoryOptions LoadOptions() {
       std::vector<std::string>{FLAGS_configuration_directory});
   const std::string code =
       file_resolver->GetFileContentOrDie(FLAGS_configuration_basename);
-  LOG(INFO) << code;
   auto lua_parameter_dictionary =
       cartographer::common::LuaParameterDictionary::NonReferenceCounted(
           code, std::move(file_resolver));
