@@ -51,14 +51,13 @@ TrajectoryOptions LoadOptions() {
   auto lua_parameter_dictionary =
       cartographer::common::LuaParameterDictionary::NonReferenceCounted(
           code, std::move(file_resolver));
-  if(!FLAGS_initial_pose.empty()) {
+  if (!FLAGS_initial_pose.empty()) {
     auto initial_trajectory_pose =
         cartographer::common::LuaParameterDictionary::NonReferenceCounted(
             "return " + FLAGS_initial_pose, std::move(file_resolver));
     return CreateTrajectoryOptions(lua_parameter_dictionary.get(),
                                    initial_trajectory_pose.get());
-  }
-  else {
+  } else {
     return CreateTrajectoryOptions(lua_parameter_dictionary.get());
   }
 }
