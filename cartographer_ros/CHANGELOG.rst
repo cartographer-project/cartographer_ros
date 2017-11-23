@@ -6,7 +6,7 @@ Changelog for package cartographer_ros
 ------------------
 * https://github.com/googlecartographer/cartographer_ros/compare/0.2.0...0.3.0
 
-  0.2.0 (2017-06-19)
+0.2.0 (2017-06-19)
 ------------------
 * https://github.com/googlecartographer/cartographer_ros/compare/0.1.0...0.2.0
 
