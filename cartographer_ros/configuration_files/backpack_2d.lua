@@ -38,6 +38,6 @@ options = {
 }
 
 MAP_BUILDER.use_trajectory_builder_2d = true
-TRAJECTORY_BUILDER_2D.scans_per_accumulation = 10
+TRAJECTORY_BUILDER_2D.num_accumulated_range_data = 10
 
 return options

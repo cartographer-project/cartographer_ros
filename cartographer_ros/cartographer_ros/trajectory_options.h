@@ -43,8 +43,16 @@ struct TrajectoryOptions {
   double imu_sampling_ratio;
 };
 
+::cartographer::mapping::proto::InitialTrajectoryPose
+CreateInitialTrajectoryPose(
+    ::cartographer::common::LuaParameterDictionary* lua_parameter_dictionary);
+
 TrajectoryOptions CreateTrajectoryOptions(
     ::cartographer::common::LuaParameterDictionary* lua_parameter_dictionary);
+
+TrajectoryOptions CreateTrajectoryOptions(
+    ::cartographer::common::LuaParameterDictionary* lua_parameter_dictionary,
+    ::cartographer::common::LuaParameterDictionary* initial_trajectory_pose);
 
 // Try to convert 'msg' into 'options'. Returns false on failure.
 bool FromRosMessage(const cartographer_ros_msgs::TrajectoryOptions& msg,

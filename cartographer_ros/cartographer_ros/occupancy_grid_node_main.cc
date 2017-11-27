@@ -137,34 +137,11 @@ void Node::HandleSubmapList(
     submap_slice.height = fetched_texture->height;
     submap_slice.slice_pose = fetched_texture->slice_pose;
     submap_slice.resolution = fetched_texture->resolution;
-
-    // Properly dealing with a non-common stride would make this code much more
-    // complicated. Let's check that it is not needed.
-    const int expected_stride = 4 * submap_slice.width;
-    // TODO(jihoonl): Refactor here out to remove kCairoFormat dependency
-    CHECK_EQ(expected_stride,
-             cairo_format_stride_for_width(
-                 PaintSubmapSlicesResult::kCairoFormat, submap_slice.width));
     submap_slice.cairo_data.clear();
-    for (size_t i = 0; i < fetched_texture->intensity.size(); ++i) {
-      // We use the red channel to track intensity information. The green
-      // channel we use to track if a cell was ever observed.
-      const uint8_t intensity = fetched_texture->intensity.at(i);
-      const uint8_t alpha = fetched_texture->alpha.at(i);
-      const uint8_t observed = (intensity == 0 && alpha == 0) ? 0 : 255;
-      submap_slice.cairo_data.push_back((alpha << 24) | (intensity << 16) |
-                                        (observed << 8) | 0);
-    }
-
-    submap_slice.surface = ::cartographer::io::MakeUniqueCairoSurfacePtr(
-        cairo_image_surface_create_for_data(
-            reinterpret_cast<unsigned char*>(submap_slice.cairo_data.data()),
-            PaintSubmapSlicesResult::kCairoFormat, submap_slice.width,
-            submap_slice.height, expected_stride));
-    CHECK_EQ(cairo_surface_status(submap_slice.surface.get()),
-             CAIRO_STATUS_SUCCESS)
-        << cairo_status_to_string(
-               cairo_surface_status(submap_slice.surface.get()));
+    submap_slice.surface =
+        DrawTexture(fetched_texture->pixels.intensity,
+                    fetched_texture->pixels.alpha, fetched_texture->width,
+                    fetched_texture->height, &submap_slice.cairo_data);
   }
 
   // Delete all submaps that didn't appear in the message.
@@ -182,7 +159,7 @@ void Node::DrawAndPublish(const ::ros::WallTimerEvent& unused_timer_event) {
   }
 
   ::cartographer::common::MutexLocker locker(&mutex_);
-  auto painted_slices = PaintSubmapSlices(&submap_slices_, resolution_);
+  auto painted_slices = PaintSubmapSlices(submap_slices_, resolution_);
   PublishOccupancyGrid(last_frame_id_, last_timestamp_, painted_slices.origin,
                        painted_slices.surface.get());
 }
