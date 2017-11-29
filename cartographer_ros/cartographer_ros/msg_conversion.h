@@ -18,6 +18,7 @@
 #define CARTOGRAPHER_ROS_MSG_CONVERSION_H_
 
 #include "cartographer/common/port.h"
+#include "cartographer/common/time.h"
 #include "cartographer/sensor/point_cloud.h"
 #include "cartographer/transform/rigid_transform.h"
 #include "geometry_msgs/Pose.h"
@@ -45,14 +46,20 @@ geometry_msgs::Pose ToGeometryMsgPose(
 
 geometry_msgs::Point ToGeometryMsgPoint(const Eigen::Vector3d& vector3d);
 
-::cartographer::sensor::PointCloudWithIntensities ToPointCloudWithIntensities(
-    const sensor_msgs::LaserScan& msg);
+// Converts ROS message to point cloud. Returns the time when the last point
+// was acquired (different from the ROS timestamp). Timing of points is given in
+// the fourth component of each point relative to `Time`.
+std::tuple<::cartographer::sensor::PointCloudWithIntensities,
+           ::cartographer::common::Time>
+ToPointCloudWithIntensities(const sensor_msgs::LaserScan& msg);
 
-::cartographer::sensor::PointCloudWithIntensities ToPointCloudWithIntensities(
-    const sensor_msgs::MultiEchoLaserScan& msg);
+std::tuple<::cartographer::sensor::PointCloudWithIntensities,
+           ::cartographer::common::Time>
+ToPointCloudWithIntensities(const sensor_msgs::MultiEchoLaserScan& msg);
 
-::cartographer::sensor::PointCloudWithIntensities ToPointCloudWithIntensities(
-    const sensor_msgs::PointCloud2& message);
+std::tuple<::cartographer::sensor::PointCloudWithIntensities,
+           ::cartographer::common::Time>
+ToPointCloudWithIntensities(const sensor_msgs::PointCloud2& message);
 
 ::cartographer::transform::Rigid3d ToRigid3d(
     const geometry_msgs::TransformStamped& transform);
