@@ -23,8 +23,13 @@
 #include "cartographer/io/file_writer.h"
 #include "cartographer/io/image.h"
 #include "cartographer/mapping_2d/map_limits.h"
+#include "nav_msgs/OccupancyGrid.h"
 
 namespace cartographer_ros {
+
+std::unique_ptr<nav_msgs::OccupancyGrid> CreateOccupancyGridMsg(
+    const std::string& frame_id, const ros::Time& time, const double resolution,
+    const Eigen::Array2f& origin, cairo_surface_t* surface);
 
 // Write 'image' as a pgm into 'file_writer'. The resolution is used in the
 // comment only'
