@@ -22,6 +22,7 @@
 #include "cartographer/transform/transform.h"
 #include "cartographer_ros/time_conversion.h"
 #include "geometry_msgs/Pose.h"
+#include "geometry_msgs/PoseStamped.h"
 #include "geometry_msgs/Quaternion.h"
 #include "geometry_msgs/Transform.h"
 #include "geometry_msgs/TransformStamped.h"
@@ -228,6 +229,17 @@ geometry_msgs::Pose ToGeometryMsgPose(const Rigid3d& rigid3d) {
   pose.orientation.y = rigid3d.rotation().y();
   pose.orientation.z = rigid3d.rotation().z();
   return pose;
+}
+
+geometry_msgs::PoseStamped ToGeometryMsgPoseStamped(int64 timestamp,
+                                                    const string& frame_id,
+                                                    const Rigid3d& rigid3d) {
+  geometry_msgs::PoseStamped pose_stamped;
+  pose_stamped.header.stamp =
+      ToRos(::cartographer::common::FromUniversal(timestamp));
+  pose_stamped.header.frame_id = frame_id;
+  pose_stamped.pose = ToGeometryMsgPose(rigid3d);
+  return pose_stamped;
 }
 
 geometry_msgs::Point ToGeometryMsgPoint(const Eigen::Vector3d& vector3d) {

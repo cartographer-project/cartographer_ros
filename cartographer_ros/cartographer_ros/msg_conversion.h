@@ -21,6 +21,7 @@
 #include "cartographer/sensor/point_cloud.h"
 #include "cartographer/transform/rigid_transform.h"
 #include "geometry_msgs/Pose.h"
+#include "geometry_msgs/PoseStamped.h"
 #include "geometry_msgs/Transform.h"
 #include "geometry_msgs/TransformStamped.h"
 #include "pcl/point_cloud.h"
@@ -41,6 +42,10 @@ geometry_msgs::Transform ToGeometryMsgTransform(
     const ::cartographer::transform::Rigid3d& rigid3d);
 
 geometry_msgs::Pose ToGeometryMsgPose(
+    const ::cartographer::transform::Rigid3d& rigid3d);
+
+geometry_msgs::PoseStamped ToGeometryMsgPoseStamped(
+    int64 timestamp, const string& frame_id,
     const ::cartographer::transform::Rigid3d& rigid3d);
 
 geometry_msgs::Point ToGeometryMsgPoint(const Eigen::Vector3d& vector3d);
