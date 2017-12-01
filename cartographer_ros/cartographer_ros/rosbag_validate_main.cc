@@ -104,6 +104,21 @@ void CheckOdometryMessage(const nav_msgs::Odometry& message) {
   }
 }
 
+void CheckTfMessage(const tf2_msgs::TFMessage& message) {
+  for (const auto& transform : message.transforms) {
+    if (transform.header.frame_id == "map") {
+      LOG_FIRST_N(ERROR, 1)
+          << "Input contains transform message from frame_id \""
+          << transform.header.frame_id << "\" to child_frame_id \""
+          << transform.child_frame_id
+          << "\". This is almost always output published by cartographer and "
+             "should not appear as input. (Unless you have some complex "
+             "remove_frames configuration, this is will not work. Simplest "
+             "solution is to record input without cartographer running.)";
+    }
+  }
+}
+
 void Run(const std::string& bag_filename, const bool dump_timing) {
   rosbag::Bag bag;
   bag.open(bag_filename, rosbag::bagmode::Read);
@@ -141,6 +156,10 @@ void Run(const std::string& bag_filename, const bool dump_timing) {
       time = msg->header.stamp;
       frame_id = msg->header.frame_id;
       CheckOdometryMessage(*msg);
+    } else if (message.isType<tf2_msgs::TFMessage>()) {
+      auto msg = message.instantiate<tf2_msgs::TFMessage>();
+      CheckTfMessage(*msg);
+      continue;
     } else {
       continue;
     }
