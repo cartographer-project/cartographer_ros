@@ -21,6 +21,7 @@
 
 #include "cartographer/common/histogram.h"
 #include "cartographer/common/make_unique.h"
+#include "cartographer_ros/msg_conversion.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 #include "nav_msgs/Odometry.h"
@@ -76,6 +77,33 @@ std::unique_ptr<std::ofstream> CreateTimingFile(const std::string& frame_id) {
   return timing_file;
 }
 
+void CheckImuMessage(const sensor_msgs::Imu& imu_message) {
+  auto linear_acceleration = ToEigen(imu_message.linear_acceleration);
+  if (linear_acceleration.norm() < 5. || linear_acceleration.norm() > 15.) {
+    LOG_FIRST_N(ERROR, 3)
+        << "frame_id " << imu_message.header.frame_id << " time "
+        << imu_message.header.stamp.toNSec() << ": IMU linear acceleration is "
+        << linear_acceleration.norm() << " m/s^2,"
+        << " expected is [5., 15.] m/s^2."
+        << " (It should include gravity and be given in m/s^2.)"
+        << " linear_acceleration " << linear_acceleration;
+  }
+}
+
+bool IsValidPose(const geometry_msgs::Pose& pose) {
+  return ToRigid3d(pose).IsValid();
+}
+
+void CheckOdometryMessage(const nav_msgs::Odometry& message) {
+  const auto& pose = message.pose.pose;
+  if (!IsValidPose(pose)) {
+    LOG_FIRST_N(ERROR, 3) << "frame_id " << message.header.frame_id << " time "
+                          << message.header.stamp.toNSec()
+                          << ": Odometry pose is invalid."
+                          << " pose " << pose;
+  }
+}
+
 void Run(const std::string& bag_filename, const bool dump_timing) {
   rosbag::Bag bag;
   bag.open(bag_filename, rosbag::bagmode::Read);
@@ -103,10 +131,12 @@ void Run(const std::string& bag_filename, const bool dump_timing) {
       auto msg = message.instantiate<sensor_msgs::Imu>();
       time = msg->header.stamp;
       frame_id = msg->header.frame_id;
+      CheckImuMessage(*msg);
     } else if (message.isType<nav_msgs::Odometry>()) {
       auto msg = message.instantiate<nav_msgs::Odometry>();
       time = msg->header.stamp;
       frame_id = msg->header.frame_id;
+      CheckOdometryMessage(*msg);
     } else {
       continue;
     }
