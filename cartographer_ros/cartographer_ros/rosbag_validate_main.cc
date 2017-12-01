@@ -79,14 +79,14 @@ std::unique_ptr<std::ofstream> CreateTimingFile(const std::string& frame_id) {
 
 void CheckImuMessage(const sensor_msgs::Imu& imu_message) {
   auto linear_acceleration = ToEigen(imu_message.linear_acceleration);
-  if (linear_acceleration.norm() < 5. || linear_acceleration.norm() > 15.) {
-    LOG_FIRST_N(ERROR, 3)
+  if (linear_acceleration.norm() < 3. || linear_acceleration.norm() > 20.) {
+    LOG_FIRST_N(WARNING, 3)
         << "frame_id " << imu_message.header.frame_id << " time "
         << imu_message.header.stamp.toNSec() << ": IMU linear acceleration is "
         << linear_acceleration.norm() << " m/s^2,"
-        << " expected is [5., 15.] m/s^2."
+        << " expected is [3., 20.] m/s^2."
         << " (It should include gravity and be given in m/s^2.)"
-        << " linear_acceleration " << linear_acceleration;
+        << " linear_acceleration " << linear_acceleration.transpose();
   }
 }
 
@@ -111,6 +111,8 @@ void Run(const std::string& bag_filename, const bool dump_timing) {
 
   std::map<std::string, PerFrameId> per_frame_id;
   size_t message_index = 0;
+  int num_imu_messages = 0;
+  double sum_imu_acceleration = 0;
   for (const rosbag::MessageInstance& message : view) {
     ++message_index;
     std::string frame_id;
@@ -132,6 +134,8 @@ void Run(const std::string& bag_filename, const bool dump_timing) {
       time = msg->header.stamp;
       frame_id = msg->header.frame_id;
       CheckImuMessage(*msg);
+      num_imu_messages++;
+      sum_imu_acceleration += ToEigen(msg->linear_acceleration).norm();
     } else if (message.isType<nav_msgs::Odometry>()) {
       auto msg = message.instantiate<nav_msgs::Odometry>();
       time = msg->header.stamp;
@@ -179,6 +183,17 @@ void Run(const std::string& bag_filename, const bool dump_timing) {
     }
   }
   bag.close();
+
+  if (num_imu_messages > 0) {
+    double average_imu_acceleration = sum_imu_acceleration / num_imu_messages;
+    if (std::isnan(average_imu_acceleration) ||
+        average_imu_acceleration < 9.5 || average_imu_acceleration > 10.5) {
+      LOG(ERROR) << "Average IMU linear acceleration is "
+                 << average_imu_acceleration << " m/s^2,"
+                 << " expected is [9.5, 10.5] m/s^2. Linear acceleration data "
+                    "should include gravity and be given in m/s^2.";
+    }
+  }
 
   constexpr int kNumBucketsForHistogram = 10;
   for (const auto& entry_pair : per_frame_id) {
