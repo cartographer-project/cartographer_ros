@@ -55,6 +55,22 @@ struct FrameProperties {
   std::string data_type;
 };
 
+const double kMinLinearAcceleration = 3.;
+const double kMaxLinearAcceleration = 30.;
+const double kTimeDeltaSerializationSensorWarning = 0.1;
+const double kTimeDeltaSerializationSensorError = 0.5;
+const double kMinAverageAcceleration = 9.5;
+const double kMaxAverageAcceleration = 10.5;
+const double kMaxGapPointsData = 0.1;
+const double kMaxGapImuData = 0.05;
+const std::set<std::string> kPointDataTypes = {
+    std::string(
+        ros::message_traits::DataType<sensor_msgs::PointCloud2>::value()),
+    std::string(ros::message_traits::DataType<
+                sensor_msgs::MultiEchoLaserScan>::value()),
+    std::string(
+        ros::message_traits::DataType<sensor_msgs::LaserScan>::value())};
+
 std::unique_ptr<std::ofstream> CreateTimingFile(const std::string& frame_id) {
   auto timing_file = ::cartographer::common::make_unique<std::ofstream>(
       std::string("timing_") + frame_id + ".csv", std::ios_base::out);
@@ -82,12 +98,14 @@ std::unique_ptr<std::ofstream> CreateTimingFile(const std::string& frame_id) {
 void CheckImuMessage(const sensor_msgs::Imu& imu_message) {
   auto linear_acceleration = ToEigen(imu_message.linear_acceleration);
   if (std::isnan(linear_acceleration.norm()) ||
-      linear_acceleration.norm() < 3. || linear_acceleration.norm() > 30.) {
+      linear_acceleration.norm() < kMinLinearAcceleration ||
+      linear_acceleration.norm() > kMaxLinearAcceleration) {
     LOG_FIRST_N(WARNING, 3)
         << "frame_id " << imu_message.header.frame_id << " time "
         << imu_message.header.stamp.toNSec() << ": IMU linear acceleration is "
         << linear_acceleration.norm() << " m/s^2,"
-        << " expected is [3., 30.] m/s^2."
+        << " expected is [" << kMinLinearAcceleration << ", "
+        << kMaxLinearAcceleration << "] m/s^2."
         << " (It should include gravity and be given in m/s^2.)"
         << " linear_acceleration " << linear_acceleration.transpose();
   }
@@ -123,14 +141,7 @@ void CheckTfMessage(const tf2_msgs::TFMessage& message) {
 }
 
 bool IsPointDataType(const std::string& data_type) {
-  const std::set<std::string> point_data_types = {
-      std::string(
-          ros::message_traits::DataType<sensor_msgs::PointCloud2>::value()),
-      std::string(ros::message_traits::DataType<
-                  sensor_msgs::MultiEchoLaserScan>::value()),
-      std::string(
-          ros::message_traits::DataType<sensor_msgs::LaserScan>::value())};
-  return (point_data_types.count(data_type) != 0);
+  return (kPointDataTypes.count(data_type) != 0);
 }
 
 void Run(const std::string& bag_filename, const bool dump_timing) {
@@ -141,7 +152,7 @@ void Run(const std::string& bag_filename, const bool dump_timing) {
   std::map<std::string, FrameProperties> frame_id_to_properties;
   size_t message_index = 0;
   int num_imu_messages = 0;
-  double sum_imu_acceleration = 0;
+  double sum_imu_acceleration = 0.;
   for (const rosbag::MessageInstance& message : view) {
     ++message_index;
     std::string frame_id;
@@ -218,13 +229,15 @@ void Run(const std::string& bag_filename, const bool dump_timing) {
     }
 
     double duration_serialization_sensor = (time - message.getTime()).toSec();
-    if (std::abs(duration_serialization_sensor) > 0.1) {
+    if (std::abs(duration_serialization_sensor) >
+        kTimeDeltaSerializationSensorWarning) {
       std::stringstream stream;
       stream << "frame_id \"" << frame_id << "\" on topic "
              << message.getTopic() << " has serialization time "
              << message.getTime() << " but sensor time " << time
              << " differing by " << duration_serialization_sensor << " s.";
-      if (std::abs(duration_serialization_sensor) > 0.5) {
+      if (std::abs(duration_serialization_sensor) >
+          kTimeDeltaSerializationSensorError) {
         LOG_FIRST_N(ERROR, 3) << stream.str();
       } else {
         LOG_FIRST_N(WARNING, 1) << stream.str();
@@ -236,10 +249,13 @@ void Run(const std::string& bag_filename, const bool dump_timing) {
   if (num_imu_messages > 0) {
     double average_imu_acceleration = sum_imu_acceleration / num_imu_messages;
     if (std::isnan(average_imu_acceleration) ||
-        average_imu_acceleration < 9.5 || average_imu_acceleration > 10.5) {
+        average_imu_acceleration < kMinAverageAcceleration ||
+        average_imu_acceleration > kMaxAverageAcceleration) {
       LOG(ERROR) << "Average IMU linear acceleration is "
                  << average_imu_acceleration << " m/s^2,"
-                 << " expected is [9.5, 10.5] m/s^2. Linear acceleration data "
+                 << " expected is [" << kMinAverageAcceleration << ", "
+                 << kMaxAverageAcceleration
+                 << "] m/s^2. Linear acceleration data "
                     "should include gravity and be given in m/s^2.";
     }
   }
@@ -250,15 +266,16 @@ void Run(const std::string& bag_filename, const bool dump_timing) {
     float max_time_delta =
         *std::max_element(frame_properties.time_deltas.begin(),
                           frame_properties.time_deltas.end());
-    if (IsPointDataType(frame_properties.data_type) && max_time_delta > 0.1) {
-      LOG(ERROR) << "Point data \" (frame_id: \"" << entry_pair.first
+    if (IsPointDataType(frame_properties.data_type) &&
+        max_time_delta > kMaxGapPointsData) {
+      LOG(ERROR) << "Point data (frame_id: \"" << entry_pair.first
                  << "\") has a large gap, largest is " << max_time_delta
                  << " s, recommended is [0.0005, 0.05] s with no jitter.";
     }
     if (frame_properties.data_type ==
             ros::message_traits::DataType<sensor_msgs::Imu>::value() &&
-        max_time_delta > 0.05) {
-      LOG(ERROR) << "IMU data \" (frame_id: \"" << entry_pair.first
+        max_time_delta > kMaxGapImuData) {
+      LOG(ERROR) << "IMU data (frame_id: \"" << entry_pair.first
                  << "\") has a large gap, largest is " << max_time_delta
                  << " s, recommended is [0.0005, 0.005] s with no jitter.";
     }
