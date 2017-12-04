@@ -78,6 +78,9 @@ class MapBuilderBridge {
   SensorBridge* sensor_bridge(int trajectory_id);
 
  private:
+  cartographer::mapping::MapBuilder::LocalSlamResultCallback
+  CreateLocalSlamResultCallback();
+
   cartographer::common::Mutex mutex_;
   const NodeOptions node_options_;
   std::unordered_map<int, std::shared_ptr<const TrajectoryState::LocalSlamData>>
