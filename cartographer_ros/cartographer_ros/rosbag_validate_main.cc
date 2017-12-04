@@ -17,10 +17,12 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <set>
 #include <string>
 
 #include "cartographer/common/histogram.h"
 #include "cartographer/common/make_unique.h"
+#include "cartographer_ros/msg_conversion.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 #include "nav_msgs/Odometry.h"
@@ -45,12 +47,29 @@ DEFINE_bool(dump_timing, false,
 namespace cartographer_ros {
 namespace {
 
-struct PerFrameId {
+struct FrameProperties {
   ros::Time last_timestamp;
   std::string topic;
-  ::cartographer::common::Histogram histogram;
+  std::vector<float> time_deltas;
   std::unique_ptr<std::ofstream> timing_file;
+  std::string data_type;
 };
+
+const double kMinLinearAcceleration = 3.;
+const double kMaxLinearAcceleration = 30.;
+const double kTimeDeltaSerializationSensorWarning = 0.1;
+const double kTimeDeltaSerializationSensorError = 0.5;
+const double kMinAverageAcceleration = 9.5;
+const double kMaxAverageAcceleration = 10.5;
+const double kMaxGapPointsData = 0.1;
+const double kMaxGapImuData = 0.05;
+const std::set<std::string> kPointDataTypes = {
+    std::string(
+        ros::message_traits::DataType<sensor_msgs::PointCloud2>::value()),
+    std::string(ros::message_traits::DataType<
+                sensor_msgs::MultiEchoLaserScan>::value()),
+    std::string(
+        ros::message_traits::DataType<sensor_msgs::LaserScan>::value())};
 
 std::unique_ptr<std::ofstream> CreateTimingFile(const std::string& frame_id) {
   auto timing_file = ::cartographer::common::make_unique<std::ofstream>(
@@ -76,13 +95,64 @@ std::unique_ptr<std::ofstream> CreateTimingFile(const std::string& frame_id) {
   return timing_file;
 }
 
+void CheckImuMessage(const sensor_msgs::Imu& imu_message) {
+  auto linear_acceleration = ToEigen(imu_message.linear_acceleration);
+  if (std::isnan(linear_acceleration.norm()) ||
+      linear_acceleration.norm() < kMinLinearAcceleration ||
+      linear_acceleration.norm() > kMaxLinearAcceleration) {
+    LOG_FIRST_N(WARNING, 3)
+        << "frame_id " << imu_message.header.frame_id << " time "
+        << imu_message.header.stamp.toNSec() << ": IMU linear acceleration is "
+        << linear_acceleration.norm() << " m/s^2,"
+        << " expected is [" << kMinLinearAcceleration << ", "
+        << kMaxLinearAcceleration << "] m/s^2."
+        << " (It should include gravity and be given in m/s^2.)"
+        << " linear_acceleration " << linear_acceleration.transpose();
+  }
+}
+
+bool IsValidPose(const geometry_msgs::Pose& pose) {
+  return ToRigid3d(pose).IsValid();
+}
+
+void CheckOdometryMessage(const nav_msgs::Odometry& message) {
+  const auto& pose = message.pose.pose;
+  if (!IsValidPose(pose)) {
+    LOG_FIRST_N(ERROR, 3) << "frame_id " << message.header.frame_id << " time "
+                          << message.header.stamp.toNSec()
+                          << ": Odometry pose is invalid."
+                          << " pose " << pose;
+  }
+}
+
+void CheckTfMessage(const tf2_msgs::TFMessage& message) {
+  for (const auto& transform : message.transforms) {
+    if (transform.header.frame_id == "map") {
+      LOG_FIRST_N(ERROR, 1)
+          << "Input contains transform message from frame_id \""
+          << transform.header.frame_id << "\" to child_frame_id \""
+          << transform.child_frame_id
+          << "\". This is almost always output published by cartographer and "
+             "should not appear as input. (Unless you have some complex "
+             "remove_frames configuration, this is will not work. Simplest "
+             "solution is to record input without cartographer running.)";
+    }
+  }
+}
+
+bool IsPointDataType(const std::string& data_type) {
+  return (kPointDataTypes.count(data_type) != 0);
+}
+
 void Run(const std::string& bag_filename, const bool dump_timing) {
   rosbag::Bag bag;
   bag.open(bag_filename, rosbag::bagmode::Read);
   rosbag::View view(bag);
 
-  std::map<std::string, PerFrameId> per_frame_id;
+  std::map<std::string, FrameProperties> frame_id_to_properties;
   size_t message_index = 0;
+  int num_imu_messages = 0;
+  double sum_imu_acceleration = 0.;
   for (const rosbag::MessageInstance& message : view) {
     ++message_index;
     std::string frame_id;
@@ -103,41 +173,51 @@ void Run(const std::string& bag_filename, const bool dump_timing) {
       auto msg = message.instantiate<sensor_msgs::Imu>();
       time = msg->header.stamp;
       frame_id = msg->header.frame_id;
+      CheckImuMessage(*msg);
+      num_imu_messages++;
+      sum_imu_acceleration += ToEigen(msg->linear_acceleration).norm();
     } else if (message.isType<nav_msgs::Odometry>()) {
       auto msg = message.instantiate<nav_msgs::Odometry>();
       time = msg->header.stamp;
       frame_id = msg->header.frame_id;
+      CheckOdometryMessage(*msg);
+    } else if (message.isType<tf2_msgs::TFMessage>()) {
+      auto msg = message.instantiate<tf2_msgs::TFMessage>();
+      CheckTfMessage(*msg);
+      continue;
     } else {
       continue;
     }
 
     bool first_packet = false;
-    if (!per_frame_id.count(frame_id)) {
-      per_frame_id.emplace(
+    if (!frame_id_to_properties.count(frame_id)) {
+      frame_id_to_properties.emplace(
           frame_id,
-          PerFrameId{time, message.getTopic(),
-                     ::cartographer::common::Histogram(),
-                     dump_timing ? CreateTimingFile(frame_id) : nullptr});
+          FrameProperties{time, message.getTopic(), std::vector<float>(),
+                          dump_timing ? CreateTimingFile(frame_id) : nullptr,
+                          message.getDataType()});
       first_packet = true;
     }
 
-    auto& entry = per_frame_id.at(frame_id);
+    auto& entry = frame_id_to_properties.at(frame_id);
     if (!first_packet) {
       const double delta_t_sec = (time - entry.last_timestamp).toSec();
       if (delta_t_sec < 0) {
-        LOG(ERROR) << "Sensor with frame_id \"" << frame_id
-                   << "\" jumps backwards in time. Make sure that the bag "
-                      "contains the data for each frame_id sorted by "
-                      "header.stamp, i.e. the order in which they were "
-                      "acquired from the sensor.";
+        LOG_FIRST_N(ERROR, 3)
+            << "Sensor with frame_id \"" << frame_id
+            << "\" jumps backwards in time. Make sure that the bag "
+               "contains the data for each frame_id sorted by "
+               "header.stamp, i.e. the order in which they were "
+               "acquired from the sensor.";
       }
-      entry.histogram.Add(delta_t_sec);
+      entry.time_deltas.push_back(delta_t_sec);
     }
 
     if (entry.topic != message.getTopic()) {
-      LOG(ERROR) << "frame_id \"" << frame_id
-                 << "\" is send on multiple topics. It was seen at least on "
-                 << entry.topic << " and " << message.getTopic();
+      LOG_FIRST_N(ERROR, 3)
+          << "frame_id \"" << frame_id
+          << "\" is send on multiple topics. It was seen at least on "
+          << entry.topic << " and " << message.getTopic();
     }
     entry.last_timestamp = time;
 
@@ -147,19 +227,71 @@ void Run(const std::string& bag_filename, const bool dump_timing) {
                            << message.getTime().toNSec() << "\t"
                            << time.toNSec() << std::endl;
     }
+
+    double duration_serialization_sensor = (time - message.getTime()).toSec();
+    if (std::abs(duration_serialization_sensor) >
+        kTimeDeltaSerializationSensorWarning) {
+      std::stringstream stream;
+      stream << "frame_id \"" << frame_id << "\" on topic "
+             << message.getTopic() << " has serialization time "
+             << message.getTime() << " but sensor time " << time
+             << " differing by " << duration_serialization_sensor << " s.";
+      if (std::abs(duration_serialization_sensor) >
+          kTimeDeltaSerializationSensorError) {
+        LOG_FIRST_N(ERROR, 3) << stream.str();
+      } else {
+        LOG_FIRST_N(WARNING, 1) << stream.str();
+      }
+    }
   }
   bag.close();
 
+  if (num_imu_messages > 0) {
+    double average_imu_acceleration = sum_imu_acceleration / num_imu_messages;
+    if (std::isnan(average_imu_acceleration) ||
+        average_imu_acceleration < kMinAverageAcceleration ||
+        average_imu_acceleration > kMaxAverageAcceleration) {
+      LOG(ERROR) << "Average IMU linear acceleration is "
+                 << average_imu_acceleration << " m/s^2,"
+                 << " expected is [" << kMinAverageAcceleration << ", "
+                 << kMaxAverageAcceleration
+                 << "] m/s^2. Linear acceleration data "
+                    "should include gravity and be given in m/s^2.";
+    }
+  }
+
   constexpr int kNumBucketsForHistogram = 10;
-  for (const auto& entry_pair : per_frame_id) {
+  for (const auto& entry_pair : frame_id_to_properties) {
+    const FrameProperties& frame_properties = entry_pair.second;
+    float max_time_delta =
+        *std::max_element(frame_properties.time_deltas.begin(),
+                          frame_properties.time_deltas.end());
+    if (IsPointDataType(frame_properties.data_type) &&
+        max_time_delta > kMaxGapPointsData) {
+      LOG(ERROR) << "Point data (frame_id: \"" << entry_pair.first
+                 << "\") has a large gap, largest is " << max_time_delta
+                 << " s, recommended is [0.0005, 0.05] s with no jitter.";
+    }
+    if (frame_properties.data_type ==
+            ros::message_traits::DataType<sensor_msgs::Imu>::value() &&
+        max_time_delta > kMaxGapImuData) {
+      LOG(ERROR) << "IMU data (frame_id: \"" << entry_pair.first
+                 << "\") has a large gap, largest is " << max_time_delta
+                 << " s, recommended is [0.0005, 0.005] s with no jitter.";
+    }
+
+    cartographer::common::Histogram histogram;
+    for (float time_delta : frame_properties.time_deltas) {
+      histogram.Add(time_delta);
+    }
     LOG(INFO) << "Time delta histogram for consecutive messages on topic \""
-              << entry_pair.second.topic << "\" (frame_id: \""
+              << frame_properties.topic << "\" (frame_id: \""
               << entry_pair.first << "\"):\n"
-              << entry_pair.second.histogram.ToString(kNumBucketsForHistogram);
+              << histogram.ToString(kNumBucketsForHistogram);
   }
 
   if (dump_timing) {
-    for (const auto& entry_pair : per_frame_id) {
+    for (const auto& entry_pair : frame_id_to_properties) {
       entry_pair.second.timing_file->close();
       CHECK(*entry_pair.second.timing_file)
           << "Could not write timing information for \"" << entry_pair.first
