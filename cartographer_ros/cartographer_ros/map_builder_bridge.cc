@@ -79,7 +79,10 @@ int MapBuilderBridge::AddTrajectory(
     const TrajectoryOptions& trajectory_options) {
   const int trajectory_id = map_builder_.AddTrajectoryBuilder(
       expected_sensor_ids, trajectory_options.trajectory_builder_options,
-      CreateLocalSlamResultCallback());
+      ::std::bind(&MapBuilderBridge::OnLocalSlamResult, this,
+                  ::std::placeholders::_1, ::std::placeholders::_2,
+                  ::std::placeholders::_3, ::std::placeholders::_4,
+                  ::std::placeholders::_5));
   LOG(INFO) << "Added trajectory with ID '" << trajectory_id << "'.";
 
   // Make sure there is no trajectory with 'trajectory_id' yet.
@@ -320,22 +323,17 @@ SensorBridge* MapBuilderBridge::sensor_bridge(const int trajectory_id) {
   return sensor_bridges_.at(trajectory_id).get();
 }
 
-cartographer::mapping::MapBuilder::LocalSlamResultCallback
-MapBuilderBridge::CreateLocalSlamResultCallback() {
-  return cartographer::mapping::MapBuilder::LocalSlamResultCallback(
-      [this](const int trajectory_id, const ::cartographer::common::Time time,
-             const ::cartographer::transform::Rigid3d local_pose,
-             ::cartographer::sensor::RangeData range_data_in_local,
-             const std::unique_ptr<const ::cartographer::mapping::NodeId>)
-          EXCLUDES(mutex_) {
-            std::shared_ptr<const TrajectoryState::LocalSlamData>
-                local_slam_data =
-                    std::make_shared<TrajectoryState::LocalSlamData>(
-                        TrajectoryState::LocalSlamData{
-                            time, local_pose, std::move(range_data_in_local)});
-            cartographer::common::MutexLocker lock(&mutex_);
-            trajectory_state_data_[trajectory_id] = std::move(local_slam_data);
-          });
+void MapBuilderBridge::OnLocalSlamResult(
+    const int trajectory_id, const ::cartographer::common::Time time,
+    const ::cartographer::transform::Rigid3d local_pose,
+    ::cartographer::sensor::RangeData range_data_in_local,
+    const std::unique_ptr<const ::cartographer::mapping::NodeId>) {
+  std::shared_ptr<const TrajectoryState::LocalSlamData> local_slam_data =
+      std::make_shared<TrajectoryState::LocalSlamData>(
+          TrajectoryState::LocalSlamData{time, local_pose,
+                                         std::move(range_data_in_local)});
+  cartographer::common::MutexLocker lock(&mutex_);
+  trajectory_state_data_[trajectory_id] = std::move(local_slam_data);
 }
 
 }  // namespace cartographer_ros

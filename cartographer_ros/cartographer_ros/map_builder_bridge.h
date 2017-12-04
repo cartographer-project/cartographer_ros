@@ -78,8 +78,12 @@ class MapBuilderBridge {
   SensorBridge* sensor_bridge(int trajectory_id);
 
  private:
-  cartographer::mapping::MapBuilder::LocalSlamResultCallback
-  CreateLocalSlamResultCallback();
+  void OnLocalSlamResult(
+      const int trajectory_id, const ::cartographer::common::Time time,
+      const ::cartographer::transform::Rigid3d local_pose,
+      ::cartographer::sensor::RangeData range_data_in_local,
+      const std::unique_ptr<const ::cartographer::mapping::NodeId>)
+      EXCLUDES(mutex_);
 
   cartographer::common::Mutex mutex_;
   const NodeOptions node_options_;
