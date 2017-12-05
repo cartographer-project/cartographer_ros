@@ -15,7 +15,6 @@
  */
 
 #include <fstream>
-#include <functional>
 #include <iostream>
 #include <map>
 #include <set>
@@ -150,30 +149,30 @@ class RangeDataChecker {
   template <typename MessageType>
   void CheckMessage(const MessageType& message) {
     const std::string& frame_id = message.header.frame_id;
-    RangeSignature current_signature = ComputeRangeSignature(message);
-    if (current_signature.first == 0) {
+    RangeChecksum current_checksum = ComputeRangeChecksum(message);
+    if (current_checksum.first == 0) {
       return;
     }
-    auto it = frame_id_to_range_signature.find(frame_id);
-    if (it != frame_id_to_range_signature.end()) {
-      RangeSignature previous_signature = it->second;
-      if (previous_signature == current_signature) {
-        ros::Time time = message.header.stamp;
+    auto it = frame_id_to_range_checksum.find(frame_id);
+    if (it != frame_id_to_range_checksum.end()) {
+      RangeChecksum previous_checksum = it->second;
+      if (previous_checksum == current_checksum) {
         LOG_FIRST_N(ERROR, 3)
-          << "Sensor with frame_id \"" << frame_id
-          << "\" sends exactly the same range measurements multiple times. "
-          << "Range data at time " << time << " equals preceding data.";
+            << "Sensor with frame_id \"" << frame_id
+            << "\" sends exactly the same range measurements multiple times. "
+            << "Range data at time " << message.header.stamp
+            << " equals preceding data.";
       }
     }
-    frame_id_to_range_signature[frame_id] = current_signature;
+    frame_id_to_range_checksum[frame_id] = current_checksum;
   }
 
  private:
   typedef std::pair<size_t /* num_points */, Eigen::Vector4f /* points_sum */>
-      RangeSignature;
+      RangeChecksum;
 
   template <typename MessageType>
-  RangeSignature ComputeRangeSignature(const MessageType& message) {
+  RangeChecksum ComputeRangeChecksum(const MessageType& message) {
     const cartographer::sensor::TimedPointCloud& point_cloud =
         ToPointCloudWithIntensities(message).points;
     Eigen::Vector4f points_sum = Eigen::Vector4f::Zero();
@@ -183,7 +182,7 @@ class RangeDataChecker {
     return {point_cloud.size(), points_sum};
   }
 
-  std::map<std::string, RangeSignature> frame_id_to_range_signature;
+  std::map<std::string, RangeChecksum> frame_id_to_range_checksum;
 };
 
 void Run(const std::string& bag_filename, const bool dump_timing) {
