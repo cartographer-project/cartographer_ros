@@ -153,8 +153,8 @@ class RangeDataChecker {
     if (current_checksum.first == 0) {
       return;
     }
-    auto it = frame_id_to_range_checksum.find(frame_id);
-    if (it != frame_id_to_range_checksum.end()) {
+    auto it = frame_id_to_range_checksum_.find(frame_id);
+    if (it != frame_id_to_range_checksum_.end()) {
       RangeChecksum previous_checksum = it->second;
       if (previous_checksum == current_checksum) {
         LOG_FIRST_N(ERROR, 3)
@@ -164,7 +164,7 @@ class RangeDataChecker {
             << " equals preceding data.";
       }
     }
-    frame_id_to_range_checksum[frame_id] = current_checksum;
+    frame_id_to_range_checksum_[frame_id] = current_checksum;
   }
 
  private:
@@ -182,7 +182,7 @@ class RangeDataChecker {
     return {point_cloud.size(), points_sum};
   }
 
-  std::map<std::string, RangeChecksum> frame_id_to_range_checksum;
+  std::map<std::string, RangeChecksum> frame_id_to_range_checksum_;
 };
 
 void Run(const std::string& bag_filename, const bool dump_timing) {
