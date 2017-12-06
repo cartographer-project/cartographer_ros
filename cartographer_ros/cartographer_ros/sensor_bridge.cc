@@ -43,11 +43,10 @@ SensorBridge::SensorBridge(
     const int num_subdivisions_per_laser_scan,
     const std::string& tracking_frame,
     const double lookup_transform_timeout_sec, tf2_ros::Buffer* const tf_buffer,
-    carto::mapping::GlobalTrajectoryBuilderInterface* const
-        global_trajectory_builder)
+    carto::mapping::TrajectoryBuilderInterface* const trajectory_builder)
     : num_subdivisions_per_laser_scan_(num_subdivisions_per_laser_scan),
       tf_bridge_(tracking_frame, lookup_transform_timeout_sec, tf_buffer),
-      global_trajectory_builder_(global_trajectory_builder) {}
+      trajectory_builder_(trajectory_builder) {}
 
 std::unique_ptr<::cartographer::sensor::OdometryData>
 SensorBridge::ToOdometryData(const nav_msgs::Odometry::ConstPtr& msg) {
@@ -68,7 +67,7 @@ void SensorBridge::HandleOdometryMessage(
   std::unique_ptr<::cartographer::sensor::OdometryData> odometry_data =
       ToOdometryData(msg);
   if (odometry_data != nullptr) {
-    global_trajectory_builder_->AddSensorData(
+    trajectory_builder_->AddSensorData(
         sensor_id, cartographer::sensor::OdometryData{odometry_data->time,
                                                       odometry_data->pose});
   }
@@ -108,7 +107,7 @@ void SensorBridge::HandleImuMessage(const std::string& sensor_id,
                                     const sensor_msgs::Imu::ConstPtr& msg) {
   std::unique_ptr<::cartographer::sensor::ImuData> imu_data = ToImuData(msg);
   if (imu_data != nullptr) {
-    global_trajectory_builder_->AddSensorData(
+    trajectory_builder_->AddSensorData(
         sensor_id, cartographer::sensor::ImuData{imu_data->time,
                                                  imu_data->linear_acceleration,
                                                  imu_data->angular_velocity});
@@ -172,7 +171,7 @@ void SensorBridge::HandleRangefinder(
   const auto sensor_to_tracking =
       tf_bridge_.LookupToTracking(time, CheckNoLeadingSlash(frame_id));
   if (sensor_to_tracking != nullptr) {
-    global_trajectory_builder_->AddSensorData(
+    trajectory_builder_->AddSensorData(
         sensor_id, cartographer::sensor::TimedPointCloudData{
                        time, sensor_to_tracking->translation().cast<float>(),
                        carto::sensor::TransformTimedPointCloud(
