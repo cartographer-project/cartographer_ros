@@ -144,6 +144,47 @@ bool IsPointDataType(const std::string& data_type) {
   return (kPointDataTypes.count(data_type) != 0);
 }
 
+class RangeDataChecker {
+ public:
+  template <typename MessageType>
+  void CheckMessage(const MessageType& message) {
+    const std::string& frame_id = message.header.frame_id;
+    RangeChecksum current_checksum = ComputeRangeChecksum(message);
+    if (current_checksum.first == 0) {
+      return;
+    }
+    auto it = frame_id_to_range_checksum_.find(frame_id);
+    if (it != frame_id_to_range_checksum_.end()) {
+      RangeChecksum previous_checksum = it->second;
+      if (previous_checksum == current_checksum) {
+        LOG_FIRST_N(ERROR, 3)
+            << "Sensor with frame_id \"" << frame_id
+            << "\" sends exactly the same range measurements multiple times. "
+            << "Range data at time " << message.header.stamp
+            << " equals preceding data.";
+      }
+    }
+    frame_id_to_range_checksum_[frame_id] = current_checksum;
+  }
+
+ private:
+  typedef std::pair<size_t /* num_points */, Eigen::Vector4f /* points_sum */>
+      RangeChecksum;
+
+  template <typename MessageType>
+  RangeChecksum ComputeRangeChecksum(const MessageType& message) {
+    const cartographer::sensor::TimedPointCloud& point_cloud =
+        ToPointCloudWithIntensities(message).points;
+    Eigen::Vector4f points_sum = Eigen::Vector4f::Zero();
+    for (const auto& point : point_cloud) {
+      points_sum += point;
+    }
+    return {point_cloud.size(), points_sum};
+  }
+
+  std::map<std::string, RangeChecksum> frame_id_to_range_checksum_;
+};
+
 void Run(const std::string& bag_filename, const bool dump_timing) {
   rosbag::Bag bag;
   bag.open(bag_filename, rosbag::bagmode::Read);
@@ -153,6 +194,7 @@ void Run(const std::string& bag_filename, const bool dump_timing) {
   size_t message_index = 0;
   int num_imu_messages = 0;
   double sum_imu_acceleration = 0.;
+  RangeDataChecker range_data_checker;
   for (const rosbag::MessageInstance& message : view) {
     ++message_index;
     std::string frame_id;
@@ -161,14 +203,17 @@ void Run(const std::string& bag_filename, const bool dump_timing) {
       auto msg = message.instantiate<sensor_msgs::PointCloud2>();
       time = msg->header.stamp;
       frame_id = msg->header.frame_id;
+      range_data_checker.CheckMessage(*msg);
     } else if (message.isType<sensor_msgs::MultiEchoLaserScan>()) {
       auto msg = message.instantiate<sensor_msgs::MultiEchoLaserScan>();
       time = msg->header.stamp;
       frame_id = msg->header.frame_id;
+      range_data_checker.CheckMessage(*msg);
     } else if (message.isType<sensor_msgs::LaserScan>()) {
       auto msg = message.instantiate<sensor_msgs::LaserScan>();
       time = msg->header.stamp;
       frame_id = msg->header.frame_id;
+      range_data_checker.CheckMessage(*msg);
     } else if (message.isType<sensor_msgs::Imu>()) {
       auto msg = message.instantiate<sensor_msgs::Imu>();
       time = msg->header.stamp;

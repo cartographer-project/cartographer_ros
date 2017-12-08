@@ -42,7 +42,7 @@ void WriteYaml(const double resolution, const Eigen::Vector2d& origin,
       "image: " + pgm_filename + "\n" +
       "resolution: " + std::to_string(resolution) + "\n" + "origin: [" +
       std::to_string(origin.x()) + ", " + std::to_string(origin.y()) +
-      ", 0.]\nnegate: 0\noccupied_thresh: 0.65\nfree_thresh: 0.196\n";
+      ", 0.0]\nnegate: 0\noccupied_thresh: 0.65\nfree_thresh: 0.196\n";
   file_writer->Write(output.data(), output.size());
 }
 
