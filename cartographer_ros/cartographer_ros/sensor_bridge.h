@@ -19,7 +19,7 @@
 
 #include <memory>
 
-#include "cartographer/mapping/trajectory_builder.h"
+#include "cartographer/mapping/trajectory_builder_interface.h"
 #include "cartographer/sensor/imu_data.h"
 #include "cartographer/sensor/odometry_data.h"
 #include "cartographer/transform/rigid_transform.h"
@@ -42,7 +42,7 @@ class SensorBridge {
   explicit SensorBridge(
       int num_subdivisions_per_laser_scan, const std::string& tracking_frame,
       double lookup_transform_timeout_sec, tf2_ros::Buffer* tf_buffer,
-      ::cartographer::mapping::TrajectoryBuilder* trajectory_builder);
+      ::cartographer::mapping::TrajectoryBuilderInterface* trajectory_builder);
 
   SensorBridge(const SensorBridge&) = delete;
   SensorBridge& operator=(const SensorBridge&) = delete;
@@ -77,7 +77,8 @@ class SensorBridge {
 
   const int num_subdivisions_per_laser_scan_;
   const TfBridge tf_bridge_;
-  ::cartographer::mapping::TrajectoryBuilder* const trajectory_builder_;
+  ::cartographer::mapping::TrajectoryBuilderInterface* const
+      trajectory_builder_;
 };
 
 }  // namespace cartographer_ros
