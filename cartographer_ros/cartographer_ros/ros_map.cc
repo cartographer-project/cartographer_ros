@@ -52,8 +52,10 @@ std::unique_ptr<nav_msgs::OccupancyGrid> CreateOccupancyGridMsg(
       const uint32_t packed = pixel_data[y * width + x];
       const unsigned char color = packed >> 16;
       const unsigned char observed = packed >> 8;
-      const int value = observed == 0 ? -1 : ::cartographer::common::RoundToInt(
-                                                 (1. - color / 255.) * 100.);
+      const int value =
+          observed == 0
+              ? -1
+              : ::cartographer::common::RoundToInt((1. - color / 255.) * 100.);
       CHECK_LE(-1, value);
       CHECK_GE(100, value);
       occupancy_grid->data.push_back(value);
@@ -84,8 +86,8 @@ void WriteYaml(const double resolution, const Eigen::Vector2d& origin,
   // Magic constants taken directly from ros map_saver code:
   // https://github.com/ros-planning/navigation/blob/ac41d2480c4cf1602daf39a6e9629142731d92b0/map_server/src/map_saver.cpp#L114
   const std::string output =
-      "image: " + pgm_filename + "\n" + "resolution: " +
-      std::to_string(resolution) + "\n" + "origin: [" +
+      "image: " + pgm_filename + "\n" +
+      "resolution: " + std::to_string(resolution) + "\n" + "origin: [" +
       std::to_string(origin.x()) + ", " + std::to_string(origin.y()) +
       ", 0.0]\nnegate: 0\noccupied_thresh: 0.65\nfree_thresh: 0.196\n";
   file_writer->Write(output.data(), output.size());
