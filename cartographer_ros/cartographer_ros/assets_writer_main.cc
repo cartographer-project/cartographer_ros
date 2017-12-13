@@ -87,13 +87,15 @@ std::unique_ptr<carto::io::PointsBatch> HandleMessage(
   points_batch->start_time = start_time;
   points_batch->frame_id = message.header.frame_id;
 
-  carto::sensor::PointCloudWithIntensities point_cloud =
+  ::cartographer::sensor::PointCloudWithIntensities point_cloud;
+  ::cartographer::common::Time point_cloud_time;
+  std::tie(point_cloud, point_cloud_time) =
       ToPointCloudWithIntensities(message);
   CHECK_EQ(point_cloud.intensities.size(), point_cloud.points.size());
 
   for (size_t i = 0; i < point_cloud.points.size(); ++i) {
     const carto::common::Time time =
-        start_time + carto::common::FromSeconds(point_cloud.points[i][3]);
+        point_cloud_time + carto::common::FromSeconds(point_cloud.points[i][3]);
     if (!transform_interpolation_buffer.Has(time)) {
       continue;
     }

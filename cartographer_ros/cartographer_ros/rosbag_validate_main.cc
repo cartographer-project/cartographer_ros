@@ -174,7 +174,7 @@ class RangeDataChecker {
   template <typename MessageType>
   RangeChecksum ComputeRangeChecksum(const MessageType& message) {
     const cartographer::sensor::TimedPointCloud& point_cloud =
-        ToPointCloudWithIntensities(message).points;
+        std::get<0>(ToPointCloudWithIntensities(message)).points;
     Eigen::Vector4f points_sum = Eigen::Vector4f::Zero();
     for (const auto& point : point_cloud) {
       points_sum += point;
