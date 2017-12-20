@@ -38,6 +38,7 @@ set(PACKAGE_DEPENDENCIES
 find_package(cartographer REQUIRED)
 include("${CARTOGRAPHER_CMAKE_DIR}/functions.cmake")
 set(BUILD_SHARED_LIBS OFF)
+option(BUILD_GRPC "build features that require Cartographer gRPC support" false)
 google_initialize_cartographer_project()
 google_enable_testing()
 
@@ -84,8 +85,14 @@ catkin_package(
 file(GLOB_RECURSE ALL_SRCS "*.cc" "*.h")
 file(GLOB_RECURSE ALL_TESTS "*_test.cc")
 file(GLOB_RECURSE ALL_EXECUTABLES "*_main.cc")
+file(GLOB_RECURSE ALL_GRPC_FILES "cartographer_ros/cartographer_grpc/*")
 list(REMOVE_ITEM ALL_SRCS ${ALL_TESTS})
 list(REMOVE_ITEM ALL_SRCS ${ALL_EXECUTABLES})
+if (NOT ${BUILD_GRPC})
+  list(REMOVE_ITEM ALL_SRCS ${ALL_GRPC_FILES})
+  list(REMOVE_ITEM ALL_TESTS ${ALL_GRPC_FILES})
+  list(REMOVE_ITEM ALL_EXECUTABLES ${ALL_GRPC_FILES})
+endif()
 add_library(${PROJECT_NAME} ${ALL_SRCS})
 add_subdirectory("cartographer_ros")
 
