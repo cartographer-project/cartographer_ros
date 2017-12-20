@@ -38,7 +38,7 @@ set(PACKAGE_DEPENDENCIES
 find_package(cartographer REQUIRED)
 include("${CARTOGRAPHER_CMAKE_DIR}/functions.cmake")
 set(BUILD_SHARED_LIBS OFF)
-option(BUILD_GRPC "build Cartographer gRPC support" false)
+option(BUILD_GRPC "build features that require Cartographer gRPC support" false)
 google_initialize_cartographer_project()
 google_enable_testing()
 
