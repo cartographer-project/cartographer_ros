@@ -91,7 +91,7 @@ install(TARGETS cartographer_pbstream_to_ros_map
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-// TODO: Add support for shared libary case.
+# TODO: Add support for shared libary case.
 if (${BUILD_GRPC})
   google_binary(cartographer_grpc_node
     SRCS
