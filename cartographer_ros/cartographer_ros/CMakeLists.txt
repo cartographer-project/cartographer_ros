@@ -98,7 +98,7 @@ if (${BUILD_GRPC})
       cartographer_grpc/node_grpc_main.cc
   )
 
-  install(TARGETS cartographer_node_grpc
+  install(TARGETS cartographer_grpc_node
     ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
     LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
