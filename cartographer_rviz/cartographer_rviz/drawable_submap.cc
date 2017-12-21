@@ -134,7 +134,7 @@ bool DrawableSubmap::MaybeFetchTexture(ros::ServiceClient* const client) {
   query_in_progress_ = true;
   last_query_timestamp_ = now;
   rpc_request_future_ = std::async(std::launch::async, [this, client]() {
-    std::unique_ptr<::cartographer_ros::SubmapTextures> submap_textures =
+    std::unique_ptr<::cartographer::io::SubmapTextures> submap_textures =
         ::cartographer_ros::FetchSubmapTextures(id_, client);
     ::cartographer::common::MutexLocker locker(&mutex_);
     query_in_progress_ = false;

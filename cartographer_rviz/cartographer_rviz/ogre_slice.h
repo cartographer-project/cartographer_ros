@@ -27,7 +27,7 @@
 #include "OgreTexture.h"
 #include "OgreVector3.h"
 #include "cartographer/mapping/id.h"
-#include "cartographer_ros/submap.h"
+#include "cartographer/io/submap_painter.h"
 
 namespace cartographer_rviz {
 
@@ -50,7 +50,7 @@ class OgreSlice {
 
   // Updates the texture and pose of the submap using new data from
   // 'submap_texture'.
-  void Update(const ::cartographer_ros::SubmapTexture& submap_texture);
+  void Update(const ::cartographer::io::SubmapTexture& submap_texture);
 
   // Changes the opacity of the submap to 'alpha'.
   void SetAlpha(float alpha);
