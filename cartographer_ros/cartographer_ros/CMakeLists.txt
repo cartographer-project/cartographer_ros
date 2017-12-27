@@ -58,6 +58,17 @@ install(TARGETS cartographer_start_trajectory
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
+google_binary(cartographer_start_trajectory_initial_pose
+  SRCS
+    start_trajectory_initial_pose_main.cc
+)
+
+install(TARGETS cartographer_start_trajectory_initial_pose
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 google_binary(cartographer_occupancy_grid_node
   SRCS
     occupancy_grid_node_main.cc
