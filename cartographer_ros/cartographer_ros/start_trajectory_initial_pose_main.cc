@@ -40,14 +40,11 @@ DEFINE_string(configuration_basename, "",
               "Basename, i.e. not containing any directory prefix, of the "
               "configuration file.");
 
-DEFINE_string(initial_pose, "", "Starting pose of a new trajectory");
-
 namespace cartographer_ros {
 namespace {
 
 boost::shared_ptr<ros::NodeHandle> nh;
 ros::Subscriber initialPoseSub;
-int id_to_finish=1;
 
 TrajectoryOptions LoadOptions(const geometry_msgs::PoseWithCovarianceStamped pose_msg) {
   std::string initial_pose=
@@ -94,7 +91,7 @@ void HandleInitialPose(const geometry_msgs::PoseWithCovarianceStamped pose_msg){
         nh->serviceClient<cartographer_ros_msgs::FinishTrajectory>(
             kFinishTrajectoryServiceName);
     cartographer_ros_msgs::FinishTrajectory srv_finish;
-    id_to_finish=1;
+    int id_to_finish=1;
     srv_finish.request.trajectory_id=id_to_finish;
     bool trajectoryMaxIdReached=false;
     int trajectoryMaxID=100;
@@ -128,10 +125,10 @@ void HandleInitialPose(const geometry_msgs::PoseWithCovarianceStamped pose_msg){
       }
       LOG(INFO) << "Started trajectory " << srv_start.response.trajectory_id;
     }else{
-      ROS_INFO("Could not finish previous trajectory");
+      ROS_ERROR("Could not finish previous trajectory");
     }
   }else{
-    ROS_INFO("Pose needs to be specified in map frame");
+    ROS_ERROR("Pose needs to be specified in map frame");
   }
 }
 
