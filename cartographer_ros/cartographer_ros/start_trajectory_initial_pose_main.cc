@@ -66,20 +66,17 @@ TrajectoryOptions LoadOptions(const geometry_msgs::PoseWithCovarianceStamped pos
   auto lua_parameter_dictionary =
       cartographer::common::LuaParameterDictionary::NonReferenceCounted(
           code, std::move(file_resolver));
-  if (!FLAGS_initial_pose.empty()) {
-    auto initial_trajectory_pose_file_resolver =
-        cartographer::common::make_unique<
-            cartographer::common::ConfigurationFileResolver>(
-            std::vector<std::string>{FLAGS_configuration_directory});
-    auto initial_trajectory_pose =
-        cartographer::common::LuaParameterDictionary::NonReferenceCounted(
-            "return " + initial_pose,
-            std::move(initial_trajectory_pose_file_resolver));
-    return CreateTrajectoryOptions(lua_parameter_dictionary.get(),
-                                   initial_trajectory_pose.get());
-  } else {
-    return CreateTrajectoryOptions(lua_parameter_dictionary.get());
-  }
+
+  auto initial_trajectory_pose_file_resolver =
+      cartographer::common::make_unique<
+          cartographer::common::ConfigurationFileResolver>(
+          std::vector<std::string>{FLAGS_configuration_directory});
+  auto initial_trajectory_pose =
+      cartographer::common::LuaParameterDictionary::NonReferenceCounted(
+          "return " + initial_pose,
+          std::move(initial_trajectory_pose_file_resolver));
+  return CreateTrajectoryOptions(lua_parameter_dictionary.get(),
+                                 initial_trajectory_pose.get());
 }
 
 
