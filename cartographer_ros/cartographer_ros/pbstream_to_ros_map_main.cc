@@ -26,15 +26,22 @@
 #include "cartographer/mapping_2d/probability_grid.h"
 #include "cartographer/mapping_2d/submaps.h"
 #include "cartographer/mapping_3d/submaps.h"
+#include "cartographer_ros/node_constants.h"
+#include "cartographer_ros/ros_log_sink.h"
 #include "cartographer_ros/ros_map.h"
 #include "cartographer_ros/submap.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
+#include "ros/ros.h"
 
 DEFINE_string(pbstream_filename, "",
               "Filename of a pbstream to draw a map from.");
 DEFINE_string(map_filestem, "map", "Stem of the output files.");
 DEFINE_double(resolution, 0.05, "Resolution of a grid cell in the drawn map.");
+
+// Hacky way of providing online map from pbstream
+DEFINE_bool(publish_map, false, "Provide map topic instead of exporting");
+DEFINE_string(frame_id, "map", "Frame id");
 
 namespace cartographer_ros {
 namespace {
@@ -103,17 +110,29 @@ void Run(const std::string& pbstream_filename, const std::string& map_filestem,
   auto result =
       ::cartographer::io::PaintSubmapSlices(submap_slices, resolution);
 
-  ::cartographer::io::StreamFileWriter pgm_writer(map_filestem + ".pgm");
+  if (FLAGS_publish_map) {
+    ::ros::NodeHandle n("");
+    auto msg =
+        CreateOccupancyGridMsg(FLAGS_frame_id, ros::Time::now(), resolution,
+                               result.origin, result.surface.get());
+    ::ros::Publisher pub = n.advertise<nav_msgs::OccupancyGrid>(
+        "map", kLatestOnlyPublisherQueueSize, true /*latched */);
+    pub.publish(*msg);
+    ::ros::spin();
+    ::ros::shutdown();
+  } else {
+    ::cartographer::io::StreamFileWriter pgm_writer(map_filestem + ".pgm");
 
-  ::cartographer::io::Image image(std::move(result.surface));
-  WritePgm(image, resolution, &pgm_writer);
+    ::cartographer::io::Image image(std::move(result.surface));
+    WritePgm(image, resolution, &pgm_writer);
 
-  const Eigen::Vector2d origin(
-      -result.origin.x() * resolution,
-      (result.origin.y() - image.height()) * resolution);
+    const Eigen::Vector2d origin(
+        -result.origin.x() * resolution,
+        (result.origin.y() - image.height()) * resolution);
 
-  ::cartographer::io::StreamFileWriter yaml_writer(map_filestem + ".yaml");
-  WriteYaml(resolution, origin, pgm_writer.GetFilename(), &yaml_writer);
+    ::cartographer::io::StreamFileWriter yaml_writer(map_filestem + ".yaml");
+    WriteYaml(resolution, origin, pgm_writer.GetFilename(), &yaml_writer);
+  }
 }
 
 }  // namespace
@@ -127,6 +146,15 @@ int main(int argc, char** argv) {
   CHECK(!FLAGS_pbstream_filename.empty()) << "-pbstream_filename is missing.";
   CHECK(!FLAGS_map_filestem.empty()) << "-map_filestem is missing.";
 
-  ::cartographer_ros::Run(FLAGS_pbstream_filename, FLAGS_map_filestem,
-                          FLAGS_resolution);
+  if (FLAGS_publish_map) {
+    FLAGS_alsologtostderr = false;
+    ::ros::init(argc, argv, "cartographer_pbstream_to_ros_map");
+    ::ros::start();
+    cartographer_ros::ScopedRosLogSink ros_log_sink;
+    ::cartographer_ros::Run(FLAGS_pbstream_filename, FLAGS_map_filestem,
+                            FLAGS_resolution);
+  } else {
+    ::cartographer_ros::Run(FLAGS_pbstream_filename, FLAGS_map_filestem,
+                            FLAGS_resolution);
+  }
 }
