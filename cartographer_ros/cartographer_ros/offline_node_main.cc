@@ -26,6 +26,7 @@
 
 #include "cartographer/common/make_unique.h"
 #include "cartographer/common/port.h"
+#include "cartographer/mapping/map_builder.h"
 #include "cartographer_ros/node.h"
 #include "cartographer_ros/node_options.h"
 #include "cartographer_ros/ros_log_sink.h"
@@ -90,7 +91,10 @@ void Run(const std::vector<std::string>& bag_filenames) {
   // transform. When we finish processing the bag, we will simply drop any
   // remaining sensor data that cannot be transformed due to missing transforms.
   node_options.lookup_transform_timeout_sec = 0.;
-  Node node(node_options, &tf_buffer);
+  auto map_builder =
+      cartographer::common::make_unique<cartographer::mapping::MapBuilder>(
+          node_options.map_builder_options);
+  Node node(node_options, std::move(map_builder), &tf_buffer);
   if (!FLAGS_pbstream_filename.empty()) {
     // TODO(jihoonl): LoadMap should be replaced by some better deserialization
     // of full SLAM state as non-frozen trajectories once possible

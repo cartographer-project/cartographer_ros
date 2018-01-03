@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include "cartographer/mapping/map_builder.h"
 #include "cartographer_ros/node.h"
 #include "cartographer_ros/node_options.h"
 #include "cartographer_ros/ros_log_sink.h"
@@ -47,7 +48,10 @@ void Run() {
   std::tie(node_options, trajectory_options) =
       LoadOptions(FLAGS_configuration_directory, FLAGS_configuration_basename);
 
-  Node node(node_options, &tf_buffer);
+  auto map_builder =
+      cartographer::common::make_unique<cartographer::mapping::MapBuilder>(
+          node_options.map_builder_options);
+  Node node(node_options, std::move(map_builder), &tf_buffer);
   if (!FLAGS_map_filename.empty()) {
     node.LoadMap(FLAGS_map_filename);
   }

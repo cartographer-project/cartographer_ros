@@ -22,7 +22,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "cartographer/mapping/map_builder.h"
+#include "cartographer/common/mutex.h"
+#include "cartographer/mapping/map_builder_interface.h"
 #include "cartographer/mapping/proto/trajectory_builder_options.pb.h"
 #include "cartographer_ros/node_options.h"
 #include "cartographer_ros/sensor_bridge.h"
@@ -53,7 +54,10 @@ class MapBuilderBridge {
     TrajectoryOptions trajectory_options;
   };
 
-  MapBuilderBridge(const NodeOptions& node_options, tf2_ros::Buffer* tf_buffer);
+  MapBuilderBridge(
+      const NodeOptions& node_options,
+      std::unique_ptr<cartographer::mapping::MapBuilderInterface> map_builder,
+      tf2_ros::Buffer* tf_buffer);
 
   MapBuilderBridge(const MapBuilderBridge&) = delete;
   MapBuilderBridge& operator=(const MapBuilderBridge&) = delete;
@@ -89,7 +93,7 @@ class MapBuilderBridge {
   const NodeOptions node_options_;
   std::unordered_map<int, std::shared_ptr<const TrajectoryState::LocalSlamData>>
       trajectory_state_data_ GUARDED_BY(mutex_);
-  cartographer::mapping::MapBuilder map_builder_;
+  std::unique_ptr<cartographer::mapping::MapBuilderInterface> map_builder_;
   tf2_ros::Buffer* const tf_buffer_;
 
   // These are keyed with 'trajectory_id'.

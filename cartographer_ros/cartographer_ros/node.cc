@@ -78,9 +78,12 @@ namespace carto = ::cartographer;
 
 using carto::transform::Rigid3d;
 
-Node::Node(const NodeOptions& node_options, tf2_ros::Buffer* const tf_buffer)
+Node::Node(
+    const NodeOptions& node_options,
+    std::unique_ptr<cartographer::mapping::MapBuilderInterface> map_builder,
+    tf2_ros::Buffer* const tf_buffer)
     : node_options_(node_options),
-      map_builder_bridge_(node_options_, tf_buffer) {
+      map_builder_bridge_(node_options_, std::move(map_builder), tf_buffer) {
   carto::common::MutexLocker lock(&mutex_);
   submap_list_publisher_ =
       node_handle_.advertise<::cartographer_ros_msgs::SubmapList>(
