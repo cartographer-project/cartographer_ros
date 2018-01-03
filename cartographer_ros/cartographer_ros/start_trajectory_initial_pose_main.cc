@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 
+#include <tf/tf.h>
 #include "cartographer/common/configuration_file_resolver.h"
 #include "cartographer/common/lua_parameter_dictionary.h"
 #include "cartographer/common/make_unique.h"
@@ -24,13 +25,12 @@
 #include "cartographer_ros/node_constants.h"
 #include "cartographer_ros/ros_log_sink.h"
 #include "cartographer_ros/trajectory_options.h"
+#include "cartographer_ros_msgs/FinishTrajectory.h"
 #include "cartographer_ros_msgs/StartTrajectory.h"
 #include "cartographer_ros_msgs/TrajectoryOptions.h"
+#include "geometry_msgs/PoseWithCovarianceStamped.h"
 #include "gflags/gflags.h"
 #include "ros/ros.h"
-#include "geometry_msgs/PoseWithCovarianceStamped.h"
-#include "cartographer_ros_msgs/FinishTrajectory.h"
-#include <tf/tf.h>
 
 DEFINE_string(configuration_directory, "",
               "First directory in which configuration files are searched, "
@@ -46,17 +46,14 @@ namespace {
 boost::shared_ptr<ros::NodeHandle> nh;
 ros::Subscriber initialPoseSub;
 
-TrajectoryOptions LoadOptions(const geometry_msgs::PoseWithCovarianceStamped pose_msg) {
-  std::string initial_pose=
-      "{to_trajectory_id = 0, relative_pose = { translation = { "
-      + std::to_string(pose_msg.pose.pose.position.x)
-      +", "
-      +std::to_string(pose_msg.pose.pose.position.y)
-      +", "
-      +"0. }, rotation = { 0., 0., "
-      +std::to_string(tf::getYaw(pose_msg.pose.pose.orientation))
-      +", } } }"
-      ;
+TrajectoryOptions LoadOptions(
+    const geometry_msgs::PoseWithCovarianceStamped pose_msg) {
+  std::string initial_pose =
+      "{to_trajectory_id = 0, relative_pose = { translation = { " +
+      std::to_string(pose_msg.pose.pose.position.x) + ", " +
+      std::to_string(pose_msg.pose.pose.position.y) + ", " +
+      "0. }, rotation = { 0., 0., " +
+      std::to_string(tf::getYaw(pose_msg.pose.pose.orientation)) + ", } } }";
   ROS_INFO(initial_pose.c_str());
   auto file_resolver = cartographer::common::make_unique<
       cartographer::common::ConfigurationFileResolver>(
@@ -79,27 +76,26 @@ TrajectoryOptions LoadOptions(const geometry_msgs::PoseWithCovarianceStamped pos
                                  initial_trajectory_pose.get());
 }
 
-
-
-void HandleInitialPose(const geometry_msgs::PoseWithCovarianceStamped pose_msg){
-  if(pose_msg.header.frame_id=="map"){
+void HandleInitialPose(
+    const geometry_msgs::PoseWithCovarianceStamped pose_msg) {
+  if (pose_msg.header.frame_id == "map") {
     ROS_INFO("Setting pose");
     ros::ServiceClient client_finish =
         nh->serviceClient<cartographer_ros_msgs::FinishTrajectory>(
             kFinishTrajectoryServiceName);
     cartographer_ros_msgs::FinishTrajectory srv_finish;
-    int id_to_finish=1;
-    srv_finish.request.trajectory_id=id_to_finish;
-    bool trajectoryMaxIdReached=false;
-    int trajectoryMaxID=100;
+    int id_to_finish = 1;
+    srv_finish.request.trajectory_id = id_to_finish;
+    bool trajectoryMaxIdReached = false;
+    int trajectoryMaxID = 100;
 
     while (!client_finish.call(srv_finish) && !trajectoryMaxIdReached) {
       LOG(ERROR) << "Error finishing trajectory, trying next ID.";
       id_to_finish++;
-      srv_finish.request.trajectory_id=id_to_finish;
-      trajectoryMaxIdReached=(id_to_finish>=trajectoryMaxID);
+      srv_finish.request.trajectory_id = id_to_finish;
+      trajectoryMaxIdReached = (id_to_finish >= trajectoryMaxID);
     }
-    if (!trajectoryMaxIdReached){
+    if (!trajectoryMaxIdReached) {
       LOG(INFO) << "Finished trajectory " << srv_finish.request.trajectory_id;
 
       ros::ServiceClient client_start =
@@ -107,8 +103,8 @@ void HandleInitialPose(const geometry_msgs::PoseWithCovarianceStamped pose_msg){
               kStartTrajectoryServiceName);
       cartographer_ros_msgs::StartTrajectory srv_start;
       srv_start.request.options = ToRosMessage(LoadOptions(pose_msg));
-      srv_start.request.topics.laser_scan_topic = nh->resolveName(
-          kLaserScanTopic, true /* apply topic remapping */);
+      srv_start.request.topics.laser_scan_topic =
+          nh->resolveName(kLaserScanTopic, true /* apply topic remapping */);
       srv_start.request.topics.multi_echo_laser_scan_topic =
           nh->resolveName(kMultiEchoLaserScanTopic, true);
       srv_start.request.topics.point_cloud2_topic =
@@ -121,21 +117,21 @@ void HandleInitialPose(const geometry_msgs::PoseWithCovarianceStamped pose_msg){
         LOG(ERROR) << "Error starting trajectory.";
       }
       LOG(INFO) << "Started trajectory " << srv_start.response.trajectory_id;
-    }else{
+    } else {
       ROS_ERROR("Could not finish previous trajectory");
     }
-  }else{
+  } else {
     ROS_ERROR("Pose needs to be specified in map frame");
   }
 }
 
 void Run() {
-  initialPoseSub=nh->subscribe("/initialpose",1, &cartographer_ros::HandleInitialPose);
+  initialPoseSub =
+      nh->subscribe("/initialpose", 1, &cartographer_ros::HandleInitialPose);
 }
 
 }  // namespace
 }  // namespace cartographer_ros
-
 
 int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
@@ -152,7 +148,7 @@ int main(int argc, char** argv) {
       << "-configuration_basename is missing.";
 
   ::ros::init(argc, argv, "cartographer_start_trajectory_initial_pose");
-  cartographer_ros::nh = boost::make_shared<ros::NodeHandle> ("");
+  cartographer_ros::nh = boost::make_shared<ros::NodeHandle>("");
 
   cartographer_ros::ScopedRosLogSink ros_log_sink;
   cartographer_ros::Run();
