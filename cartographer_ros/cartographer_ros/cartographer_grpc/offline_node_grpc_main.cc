@@ -22,24 +22,24 @@
 
 DEFINE_string(configuration_directory, "",
               "First directory in which configuration files are searched, "
-                  "second is always the Cartographer installation to allow "
-                  "including files from there.");
+              "second is always the Cartographer installation to allow "
+              "including files from there.");
 DEFINE_string(configuration_basename, "",
               "Basename, i.e. not containing any directory prefix, of the "
-                  "configuration file.");
+              "configuration file.");
 DEFINE_string(bag_filenames, "", "Comma-separated list of bags to process.");
 DEFINE_string(server_address, "localhost:50051",
               "gRPC server address to "
-                  "stream the sensor data to.");
+              "stream the sensor data to.");
 
 int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
   google::ParseCommandLineFlags(&argc, &argv, true);
 
   CHECK(!FLAGS_configuration_directory.empty())
-  << "-configuration_directory is missing.";
+      << "-configuration_directory is missing.";
   CHECK(!FLAGS_configuration_basename.empty())
-  << "-configuration_basename is missing.";
+      << "-configuration_basename is missing.";
   CHECK(!FLAGS_bag_filenames.empty()) << "-bag_filenames is missing.";
 
   ::ros::init(argc, argv, "cartographer_offline_node");
@@ -66,4 +66,3 @@ int main(int argc, char** argv) {
 
   ::ros::shutdown();
 }
-
