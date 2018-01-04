@@ -26,10 +26,10 @@
 namespace cartographer_ros {
 
 void RunOfflineNode(
+    std::unique_ptr<cartographer::mapping::MapBuilderInterface> map_builder,
     const cartographer_ros::NodeOptions& node_options,
     const cartographer_ros::TrajectoryOptions& trajectory_options,
-    const std::vector<std::string>& bag_filenames,
-    std::unique_ptr<cartographer::mapping::MapBuilderInterface> map_builder);
+    const std::vector<std::string>& bag_filenames);
 
 }  // namespace cartographer_ros
 

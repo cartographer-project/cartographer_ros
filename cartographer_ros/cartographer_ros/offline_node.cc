@@ -16,7 +16,10 @@
 
 #include "cartographer_ros/offline_node.h"
 
+#include <errno.h>
+#include <string.h>
 #include <sys/resource.h>
+#include <time.h>
 #include <chrono>
 
 #include "cartographer_ros/node.h"
@@ -49,10 +52,10 @@ constexpr double kClockPublishFrequencySec = 1. / 30.;
 constexpr int kSingleThreaded = 1;
 
 void RunOfflineNode(
+    std::unique_ptr<cartographer::mapping::MapBuilderInterface> map_builder,
     const cartographer_ros::NodeOptions& node_options,
     const cartographer_ros::TrajectoryOptions& trajectory_options,
-    const std::vector<std::string>& bag_filenames,
-    std::unique_ptr<cartographer::mapping::MapBuilderInterface> map_builder) {
+    const std::vector<std::string>& bag_filenames) {
   const std::chrono::time_point<std::chrono::steady_clock> start_time =
       std::chrono::steady_clock::now();
 

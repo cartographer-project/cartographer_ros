@@ -59,9 +59,9 @@ int main(int argc, char** argv) {
           node_options.map_builder_options);
 
   cartographer_ros::RunOfflineNode(
+      std::move(map_builder),
       node_options, trajectory_options,
-      cartographer_ros::SplitString(FLAGS_bag_filenames, ','),
-      std::move(map_builder));
+      cartographer_ros::SplitString(FLAGS_bag_filenames, ','));
 
   ::ros::shutdown();
 }
