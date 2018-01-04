@@ -25,6 +25,7 @@
 #include "OgreSceneManager.h"
 #include "OgreSceneNode.h"
 #include "cartographer/common/mutex.h"
+#include "cartographer/io/submap_painter.h"
 #include "cartographer/mapping/id.h"
 #include "cartographer/transform/rigid_transform.h"
 #include "cartographer_ros/submap.h"
@@ -105,7 +106,7 @@ class DrawableSubmap : public QObject {
   bool query_in_progress_ = false GUARDED_BY(mutex_);
   int metadata_version_ = -1 GUARDED_BY(mutex_);
   std::future<void> rpc_request_future_;
-  std::unique_ptr<::cartographer_ros::SubmapTextures> submap_textures_
+  std::unique_ptr<::cartographer::io::SubmapTextures> submap_textures_
       GUARDED_BY(mutex_);
   float current_alpha_ = 0.f;
   std::unique_ptr<::rviz::BoolProperty> visibility_;

@@ -39,36 +39,6 @@ DEFINE_double(resolution, 0.05, "Resolution of a grid cell in the drawn map.");
 namespace cartographer_ros {
 namespace {
 
-void FillSubmapSlice(
-    const ::cartographer::transform::Rigid3d& global_submap_pose,
-    const ::cartographer::mapping::proto::Submap& proto,
-    ::cartographer::io::SubmapSlice* const submap_slice) {
-  ::cartographer::mapping::proto::SubmapQuery::Response response;
-  ::cartographer::transform::Rigid3d local_pose;
-  if (proto.has_submap_3d()) {
-    ::cartographer::mapping_3d::Submap submap(proto.submap_3d());
-    local_pose = submap.local_pose();
-    submap.ToResponseProto(global_submap_pose, &response);
-  } else {
-    ::cartographer::mapping_2d::Submap submap(proto.submap_2d());
-    local_pose = submap.local_pose();
-    submap.ToResponseProto(global_submap_pose, &response);
-  }
-  submap_slice->pose = global_submap_pose;
-
-  auto& texture_proto = response.textures(0);
-  const SubmapTexture::Pixels pixels = UnpackTextureData(
-      texture_proto.cells(), texture_proto.width(), texture_proto.height());
-  submap_slice->width = texture_proto.width();
-  submap_slice->height = texture_proto.height();
-  submap_slice->resolution = texture_proto.resolution();
-  submap_slice->slice_pose =
-      ::cartographer::transform::ToRigid3(texture_proto.slice_pose());
-  submap_slice->surface =
-      DrawTexture(pixels.intensity, pixels.alpha, texture_proto.width(),
-                  texture_proto.height(), &submap_slice->cairo_data);
-}
-
 void Run(const std::string& pbstream_filename, const std::string& map_filestem,
          const double resolution) {
   ::cartographer::io::ProtoStreamReader reader(pbstream_filename);
