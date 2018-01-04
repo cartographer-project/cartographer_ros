@@ -25,6 +25,7 @@
 
 #include "cartographer/common/fixed_ratio_sampler.h"
 #include "cartographer/common/mutex.h"
+#include "cartographer/mapping/map_builder_interface.h"
 #include "cartographer/mapping/pose_extrapolator.h"
 #include "cartographer_ros/map_builder_bridge.h"
 #include "cartographer_ros/node_constants.h"
@@ -46,7 +47,9 @@ namespace cartographer_ros {
 // Wires up ROS topics to SLAM.
 class Node {
  public:
-  Node(const NodeOptions& node_options, tf2_ros::Buffer* tf_buffer);
+  Node(const NodeOptions& node_options,
+       std::unique_ptr<cartographer::mapping::MapBuilderInterface> map_builder,
+       tf2_ros::Buffer* tf_buffer);
   ~Node();
 
   Node(const Node&) = delete;
