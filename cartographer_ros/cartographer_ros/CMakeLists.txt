@@ -105,7 +105,7 @@ if (${BUILD_GRPC})
   )
 
   install(PROGRAMS
-    scripts/cartographer_grpc_server.sh
+    ../scripts/cartographer_grpc_server.sh
     DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   )
 endif()
