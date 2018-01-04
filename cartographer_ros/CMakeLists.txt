@@ -93,7 +93,7 @@ if (NOT ${BUILD_GRPC})
   list(REMOVE_ITEM ALL_TESTS ${ALL_GRPC_FILES})
   list(REMOVE_ITEM ALL_EXECUTABLES ${ALL_GRPC_FILES})
 endif()
-add_library(${PROJECT_NAME} ${ALL_SRCS} cartographer_ros/cartographer_grpc/offline_node_grpc_main.cc)
+add_library(${PROJECT_NAME} ${ALL_SRCS})
 add_subdirectory("cartographer_ros")
 
 target_link_libraries(${PROJECT_NAME} PUBLIC cartographer)
