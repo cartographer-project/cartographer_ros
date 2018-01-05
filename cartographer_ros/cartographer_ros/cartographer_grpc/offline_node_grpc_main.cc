@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
       << "-configuration_basename is missing.";
   CHECK(!FLAGS_bag_filenames.empty()) << "-bag_filenames is missing.";
 
-  ::ros::init(argc, argv, "cartographer_offline_node");
+  ::ros::init(argc, argv, "cartographer_grpc_offline_node");
   ::ros::start();
 
   cartographer_ros::ScopedRosLogSink ros_log_sink;
