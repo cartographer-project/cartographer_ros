@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 The Cartographer Authors
+ * Copyright 2018 The Cartographer Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cartographer/mapping/map_builder.h"
+#include "cartographer_grpc/mapping/map_builder_stub.h"
 #include "cartographer_ros/node.h"
 #include "cartographer_ros/offline_node.h"
 #include "cartographer_ros/ros_log_sink.h"
@@ -28,6 +28,9 @@ DEFINE_string(configuration_basename, "",
               "Basename, i.e. not containing any directory prefix, of the "
               "configuration file.");
 DEFINE_string(bag_filenames, "", "Comma-separated list of bags to process.");
+DEFINE_string(server_address, "localhost:50051",
+              "gRPC server address to "
+              "stream the sensor data to.");
 
 int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
@@ -39,7 +42,7 @@ int main(int argc, char** argv) {
       << "-configuration_basename is missing.";
   CHECK(!FLAGS_bag_filenames.empty()) << "-bag_filenames is missing.";
 
-  ::ros::init(argc, argv, "cartographer_offline_node");
+  ::ros::init(argc, argv, "cartographer_grpc_offline_node");
   ::ros::start();
 
   cartographer_ros::ScopedRosLogSink ros_log_sink;
@@ -54,9 +57,8 @@ int main(int argc, char** argv) {
   // remaining sensor data that cannot be transformed due to missing transforms.
   node_options.lookup_transform_timeout_sec = 0.;
 
-  auto map_builder =
-      cartographer::common::make_unique<cartographer::mapping::MapBuilder>(
-          node_options.map_builder_options);
+  auto map_builder = cartographer::common::make_unique<
+      ::cartographer_grpc::mapping::MapBuilderStub>(FLAGS_server_address);
 
   cartographer_ros::RunOfflineNode(
       std::move(map_builder), node_options, trajectory_options,
