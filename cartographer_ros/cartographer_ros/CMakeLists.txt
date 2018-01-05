@@ -104,6 +104,17 @@ if (${BUILD_GRPC})
     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   )
 
+  google_binary(cartographer_grpc_offline_node
+    SRCS
+      cartographer_grpc/offline_node_grpc_main.cc
+  )
+
+  install(TARGETS cartographer_grpc_offline_node
+    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+  )
+
   install(PROGRAMS
     ../scripts/cartographer_grpc_server.sh
     DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
