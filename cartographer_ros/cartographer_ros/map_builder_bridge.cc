@@ -158,13 +158,13 @@ cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
   cartographer_ros_msgs::SubmapList submap_list;
   submap_list.header.stamp = ::ros::Time::now();
   submap_list.header.frame_id = node_options_.map_frame;
-  for (const auto& submap_id_data :
-       map_builder_->pose_graph()->GetAllSubmapData()) {
+  for (const auto& submap_id_pose :
+       map_builder_->pose_graph()->GetAllSubmapPoses()) {
     cartographer_ros_msgs::SubmapEntry submap_entry;
-    submap_entry.trajectory_id = submap_id_data.id.trajectory_id;
-    submap_entry.submap_index = submap_id_data.id.submap_index;
-    submap_entry.submap_version = submap_id_data.data.submap->num_range_data();
-    submap_entry.pose = ToGeometryMsgPose(submap_id_data.data.pose);
+    submap_entry.trajectory_id = submap_id_pose.id.trajectory_id;
+    submap_entry.submap_index = submap_id_pose.id.submap_index;
+    submap_entry.submap_version = submap_id_pose.data.version;
+    submap_entry.pose = ToGeometryMsgPose(submap_id_pose.data.pose);
     submap_list.submap.push_back(submap_entry);
   }
   return submap_list;
