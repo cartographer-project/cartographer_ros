@@ -125,6 +125,60 @@ Experimenting with this value yields a better result at ``2e2``.
 Here, the scan matcher used rotation to still slightly mess up the result though.
 Setting the ``rotation_weight`` to ``4e2`` leaves us with a reasonable result.
 
+Special Cases
+-------------
+
+The default configuration and the above tuning steps are focused on quality.
+Only after we have achieved good quality, we can further consider low latency tasks and other special cases.
+
+Low Latency
+^^^^^^^^^^^
+
+Low latency is required for online algorithms, such as robot localization.
+Local SLAM, which operates in the foreground, directly affects latency.
+Global SLAM builds up a queue of background tasks. When global SLAM cannot keep up the the queue,
+drift can accumulate indefinitely, so global SLAM should be tuned to work in real time.
+
+To tune the different components for speed, there are many options, and we list them ordered from 
+the recommended, effective ones to the those that are more intrusive.
+It is recommended to only explore one option at a time, starting with the first.
+
+To tune global SLAM for lower latency, we can
+
+- decrease ``optimize_every_n_nodes``
+- increase ``MAP_BUILDER.num_background_threads`` up to the number of cores
+- decrease ``global_sampling_ratio``
+- decrease ``constraint_builder.sampling_ratio``
+- increase ``constraint_builder.min_score``
+- for the adaptive voxel filter(s), decrease ``.min_num_points``, ``.max_range``, increase ``.max_length``
+- increase ``voxel_filter_size``, ``submaps.resolution``, decrease ``submaps.num_range_data``
+- increase ``global_constraint_search_after_n_seconds``
+- decrease ``max_num_iterations``
+
+To tune local SLAM for lower latency, we can
+
+- increase ``voxel_filter_size``
+- increase ``submaps.resolution``
+- for the adaptive voxel filter(s), decrease ``.min_num_points``, ``.max_range``, increase ``.max_length``
+- decrease ``max_range`` (especially if data is noisy)
+- decrease ``submaps.num_range_data``
+
+Note that larger voxels will slightly increase scan matching scores as a side effect,
+so score thresholds should be increased accordingly.
+
+Pure Localization in a Given Map
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Pure localization is different from mapping in that we expect a lower latency of both local and global
+SLAM, and global SLAM will usually find a very large number of inter constraints between the frozen trajectory
+that serves as a map and the current trajectory.
+
+To tune for pure localization, we should first enable ``TRAJECTORY_BUILDER.pure_localization = true`` and
+strongly decrease ``POSE_GRAPH.optimize_every_n_nodes`` to receive frequent results.
+With these settings, global SLAM will usually be too slow and cannot keep up.
+As a next step, we strongly decrease ``global_sampling_ratio`` and ``constraint_builder.sampling_ratio``
+to compensate for the large number of constraints.
+We then tune for lower latency as explained above until the system reliably works in real time.
 
 Verification
 ------------
