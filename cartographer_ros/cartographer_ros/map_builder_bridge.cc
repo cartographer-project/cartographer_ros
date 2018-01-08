@@ -257,9 +257,9 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintList() {
   residual_inter_marker.ns = "Inter residuals";
   residual_inter_marker.pose.position.z = 0.1;
 
-  const auto trajectory_nodes =
-      map_builder_->pose_graph()->GetTrajectoryNodes();
-  const auto submap_data = map_builder_->pose_graph()->GetAllSubmapData();
+  const auto trajectory_node_poses =
+      map_builder_->pose_graph()->GetTrajectoryNodePoses();
+  const auto submap_poses = map_builder_->pose_graph()->GetAllSubmapPoses();
   const auto constraints = map_builder_->pose_graph()->constraints();
 
   for (const auto& constraint : constraints) {
@@ -293,13 +293,13 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintList() {
       residual_marker->colors.push_back(color_residual);
     }
 
-    const auto submap_it = submap_data.find(constraint.submap_id);
-    if (submap_it == submap_data.end()) {
+    const auto submap_it = submap_poses.find(constraint.submap_id);
+    if (submap_it == submap_poses.end()) {
       continue;
     }
     const auto& submap_pose = submap_it->data.pose;
-    const auto node_it = trajectory_nodes.find(constraint.node_id);
-    if (node_it == trajectory_nodes.end()) {
+    const auto node_it = trajectory_node_poses.find(constraint.node_id);
+    if (node_it == trajectory_node_poses.end()) {
       continue;
     }
     const auto& trajectory_node_pose = node_it->data.global_pose;
