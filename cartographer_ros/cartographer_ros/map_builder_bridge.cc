@@ -201,13 +201,13 @@ MapBuilderBridge::GetTrajectoryStates() {
 
 visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
   visualization_msgs::MarkerArray trajectory_node_list;
-  const auto nodes = map_builder_->pose_graph()->GetTrajectoryNodes();
-  for (const int trajectory_id : nodes.trajectory_ids()) {
+  const auto node_poses = map_builder_->pose_graph()->GetTrajectoryNodePoses();
+  for (const int trajectory_id : node_poses.trajectory_ids()) {
     visualization_msgs::Marker marker =
         CreateTrajectoryMarker(trajectory_id, node_options_.map_frame);
 
-    for (const auto& node_id_data : nodes.trajectory(trajectory_id)) {
-      if (node_id_data.data.constant_data == nullptr) {
+    for (const auto& node_id_data : node_poses.trajectory(trajectory_id)) {
+      if (node_id_data.data.has_constant_data) {
         PushAndResetLineMarker(&marker, &trajectory_node_list.markers);
         continue;
       }
