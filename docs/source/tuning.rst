@@ -129,21 +129,30 @@ Special Cases
 -------------
 
 The default configuration and the above tuning steps are focused on quality.
-Only after we have achieved good quality, we can further consider low latency tasks and other special cases.
+Only after we have achieved good quality, we can further consider special cases.
 
 Low Latency
 ^^^^^^^^^^^
 
+By low latency, we mean that an optimized local pose becomes available shortly after sensor input was received,
+usually within a second, and that global optimization has no backlog.
 Low latency is required for online algorithms, such as robot localization.
 Local SLAM, which operates in the foreground, directly affects latency.
-Global SLAM builds up a queue of background tasks. When global SLAM cannot keep up the the queue,
-drift can accumulate indefinitely, so global SLAM should be tuned to work in real time.
+Global SLAM builds up a queue of background tasks.
+When global SLAM cannot keep up the queue, drift can accumulate indefinitely,
+so global SLAM should be tuned to work in real time.
 
-To tune the different components for speed, there are many options, and we list them ordered from 
-the recommended, effective ones to the those that are more intrusive.
+There are many options to tune the different components for speed, and we list them ordered from 
+the recommended, straightforward ones to the those that are more intrusive.
 It is recommended to only explore one option at a time, starting with the first.
+Configuration parameters are documented in the `Cartographer documentation`_.
 
-To tune global SLAM for lower latency, we can
+.. _Cartographer documentation: https://google-cartographer.readthedocs.io/en/latest/configuration.html
+
+To tune global SLAM for lower latency, we reduce its computational load
+until is consistently keeps up with real-time input.
+Below this threshold, we do not reduce it further, but try to achieve the best possible quality.
+To reduce global SLAM latency, we can
 
 - decrease ``optimize_every_n_nodes``
 - increase ``MAP_BUILDER.num_background_threads`` up to the number of cores
@@ -152,6 +161,7 @@ To tune global SLAM for lower latency, we can
 - increase ``constraint_builder.min_score``
 - for the adaptive voxel filter(s), decrease ``.min_num_points``, ``.max_range``, increase ``.max_length``
 - increase ``voxel_filter_size``, ``submaps.resolution``, decrease ``submaps.num_range_data``
+- decrease search windows sizes, ``.linear_xy_search_window``, ``.linear_z_search_window``, ``.angular_search_window``
 - increase ``global_constraint_search_after_n_seconds``
 - decrease ``max_num_iterations``
 
@@ -169,8 +179,9 @@ so score thresholds should be increased accordingly.
 Pure Localization in a Given Map
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Pure localization is different from mapping in that we expect a lower latency of both local and global
-SLAM, and global SLAM will usually find a very large number of inter constraints between the frozen trajectory
+Pure localization is different from mapping.
+First, we expect a lower latency of both local and global SLAM.
+Second, global SLAM will usually find a very large number of inter constraints between the frozen trajectory
 that serves as a map and the current trajectory.
 
 To tune for pure localization, we should first enable ``TRAJECTORY_BUILDER.pure_localization = true`` and
