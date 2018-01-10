@@ -75,13 +75,7 @@ void SensorBridge::HandleOdometryMessage(
 
 void SensorBridge::HandleNavSatFixMessage(
     const std::string& sensor_id, const sensor_msgs::NavSatFix::ConstPtr& msg) {
-  LOG(INFO) << "TODO(spielawa / wohe): NavSatFix support not yet implemented.";
-  const carto::common::Time time = FromRos(msg->header.stamp);
-  trajectory_builder_->AddSensorData(
-      sensor_id,
-      cartographer::sensor::FixedFramePoseData{
-          time,
-          cartographer::common::optional<cartographer::transform::Rigid3d>()});
+  LOG(FATAL) << "TODO(spielawa / wohe): NavSatFix support not yet implemented.";
 }
 
 std::unique_ptr<::cartographer::sensor::ImuData> SensorBridge::ToImuData(

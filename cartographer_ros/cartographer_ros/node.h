@@ -170,12 +170,12 @@ class Node {
                              const double imu_sampling_ratio)
         : rangefinder_sampler(rangefinder_sampling_ratio),
           odometry_sampler(odometry_sampling_ratio),
-          nav_sat_sampler(fixed_frame_pose_sampling_ratio),
+          fixed_frame_pose_sampler(fixed_frame_pose_sampling_ratio),
           imu_sampler(imu_sampling_ratio) {}
 
     ::cartographer::common::FixedRatioSampler rangefinder_sampler;
     ::cartographer::common::FixedRatioSampler odometry_sampler;
-    ::cartographer::common::FixedRatioSampler nav_sat_sampler;
+    ::cartographer::common::FixedRatioSampler fixed_frame_pose_sampler;
     ::cartographer::common::FixedRatioSampler imu_sampler;
   };
 

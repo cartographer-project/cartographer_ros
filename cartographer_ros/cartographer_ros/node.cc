@@ -162,7 +162,7 @@ void Node::AddSensorSamplers(const int trajectory_id,
       std::piecewise_construct, std::forward_as_tuple(trajectory_id),
       std::forward_as_tuple(options.rangefinder_sampling_ratio,
                             options.odometry_sampling_ratio,
-                            +options.fixed_frame_pose_sampling_ratio,
+                            options.fixed_frame_pose_sampling_ratio,
                             options.imu_sampling_ratio));
 }
 
@@ -521,7 +521,7 @@ void Node::HandleNavSatFixMessage(const int trajectory_id,
                                   const std::string& sensor_id,
                                   const sensor_msgs::NavSatFix::ConstPtr& msg) {
   carto::common::MutexLocker lock(&mutex_);
-  if (!sensor_samplers_.at(trajectory_id).nav_sat_sampler.Pulse()) {
+  if (!sensor_samplers_.at(trajectory_id).fixed_frame_pose_sampler.Pulse()) {
     return;
   }
   map_builder_bridge_.sensor_bridge(trajectory_id)
