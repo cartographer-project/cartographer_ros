@@ -41,7 +41,7 @@ struct TrajectoryOptions {
   int num_point_clouds;
   double rangefinder_sampling_ratio;
   double odometry_sampling_ratio;
-  double nav_sat_sampling_ratio;
+  double fixed_frame_pose_sampling_ratio;
   double imu_sampling_ratio;
 };
 

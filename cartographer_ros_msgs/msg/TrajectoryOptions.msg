@@ -24,7 +24,7 @@ int32 num_subdivisions_per_laser_scan
 int32 num_point_clouds
 float64 rangefinder_sampling_ratio
 float64 odometry_sampling_ratio
-float64 nav_sat_sampling_ratio
+float64 fixed_frame_pose_sampling_ratio
 float64 imu_sampling_ratio
 
 # This is a binary-encoded

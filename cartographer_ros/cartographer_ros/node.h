@@ -166,11 +166,11 @@ class Node {
   struct TrajectorySensorSamplers {
     TrajectorySensorSamplers(const double rangefinder_sampling_ratio,
                              const double odometry_sampling_ratio,
-                             const double nav_sat_sampling_ratio,
+                             const double fixed_frame_pose_sampling_ratio,
                              const double imu_sampling_ratio)
         : rangefinder_sampler(rangefinder_sampling_ratio),
           odometry_sampler(odometry_sampling_ratio),
-          nav_sat_sampler(nav_sat_sampling_ratio),
+          nav_sat_sampler(fixed_frame_pose_sampling_ratio),
           imu_sampler(imu_sampling_ratio) {}
 
     ::cartographer::common::FixedRatioSampler rangefinder_sampler;
