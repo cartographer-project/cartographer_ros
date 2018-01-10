@@ -160,9 +160,10 @@ void Node::AddSensorSamplers(const int trajectory_id,
   CHECK(sensor_samplers_.count(trajectory_id) == 0);
   sensor_samplers_.emplace(
       std::piecewise_construct, std::forward_as_tuple(trajectory_id),
-      std::forward_as_tuple(
-          options.rangefinder_sampling_ratio, options.odometry_sampling_ratio,
-          options.fixed_frame_pose_sampling_ratio, options.imu_sampling_ratio));
+      std::forward_as_tuple(options.rangefinder_sampling_ratio, 
+                            options.odometry_sampling_ratio,
++                           options.fixed_frame_pose_sampling_ratio, 
+                            options.imu_sampling_ratio));
 }
 
 void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
