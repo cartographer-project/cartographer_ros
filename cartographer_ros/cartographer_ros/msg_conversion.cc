@@ -249,4 +249,25 @@ geometry_msgs::Point ToGeometryMsgPoint(const Eigen::Vector3d& vector3d) {
   return point;
 }
 
+Eigen::Vector3d LatLongAltToEcef(const double latitude, const double longitude,
+                                 const double altitude) {
+  // https://en.wikipedia.org/wiki/Geographic_coordinate_conversion#From_geodetic_to_ECEF_coordinates
+  constexpr double a = 6378137;  // semi-major axis, equator to center.
+  constexpr double f = 1 / 298.257223563;
+  constexpr double b = a * (1 - f);  // semi-minor axis, pole to center.
+  constexpr double a_squared = a * a;
+  constexpr double b_squared = b * b;
+  constexpr double e_squared = (a_squared - b_squared) / a_squared;
+  constexpr double kDegreesToRadians = M_PI / 180;
+  const double sin_phi = sin(latitude * kDegreesToRadians);
+  const double cos_phi = cos(latitude * kDegreesToRadians);
+  const double sin_lambda = sin(longitude * kDegreesToRadians);
+  const double cos_lambda = cos(longitude * kDegreesToRadians);
+  const double N = a / sqrt(1 - e_squared * sin_phi * sin_phi);
+  const double x = (N + altitude) * cos_phi * cos_lambda;
+  const double y = (N + altitude) * cos_phi * sin_lambda;
+  const double z = (b_squared / a_squared * N + altitude) * sin_phi;
+
+  return Eigen::Vector3d(x, y, z);
+}
 }  // namespace cartographer_ros

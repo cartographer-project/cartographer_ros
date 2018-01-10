@@ -70,6 +70,10 @@ Eigen::Vector3d ToEigen(const geometry_msgs::Vector3& vector3);
 
 Eigen::Quaterniond ToEigen(const geometry_msgs::Quaternion& quaternion);
 
+// Converts from WGS84 (latitude, longitude, altitude) to ECEF.
+Eigen::Vector3d LatLongAltToEcef(double latitude, double longitude,
+                                 double altitude);
+
 }  // namespace cartographer_ros
 
 #endif  // CARTOGRAPHER_ROS_MSG_CONVERSION_H_
