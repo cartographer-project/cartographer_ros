@@ -115,7 +115,8 @@ bool FromRosMessage(const cartographer_ros_msgs::TrajectoryOptions& msg,
   options->num_point_clouds = msg.num_point_clouds;
   options->rangefinder_sampling_ratio = msg.rangefinder_sampling_ratio;
   options->odometry_sampling_ratio = msg.odometry_sampling_ratio;
-  options->fixed_frame_pose_sampling_ratio = msg.fixed_frame_pose_sampling_ratio;
+  options->fixed_frame_pose_sampling_ratio =
+      msg.fixed_frame_pose_sampling_ratio;
   options->imu_sampling_ratio = msg.imu_sampling_ratio;
   if (!options->trajectory_builder_options.ParseFromString(
           msg.trajectory_builder_options_proto)) {
