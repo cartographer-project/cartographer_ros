@@ -332,7 +332,8 @@ void MapBuilderBridge::OnLocalSlamResult(
     const int trajectory_id, const ::cartographer::common::Time time,
     const ::cartographer::transform::Rigid3d local_pose,
     ::cartographer::sensor::RangeData range_data_in_local,
-    const std::unique_ptr<const ::cartographer::mapping::NodeId>) {
+    const std::unique_ptr<const ::cartographer::mapping::
+                              TrajectoryBuilderInterface::InsertionResult>) {
   std::shared_ptr<const TrajectoryState::LocalSlamData> local_slam_data =
       std::make_shared<TrajectoryState::LocalSlamData>(
           TrajectoryState::LocalSlamData{time, local_pose,
