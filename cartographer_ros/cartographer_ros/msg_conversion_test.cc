@@ -81,5 +81,33 @@ TEST(MsgConversion, LaserScanToPointCloudWithInfinityAndNaN) {
       point_cloud[1].isApprox(Eigen::Vector4f(-3.f, 0.f, 0.f, 0.f), 1e-6));
 }
 
+TEST(MsgConversion, LatLongAltToEcef) {
+  Eigen::Vector3d equator_prime_meridian = LatLongAltToEcef(0, 0, 0);
+  EXPECT_TRUE(equator_prime_meridian.isApprox(Eigen::Vector3d(6378137, 0, 0)))
+      << equator_prime_meridian;
+  Eigen::Vector3d plus_ten_meters = LatLongAltToEcef(0, 0, 10);
+  EXPECT_TRUE(plus_ten_meters.isApprox(Eigen::Vector3d(6378147, 0, 0)))
+      << plus_ten_meters;
+  Eigen::Vector3d north_pole = LatLongAltToEcef(90, 0, 0);
+  EXPECT_TRUE(north_pole.isApprox(Eigen::Vector3d(0, 0, 6356752.3142), 1e-9))
+      << north_pole;
+  Eigen::Vector3d also_north_pole = LatLongAltToEcef(90, 90, 0);
+  EXPECT_TRUE(
+      also_north_pole.isApprox(Eigen::Vector3d(0, 0, 6356752.3142), 1e-9))
+      << also_north_pole;
+  Eigen::Vector3d south_pole = LatLongAltToEcef(-90, 0, 0);
+  EXPECT_TRUE(south_pole.isApprox(Eigen::Vector3d(0, 0, -6356752.3142), 1e-9))
+      << south_pole;
+  Eigen::Vector3d above_south_pole = LatLongAltToEcef(-90, 60, 20);
+  EXPECT_TRUE(
+      above_south_pole.isApprox(Eigen::Vector3d(0, 0, -6356772.3142), 1e-9))
+      << above_south_pole;
+  Eigen::Vector3d somewhere_on_earth =
+      LatLongAltToEcef(48.1372149, 11.5748024, 517.1);
+  EXPECT_TRUE(somewhere_on_earth.isApprox(
+      Eigen::Vector3d(4177983, 855702, 4727457), 1e-6))
+      << somewhere_on_earth;
+}
+
 }  // namespace
 }  // namespace cartographer_ros
