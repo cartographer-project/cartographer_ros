@@ -177,6 +177,11 @@ void RunOfflineNode(
               trajectory_id, topic,
               delayed_msg.instantiate<nav_msgs::Odometry>());
         }
+        if (delayed_msg.isType<sensor_msgs::NavSatFix>()) {
+          node.HandleNavSatFixMessage(
+              trajectory_id, topic,
+              delayed_msg.instantiate<sensor_msgs::NavSatFix>());
+        }
         clock.clock = delayed_msg.getTime();
         clock_publisher.publish(clock);
 

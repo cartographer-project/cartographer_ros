@@ -39,7 +39,13 @@
 #include "cartographer_ros_msgs/SubmapQuery.h"
 #include "cartographer_ros_msgs/TrajectoryOptions.h"
 #include "cartographer_ros_msgs/WriteState.h"
+#include "nav_msgs/Odometry.h"
 #include "ros/ros.h"
+#include "sensor_msgs/Imu.h"
+#include "sensor_msgs/LaserScan.h"
+#include "sensor_msgs/MultiEchoLaserScan.h"
+#include "sensor_msgs/NavSatFix.h"
+#include "sensor_msgs/PointCloud2.h"
 #include "tf2_ros/transform_broadcaster.h"
 
 namespace cartographer_ros {
@@ -79,6 +85,8 @@ class Node {
   // The following functions handle adding sensor data to a trajectory.
   void HandleOdometryMessage(int trajectory_id, const std::string& sensor_id,
                              const nav_msgs::Odometry::ConstPtr& msg);
+  void HandleNavSatFixMessage(int trajectory_id, const std::string& sensor_id,
+                              const sensor_msgs::NavSatFix::ConstPtr& msg);
   void HandleImuMessage(int trajectory_id, const std::string& sensor_id,
                         const sensor_msgs::Imu::ConstPtr& msg);
   void HandleLaserScanMessage(int trajectory_id, const std::string& sensor_id,
@@ -156,15 +164,18 @@ class Node {
   ::ros::Publisher scan_matched_point_cloud_publisher_;
 
   struct TrajectorySensorSamplers {
-    TrajectorySensorSamplers(double rangefinder_sampling_ratio,
-                             double odometry_sampling_ratio,
-                             double imu_sampling_ratio)
+    TrajectorySensorSamplers(const double rangefinder_sampling_ratio,
+                             const double odometry_sampling_ratio,
+                             const double fixed_frame_pose_sampling_ratio,
+                             const double imu_sampling_ratio)
         : rangefinder_sampler(rangefinder_sampling_ratio),
           odometry_sampler(odometry_sampling_ratio),
+          fixed_frame_pose_sampler(fixed_frame_pose_sampling_ratio),
           imu_sampler(imu_sampling_ratio) {}
 
     ::cartographer::common::FixedRatioSampler rangefinder_sampler;
     ::cartographer::common::FixedRatioSampler odometry_sampler;
+    ::cartographer::common::FixedRatioSampler fixed_frame_pose_sampler;
     ::cartographer::common::FixedRatioSampler imu_sampler;
   };
 

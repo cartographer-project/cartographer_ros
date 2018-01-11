@@ -73,6 +73,11 @@ void SensorBridge::HandleOdometryMessage(
   }
 }
 
+void SensorBridge::HandleNavSatFixMessage(
+    const std::string& sensor_id, const sensor_msgs::NavSatFix::ConstPtr& msg) {
+  LOG(FATAL) << "TODO(spielawa / wohe): NavSatFix support not yet implemented.";
+}
+
 std::unique_ptr<::cartographer::sensor::ImuData> SensorBridge::ToImuData(
     const sensor_msgs::Imu::ConstPtr& msg) {
   CHECK_NE(msg->linear_acceleration_covariance[0], -1)
