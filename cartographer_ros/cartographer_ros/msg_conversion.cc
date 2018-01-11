@@ -273,8 +273,8 @@ Eigen::Vector3d LatLongAltToEcef(const double latitude, const double longitude,
   return Eigen::Vector3d(x, y, z);
 }
 
-cartographer::transform::Rigid3d ComputeLocalFrameFromLatLong(
-    double latitude, double longitude) {
+cartographer::transform::Rigid3d
+ComputeLocalFrameFromLatLong(const double latitude, const double longitude) {
   const Eigen::Vector3d translation = LatLongAltToEcef(latitude, longitude, 0.);
   const Eigen::Quaterniond rotation =
       Eigen::AngleAxisd(cartographer::common::DegToRad(latitude - 90.),
