@@ -86,7 +86,7 @@ void SensorBridge::HandleNavSatFixMessage(
     ecef_to_local_frame_ =
         ComputeLocalFrameFromLatLong(msg->latitude, msg->longitude);
     LOG(INFO) << "Using NavSatFix. Setting ecef_to_local_frame with lat = "
-              << msg->latitude << ", long = " << msg->longitude.;
+              << msg->latitude << ", long = " << msg->longitude << ".";
   }
 
   trajectory_builder_->AddSensorData(
