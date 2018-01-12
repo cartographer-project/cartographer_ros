@@ -79,21 +79,22 @@ void SensorBridge::HandleNavSatFixMessage(
     trajectory_builder_->AddSensorData(
         sensor_id, carto::sensor::FixedFramePoseData{
                        time, carto::common::optional<Rigid3d>()});
-  } else {
-    if (!ecef_to_local_frame_.has_value()) {
-      ecef_to_local_frame_ =
-          ComputeLocalFrameFromLatLong(msg->latitude, msg->longitude);
-      LOG(INFO) << "Using NavSatFix. Setting ecef_to_local_frame.";
-    }
-
-    trajectory_builder_->AddSensorData(
-        sensor_id,
-        carto::sensor::FixedFramePoseData{
-            time, carto::common::optional<Rigid3d>(Rigid3d::Translation(
-                      ecef_to_local_frame_.value() *
-                      LatLongAltToEcef(msg->latitude, msg->longitude,
-                                       msg->altitude)))});
+    return;
   }
+
+  if (!ecef_to_local_frame_.has_value()) {
+    ecef_to_local_frame_ =
+        ComputeLocalFrameFromLatLong(msg->latitude, msg->longitude);
+    LOG(INFO) << "Using NavSatFix. Setting ecef_to_local_frame.";
+  }
+
+  trajectory_builder_->AddSensorData(
+      sensor_id,
+      carto::sensor::FixedFramePoseData{
+          time, carto::common::optional<Rigid3d>(Rigid3d::Translation(
+                    ecef_to_local_frame_.value() *
+                    LatLongAltToEcef(msg->latitude, msg->longitude,
+                                     msg->altitude)))});
 }
 
 std::unique_ptr<carto::sensor::ImuData> SensorBridge::ToImuData(
