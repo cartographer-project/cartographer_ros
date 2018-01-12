@@ -17,6 +17,7 @@
 #include "cartographer_ros/msg_conversion.h"
 
 #include <cmath>
+#include <random>
 
 #include "gtest/gtest.h"
 #include "sensor_msgs/LaserScan.h"
@@ -107,6 +108,47 @@ TEST(MsgConversion, LatLongAltToEcef) {
   EXPECT_TRUE(somewhere_on_earth.isApprox(
       Eigen::Vector3d(4177983, 855702, 4727457), 1e-6))
       << somewhere_on_earth;
+}
+
+TEST(MsgConversion, ComputeLocalFrameFromLatLong) {
+  cartographer::transform::Rigid3d north_pole =
+      ComputeLocalFrameFromLatLong(90., 0.);
+  EXPECT_TRUE((north_pole * LatLongAltToEcef(90., 0., 1.))
+                  .isApprox(Eigen::Vector3d::UnitZ()));
+  cartographer::transform::Rigid3d south_pole =
+      ComputeLocalFrameFromLatLong(-90., 0.);
+  EXPECT_TRUE((south_pole * LatLongAltToEcef(-90., 0., 1.))
+                  .isApprox(Eigen::Vector3d::UnitZ()));
+  cartographer::transform::Rigid3d prime_meridian_equator =
+      ComputeLocalFrameFromLatLong(0., 0.);
+  EXPECT_TRUE((prime_meridian_equator * LatLongAltToEcef(0., 0., 1.))
+                  .isApprox(Eigen::Vector3d::UnitZ()))
+      << prime_meridian_equator * LatLongAltToEcef(0., 0., 1.);
+  cartographer::transform::Rigid3d meridian_90_equator =
+      ComputeLocalFrameFromLatLong(0., 90.);
+  EXPECT_TRUE((meridian_90_equator * LatLongAltToEcef(0., 90., 1.))
+                  .isApprox(Eigen::Vector3d::UnitZ()))
+      << meridian_90_equator * LatLongAltToEcef(0., 90., 1.);
+
+  std::mt19937 rng(42);
+  std::uniform_real_distribution<double> lat_distribution(-90., 90.);
+  std::uniform_real_distribution<double> long_distribution(-180., 180.);
+  std::uniform_real_distribution<double> alt_distribution(-519., 519.);
+
+  for (int i = 0; i < 1000; ++i) {
+    const double latitude = lat_distribution(rng);
+    const double longitude = long_distribution(rng);
+    const double altitude = alt_distribution(rng);
+    cartographer::transform::Rigid3d transform_to_local_frame =
+        ComputeLocalFrameFromLatLong(latitude, longitude);
+    EXPECT_TRUE((transform_to_local_frame *
+                 LatLongAltToEcef(latitude, longitude, altitude))
+                    .isApprox(altitude * Eigen::Vector3d::UnitZ(), 1e-6))
+        << transform_to_local_frame *
+               LatLongAltToEcef(latitude, longitude, altitude)
+        << "\n"
+        << altitude;
+  }
 }
 
 }  // namespace

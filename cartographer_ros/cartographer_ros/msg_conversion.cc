@@ -16,6 +16,9 @@
 
 #include "cartographer_ros/msg_conversion.h"
 
+#include <cmath>
+
+#include "cartographer/common/math.h"
 #include "cartographer/common/port.h"
 #include "cartographer/common/time.h"
 #include "cartographer/transform/proto/transform.pb.h"
@@ -252,22 +255,33 @@ geometry_msgs::Point ToGeometryMsgPoint(const Eigen::Vector3d& vector3d) {
 Eigen::Vector3d LatLongAltToEcef(const double latitude, const double longitude,
                                  const double altitude) {
   // https://en.wikipedia.org/wiki/Geographic_coordinate_conversion#From_geodetic_to_ECEF_coordinates
-  constexpr double a = 6378137;  // semi-major axis, equator to center.
-  constexpr double f = 1 / 298.257223563;
-  constexpr double b = a * (1 - f);  // semi-minor axis, pole to center.
+  constexpr double a = 6378137.;  // semi-major axis, equator to center.
+  constexpr double f = 1. / 298.257223563;
+  constexpr double b = a * (1. - f);  // semi-minor axis, pole to center.
   constexpr double a_squared = a * a;
   constexpr double b_squared = b * b;
   constexpr double e_squared = (a_squared - b_squared) / a_squared;
-  constexpr double kDegreesToRadians = M_PI / 180;
-  const double sin_phi = sin(latitude * kDegreesToRadians);
-  const double cos_phi = cos(latitude * kDegreesToRadians);
-  const double sin_lambda = sin(longitude * kDegreesToRadians);
-  const double cos_lambda = cos(longitude * kDegreesToRadians);
-  const double N = a / sqrt(1 - e_squared * sin_phi * sin_phi);
+  const double sin_phi = std::sin(cartographer::common::DegToRad(latitude));
+  const double cos_phi = std::cos(cartographer::common::DegToRad(latitude));
+  const double sin_lambda = std::sin(cartographer::common::DegToRad(longitude));
+  const double cos_lambda = std::cos(cartographer::common::DegToRad(longitude));
+  const double N = a / std::sqrt(1 - e_squared * sin_phi * sin_phi);
   const double x = (N + altitude) * cos_phi * cos_lambda;
   const double y = (N + altitude) * cos_phi * sin_lambda;
   const double z = (b_squared / a_squared * N + altitude) * sin_phi;
 
   return Eigen::Vector3d(x, y, z);
 }
+
+cartographer::transform::Rigid3d ComputeLocalFrameFromLatLong(
+    const double latitude, const double longitude) {
+  const Eigen::Vector3d translation = LatLongAltToEcef(latitude, longitude, 0.);
+  const Eigen::Quaterniond rotation =
+      Eigen::AngleAxisd(cartographer::common::DegToRad(latitude - 90.),
+                        Eigen::Vector3d::UnitY()) *
+      Eigen::AngleAxisd(cartographer::common::DegToRad(-longitude),
+                        Eigen::Vector3d::UnitZ());
+  return cartographer::transform::Rigid3d(rotation * -translation, rotation);
+}
+
 }  // namespace cartographer_ros
