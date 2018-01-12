@@ -75,7 +75,29 @@ void SensorBridge::HandleOdometryMessage(
 
 void SensorBridge::HandleNavSatFixMessage(
     const std::string& sensor_id, const sensor_msgs::NavSatFix::ConstPtr& msg) {
-  LOG(FATAL) << "TODO(spielawa / wohe): NavSatFix support not yet implemented.";
+  const carto::common::Time time = FromRos(msg->header.stamp);
+  if (msg->status.status == sensor_msgs::NavSatStatus::STATUS_NO_FIX) {
+    trajectory_builder_->AddSensorData(
+        sensor_id, cartographer::sensor::FixedFramePoseData{
+                       time, cartographer::common::optional<
+                                 cartographer::transform::Rigid3d>()});
+  } else {
+    if (!ecef_to_local_frame_.has_value()) {
+      ecef_to_local_frame_ =
+          ComputeLocalFrameFromLatLong(msg->latitude, msg->longitude);
+      LOG(INFO) << "Using NavSatFix. Setting ecef_to_local_frame.";
+    }
+
+    trajectory_builder_->AddSensorData(
+        sensor_id,
+        cartographer::sensor::FixedFramePoseData{
+            time,
+            cartographer::common::optional<cartographer::transform::Rigid3d>(
+                cartographer::transform::Rigid3d::Translation(
+                    ecef_to_local_frame_.value() *
+                    LatLongAltToEcef(msg->latitude, msg->longitude,
+                                     msg->altitude)))});
+  }
 }
 
 std::unique_ptr<::cartographer::sensor::ImuData> SensorBridge::ToImuData(
