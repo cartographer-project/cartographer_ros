@@ -68,8 +68,9 @@ class PlayableBagMultiplexer {
   void AddPlayableBag(PlayableBag playable_bag);
   bool IsMessageAvailable();
 
-  // Returns the next message from the multiplexed stream, along with the
-  // id of the trajectory corresponding to the message.
+  // Returns the next message from the multiplexed (merge-sorted) message
+  // stream, along with the bag id corresponding to the message, and whether
+  // this was the last message in that bag.
   std::tuple<int, rosbag::MessageInstance, bool> GetNextMessage();
 
  private:
