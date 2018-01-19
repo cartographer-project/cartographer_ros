@@ -199,7 +199,7 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
               .second);
 
     playable_bag_multiplexer.AddPlayableBag(PlayableBag(
-        bag_filename, trajectory_id, kDelay,
+        bag_filename, trajectory_id, ros::TIME_MIN, ros::TIME_MAX, kDelay,
         [&](const rosbag::MessageInstance& msg) {
           if (msg.isType<tf2_msgs::TFMessage>()) {
             if (FLAGS_use_bag_transforms) {

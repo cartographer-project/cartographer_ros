@@ -29,8 +29,9 @@ class PlayableBag {
  public:
   using BufferCallback = std::function<bool(const rosbag::MessageInstance&)>;
 
-  PlayableBag(const std::string bag_filename, const int bag_id,
-              ros::Duration buffer_delay, BufferCallback buffer_callback);
+  PlayableBag(const std::string& bag_filename, int bag_id, ros::Time start_time,
+              ros::Time end_time, ros::Duration buffer_delay,
+              BufferCallback buffer_callback);
 
   ros::Time PeekMessageTime();
 
