@@ -167,7 +167,7 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
        ++current_bag_index) {
     const std::string& bag_filename = bag_filenames.at(current_bag_index);
     if (!::ros::ok()) {
-      break;
+      return;
     }
     std::unordered_set<std::string> current_expected_sensor_topics;
     if (specified_sensor_topics.at(current_bag_index).empty()) {
@@ -206,7 +206,7 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
     const bool bag_has_more_messages = std::get<2>(next_msg_tuple);
 
     if (!::ros::ok()) {
-      break;
+      return;
     }
     const std::string topic =
         node.node_handle()->resolveName(msg.getTopic(), false /* resolve */);

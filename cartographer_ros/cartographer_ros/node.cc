@@ -122,7 +122,7 @@ Node::Node(
       &Node::PublishConstraintList, this));
 }
 
-Node::~Node() {}
+Node::~Node() { FinishAllTrajectories(); }
 
 ::ros::NodeHandle* Node::node_handle() { return &node_handle_; }
 
