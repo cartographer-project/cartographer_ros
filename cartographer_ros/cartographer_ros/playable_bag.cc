@@ -48,6 +48,10 @@ ros::Time PlayableBag::PeekMessageTime() {
   return buffered_messages_.front().getTime();
 }
 
+std::pair<ros::Time, ros::Time> PlayableBag::GetBeginEndTime() {
+  return std::make_pair(view_->getBeginTime(), view_->getEndTime());
+}
+
 rosbag::MessageInstance PlayableBag::GetNextMessage() {
   CHECK(IsMessageAvailable());
   const rosbag::MessageInstance msg = buffered_messages_.front();
