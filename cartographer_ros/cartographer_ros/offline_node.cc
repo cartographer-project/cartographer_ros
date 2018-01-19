@@ -21,8 +21,10 @@
 #include <sys/resource.h>
 #include <time.h>
 #include <chrono>
+#include <queue>
 
 #include "cartographer_ros/node.h"
+#include "cartographer_ros/split_string.h"
 #include "cartographer_ros/urdf_reader.h"
 #include "ros/callback_queue.h"
 #include "rosbag/bag.h"
@@ -32,6 +34,14 @@
 #include "tf2_ros/static_transform_broadcaster.h"
 #include "urdf/model.h"
 
+DEFINE_string(configuration_directory, "",
+              "First directory in which configuration files are searched, "
+              "second is always the Cartographer installation to allow "
+              "including files from there.");
+DEFINE_string(configuration_basename, "",
+              "Basename, i.e. not containing any directory prefix, of the "
+              "configuration file.");
+DEFINE_string(bag_filenames, "", "Comma-separated list of bags to process.");
 DEFINE_string(
     urdf_filename, "",
     "URDF file that contains static links for your sensor configuration.");
@@ -51,11 +61,26 @@ constexpr char kTfTopic[] = "tf";
 constexpr double kClockPublishFrequencySec = 1. / 30.;
 constexpr int kSingleThreaded = 1;
 
-void RunOfflineNode(
-    std::unique_ptr<cartographer::mapping::MapBuilderInterface> map_builder,
-    const cartographer_ros::NodeOptions& node_options,
-    const cartographer_ros::TrajectoryOptions& trajectory_options,
-    const std::vector<std::string>& bag_filenames) {
+void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
+  CHECK(!FLAGS_configuration_directory.empty())
+      << "-configuration_directory is missing.";
+  CHECK(!FLAGS_configuration_basename.empty())
+      << "-configuration_basename is missing.";
+  CHECK(!FLAGS_bag_filenames.empty()) << "-bag_filenames is missing.";
+  const auto bag_filenames =
+      cartographer_ros::SplitString(FLAGS_bag_filenames, ',');
+  cartographer_ros::NodeOptions node_options;
+  cartographer_ros::TrajectoryOptions trajectory_options;
+  std::tie(node_options, trajectory_options) = cartographer_ros::LoadOptions(
+      FLAGS_configuration_directory, FLAGS_configuration_basename);
+
+  // Since we preload the transform buffer, we should never have to wait for a
+  // transform. When we finish processing the bag, we will simply drop any
+  // remaining sensor data that cannot be transformed due to missing transforms.
+  node_options.lookup_transform_timeout_sec = 0.;
+
+  auto map_builder = map_builder_factory(node_options.map_builder_options);
+
   const std::chrono::time_point<std::chrono::steady_clock> start_time =
       std::chrono::steady_clock::now();
 
