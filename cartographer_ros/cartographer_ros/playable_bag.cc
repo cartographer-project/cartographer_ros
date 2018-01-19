@@ -23,35 +23,33 @@
 
 namespace cartographer_ros {
 
-PlayableBag::PlayableBag(const std::string bag_filename,
-                         tf2_ros::Buffer* const tf_buffer,
-                         ros::Publisher* const tf_publisher,
-                         const int trajectory_id, const bool use_bag_transforms)
+PlayableBag::PlayableBag(const std::string bag_filename, const int bag_id,
+                         ros::Duration buffer_delay,
+                         BufferCallback buffer_callback)
     : bag_(cartographer::common::make_unique<rosbag::Bag>(
           bag_filename, rosbag::bagmode::Read)),
       view_(cartographer::common::make_unique<rosbag::View>(*bag_)),
       view_iterator_(view_->begin()),
-      tf_buffer_(tf_buffer),
-      tf_publisher_(tf_publisher),
       finished_(false),
-      trajectory_id_(trajectory_id),
+      bag_id_(bag_id),
       bag_filename_(bag_filename),
       duration_in_seconds_(
           (view_->getEndTime() - view_->getBeginTime()).toSec()),
       log_counter_(0),
-      use_bag_transforms_(use_bag_transforms) {
+      buffer_delay_(buffer_delay),
+      buffer_callback_(std::move(buffer_callback)) {
   AdvanceUntilMessageAvailable();
 }
 
 ros::Time PlayableBag::PeekMessageTime() {
   CHECK(IsMessageAvailable());
-  return delayed_messages_.front().getTime();
+  return buffered_messages_.front().getTime();
 }
 
 rosbag::MessageInstance PlayableBag::GetNextMessage() {
   CHECK(IsMessageAvailable());
-  const rosbag::MessageInstance msg = delayed_messages_.front();
-  delayed_messages_.pop_front();
+  const rosbag::MessageInstance msg = buffered_messages_.front();
+  buffered_messages_.pop_front();
   AdvanceUntilMessageAvailable();
   if ((log_counter_++ % 10000) == 0) {
     LOG(INFO) << "Processed " << (msg.getTime() - view_->getBeginTime()).toSec()
@@ -62,12 +60,12 @@ rosbag::MessageInstance PlayableBag::GetNextMessage() {
 }
 
 bool PlayableBag::IsMessageAvailable() {
-  return !delayed_messages_.empty() &&
-         (delayed_messages_.front().getTime() <
-          delayed_messages_.back().getTime() - kDelay);
+  return !buffered_messages_.empty() &&
+         (buffered_messages_.front().getTime() <
+          buffered_messages_.back().getTime() - buffer_delay_);
 }
 
-int PlayableBag::trajectory_id() { return trajectory_id_; }
+int PlayableBag::bag_id() { return bag_id_; }
 
 void PlayableBag::AdvanceOneMessage() {
   CHECK(!finished_);
@@ -76,20 +74,8 @@ void PlayableBag::AdvanceOneMessage() {
     return;
   }
   rosbag::MessageInstance& msg = *view_iterator_;
-  if (use_bag_transforms_ && msg.isType<tf2_msgs::TFMessage>()) {
-    const auto tf_message = msg.instantiate<tf2_msgs::TFMessage>();
-    tf_publisher_->publish(tf_message);
-
-    for (const auto& transform : tf_message->transforms) {
-      try {
-        tf_buffer_->setTransform(transform, "unused_authority",
-                                 msg.getTopic() == kTfStaticTopic);
-      } catch (const tf2::TransformException& ex) {
-        LOG(WARNING) << ex.what();
-      }
-    }
-  } else {
-    delayed_messages_.push_back(msg);
+  if (buffer_callback_(msg)) {
+    buffered_messages_.push_back(msg);
   }
   ++view_iterator_;
 }
@@ -125,8 +111,7 @@ PlayableBagMultiplexer::GetNextMessage() {
     next_message_queue_.emplace(NextMessageTimestamp{
         playable_bags_.at(bag_index).PeekMessageTime(), bag_index});
   }
-  return std::make_tuple(playable_bags_.at(bag_index).trajectory_id(),
-                         std::move(msg),
+  return std::make_tuple(playable_bags_.at(bag_index).bag_id(), std::move(msg),
                          playable_bags_.at(bag_index).IsMessageAvailable());
 }
 

@@ -16,6 +16,7 @@
 
 #ifndef CARTOGRAPHER_ROS_PLAYABLE_BAG_H_
 #define CARTOGRAPHER_ROS_PLAYABLE_BAG_H_
+#include <functional>
 #include <queue>
 
 #include "rosbag/bag.h"
@@ -26,16 +27,17 @@ namespace cartographer_ros {
 
 class PlayableBag {
  public:
-  PlayableBag(const std::string bag_filename, tf2_ros::Buffer* const tf_buffer,
-              ros::Publisher* const tf_publisher, const int trajectory_id,
-              const bool use_bag_transforms);
+  using BufferCallback = std::function<bool(const rosbag::MessageInstance&)>;
+
+  PlayableBag(const std::string bag_filename, const int bag_id,
+              ros::Duration buffer_delay, BufferCallback buffer_callback);
 
   ros::Time PeekMessageTime();
 
   rosbag::MessageInstance GetNextMessage();
 
   bool IsMessageAvailable();
-  int trajectory_id();
+  int bag_id();
 
  private:
   void AdvanceOneMessage();
@@ -46,26 +48,19 @@ class PlayableBag {
   std::unique_ptr<rosbag::View> view_;
 
   rosbag::View::const_iterator view_iterator_;
-  tf2_ros::Buffer* const tf_buffer_;
-  ::ros::Publisher* const tf_publisher_;
 
   bool finished_;
-  const int trajectory_id_;
+  const int bag_id_;
 
   const std::string bag_filename_;
 
   const double duration_in_seconds_;
   int log_counter_;
 
-  // We need to keep 'tf_buffer' small because it becomes very inefficient
-  // otherwise. We make sure that tf_messages are published before any data
-  // messages, so that tf lookups always work.
-  std::deque<rosbag::MessageInstance> delayed_messages_;
-  const bool use_bag_transforms_;
-  // We publish tf messages one second earlier than other messages. Under
-  // the assumption of higher frequency tf this should ensure that tf can
-  // always interpolate.
-  const ::ros::Duration kDelay = ::ros::Duration(1.);
+  std::deque<rosbag::MessageInstance> buffered_messages_;
+
+  const ::ros::Duration buffer_delay_;
+  BufferCallback buffer_callback_;
 };
 
 class PlayableBagMultiplexer {

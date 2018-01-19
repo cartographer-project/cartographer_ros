@@ -62,6 +62,10 @@ namespace cartographer_ros {
 constexpr char kClockTopic[] = "clock";
 constexpr double kClockPublishFrequencySec = 1. / 30.;
 constexpr int kSingleThreaded = 1;
+// We publish tf messages one second earlier than other messages. Under
+// the assumption of higher frequency tf this should ensure that tf can
+// always interpolate.
+const ::ros::Duration kDelay = ::ros::Duration(1.0);
 
 void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
   CHECK(!FLAGS_configuration_directory.empty())
@@ -194,9 +198,32 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
                        std::forward_as_tuple(current_expected_sensor_topics))
               .second);
 
-    playable_bag_multiplexer.AddPlayableBag(
-        PlayableBag(bag_filename, &tf_buffer, &tf_publisher, trajectory_id,
-                    FLAGS_use_bag_transforms));
+    playable_bag_multiplexer.AddPlayableBag(PlayableBag(
+        bag_filename, trajectory_id, kDelay,
+        [&](const rosbag::MessageInstance& msg) {
+          if (msg.isType<tf2_msgs::TFMessage>()) {
+            if (FLAGS_use_bag_transforms) {
+              const auto tf_message = msg.instantiate<tf2_msgs::TFMessage>();
+              tf_publisher.publish(tf_message);
+
+              for (const auto& transform : tf_message->transforms) {
+                try {
+                  // We need to keep 'tf_buffer' small because it becomes very
+                  // inefficient otherwise. We make sure that tf_messages are
+                  // published before any data messages, so that tf lookups
+                  // always work.
+                  tf_buffer.setTransform(transform, "unused_authority",
+                                         msg.getTopic() == kTfStaticTopic);
+                } catch (const tf2::TransformException& ex) {
+                  LOG(WARNING) << ex.what();
+                }
+              }
+            }
+            return false;
+          } else {
+            return true;
+          }
+        }));
   }
 
   while (playable_bag_multiplexer.IsMessageAvailable()) {
