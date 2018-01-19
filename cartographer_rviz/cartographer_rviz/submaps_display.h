@@ -27,6 +27,8 @@
 #include "cartographer_ros_msgs/SubmapList.h"
 #include "cartographer_rviz/drawable_submap.h"
 #include "rviz/message_filter_display.h"
+#include "rviz/properties/bool_property.h"
+#include "rviz/properties/float_property.h"
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_listener.h"
 
@@ -93,6 +95,7 @@ class SubmapsDisplay
   ::rviz::BoolProperty* slice_low_resolution_enabled_;
   ::rviz::Property* trajectories_category_;
   ::rviz::BoolProperty* visibility_all_enabled_;
+  ::rviz::FloatProperty* fade_out_start_distance_in_meters_;
 };
 
 }  // namespace cartographer_rviz
