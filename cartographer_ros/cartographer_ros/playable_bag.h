@@ -27,6 +27,8 @@ namespace cartographer_ros {
 
 class PlayableBag {
  public:
+  // Processes messages as they are about to enter the buffer. Returns a boolean
+  // indicating whether the message should enter the buffer.
   using BufferCallback = std::function<bool(const rosbag::MessageInstance&)>;
 
   PlayableBag(const std::string& bag_filename, int bag_id, ros::Time start_time,
