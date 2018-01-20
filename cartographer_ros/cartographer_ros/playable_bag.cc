@@ -80,7 +80,7 @@ void PlayableBag::AdvanceOneMessage() {
     return;
   }
   rosbag::MessageInstance& msg = *view_iterator_;
-  if (buffer_callback_(msg)) {
+  if (!buffer_callback_ || buffer_callback_(msg)) {
     buffered_messages_.push_back(msg);
   }
   ++view_iterator_;
