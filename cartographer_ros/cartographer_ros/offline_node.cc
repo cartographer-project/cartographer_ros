@@ -60,6 +60,8 @@ DEFINE_string(sensor_topics, "",
 namespace cartographer_ros {
 
 constexpr char kClockTopic[] = "clock";
+constexpr char kTfStaticTopic[] = "/tf_static";
+constexpr char kTfTopic[] = "tf";
 constexpr double kClockPublishFrequencySec = 1. / 30.;
 constexpr int kSingleThreaded = 1;
 // We publish tf messages one second earlier than other messages. Under

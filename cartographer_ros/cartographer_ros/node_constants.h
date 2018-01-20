@@ -39,8 +39,6 @@ constexpr char kWriteStateServiceName[] = "write_state";
 constexpr char kTrajectoryNodeListTopic[] = "trajectory_node_list";
 constexpr char kConstraintListTopic[] = "constraint_list";
 constexpr double kConstraintPublishPeriodSec = 0.5;
-constexpr char kTfStaticTopic[] = "/tf_static";
-constexpr char kTfTopic[] = "tf";
 
 constexpr int kInfiniteSubscriberQueueSize = 0;
 constexpr int kLatestOnlyPublisherQueueSize = 1;
