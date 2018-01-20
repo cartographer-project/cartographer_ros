@@ -74,7 +74,7 @@ class PlayableBagMultiplexer {
   // Returns the next message from the multiplexed (merge-sorted) message
   // stream, along with the bag id corresponding to the message, and whether
   // this was the last message in that bag.
-  std::tuple<int, rosbag::MessageInstance, bool> GetNextMessage();
+  std::tuple<rosbag::MessageInstance, int, bool> GetNextMessage();
 
  private:
   std::vector<PlayableBag> playable_bags_;

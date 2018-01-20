@@ -106,7 +106,7 @@ bool PlayableBagMultiplexer::IsMessageAvailable() {
   return !next_message_queue_.empty();
 }
 
-std::tuple<int, rosbag::MessageInstance, bool>
+std::tuple<rosbag::MessageInstance, int, bool>
 PlayableBagMultiplexer::GetNextMessage() {
   CHECK(IsMessageAvailable());
   const int bag_index = next_message_queue_.top().playable_bag_index;
@@ -117,7 +117,7 @@ PlayableBagMultiplexer::GetNextMessage() {
     next_message_queue_.emplace(NextMessageTimestamp{
         playable_bags_.at(bag_index).PeekMessageTime(), bag_index});
   }
-  return std::make_tuple(playable_bags_.at(bag_index).bag_id(), std::move(msg),
+  return std::make_tuple(std::move(msg), playable_bags_.at(bag_index).bag_id(),
                          playable_bags_.at(bag_index).IsMessageAvailable());
 }
 

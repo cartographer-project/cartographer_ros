@@ -228,8 +228,8 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
 
   while (playable_bag_multiplexer.IsMessageAvailable()) {
     const auto next_msg_tuple = playable_bag_multiplexer.GetNextMessage();
-    const int trajectory_id = std::get<0>(next_msg_tuple);
-    const rosbag::MessageInstance& msg = std::get<1>(next_msg_tuple);
+    const rosbag::MessageInstance& msg = std::get<0>(next_msg_tuple);
+    const int trajectory_id = std::get<1>(next_msg_tuple);
     const bool bag_has_more_messages = std::get<2>(next_msg_tuple);
 
     if (!::ros::ok()) {
