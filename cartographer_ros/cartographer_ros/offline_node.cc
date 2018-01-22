@@ -230,7 +230,7 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
     const auto next_msg_tuple = playable_bag_multiplexer.GetNextMessage();
     const rosbag::MessageInstance& msg = std::get<0>(next_msg_tuple);
     const int bag_index = std::get<1>(next_msg_tuple);
-    const bool bag_has_more_messages = std::get<2>(next_msg_tuple);
+    const bool bag_last_message = std::get<2>(next_msg_tuple);
 
     int trajectory_id;
     // Lazily add trajectories only when the first message arrives.
@@ -280,7 +280,7 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
     clock.clock = msg.getTime();
     clock_publisher.publish(clock);
 
-    if (!bag_has_more_messages) {
+    if (bag_last_message) {
       node.FinishTrajectory(trajectory_id);
     }
   }

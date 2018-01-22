@@ -118,7 +118,7 @@ PlayableBagMultiplexer::GetNextMessage() {
         playable_bags_.at(bag_index).PeekMessageTime(), bag_index});
   }
   return std::make_tuple(std::move(msg), playable_bags_.at(bag_index).bag_id(),
-                         playable_bags_.at(bag_index).IsMessageAvailable());
+                         !playable_bags_.at(bag_index).IsMessageAvailable());
 }
 
 }  // namespace cartographer_ros
