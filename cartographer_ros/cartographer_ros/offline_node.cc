@@ -168,6 +168,7 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
 
   std::unordered_map<int, std::unordered_set<std::string>>
       expected_sensor_topics;
+  std::unordered_map<int, int> bag_id_to_trajectory_id;
   PlayableBagMultiplexer playable_bag_multiplexer;
   for (size_t current_bag_index = 0; current_bag_index < bag_filenames.size();
        ++current_bag_index) {
@@ -191,17 +192,14 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
                   .second);
       }
     }
-    const int trajectory_id =
-        node.AddOfflineTrajectory(current_expected_sensor_topics,
-                                  trajectory_options.at(current_bag_index));
     CHECK(expected_sensor_topics
               .emplace(std::piecewise_construct,
-                       std::forward_as_tuple(trajectory_id),
+                       std::forward_as_tuple(current_bag_index),
                        std::forward_as_tuple(current_expected_sensor_topics))
               .second);
 
     playable_bag_multiplexer.AddPlayableBag(PlayableBag(
-        bag_filename, trajectory_id, ros::TIME_MIN, ros::TIME_MAX, kDelay,
+        bag_filename, current_bag_index, ros::TIME_MIN, ros::TIME_MAX, kDelay,
         [&](const rosbag::MessageInstance& msg) {
           if (msg.isType<tf2_msgs::TFMessage>()) {
             if (FLAGS_use_bag_transforms) {
@@ -231,15 +229,30 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
   while (playable_bag_multiplexer.IsMessageAvailable()) {
     const auto next_msg_tuple = playable_bag_multiplexer.GetNextMessage();
     const rosbag::MessageInstance& msg = std::get<0>(next_msg_tuple);
-    const int trajectory_id = std::get<1>(next_msg_tuple);
+    const int bag_index = std::get<1>(next_msg_tuple);
     const bool bag_has_more_messages = std::get<2>(next_msg_tuple);
+
+    int trajectory_id;
+    // Lazily add trajectories only when the first message arrives.
+    if (bag_id_to_trajectory_id.count(bag_index) == 0) {
+      trajectory_id =
+          node.AddOfflineTrajectory(expected_sensor_topics.at(bag_index),
+                                    trajectory_options.at(bag_index));
+      CHECK(bag_id_to_trajectory_id
+                .emplace(std::piecewise_construct,
+                         std::forward_as_tuple(bag_index),
+                         std::forward_as_tuple(trajectory_id))
+                .second);
+    } else {
+      trajectory_id = bag_id_to_trajectory_id.at(bag_index);
+    }
 
     if (!::ros::ok()) {
       return;
     }
     const std::string topic =
         node.node_handle()->resolveName(msg.getTopic(), false /* resolve */);
-    if (expected_sensor_topics.at(trajectory_id).count(topic) == 0) {
+    if (expected_sensor_topics.at(bag_index).count(topic) == 0) {
       continue;
     }
 
