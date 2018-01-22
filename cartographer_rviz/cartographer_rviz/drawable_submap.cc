@@ -35,7 +35,6 @@ namespace cartographer_rviz {
 namespace {
 
 constexpr std::chrono::milliseconds kMinQueryDelayInMs(250);
-
 constexpr float kAlphaUpdateThreshold = 0.2f;
 
 const Ogre::ColourValue kSubmapIdColor(Ogre::ColourValue::Red);

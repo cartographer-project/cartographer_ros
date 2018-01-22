@@ -69,10 +69,9 @@ class DrawableSubmap : public QObject {
 
   // Sets the alpha of the submap taking into account its slice height and the
   // 'current_tracking_z'. 'fade_out_start_distance_in_meters' defines the
-  // distance in z
-  // direction, before which the submap will be shown at full opacity.
-  void SetAlpha(double current_tracking_z,
-                float fade_out_start_distance_in_meters);
+  // distance in z direction in meters, before which the submap will be shown
+  // at full opacity.
+  void SetAlpha(double current_tracking_z, float fade_out_distance_in_meters);
 
   // Sets the visibility of a slice. It will be drawn if the parent submap
   // is also visible.
