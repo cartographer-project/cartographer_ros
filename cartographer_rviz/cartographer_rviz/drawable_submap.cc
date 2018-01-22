@@ -36,8 +36,6 @@ namespace {
 
 constexpr std::chrono::milliseconds kMinQueryDelayInMs(250);
 
-// Distance before which the submap will be shown at full opacity, and distance
-// over which the submap will then fade out.
 constexpr float kAlphaUpdateThreshold = 0.2f;
 
 const Ogre::ColourValue kSubmapIdColor(Ogre::ColourValue::Red);
