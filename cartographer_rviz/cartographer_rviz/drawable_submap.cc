@@ -152,7 +152,7 @@ bool DrawableSubmap::QueryInProgress() {
 void DrawableSubmap::SetAlpha(const double current_tracking_z,
                               const float fade_out_start_distance_in_meters) {
   const float fade_out_distance_in_meters =
-      2 * fade_out_start_distance_in_meters;
+      2.f * fade_out_start_distance_in_meters;
   const double distance_z =
       std::abs(pose_.translation().z() - current_tracking_z);
   const double fade_distance =
