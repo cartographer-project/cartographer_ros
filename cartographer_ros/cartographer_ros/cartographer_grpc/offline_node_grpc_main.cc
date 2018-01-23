@@ -17,7 +17,6 @@
 #include "cartographer_grpc/mapping/map_builder_stub.h"
 #include "cartographer_ros/offline_node.h"
 #include "cartographer_ros/ros_log_sink.h"
-#include "cartographer_ros/split_string.h"
 #include "gflags/gflags.h"
 #include "ros/ros.h"
 
