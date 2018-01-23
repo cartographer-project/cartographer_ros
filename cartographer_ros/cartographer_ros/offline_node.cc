@@ -26,6 +26,7 @@
 #include "cartographer_ros/playable_bag.h"
 #include "cartographer_ros/split_string.h"
 #include "cartographer_ros/urdf_reader.h"
+#include "gflags/gflags.h"
 #include "ros/callback_queue.h"
 #include "rosgraph_msgs/Clock.h"
 #include "tf2_ros/static_transform_broadcaster.h"
