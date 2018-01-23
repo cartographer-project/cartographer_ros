@@ -17,6 +17,7 @@
 #include "cartographer/mapping/map_builder.h"
 #include "cartographer_ros/offline_node.h"
 #include "cartographer_ros/ros_log_sink.h"
+#include "gflags/gflags.h"
 #include "ros/ros.h"
 
 int main(int argc, char** argv) {
