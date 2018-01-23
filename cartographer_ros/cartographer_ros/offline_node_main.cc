@@ -20,15 +20,6 @@
 #include "gflags/gflags.h"
 #include "ros/ros.h"
 
-DEFINE_string(configuration_directory, "",
-              "First directory in which configuration files are searched, "
-              "second is always the Cartographer installation to allow "
-              "including files from there.");
-DEFINE_string(configuration_basename, "",
-              "Basename, i.e. not containing any directory prefix, of the "
-              "configuration file.");
-DEFINE_string(bag_filenames, "", "Comma-separated list of bags to process.");
-
 int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
   google::ParseCommandLineFlags(&argc, &argv, true);
