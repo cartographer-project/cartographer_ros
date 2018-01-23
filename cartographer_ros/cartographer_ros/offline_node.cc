@@ -35,15 +35,19 @@ DEFINE_string(configuration_directory, "",
               "First directory in which configuration files are searched, "
               "second is always the Cartographer installation to allow "
               "including files from there.");
-DEFINE_string(configuration_basenames, "",
-              "Basenames, i.e. not containing any directory prefix, of the "
-              "configuration files for each trajectory.");
+DEFINE_string(
+    configuration_basenames, "",
+    "Comma-separated list of basenames, i.e. not containing any "
+    "directory prefix, of the configuration files for each trajectory. "
+    "The first configuration file will be used for node options."
+    "If less configuration files are specified than trajectories, the "
+    "first file will be used the remaining trajectories.");
 DEFINE_string(
     bag_filenames, "",
     "Comma-separated list of bags to process. One bag per trajectory.");
 DEFINE_string(urdf_filenames, "",
-              "One or more URDF files that contains static links for your "
-              "sensor configuration.");
+              "Comma-separated list of one or more URDF files that contain "
+              "static links for the sensor configuration(s).");
 DEFINE_bool(use_bag_transforms, true,
             "Whether to read, use and republish transforms from bags.");
 DEFINE_string(pbstream_filename, "",
@@ -52,10 +56,14 @@ DEFINE_bool(keep_running, false,
             "Keep running the offline node after all messages from the bag "
             "have been processed.");
 DEFINE_string(sensor_topics, "",
-              "Optional list of sensor topics for each trajectory. A single "
-              "trajectory's topics are delimited with colons, while different "
-              "trajectories are delimited with commas. If a blank list is "
-              "given for a trajectory, the default topics are used.");
+              "Optional comma-separated list of colon-separated lists of "
+              "sensor topics for each trajectory. A single trajectory's topics "
+              "are delimited with colons, while different trajectories are "
+              "delimited with commas. If a blank list is given for a "
+              "trajectory, the default topics are used. If a single "
+              "colon-separated list is given, it will be used for all "
+              "trajectories. If omitted, default topics will be used "
+              "for all trajectories.");
 
 namespace cartographer_ros {
 
@@ -80,23 +88,21 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
   cartographer_ros::NodeOptions node_options;
   const auto configuration_basenames =
       cartographer_ros::SplitString(FLAGS_configuration_basenames, ',');
-  TrajectoryOptions first_trajectory_options;
-  std::tie(node_options, first_trajectory_options) =
+  std::vector<TrajectoryOptions> bag_trajectory_options(1);
+  std::tie(node_options, bag_trajectory_options.at(0)) =
       LoadOptions(FLAGS_configuration_directory, configuration_basenames.at(0));
 
-  std::vector<TrajectoryOptions> trajectory_options;
-  if (configuration_basenames.size() == 1) {
-    trajectory_options = std::vector<TrajectoryOptions>{
-        bag_filenames.size(), first_trajectory_options};
-  } else {
-    for (const std::string& configuration_basename : configuration_basenames) {
-      TrajectoryOptions current_trajectory_options;
-      std::tie(std::ignore, current_trajectory_options) =
-          LoadOptions(FLAGS_configuration_directory, configuration_basename);
-      trajectory_options.push_back(std::move(current_trajectory_options));
+  for (size_t bag_index = 1; bag_index < bag_filenames.size(); ++bag_index) {
+    TrajectoryOptions current_trajectory_options;
+    if (bag_index < configuration_basenames.size()) {
+      std::tie(std::ignore, current_trajectory_options) = LoadOptions(
+          FLAGS_configuration_directory, configuration_basenames.at(bag_index));
+    } else {
+      current_trajectory_options = bag_trajectory_options.at(0);
     }
+    bag_trajectory_options.push_back(current_trajectory_options);
   }
-  CHECK_EQ(trajectory_options.size(), bag_filenames.size());
+  CHECK_EQ(bag_trajectory_options.size(), bag_filenames.size());
 
   // Since we preload the transform buffer, we should never have to wait for a
   // transform. When we finish processing the bag, we will simply drop any
@@ -153,22 +159,28 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
       },
       false /* oneshot */, false /* autostart */);
 
-  std::vector<std::string> specified_sensor_topics =
-      cartographer_ros::SplitString(FLAGS_sensor_topics, ',');
+  // Colon-delimited string lists of sensor topics for each bag.
+  std::vector<std::string> bag_sensor_topics_strings;
 
-  if (specified_sensor_topics.empty()) {
-    specified_sensor_topics =
+  if (FLAGS_sensor_topics.empty()) {
+    // Use default topic names for all bags, denoted by an empty sensor
+    // topic list string for each bag.
+    bag_sensor_topics_strings =
         std::vector<std::string>(bag_filenames.size(), std::string());
-  } else if (specified_sensor_topics.size() == 1) {
-    specified_sensor_topics.insert(specified_sensor_topics.end(),
-                                   bag_filenames.size() - 1,
-                                   specified_sensor_topics.at(0));
+  } else {
+    bag_sensor_topics_strings =
+        cartographer_ros::SplitString(FLAGS_sensor_topics, ',');
+    if (bag_sensor_topics_strings.size() == 1) {
+      // Use the single specified topic list string for all bags.
+      bag_sensor_topics_strings.insert(bag_sensor_topics_strings.end(),
+                                       bag_filenames.size() - 1,
+                                       bag_sensor_topics_strings.at(0));
+    }
   }
-  CHECK_EQ(specified_sensor_topics.size(), bag_filenames.size());
+  CHECK_EQ(bag_sensor_topics_strings.size(), bag_filenames.size());
 
-  std::unordered_map<int, std::unordered_set<std::string>>
-      expected_sensor_topics;
-  std::unordered_map<int, int> bag_id_to_trajectory_id;
+  std::vector<std::unordered_set<std::string>> bag_sensor_topics;
+  std::unordered_map<int, int> bag_index_to_trajectory_id;
   PlayableBagMultiplexer playable_bag_multiplexer;
   for (size_t current_bag_index = 0; current_bag_index < bag_filenames.size();
        ++current_bag_index) {
@@ -176,31 +188,29 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
     if (!::ros::ok()) {
       return;
     }
-    std::unordered_set<std::string> current_expected_sensor_topics;
-    if (specified_sensor_topics.at(current_bag_index).empty()) {
-      for (const std::string& topic : node.ComputeDefaultTopics(
-               trajectory_options.at(current_bag_index))) {
-        CHECK(current_expected_sensor_topics
-                  .insert(node.node_handle()->resolveName(topic))
-                  .second);
-      }
+    std::vector<std::string> unresolved_current_bag_sensor_topics;
+    if (bag_sensor_topics_strings.at(current_bag_index).empty()) {
+      // Empty topic list string provided for this trajectory,
+      // use default topics.
+      const auto default_topics = node.ComputeDefaultTopics(
+          bag_trajectory_options.at(current_bag_index));
+      unresolved_current_bag_sensor_topics = std::vector<std::string>(
+          default_topics.begin(), default_topics.end());
     } else {
-      for (const std::string& topic : cartographer_ros::SplitString(
-               specified_sensor_topics.at(current_bag_index), ':')) {
-        CHECK(current_expected_sensor_topics
-                  .insert(node.node_handle()->resolveName(topic))
-                  .second);
-      }
+      unresolved_current_bag_sensor_topics = cartographer_ros::SplitString(
+          bag_sensor_topics_strings.at(current_bag_index), ':');
     }
-    CHECK(expected_sensor_topics
-              .emplace(std::piecewise_construct,
-                       std::forward_as_tuple(current_bag_index),
-                       std::forward_as_tuple(current_expected_sensor_topics))
-              .second);
+    std::unordered_set<std::string> current_bag_sensor_topics;
+    for (const auto& topic : unresolved_current_bag_sensor_topics) {
+      CHECK(current_bag_sensor_topics
+                .insert(node.node_handle()->resolveName(topic))
+                .second);
+    }
+    bag_sensor_topics.push_back(current_bag_sensor_topics);
 
     playable_bag_multiplexer.AddPlayableBag(PlayableBag(
         bag_filename, current_bag_index, ros::TIME_MIN, ros::TIME_MAX, kDelay,
-        [&](const rosbag::MessageInstance& msg) {
+        [&tf_publisher, &tf_buffer](const rosbag::MessageInstance& msg) {
           if (msg.isType<tf2_msgs::TFMessage>()) {
             if (FLAGS_use_bag_transforms) {
               const auto tf_message = msg.instantiate<tf2_msgs::TFMessage>();
@@ -219,27 +229,30 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
                 }
               }
             }
+            // Tell 'PlayableBag' to filter the tf message since there is no
+            // further use for it.
             return false;
           } else {
             return true;
           }
         }));
   }
+  CHECK_EQ(bag_sensor_topics.size(), bag_filenames.size());
 
   while (playable_bag_multiplexer.IsMessageAvailable()) {
     const auto next_msg_tuple = playable_bag_multiplexer.GetNextMessage();
     const rosbag::MessageInstance& msg = std::get<0>(next_msg_tuple);
     const int bag_index = std::get<1>(next_msg_tuple);
-    const bool bag_last_message = std::get<2>(next_msg_tuple);
+    const bool is_last_message_in_bag = std::get<2>(next_msg_tuple);
 
     int trajectory_id;
     // Lazily add trajectories only when the first message arrives in order
     // to avoid blocking the sensor queue.
-    if (bag_id_to_trajectory_id.count(bag_index) == 0) {
+    if (bag_index_to_trajectory_id.count(bag_index) == 0) {
       trajectory_id =
-          node.AddOfflineTrajectory(expected_sensor_topics.at(bag_index),
-                                    trajectory_options.at(bag_index));
-      CHECK(bag_id_to_trajectory_id
+          node.AddOfflineTrajectory(bag_sensor_topics.at(bag_index),
+                                    bag_trajectory_options.at(bag_index));
+      CHECK(bag_index_to_trajectory_id
                 .emplace(std::piecewise_construct,
                          std::forward_as_tuple(bag_index),
                          std::forward_as_tuple(trajectory_id))
@@ -247,7 +260,7 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
       LOG(INFO) << "Assigned trajectory " << trajectory_id << " to bag "
                 << bag_filenames.at(bag_index);
     } else {
-      trajectory_id = bag_id_to_trajectory_id.at(bag_index);
+      trajectory_id = bag_index_to_trajectory_id.at(bag_index);
     }
 
     if (!::ros::ok()) {
@@ -255,7 +268,7 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
     }
     const std::string topic =
         node.node_handle()->resolveName(msg.getTopic(), false /* resolve */);
-    if (expected_sensor_topics.at(bag_index).count(topic) == 0) {
+    if (bag_sensor_topics.at(bag_index).count(topic) == 0) {
       continue;
     }
 
@@ -280,10 +293,14 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
       node.HandleOdometryMessage(trajectory_id, topic,
                                  msg.instantiate<nav_msgs::Odometry>());
     }
+    if (msg.isType<sensor_msgs::NavSatFix>()) {
+      node.HandleNavSatFixMessage(trajectory_id, topic,
+                                  msg.instantiate<sensor_msgs::NavSatFix>());
+    }
     clock.clock = msg.getTime();
     clock_publisher.publish(clock);
 
-    if (bag_last_message) {
+    if (is_last_message_in_bag) {
       node.FinishTrajectory(trajectory_id);
     }
   }

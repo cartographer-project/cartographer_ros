@@ -27,71 +27,67 @@ namespace cartographer_ros {
 
 class PlayableBag {
  public:
-  // Processes messages as they are about to enter the buffer. Returns a boolean
+  // Handles messages as they are about to enter the buffer. Returns a boolean
   // indicating whether the message should enter the buffer.
-  using BufferCallback = std::function<bool(const rosbag::MessageInstance&)>;
+  using FilteringMessageHandler =
+      std::function<bool /* forward_message_to_buffer */ (
+          const rosbag::MessageInstance&)>;
 
   PlayableBag(const std::string& bag_filename, int bag_id, ros::Time start_time,
               ros::Time end_time, ros::Duration buffer_delay,
-              BufferCallback buffer_callback);
+              FilteringMessageHandler filtering_message_handler);
 
   ros::Time PeekMessageTime();
-
   rosbag::MessageInstance GetNextMessage();
-
-  std::pair<ros::Time, ros::Time> GetBeginEndTime();
-
   bool IsMessageAvailable();
+  std::tuple<ros::Time, ros::Time> GetBeginEndTime();
+
   int bag_id();
 
  private:
   void AdvanceOneMessage();
-
   void AdvanceUntilMessageAvailable();
 
   std::unique_ptr<rosbag::Bag> bag_;
   std::unique_ptr<rosbag::View> view_;
-
   rosbag::View::const_iterator view_iterator_;
-
   bool finished_;
   const int bag_id_;
-
   const std::string bag_filename_;
-
   const double duration_in_seconds_;
   int log_counter_;
-
   std::deque<rosbag::MessageInstance> buffered_messages_;
-
   const ::ros::Duration buffer_delay_;
-  BufferCallback buffer_callback_;
+  FilteringMessageHandler filtering_message_handler_;
 };
 
 class PlayableBagMultiplexer {
  public:
   void AddPlayableBag(PlayableBag playable_bag);
-  bool IsMessageAvailable();
 
   // Returns the next message from the multiplexed (merge-sorted) message
   // stream, along with the bag id corresponding to the message, and whether
   // this was the last message in that bag.
-  std::tuple<rosbag::MessageInstance, int, bool> GetNextMessage();
+  std::tuple<rosbag::MessageInstance, int /* bag_id */,
+             bool /* is_last_message_in_bag */>
+  GetNextMessage();
+
+  bool IsMessageAvailable();
 
  private:
+  struct BagMessageItem {
+    ros::Time message_timestamp;
+    int bag_index;
+    struct TimestampIsGreater {
+      bool operator()(const BagMessageItem& l, const BagMessageItem& r) {
+        return l.message_timestamp > r.message_timestamp;
+      }
+    };
+  };
+
   std::vector<PlayableBag> playable_bags_;
-  struct NextMessageTimestamp {
-    ros::Time next_message_timestamp;
-    int playable_bag_index;
-  };
-  struct cmp {
-    bool operator()(const NextMessageTimestamp& l,
-                    const NextMessageTimestamp& r) {
-      return l.next_message_timestamp > r.next_message_timestamp;
-    }
-  };
-  std::priority_queue<NextMessageTimestamp, std::vector<NextMessageTimestamp>,
-                      cmp>
+  std::priority_queue<BagMessageItem, std::vector<BagMessageItem>,
+                      BagMessageItem::TimestampIsGreater>
       next_message_queue_;
 };
 
