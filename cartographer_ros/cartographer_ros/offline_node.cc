@@ -233,7 +233,8 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
     const bool bag_last_message = std::get<2>(next_msg_tuple);
 
     int trajectory_id;
-    // Lazily add trajectories only when the first message arrives.
+    // Lazily add trajectories only when the first message arrives in order
+    // to avoid blocking the sensor queue.
     if (bag_id_to_trajectory_id.count(bag_index) == 0) {
       trajectory_id =
           node.AddOfflineTrajectory(expected_sensor_topics.at(bag_index),
