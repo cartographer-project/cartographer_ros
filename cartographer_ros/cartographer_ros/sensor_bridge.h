@@ -19,6 +19,7 @@
 
 #include <memory>
 
+#include "cartographer/common/optional.h"
 #include "cartographer/mapping/trajectory_builder_interface.h"
 #include "cartographer/sensor/imu_data.h"
 #include "cartographer/sensor/odometry_data.h"
@@ -32,6 +33,7 @@
 #include "sensor_msgs/Imu.h"
 #include "sensor_msgs/LaserScan.h"
 #include "sensor_msgs/MultiEchoLaserScan.h"
+#include "sensor_msgs/NavSatFix.h"
 #include "sensor_msgs/PointCloud2.h"
 
 namespace cartographer_ros {
@@ -51,6 +53,8 @@ class SensorBridge {
       const nav_msgs::Odometry::ConstPtr& msg);
   void HandleOdometryMessage(const std::string& sensor_id,
                              const nav_msgs::Odometry::ConstPtr& msg);
+  void HandleNavSatFixMessage(const std::string& sensor_id,
+                              const sensor_msgs::NavSatFix::ConstPtr& msg);
   std::unique_ptr<::cartographer::sensor::ImuData> ToImuData(
       const sensor_msgs::Imu::ConstPtr& msg);
   void HandleImuMessage(const std::string& sensor_id,
@@ -79,6 +83,9 @@ class SensorBridge {
   const TfBridge tf_bridge_;
   ::cartographer::mapping::TrajectoryBuilderInterface* const
       trajectory_builder_;
+
+  ::cartographer::common::optional<::cartographer::transform::Rigid3d>
+      ecef_to_local_frame_;
 };
 
 }  // namespace cartographer_ros

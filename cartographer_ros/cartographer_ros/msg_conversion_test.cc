@@ -17,6 +17,7 @@
 #include "cartographer_ros/msg_conversion.h"
 
 #include <cmath>
+#include <random>
 
 #include "gtest/gtest.h"
 #include "sensor_msgs/LaserScan.h"
@@ -79,6 +80,75 @@ TEST(MsgConversion, LaserScanToPointCloudWithInfinityAndNaN) {
       point_cloud[0].isApprox(Eigen::Vector4f(0.f, 2.f, 0.f, 0.f), 1e-6));
   EXPECT_TRUE(
       point_cloud[1].isApprox(Eigen::Vector4f(-3.f, 0.f, 0.f, 0.f), 1e-6));
+}
+
+TEST(MsgConversion, LatLongAltToEcef) {
+  Eigen::Vector3d equator_prime_meridian = LatLongAltToEcef(0, 0, 0);
+  EXPECT_TRUE(equator_prime_meridian.isApprox(Eigen::Vector3d(6378137, 0, 0)))
+      << equator_prime_meridian;
+  Eigen::Vector3d plus_ten_meters = LatLongAltToEcef(0, 0, 10);
+  EXPECT_TRUE(plus_ten_meters.isApprox(Eigen::Vector3d(6378147, 0, 0)))
+      << plus_ten_meters;
+  Eigen::Vector3d north_pole = LatLongAltToEcef(90, 0, 0);
+  EXPECT_TRUE(north_pole.isApprox(Eigen::Vector3d(0, 0, 6356752.3142), 1e-9))
+      << north_pole;
+  Eigen::Vector3d also_north_pole = LatLongAltToEcef(90, 90, 0);
+  EXPECT_TRUE(
+      also_north_pole.isApprox(Eigen::Vector3d(0, 0, 6356752.3142), 1e-9))
+      << also_north_pole;
+  Eigen::Vector3d south_pole = LatLongAltToEcef(-90, 0, 0);
+  EXPECT_TRUE(south_pole.isApprox(Eigen::Vector3d(0, 0, -6356752.3142), 1e-9))
+      << south_pole;
+  Eigen::Vector3d above_south_pole = LatLongAltToEcef(-90, 60, 20);
+  EXPECT_TRUE(
+      above_south_pole.isApprox(Eigen::Vector3d(0, 0, -6356772.3142), 1e-9))
+      << above_south_pole;
+  Eigen::Vector3d somewhere_on_earth =
+      LatLongAltToEcef(48.1372149, 11.5748024, 517.1);
+  EXPECT_TRUE(somewhere_on_earth.isApprox(
+      Eigen::Vector3d(4177983, 855702, 4727457), 1e-6))
+      << somewhere_on_earth;
+}
+
+TEST(MsgConversion, ComputeLocalFrameFromLatLong) {
+  cartographer::transform::Rigid3d north_pole =
+      ComputeLocalFrameFromLatLong(90., 0.);
+  EXPECT_TRUE((north_pole * LatLongAltToEcef(90., 0., 1.))
+                  .isApprox(Eigen::Vector3d::UnitZ()));
+  cartographer::transform::Rigid3d south_pole =
+      ComputeLocalFrameFromLatLong(-90., 0.);
+  EXPECT_TRUE((south_pole * LatLongAltToEcef(-90., 0., 1.))
+                  .isApprox(Eigen::Vector3d::UnitZ()));
+  cartographer::transform::Rigid3d prime_meridian_equator =
+      ComputeLocalFrameFromLatLong(0., 0.);
+  EXPECT_TRUE((prime_meridian_equator * LatLongAltToEcef(0., 0., 1.))
+                  .isApprox(Eigen::Vector3d::UnitZ()))
+      << prime_meridian_equator * LatLongAltToEcef(0., 0., 1.);
+  cartographer::transform::Rigid3d meridian_90_equator =
+      ComputeLocalFrameFromLatLong(0., 90.);
+  EXPECT_TRUE((meridian_90_equator * LatLongAltToEcef(0., 90., 1.))
+                  .isApprox(Eigen::Vector3d::UnitZ()))
+      << meridian_90_equator * LatLongAltToEcef(0., 90., 1.);
+
+  std::mt19937 rng(42);
+  std::uniform_real_distribution<double> lat_distribution(-90., 90.);
+  std::uniform_real_distribution<double> long_distribution(-180., 180.);
+  std::uniform_real_distribution<double> alt_distribution(-519., 519.);
+
+  for (int i = 0; i < 1000; ++i) {
+    const double latitude = lat_distribution(rng);
+    const double longitude = long_distribution(rng);
+    const double altitude = alt_distribution(rng);
+    cartographer::transform::Rigid3d transform_to_local_frame =
+        ComputeLocalFrameFromLatLong(latitude, longitude);
+    EXPECT_TRUE((transform_to_local_frame *
+                 LatLongAltToEcef(latitude, longitude, altitude))
+                    .isApprox(altitude * Eigen::Vector3d::UnitZ(), 1e-6))
+        << transform_to_local_frame *
+               LatLongAltToEcef(latitude, longitude, altitude)
+        << "\n"
+        << altitude;
+  }
 }
 
 }  // namespace

@@ -52,6 +52,7 @@ cartographer_ros_msgs::SensorTopics DefaultSensorTopics() {
   topics.point_cloud2_topic = kPointCloud2Topic;
   topics.imu_topic = kImuTopic;
   topics.odometry_topic = kOdometryTopic;
+  topics.nav_sat_fix_topic = kNavSatFixTopic;
   return topics;
 }
 
@@ -159,9 +160,9 @@ void Node::AddSensorSamplers(const int trajectory_id,
   CHECK(sensor_samplers_.count(trajectory_id) == 0);
   sensor_samplers_.emplace(
       std::piecewise_construct, std::forward_as_tuple(trajectory_id),
-      std::forward_as_tuple(options.rangefinder_sampling_ratio,
-                            options.odometry_sampling_ratio,
-                            options.imu_sampling_ratio));
+      std::forward_as_tuple(
+          options.rangefinder_sampling_ratio, options.odometry_sampling_ratio,
+          options.fixed_frame_pose_sampling_ratio, options.imu_sampling_ratio));
 }
 
 void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
@@ -284,6 +285,11 @@ std::unordered_set<std::string> Node::ComputeExpectedTopics(
   if (options.use_odometry) {
     expected_topics.insert(topics.odometry_topic);
   }
+  // NavSatFix is optional.
+  if (options.use_nav_sat) {
+    expected_topics.insert(topics.nav_sat_fix_topic);
+  }
+
   return expected_topics;
 }
 
@@ -351,6 +357,14 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
         {SubscribeWithHandler<nav_msgs::Odometry>(&Node::HandleOdometryMessage,
                                                   trajectory_id, topic,
                                                   &node_handle_, this),
+         topic});
+  }
+  if (options.use_nav_sat) {
+    std::string topic = topics.nav_sat_fix_topic;
+    subscribers_[trajectory_id].push_back(
+        {SubscribeWithHandler<sensor_msgs::NavSatFix>(
+             &Node::HandleNavSatFixMessage, trajectory_id, topic, &node_handle_,
+             this),
          topic});
   }
 }
@@ -502,6 +516,17 @@ void Node::HandleOdometryMessage(const int trajectory_id,
   sensor_bridge_ptr->HandleOdometryMessage(sensor_id, msg);
 }
 
+void Node::HandleNavSatFixMessage(const int trajectory_id,
+                                  const std::string& sensor_id,
+                                  const sensor_msgs::NavSatFix::ConstPtr& msg) {
+  carto::common::MutexLocker lock(&mutex_);
+  if (!sensor_samplers_.at(trajectory_id).fixed_frame_pose_sampler.Pulse()) {
+    return;
+  }
+  map_builder_bridge_.sensor_bridge(trajectory_id)
+      ->HandleNavSatFixMessage(sensor_id, msg);
+}
+
 void Node::HandleImuMessage(const int trajectory_id,
                             const std::string& sensor_id,
                             const sensor_msgs::Imu::ConstPtr& msg) {
@@ -529,7 +554,7 @@ void Node::HandleLaserScanMessage(const int trajectory_id,
 }
 
 void Node::HandleMultiEchoLaserScanMessage(
-    int trajectory_id, const std::string& sensor_id,
+    const int trajectory_id, const std::string& sensor_id,
     const sensor_msgs::MultiEchoLaserScan::ConstPtr& msg) {
   carto::common::MutexLocker lock(&mutex_);
   if (!sensor_samplers_.at(trajectory_id).rangefinder_sampler.Pulse()) {
