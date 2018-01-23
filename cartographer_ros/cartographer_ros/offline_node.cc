@@ -243,6 +243,8 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
                          std::forward_as_tuple(bag_index),
                          std::forward_as_tuple(trajectory_id))
                 .second);
+      LOG(INFO) << "Assigned trajectory " << trajectory_id << " to bag "
+                << bag_filenames.at(bag_index);
     } else {
       trajectory_id = bag_id_to_trajectory_id.at(bag_index);
     }
