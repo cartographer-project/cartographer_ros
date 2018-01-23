@@ -26,6 +26,7 @@
 #include "cartographer_ros/node.h"
 #include "cartographer_ros/split_string.h"
 #include "cartographer_ros/urdf_reader.h"
+#include "gflags/gflags.h"
 #include "ros/callback_queue.h"
 #include "rosbag/bag.h"
 #include "rosbag/view.h"
