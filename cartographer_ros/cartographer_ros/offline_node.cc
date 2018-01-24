@@ -62,8 +62,8 @@ DEFINE_bool(keep_running, false,
             "Keep running the offline node after all messages from the bag "
             "have been processed.");
 DEFINE_double(skip, 0,
-              "How many seconds to skip from the beginning "
-              "(i.e. when the earliest bag starts.) ");
+              "Optional amount of seconds to skip from the beginning "
+              "(i.e. when the earliest bag starts.). ");
 
 namespace cartographer_ros {
 
