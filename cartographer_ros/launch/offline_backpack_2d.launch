@@ -30,8 +30,8 @@
       required="$(arg no_rviz)"
       type="cartographer_offline_node" args="
           -configuration_directory $(find cartographer_ros)/configuration_files
-          -configuration_basename backpack_2d.lua
-          -urdf_filename $(find cartographer_ros)/urdf/backpack_2d.urdf
+          -configuration_basenames backpack_2d.lua
+          -urdf_filenames $(find cartographer_ros)/urdf/backpack_2d.urdf
           -bag_filenames $(arg bag_filenames)"
       output="screen">
     <remap from="echoes" to="horizontal_laser_2d" />
