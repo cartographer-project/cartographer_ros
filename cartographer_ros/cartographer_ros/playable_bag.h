@@ -41,6 +41,7 @@ class PlayableBag {
   rosbag::MessageInstance GetNextMessage();
   bool IsMessageAvailable();
   std::tuple<ros::Time, ros::Time> GetBeginEndTime();
+  std::vector<const rosbag::ConnectionInfo*> GetConnections();
 
   int bag_id();
 

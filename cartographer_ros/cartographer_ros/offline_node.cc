@@ -57,6 +57,9 @@ DEFINE_string(pbstream_filename, "",
 DEFINE_bool(keep_running, false,
             "Keep running the offline node after all messages from the bag "
             "have been processed.");
+DEFINE_bool(publish_all_bag_messages, false,
+            "Publish all messages from bags as they are being processed. "
+            "Transforms are controlled separately by 'use_bag_transforms'.");
 
 namespace cartographer_ros {
 
@@ -158,6 +161,7 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
            cartographer::mapping::TrajectoryBuilderInterface::SensorId>
       bag_topic_to_sensor_id;
   PlayableBagMultiplexer playable_bag_multiplexer;
+  std::map<std::string, ros::Publisher> publishers;
   for (size_t current_bag_index = 0; current_bag_index < bag_filenames.size();
        ++current_bag_index) {
     const std::string& bag_filename = bag_filenames.at(current_bag_index);
@@ -179,7 +183,7 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
       bag_topic_to_sensor_id[bag_resolved_topic] = expected_sensor_id;
     }
 
-    playable_bag_multiplexer.AddPlayableBag(PlayableBag(
+    PlayableBag current_playable_bag = PlayableBag(
         bag_filename, current_bag_index, ros::TIME_MIN, ros::TIME_MAX, kDelay,
         // PlayableBag::FilteringEarlyMessageHandler is used to get an early
         // peek at the tf messages in the bag and insert them into 'tf_buffer'.
@@ -211,7 +215,32 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
           } else {
             return true;
           }
-        }));
+        });
+
+    // Adapted from rosbag/player.cpp. Keeps a map of publishers for
+    // republishing all bag messages.
+    if (FLAGS_publish_all_bag_messages) {
+      for (const auto* c : current_playable_bag.GetConnections()) {
+        const auto header_iter_callerid = c->header->find("callerid");
+        const std::string callerid = (header_iter_callerid != c->header->end()
+                                          ? header_iter_callerid->second
+                                          : std::string(""));
+        const std::string callerid_topic = callerid + c->topic;
+        if (publishers.find(callerid_topic) == publishers.end()) {
+          ros::AdvertiseOptions opts(c->topic, kInfiniteSubscriberQueueSize,
+                                     c->md5sum, c->datatype, c->msg_def);
+          const auto header_iter_latching = c->header->find("latching");
+          opts.latch = (header_iter_latching != c->header->end() &&
+                        header_iter_latching->second == "1");
+          const ros::Publisher pub = node.node_handle()->advertise(opts);
+          publishers.insert(
+              publishers.begin(),
+              std::pair<std::string, ros::Publisher>(callerid_topic, pub));
+        }
+      }
+    }
+
+    playable_bag_multiplexer.AddPlayableBag(std::move(current_playable_bag));
   }
 
   // TODO(gaschler): Warn if resolved topics are not in bags.
@@ -242,6 +271,13 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
 
     if (!::ros::ok()) {
       return;
+    }
+    if (FLAGS_publish_all_bag_messages) {
+      const auto pub_iter = publishers.find(msg.getCallerId() + msg.getTopic());
+      CHECK(pub_iter != publishers.end());
+      if (pub_iter->second.getNumSubscribers() > 0) {
+        pub_iter->second.publish(msg);
+      }
     }
     const auto bag_topic = std::make_pair(
         bag_index,

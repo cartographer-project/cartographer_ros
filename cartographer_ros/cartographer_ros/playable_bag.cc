@@ -126,4 +126,8 @@ PlayableBagMultiplexer::GetNextMessage() {
                          !current_bag.IsMessageAvailable());
 }
 
+std::vector<const rosbag::ConnectionInfo*> PlayableBag::GetConnections() {
+  return view_->getConnections();
+}
+
 }  // namespace cartographer_ros
