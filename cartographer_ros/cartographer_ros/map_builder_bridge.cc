@@ -257,8 +257,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintList() {
   visualization_msgs::Marker residual_inter_same_trajectory_marker =
       constraint_intra_marker;
   residual_inter_same_trajectory_marker.id = marker_id++;
-  residual_inter_same_trajectory_marker.ns =
-      "Inter residuals, same trajectory";
+  residual_inter_same_trajectory_marker.ns = "Inter residuals, same trajectory";
   residual_inter_same_trajectory_marker.pose.position.z = 0.1;
 
   visualization_msgs::Marker constraint_inter_diff_trajectory_marker =
@@ -309,7 +308,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintList() {
         // Bright orange
         color_constraint.a = 1.0;
         color_constraint.r = 1.0;
-        color_constraint.g = 165./255.;
+        color_constraint.g = 165. / 255.;
       }
       // Bright cyan
       color_residual.a = 1.0;
