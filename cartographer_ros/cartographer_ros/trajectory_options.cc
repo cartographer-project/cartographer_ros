@@ -54,6 +54,8 @@ TrajectoryOptions CreateTrajectoryOptions(
       lua_parameter_dictionary->GetBool("provide_odom_frame");
   options.use_odometry = lua_parameter_dictionary->GetBool("use_odometry");
   options.use_nav_sat = lua_parameter_dictionary->GetBool("use_nav_sat");
+  options.project_pose_to_2d_plane = 
+      lua_parameter_dictionary->GetBool("project_pose_to_2d_plane");
   options.num_laser_scans =
       lua_parameter_dictionary->GetNonNegativeInt("num_laser_scans");
   options.num_multi_echo_laser_scans =
@@ -108,6 +110,7 @@ bool FromRosMessage(const cartographer_ros_msgs::TrajectoryOptions& msg,
   options->provide_odom_frame = msg.provide_odom_frame;
   options->use_odometry = msg.use_odometry;
   options->use_nav_sat = msg.use_nav_sat;
+  options->project_pose_to_2d_plane = msg.project_pose_to_2d_plane;
   options->num_laser_scans = msg.num_laser_scans;
   options->num_multi_echo_laser_scans = msg.num_multi_echo_laser_scans;
   options->num_subdivisions_per_laser_scan =
@@ -136,6 +139,7 @@ cartographer_ros_msgs::TrajectoryOptions ToRosMessage(
   msg.provide_odom_frame = options.provide_odom_frame;
   msg.use_odometry = options.use_odometry;
   msg.use_nav_sat = options.use_nav_sat;
+  msg.project_pose_to_2d_plane = options.project_pose_to_2d_plane;
   msg.num_laser_scans = options.num_laser_scans;
   msg.num_multi_echo_laser_scans = options.num_multi_echo_laser_scans;
   msg.num_subdivisions_per_laser_scan = options.num_subdivisions_per_laser_scan;

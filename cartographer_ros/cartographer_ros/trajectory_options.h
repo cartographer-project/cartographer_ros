@@ -35,6 +35,7 @@ struct TrajectoryOptions {
   bool provide_odom_frame;
   bool use_odometry;
   bool use_nav_sat;
+  bool project_pose_to_2d_plane;
   int num_laser_scans;
   int num_multi_echo_laser_scans;
   int num_subdivisions_per_laser_scan;
