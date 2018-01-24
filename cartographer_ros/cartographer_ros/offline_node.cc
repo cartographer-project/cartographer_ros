@@ -211,6 +211,11 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
 
     playable_bag_multiplexer.AddPlayableBag(PlayableBag(
         bag_filename, current_bag_index, ros::TIME_MIN, ros::TIME_MAX, kDelay,
+        // PlayableBag::FilteringEarlyMessageHandler is used to get an early
+        // peek at the tf messages in the bag and insert them into 'tf_buffer'.
+        // When a message is retrieved by GetNextMessage() further below,
+        // we will have already inserted further 'kDelay' seconds worth of
+        // transforms into 'tf_buffer' via this lambda.
         [&tf_publisher, &tf_buffer](const rosbag::MessageInstance& msg) {
           if (msg.isType<tf2_msgs::TFMessage>()) {
             if (FLAGS_use_bag_transforms) {

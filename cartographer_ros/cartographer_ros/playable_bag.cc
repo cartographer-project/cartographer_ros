@@ -23,10 +23,11 @@
 
 namespace cartographer_ros {
 
-PlayableBag::PlayableBag(const std::string& bag_filename, const int bag_id,
-                         const ros::Time start_time, const ros::Time end_time,
-                         const ros::Duration buffer_delay,
-                         FilteringMessageHandler filtering_message_handler)
+PlayableBag::PlayableBag(
+    const std::string& bag_filename, const int bag_id,
+    const ros::Time start_time, const ros::Time end_time,
+    const ros::Duration buffer_delay,
+    FilteringEarlyMessageHandler filtering_early_message_handler)
     : bag_(cartographer::common::make_unique<rosbag::Bag>(
           bag_filename, rosbag::bagmode::Read)),
       view_(cartographer::common::make_unique<rosbag::View>(*bag_, start_time,
@@ -39,7 +40,8 @@ PlayableBag::PlayableBag(const std::string& bag_filename, const int bag_id,
           (view_->getEndTime() - view_->getBeginTime()).toSec()),
       log_counter_(0),
       buffer_delay_(buffer_delay),
-      filtering_message_handler_(std::move(filtering_message_handler)) {
+      filtering_early_message_handler_(
+          std::move(filtering_early_message_handler)) {
   AdvanceUntilMessageAvailable();
 }
 
@@ -80,7 +82,8 @@ void PlayableBag::AdvanceOneMessage() {
     return;
   }
   rosbag::MessageInstance& msg = *view_iterator_;
-  if (!filtering_message_handler_ || filtering_message_handler_(msg)) {
+  if (!filtering_early_message_handler_ ||
+      filtering_early_message_handler_(msg)) {
     buffered_messages_.push_back(msg);
   }
   ++view_iterator_;

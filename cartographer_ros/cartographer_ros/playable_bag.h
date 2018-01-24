@@ -27,15 +27,15 @@ namespace cartographer_ros {
 
 class PlayableBag {
  public:
-  // Handles messages as they are about to enter the buffer. Returns a boolean
-  // indicating whether the message should enter the buffer.
-  using FilteringMessageHandler =
+  // Handles messages early, i.e. when they are about to enter the buffer.
+  // Returns a boolean indicating whether the message should enter the buffer.
+  using FilteringEarlyMessageHandler =
       std::function<bool /* forward_message_to_buffer */ (
           const rosbag::MessageInstance&)>;
 
   PlayableBag(const std::string& bag_filename, int bag_id, ros::Time start_time,
               ros::Time end_time, ros::Duration buffer_delay,
-              FilteringMessageHandler filtering_message_handler);
+              FilteringEarlyMessageHandler filtering_early_message_handler);
 
   ros::Time PeekMessageTime();
   rosbag::MessageInstance GetNextMessage();
@@ -58,7 +58,7 @@ class PlayableBag {
   int log_counter_;
   std::deque<rosbag::MessageInstance> buffered_messages_;
   const ::ros::Duration buffer_delay_;
-  FilteringMessageHandler filtering_message_handler_;
+  FilteringEarlyMessageHandler filtering_early_message_handler_;
 };
 
 class PlayableBagMultiplexer {
