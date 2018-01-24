@@ -17,6 +17,7 @@
 #include "cartographer_grpc/mapping/map_builder_stub.h"
 #include "cartographer_ros/offline_node.h"
 #include "cartographer_ros/ros_log_sink.h"
+#include "gflags/gflags.h"
 #include "ros/ros.h"
 
 DEFINE_string(server_address, "localhost:50051",
