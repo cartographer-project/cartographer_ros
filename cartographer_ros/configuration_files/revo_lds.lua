@@ -23,6 +23,7 @@ options = {
   published_frame = "horizontal_laser_link",
   odom_frame = "odom",
   provide_odom_frame = true,
+  project_pose_to_2d_plane = false,
   use_odometry = false,
   use_nav_sat = false,
   num_laser_scans = 1,
