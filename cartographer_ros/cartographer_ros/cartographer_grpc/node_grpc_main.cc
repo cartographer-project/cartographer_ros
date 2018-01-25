@@ -37,6 +37,7 @@ DEFINE_bool(
 DEFINE_string(
     save_map_filename, "",
     "If non-empty, serialize state and write it to disk before shutting down.");
+DEFINE_string(map_filename, "", "If non-empty, filename of a map to load.");
 
 namespace cartographer_ros {
 namespace cartographer_grpc {
@@ -54,6 +55,10 @@ void Run() {
   auto map_builder = cartographer::common::make_unique<
       ::cartographer_grpc::mapping::MapBuilderStub>(FLAGS_server_address);
   Node node(node_options, std::move(map_builder), &tf_buffer);
+
+  if (!FLAGS_map_filename.empty()) {
+    node.LoadMap(FLAGS_map_filename);
+  }
 
   if (FLAGS_start_trajectory_with_default_topics) {
     node.StartTrajectoryWithDefaultTopics(trajectory_options);
