@@ -186,21 +186,24 @@ void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
     // frequency, and republishing it would be computationally wasteful.
     if (trajectory_state.local_slam_data->time !=
         extrapolator.GetLastPoseTime()) {
-      // TODO(gaschler): Consider using other message without time information.
-      carto::sensor::TimedPointCloud point_cloud;
-      point_cloud.reserve(
-          trajectory_state.local_slam_data->range_data_in_local.returns.size());
-      for (const Eigen::Vector3f point :
-           trajectory_state.local_slam_data->range_data_in_local.returns) {
-        Eigen::Vector4f point_time;
-        point_time << point, 0.f;
-        point_cloud.push_back(point_time);
+      if (scan_matched_point_cloud_publisher_.getNumSubscribers() > 0) {
+        // TODO(gaschler): Consider using other message without time
+        // information.
+        carto::sensor::TimedPointCloud point_cloud;
+        point_cloud.reserve(trajectory_state.local_slam_data
+                                ->range_data_in_local.returns.size());
+        for (const Eigen::Vector3f point :
+             trajectory_state.local_slam_data->range_data_in_local.returns) {
+          Eigen::Vector4f point_time;
+          point_time << point, 0.f;
+          point_cloud.push_back(point_time);
+        }
+        scan_matched_point_cloud_publisher_.publish(ToPointCloud2Message(
+            carto::common::ToUniversal(trajectory_state.local_slam_data->time),
+            node_options_.map_frame,
+            carto::sensor::TransformTimedPointCloud(
+                point_cloud, trajectory_state.local_to_map.cast<float>())));
       }
-      scan_matched_point_cloud_publisher_.publish(ToPointCloud2Message(
-          carto::common::ToUniversal(trajectory_state.local_slam_data->time),
-          node_options_.map_frame,
-          carto::sensor::TransformTimedPointCloud(
-              point_cloud, trajectory_state.local_to_map.cast<float>())));
       extrapolator.AddPose(trajectory_state.local_slam_data->time,
                            trajectory_state.local_slam_data->local_pose);
     }
