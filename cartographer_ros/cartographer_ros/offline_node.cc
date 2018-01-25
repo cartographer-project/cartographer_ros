@@ -274,34 +274,32 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
     }
     const std::string topic =
         node.node_handle()->resolveName(msg.getTopic(), false /* resolve */);
-    if (bag_sensor_topics.at(bag_index).count(topic) == 0) {
-      continue;
-    }
-
-    if (msg.isType<sensor_msgs::LaserScan>()) {
-      node.HandleLaserScanMessage(trajectory_id, topic,
-                                  msg.instantiate<sensor_msgs::LaserScan>());
-    }
-    if (msg.isType<sensor_msgs::MultiEchoLaserScan>()) {
-      node.HandleMultiEchoLaserScanMessage(
-          trajectory_id, topic,
-          msg.instantiate<sensor_msgs::MultiEchoLaserScan>());
-    }
-    if (msg.isType<sensor_msgs::PointCloud2>()) {
-      node.HandlePointCloud2Message(
-          trajectory_id, topic, msg.instantiate<sensor_msgs::PointCloud2>());
-    }
-    if (msg.isType<sensor_msgs::Imu>()) {
-      node.HandleImuMessage(trajectory_id, topic,
-                            msg.instantiate<sensor_msgs::Imu>());
-    }
-    if (msg.isType<nav_msgs::Odometry>()) {
-      node.HandleOdometryMessage(trajectory_id, topic,
-                                 msg.instantiate<nav_msgs::Odometry>());
-    }
-    if (msg.isType<sensor_msgs::NavSatFix>()) {
-      node.HandleNavSatFixMessage(trajectory_id, topic,
-                                  msg.instantiate<sensor_msgs::NavSatFix>());
+    if (bag_sensor_topics.at(bag_index).count(topic) > 0) {
+      if (msg.isType<sensor_msgs::LaserScan>()) {
+        node.HandleLaserScanMessage(trajectory_id, topic,
+                                    msg.instantiate<sensor_msgs::LaserScan>());
+      }
+      if (msg.isType<sensor_msgs::MultiEchoLaserScan>()) {
+        node.HandleMultiEchoLaserScanMessage(
+            trajectory_id, topic,
+            msg.instantiate<sensor_msgs::MultiEchoLaserScan>());
+      }
+      if (msg.isType<sensor_msgs::PointCloud2>()) {
+        node.HandlePointCloud2Message(
+            trajectory_id, topic, msg.instantiate<sensor_msgs::PointCloud2>());
+      }
+      if (msg.isType<sensor_msgs::Imu>()) {
+        node.HandleImuMessage(trajectory_id, topic,
+                              msg.instantiate<sensor_msgs::Imu>());
+      }
+      if (msg.isType<nav_msgs::Odometry>()) {
+        node.HandleOdometryMessage(trajectory_id, topic,
+                                   msg.instantiate<nav_msgs::Odometry>());
+      }
+      if (msg.isType<sensor_msgs::NavSatFix>()) {
+        node.HandleNavSatFixMessage(trajectory_id, topic,
+                                    msg.instantiate<sensor_msgs::NavSatFix>());
+      }
     }
     clock.clock = msg.getTime();
     clock_publisher.publish(clock);
