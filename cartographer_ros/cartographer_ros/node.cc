@@ -450,23 +450,23 @@ void Node::StartTrajectoryWithDefaultTopics(const TrajectoryOptions& options) {
 
 std::vector<
     std::set<cartographer::mapping::TrajectoryBuilderInterface::SensorId>>
-Node::ComputeDefaultSensorIdsForMultipleTrajectories(
-    const std::vector<TrajectoryOptions>& options) const {
+Node::ComputeDefaultSensorIdsForMultipleBags(
+    const std::vector<TrajectoryOptions>& bags_options) const {
   using SensorId = cartographer::mapping::TrajectoryBuilderInterface::SensorId;
-  std::vector<std::set<SensorId>> trajectories_sensor_ids;
-  for (size_t i = 0; i < options.size(); ++i) {
+  std::vector<std::set<SensorId>> bags_sensor_ids;
+  for (size_t i = 0; i < bags_options.size(); ++i) {
     std::string prefix;
-    if (options.size() > 0) {
-      prefix = "trajectory_" + std::to_string(i + 1) + "_";
+    if (bags_options.size() > 0) {
+      prefix = "bag_" + std::to_string(i + 1) + "_";
     }
     std::set<SensorId> unique_sensor_ids;
     for (const auto& sensor_id :
-         ComputeExpectedSensorIds(options.at(i), DefaultSensorTopics())) {
+         ComputeExpectedSensorIds(bags_options.at(i), DefaultSensorTopics())) {
       unique_sensor_ids.insert(SensorId{sensor_id.type, prefix + sensor_id.id});
     }
-    trajectories_sensor_ids.push_back(unique_sensor_ids);
+    bags_sensor_ids.push_back(unique_sensor_ids);
   }
-  return trajectories_sensor_ids;
+  return bags_sensor_ids;
 }
 
 int Node::AddOfflineTrajectory(

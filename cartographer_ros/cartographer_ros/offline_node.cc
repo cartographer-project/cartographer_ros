@@ -152,8 +152,7 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
       false /* oneshot */, false /* autostart */);
 
   auto bag_expected_sensor_ids =
-      node.ComputeDefaultSensorIdsForMultipleTrajectories(
-          bag_trajectory_options);
+      node.ComputeDefaultSensorIdsForMultipleBags(bag_trajectory_options);
   std::map<std::string,
            cartographer::mapping::TrajectoryBuilderInterface::SensorId>
       bag_topic_to_sensor_id;
