@@ -456,7 +456,7 @@ Node::ComputeDefaultSensorIdsForMultipleBags(
   std::vector<std::set<SensorId>> bags_sensor_ids;
   for (size_t i = 0; i < bags_options.size(); ++i) {
     std::string prefix;
-    if (bags_options.size() > 0) {
+    if (bags_options.size() > 1) {
       prefix = "bag_" + std::to_string(i + 1) + "_";
     }
     std::set<SensorId> unique_sensor_ids;
