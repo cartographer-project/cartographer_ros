@@ -56,15 +56,6 @@ DEFINE_string(pbstream_filename, "",
 DEFINE_bool(keep_running, false,
             "Keep running the offline node after all messages from the bag "
             "have been processed.");
-DEFINE_string(sensor_topics, "",
-              "Optional comma-separated list of colon-separated lists of "
-              "sensor topics for each trajectory. A single trajectory's topics "
-              "are delimited with colons, while different trajectories are "
-              "delimited with commas. If a blank list is given for a "
-              "trajectory, the default topics are used. If a single "
-              "colon-separated list is given, it will be used for all "
-              "trajectories. If omitted, default topics will be used "
-              "for all trajectories.");
 
 namespace cartographer_ros {
 
@@ -160,28 +151,11 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
       },
       false /* oneshot */, false /* autostart */);
 
-  // Colon-delimited string lists of sensor topics for each bag.
-  std::vector<std::string> bag_sensor_topics_strings;
-
-  if (FLAGS_sensor_topics.empty()) {
-    // Use default topic names for all bags, denoted by an empty sensor
-    // topic list string for each bag.
-    bag_sensor_topics_strings =
-        std::vector<std::string>(bag_filenames.size(), std::string());
-  } else {
-    bag_sensor_topics_strings =
-        cartographer_ros::SplitString(FLAGS_sensor_topics, ',');
-    if (bag_sensor_topics_strings.size() == 1) {
-      // Use the single specified topic list string for all bags.
-      bag_sensor_topics_strings.insert(bag_sensor_topics_strings.end(),
-                                       bag_filenames.size() - 1,
-                                       bag_sensor_topics_strings.at(0));
-    }
-  }
-  CHECK_EQ(bag_sensor_topics_strings.size(), bag_filenames.size());
-
-  std::vector<std::unordered_set<std::string>> bag_sensor_topics;
-  std::unordered_map<int, int> bag_index_to_trajectory_id;
+  auto bag_expected_sensor_ids =
+      node.ComputeDefaultSensorIdsForMultipleBags(bag_trajectory_options);
+  std::map<std::string,
+           cartographer::mapping::TrajectoryBuilderInterface::SensorId>
+      bag_topic_to_sensor_id;
   PlayableBagMultiplexer playable_bag_multiplexer;
   for (size_t current_bag_index = 0; current_bag_index < bag_filenames.size();
        ++current_bag_index) {
@@ -189,25 +163,21 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
     if (!::ros::ok()) {
       return;
     }
-    std::vector<std::string> unresolved_current_bag_sensor_topics;
-    if (bag_sensor_topics_strings.at(current_bag_index).empty()) {
-      // Empty topic list string provided for this trajectory,
-      // use default topics.
-      const auto default_topics = node.ComputeDefaultTopics(
-          bag_trajectory_options.at(current_bag_index));
-      unresolved_current_bag_sensor_topics = std::vector<std::string>(
-          default_topics.begin(), default_topics.end());
-    } else {
-      unresolved_current_bag_sensor_topics = cartographer_ros::SplitString(
-          bag_sensor_topics_strings.at(current_bag_index), ':');
-    }
     std::unordered_set<std::string> current_bag_sensor_topics;
-    for (const auto& topic : unresolved_current_bag_sensor_topics) {
-      CHECK(current_bag_sensor_topics
-                .insert(node.node_handle()->resolveName(topic))
-                .second);
+    for (const auto& expected_sensor_id :
+         bag_expected_sensor_ids.at(current_bag_index)) {
+      std::string resolved_topic =
+          node.node_handle()->resolveName(expected_sensor_id.id);
+      if (bag_topic_to_sensor_id.count(resolved_topic) != 0) {
+        LOG(ERROR) << "Sensor " << expected_sensor_id.id
+                   << " resolves to topic " << resolved_topic
+                   << " which is already used by "
+                   << " sensor "
+                   << bag_topic_to_sensor_id.at(resolved_topic).id;
+      }
+      bag_topic_to_sensor_id[resolved_topic] = expected_sensor_id;
+      current_bag_sensor_topics.insert(resolved_topic);
     }
-    bag_sensor_topics.push_back(current_bag_sensor_topics);
 
     playable_bag_multiplexer.AddPlayableBag(PlayableBag(
         bag_filename, current_bag_index, ros::TIME_MIN, ros::TIME_MAX, kDelay,
@@ -243,8 +213,9 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
           }
         }));
   }
-  CHECK_EQ(bag_sensor_topics.size(), bag_filenames.size());
 
+  // TODO(gaschler): Warn if resolved topics are not in bags.
+  std::unordered_map<int, int> bag_index_to_trajectory_id;
   while (playable_bag_multiplexer.IsMessageAvailable()) {
     const auto next_msg_tuple = playable_bag_multiplexer.GetNextMessage();
     const rosbag::MessageInstance& msg = std::get<0>(next_msg_tuple);
@@ -256,7 +227,7 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
     // to avoid blocking the sensor queue.
     if (bag_index_to_trajectory_id.count(bag_index) == 0) {
       trajectory_id =
-          node.AddOfflineTrajectory(bag_sensor_topics.at(bag_index),
+          node.AddOfflineTrajectory(bag_expected_sensor_ids.at(bag_index),
                                     bag_trajectory_options.at(bag_index));
       CHECK(bag_index_to_trajectory_id
                 .emplace(std::piecewise_construct,
@@ -272,32 +243,35 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
     if (!::ros::ok()) {
       return;
     }
-    const std::string topic =
+    const std::string bag_topic =
         node.node_handle()->resolveName(msg.getTopic(), false /* resolve */);
-    if (bag_sensor_topics.at(bag_index).count(topic) > 0) {
+    auto it = bag_topic_to_sensor_id.find(bag_topic);
+    if (it != bag_topic_to_sensor_id.end()) {
+      const std::string& sensor_id = it->second.id;
       if (msg.isType<sensor_msgs::LaserScan>()) {
-        node.HandleLaserScanMessage(trajectory_id, topic,
+        node.HandleLaserScanMessage(trajectory_id, sensor_id,
                                     msg.instantiate<sensor_msgs::LaserScan>());
       }
       if (msg.isType<sensor_msgs::MultiEchoLaserScan>()) {
         node.HandleMultiEchoLaserScanMessage(
-            trajectory_id, topic,
+            trajectory_id, sensor_id,
             msg.instantiate<sensor_msgs::MultiEchoLaserScan>());
       }
       if (msg.isType<sensor_msgs::PointCloud2>()) {
         node.HandlePointCloud2Message(
-            trajectory_id, topic, msg.instantiate<sensor_msgs::PointCloud2>());
+            trajectory_id, sensor_id,
+            msg.instantiate<sensor_msgs::PointCloud2>());
       }
       if (msg.isType<sensor_msgs::Imu>()) {
-        node.HandleImuMessage(trajectory_id, topic,
+        node.HandleImuMessage(trajectory_id, sensor_id,
                               msg.instantiate<sensor_msgs::Imu>());
       }
       if (msg.isType<nav_msgs::Odometry>()) {
-        node.HandleOdometryMessage(trajectory_id, topic,
+        node.HandleOdometryMessage(trajectory_id, sensor_id,
                                    msg.instantiate<nav_msgs::Odometry>());
       }
       if (msg.isType<sensor_msgs::NavSatFix>()) {
-        node.HandleNavSatFixMessage(trajectory_id, topic,
+        node.HandleNavSatFixMessage(trajectory_id, sensor_id,
                                     msg.instantiate<sensor_msgs::NavSatFix>());
       }
     }

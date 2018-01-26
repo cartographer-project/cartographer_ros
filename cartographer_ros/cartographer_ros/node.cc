@@ -255,23 +255,26 @@ void Node::PublishConstraintList(
   }
 }
 
-std::unordered_set<std::string> Node::ComputeExpectedTopics(
+std::set<cartographer::mapping::TrajectoryBuilderInterface::SensorId>
+Node::ComputeExpectedSensorIds(
     const TrajectoryOptions& options,
-    const cartographer_ros_msgs::SensorTopics& topics) {
-  std::unordered_set<std::string> expected_topics;
+    const cartographer_ros_msgs::SensorTopics& topics) const {
+  using SensorId = cartographer::mapping::TrajectoryBuilderInterface::SensorId;
+  using SensorType = SensorId::SensorType;
+  std::set<SensorId> expected_topics;
   // Subscribe to all laser scan, multi echo laser scan, and point cloud topics.
   for (const std::string& topic : ComputeRepeatedTopicNames(
            topics.laser_scan_topic, options.num_laser_scans)) {
-    expected_topics.insert(topic);
+    expected_topics.insert(SensorId{SensorType::RANGE, topic});
   }
   for (const std::string& topic :
        ComputeRepeatedTopicNames(topics.multi_echo_laser_scan_topic,
                                  options.num_multi_echo_laser_scans)) {
-    expected_topics.insert(topic);
+    expected_topics.insert(SensorId{SensorType::RANGE, topic});
   }
   for (const std::string& topic : ComputeRepeatedTopicNames(
            topics.point_cloud2_topic, options.num_point_clouds)) {
-    expected_topics.insert(topic);
+    expected_topics.insert(SensorId{SensorType::RANGE, topic});
   }
   // For 2D SLAM, subscribe to the IMU if we expect it. For 3D SLAM, the IMU is
   // required.
@@ -279,15 +282,17 @@ std::unordered_set<std::string> Node::ComputeExpectedTopics(
       (node_options_.map_builder_options.use_trajectory_builder_2d() &&
        options.trajectory_builder_options.trajectory_builder_2d_options()
            .use_imu_data())) {
-    expected_topics.insert(topics.imu_topic);
+    expected_topics.insert(SensorId{SensorType::IMU, topics.imu_topic});
   }
   // Odometry is optional.
   if (options.use_odometry) {
-    expected_topics.insert(topics.odometry_topic);
+    expected_topics.insert(
+        SensorId{SensorType::ODOMETRY, topics.odometry_topic});
   }
   // NavSatFix is optional.
   if (options.use_nav_sat) {
-    expected_topics.insert(topics.nav_sat_fix_topic);
+    expected_topics.insert(
+        SensorId{SensorType::FIXED_FRAME_POSE, topics.nav_sat_fix_topic});
   }
 
   return expected_topics;
@@ -295,16 +300,17 @@ std::unordered_set<std::string> Node::ComputeExpectedTopics(
 
 int Node::AddTrajectory(const TrajectoryOptions& options,
                         const cartographer_ros_msgs::SensorTopics& topics) {
-  const std::unordered_set<std::string> expected_sensor_ids =
-      ComputeExpectedTopics(options, topics);
+  const std::set<cartographer::mapping::TrajectoryBuilderInterface::SensorId>
+      expected_sensor_ids = ComputeExpectedSensorIds(options, topics);
   const int trajectory_id =
       map_builder_bridge_.AddTrajectory(expected_sensor_ids, options);
   AddExtrapolator(trajectory_id, options);
   AddSensorSamplers(trajectory_id, options);
   LaunchSubscribers(options, topics, trajectory_id);
   is_active_trajectory_[trajectory_id] = true;
-  subscribed_topics_.insert(expected_sensor_ids.begin(),
-                            expected_sensor_ids.end());
+  for (const auto& sensor_id : expected_sensor_ids) {
+    subscribed_topics_.insert(sensor_id.id);
+  }
   return trajectory_id;
 }
 
@@ -384,7 +390,8 @@ bool Node::ValidateTrajectoryOptions(const TrajectoryOptions& options) {
 bool Node::ValidateTopicNames(
     const ::cartographer_ros_msgs::SensorTopics& topics,
     const TrajectoryOptions& options) {
-  for (const std::string& topic : ComputeExpectedTopics(options, topics)) {
+  for (const auto& sensor_id : ComputeExpectedSensorIds(options, topics)) {
+    const std::string& topic = sensor_id.id;
     if (subscribed_topics_.count(topic) > 0) {
       LOG(ERROR) << "Topic name [" << topic << "] is already used.";
       return false;
@@ -441,14 +448,30 @@ void Node::StartTrajectoryWithDefaultTopics(const TrajectoryOptions& options) {
   AddTrajectory(options, DefaultSensorTopics());
 }
 
-std::unordered_set<std::string> Node::ComputeDefaultTopics(
-    const TrajectoryOptions& options) {
-  carto::common::MutexLocker lock(&mutex_);
-  return ComputeExpectedTopics(options, DefaultSensorTopics());
+std::vector<
+    std::set<cartographer::mapping::TrajectoryBuilderInterface::SensorId>>
+Node::ComputeDefaultSensorIdsForMultipleBags(
+    const std::vector<TrajectoryOptions>& bags_options) const {
+  using SensorId = cartographer::mapping::TrajectoryBuilderInterface::SensorId;
+  std::vector<std::set<SensorId>> bags_sensor_ids;
+  for (size_t i = 0; i < bags_options.size(); ++i) {
+    std::string prefix;
+    if (bags_options.size() > 1) {
+      prefix = "bag_" + std::to_string(i + 1) + "_";
+    }
+    std::set<SensorId> unique_sensor_ids;
+    for (const auto& sensor_id :
+         ComputeExpectedSensorIds(bags_options.at(i), DefaultSensorTopics())) {
+      unique_sensor_ids.insert(SensorId{sensor_id.type, prefix + sensor_id.id});
+    }
+    bags_sensor_ids.push_back(unique_sensor_ids);
+  }
+  return bags_sensor_ids;
 }
 
 int Node::AddOfflineTrajectory(
-    const std::unordered_set<std::string>& expected_sensor_ids,
+    const std::set<cartographer::mapping::TrajectoryBuilderInterface::SensorId>&
+        expected_sensor_ids,
     const TrajectoryOptions& options) {
   carto::common::MutexLocker lock(&mutex_);
   const int trajectory_id =

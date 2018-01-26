@@ -18,13 +18,14 @@
 #define CARTOGRAPHER_ROS_MAP_BUILDER_BRIDGE_H_
 
 #include <memory>
+#include <set>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 
 #include "cartographer/common/mutex.h"
 #include "cartographer/mapping/map_builder_interface.h"
 #include "cartographer/mapping/proto/trajectory_builder_options.pb.h"
+#include "cartographer/mapping/trajectory_builder_interface.h"
 #include "cartographer_ros/node_options.h"
 #include "cartographer_ros/sensor_bridge.h"
 #include "cartographer_ros/tf_bridge.h"
@@ -63,8 +64,11 @@ class MapBuilderBridge {
   MapBuilderBridge& operator=(const MapBuilderBridge&) = delete;
 
   void LoadMap(const std::string& map_filename);
-  int AddTrajectory(const std::unordered_set<std::string>& expected_sensor_ids,
-                    const TrajectoryOptions& trajectory_options);
+  int AddTrajectory(
+      const std::set<
+          ::cartographer::mapping::TrajectoryBuilderInterface::SensorId>&
+          expected_sensor_ids,
+      const TrajectoryOptions& trajectory_options);
   void FinishTrajectory(int trajectory_id);
   void RunFinalOptimization();
   void SerializeState(const std::string& filename);
