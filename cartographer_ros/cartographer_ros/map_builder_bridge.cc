@@ -79,7 +79,8 @@ void MapBuilderBridge::LoadMap(const std::string& map_filename) {
 }
 
 int MapBuilderBridge::AddTrajectory(
-    const std::unordered_set<std::string>& expected_sensor_ids,
+    const std::set<cartographer::mapping::TrajectoryBuilderInterface::SensorId>&
+        expected_sensor_ids,
     const TrajectoryOptions& trajectory_options) {
   const int trajectory_id = map_builder_->AddTrajectoryBuilder(
       expected_sensor_ids, trajectory_options.trajectory_builder_options,
