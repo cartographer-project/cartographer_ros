@@ -106,7 +106,7 @@ int MapBuilderBridge::AddTrajectory(
 
 void MapBuilderBridge::FinishTrajectory(const int trajectory_id) {
   LOG(INFO) << "Finishing trajectory with ID '" << trajectory_id << "'...";
-  
+
   // Make sure there is a trajectory with 'trajectory_id'.
   CHECK_EQ(sensor_bridges_.count(trajectory_id), 1);
   map_builder_->FinishTrajectory(trajectory_id);
