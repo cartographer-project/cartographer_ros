@@ -40,12 +40,13 @@ DEFINE_string(
     configuration_basenames, "",
     "Comma-separated list of basenames, i.e. not containing any "
     "directory prefix, of the configuration files for each trajectory. "
-    "The first configuration file will be used for node options."
+    "The first configuration file will be used for node options. "
     "If less configuration files are specified than trajectories, the "
     "first file will be used the remaining trajectories.");
 DEFINE_string(
     bag_filenames, "",
-    "Comma-separated list of bags to process. One bag per trajectory.");
+    "Comma-separated list of bags to process. One bag per trajectory. "
+    "Any combination of simultaneous and sequential bags is supported.");
 DEFINE_string(urdf_filenames, "",
               "Comma-separated list of one or more URDF files that contain "
               "static links for the sensor configuration(s).");
@@ -153,7 +154,7 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
 
   auto bag_expected_sensor_ids =
       node.ComputeDefaultSensorIdsForMultipleBags(bag_trajectory_options);
-  std::map<std::string,
+  std::map<std::pair<int /* bag_index */, std::string>,
            cartographer::mapping::TrajectoryBuilderInterface::SensorId>
       bag_topic_to_sensor_id;
   PlayableBagMultiplexer playable_bag_multiplexer;
@@ -163,20 +164,19 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
     if (!::ros::ok()) {
       return;
     }
-    std::unordered_set<std::string> current_bag_sensor_topics;
     for (const auto& expected_sensor_id :
          bag_expected_sensor_ids.at(current_bag_index)) {
-      std::string resolved_topic =
-          node.node_handle()->resolveName(expected_sensor_id.id);
-      if (bag_topic_to_sensor_id.count(resolved_topic) != 0) {
-        LOG(ERROR) << "Sensor " << expected_sensor_id.id
-                   << " resolves to topic " << resolved_topic
-                   << " which is already used by "
+      const auto bag_resolved_topic = std::make_pair(
+          static_cast<int>(current_bag_index),
+          node.node_handle()->resolveName(expected_sensor_id.id));
+      if (bag_topic_to_sensor_id.count(bag_resolved_topic) != 0) {
+        LOG(ERROR) << "Sensor " << expected_sensor_id.id << " of bag "
+                   << current_bag_index << " resolves to topic "
+                   << bag_resolved_topic.second << " which is already used by "
                    << " sensor "
-                   << bag_topic_to_sensor_id.at(resolved_topic).id;
+                   << bag_topic_to_sensor_id.at(bag_resolved_topic).id;
       }
-      bag_topic_to_sensor_id[resolved_topic] = expected_sensor_id;
-      current_bag_sensor_topics.insert(resolved_topic);
+      bag_topic_to_sensor_id[bag_resolved_topic] = expected_sensor_id;
     }
 
     playable_bag_multiplexer.AddPlayableBag(PlayableBag(
@@ -243,8 +243,9 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
     if (!::ros::ok()) {
       return;
     }
-    const std::string bag_topic =
-        node.node_handle()->resolveName(msg.getTopic(), false /* resolve */);
+    const auto bag_topic = std::make_pair(
+        bag_index,
+        node.node_handle()->resolveName(msg.getTopic(), false /* resolve */));
     auto it = bag_topic_to_sensor_id.find(bag_topic);
     if (it != bag_topic_to_sensor_id.end()) {
       const std::string& sensor_id = it->second.id;
