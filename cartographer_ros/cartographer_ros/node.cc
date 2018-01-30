@@ -486,9 +486,9 @@ bool Node::HandleFinishTrajectory(
     ::cartographer_ros_msgs::FinishTrajectory::Request& request,
     ::cartographer_ros_msgs::FinishTrajectory::Response& response) {
   carto::common::MutexLocker lock(&mutex_);
-  bool finished = FinishTrajectoryUnderLock(request.trajectory_id);
-  response.finished = finished;
-  return finished;
+  bool success = FinishTrajectoryUnderLock(request.trajectory_id);
+  response.success = success;
+  return success;
 }
 
 bool Node::HandleWriteState(

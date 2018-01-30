@@ -14,4 +14,4 @@
 
 int32 trajectory_id
 ---
-bool finished
+bool success
