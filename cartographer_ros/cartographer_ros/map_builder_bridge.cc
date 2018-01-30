@@ -111,6 +111,7 @@ void MapBuilderBridge::FinishTrajectory(const int trajectory_id) {
   CHECK_EQ(sensor_bridges_.count(trajectory_id), 1);
   map_builder_->FinishTrajectory(trajectory_id);
   sensor_bridges_.erase(trajectory_id);
+  LOG(INFO) << "Finished trajectory " << trajectory_id << ".";
 }
 
 void MapBuilderBridge::RunFinalOptimization() {
@@ -122,6 +123,7 @@ void MapBuilderBridge::SerializeState(const std::string& filename) {
   cartographer::io::ProtoStreamWriter writer(filename);
   map_builder_->SerializeState(&writer);
   CHECK(writer.Close()) << "Could not write state.";
+  LOG(INFO) << "State was written to " << filename << ".";
 }
 
 bool MapBuilderBridge::HandleSubmapQuery(

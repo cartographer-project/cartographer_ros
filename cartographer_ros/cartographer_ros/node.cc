@@ -486,7 +486,9 @@ bool Node::HandleFinishTrajectory(
     ::cartographer_ros_msgs::FinishTrajectory::Request& request,
     ::cartographer_ros_msgs::FinishTrajectory::Response& response) {
   carto::common::MutexLocker lock(&mutex_);
-  return FinishTrajectoryUnderLock(request.trajectory_id);
+  bool success = FinishTrajectoryUnderLock(request.trajectory_id);
+  response.success = success;
+  return success;
 }
 
 bool Node::HandleWriteState(
@@ -494,6 +496,7 @@ bool Node::HandleWriteState(
     ::cartographer_ros_msgs::WriteState::Response& response) {
   carto::common::MutexLocker lock(&mutex_);
   map_builder_bridge_.SerializeState(request.filename);
+  response.finished = true;
   return true;
 }
 
