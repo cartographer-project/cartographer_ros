@@ -493,20 +493,22 @@ void Node::StartTrajectoryWithDefaultTopics(const TrajectoryOptions& options) {
 }
 
 std::vector<
-    std::set<cartographer::mapping::TrajectoryBuilderInterface::SensorId>>
+    std::vector<cartographer::mapping::TrajectoryBuilderInterface::SensorId>>
 Node::ComputeDefaultSensorIdsForMultipleBags(
-    const std::vector<TrajectoryOptions>& bags_options) const {
+    const std::vector<TrajectoryOptions>& bags_options,
+    bool include_multiple_bag_prefix) const {
   using SensorId = cartographer::mapping::TrajectoryBuilderInterface::SensorId;
-  std::vector<std::set<SensorId>> bags_sensor_ids;
+  std::vector<std::vector<SensorId>> bags_sensor_ids;
   for (size_t i = 0; i < bags_options.size(); ++i) {
     std::string prefix;
-    if (bags_options.size() > 1) {
+    if (include_multiple_bag_prefix && bags_options.size() > 1) {
       prefix = "bag_" + std::to_string(i + 1) + "_";
     }
-    std::set<SensorId> unique_sensor_ids;
+    std::vector<SensorId> unique_sensor_ids;
     for (const auto& sensor_id :
          ComputeExpectedSensorIds(bags_options.at(i), DefaultSensorTopics())) {
-      unique_sensor_ids.insert(SensorId{sensor_id.type, prefix + sensor_id.id});
+      unique_sensor_ids.push_back(
+          SensorId{sensor_id.type, prefix + sensor_id.id});
     }
     bags_sensor_ids.push_back(unique_sensor_ids);
   }

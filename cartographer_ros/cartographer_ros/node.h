@@ -78,10 +78,11 @@ class Node {
   // Returns unique SensorIds for multiple input bag files based on
   // their TrajectoryOptions.
   // 'SensorId::id' is the expected ROS topic name.
-  std::vector<
-      std::set<::cartographer::mapping::TrajectoryBuilderInterface::SensorId>>
+  std::vector<std::vector<
+      ::cartographer::mapping::TrajectoryBuilderInterface::SensorId>>
   ComputeDefaultSensorIdsForMultipleBags(
-      const std::vector<TrajectoryOptions>& bags_options) const;
+      const std::vector<TrajectoryOptions>& bags_options,
+      bool include_multiple_bag_prefix) const;
 
   // Adds a trajectory for offline processing, i.e. not listening to topics.
   int AddOfflineTrajectory(
