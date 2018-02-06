@@ -458,7 +458,7 @@ bool Node::HandleStartTrajectory(
     response.status.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
     response.status.message = error;
   } else {
-  response.trajectory_id = AddTrajectory(options, request.topics);
+    response.trajectory_id = AddTrajectory(options, request.topics);
     response.status.code = cartographer_ros_msgs::StatusCode::OK;
     response.status.message = "Success.";
   }
