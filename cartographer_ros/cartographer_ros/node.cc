@@ -34,6 +34,8 @@
 #include "cartographer_ros/sensor_bridge.h"
 #include "cartographer_ros/tf_bridge.h"
 #include "cartographer_ros/time_conversion.h"
+#include "cartographer_ros_msgs/StatusCode.h"
+#include "cartographer_ros_msgs/StatusResponse.h"
 #include "glog/logging.h"
 #include "nav_msgs/Odometry.h"
 #include "ros/serialization.h"
@@ -130,7 +132,8 @@ bool Node::HandleSubmapQuery(
     ::cartographer_ros_msgs::SubmapQuery::Request& request,
     ::cartographer_ros_msgs::SubmapQuery::Response& response) {
   carto::common::MutexLocker lock(&mutex_);
-  return map_builder_bridge_.HandleSubmapQuery(request, response);
+  map_builder_bridge_.HandleSubmapQuery(request, response);
+  return true;
 }
 
 void Node::PublishSubmapList(const ::ros::WallTimerEvent& unused_timer_event) {
@@ -400,15 +403,25 @@ bool Node::ValidateTopicNames(
   return true;
 }
 
-bool Node::FinishTrajectoryUnderLock(const int trajectory_id) {
+cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
+    const int trajectory_id) {
+  cartographer_ros_msgs::StatusResponse status_response;
   if (is_active_trajectory_.count(trajectory_id) == 0) {
-    LOG(INFO) << "Trajectory_id " << trajectory_id << " is not created yet.";
-    return false;
+    const std::string error =
+        "Trajectory " + std::to_string(trajectory_id) + " is not created yet.";
+    LOG(INFO) << error;
+    status_response.code = cartographer_ros_msgs::StatusCode::NOT_FOUND;
+    status_response.message = error;
+    return status_response;
   }
   if (!is_active_trajectory_[trajectory_id]) {
-    LOG(INFO) << "Trajectory_id " << trajectory_id
-              << " has already been finished.";
-    return false;
+    const std::string error = "Trajectory " + std::to_string(trajectory_id) +
+                              " has already been finished.";
+    LOG(INFO) << error;
+    status_response.code =
+        cartographer_ros_msgs::StatusCode::RESOURCE_EXHAUSTED;
+    status_response.message = error;
+    return status_response;
   }
 
   // Shutdown the subscribers of this trajectory.
@@ -421,7 +434,11 @@ bool Node::FinishTrajectoryUnderLock(const int trajectory_id) {
   CHECK(is_active_trajectory_.at(trajectory_id));
   map_builder_bridge_.FinishTrajectory(trajectory_id);
   is_active_trajectory_[trajectory_id] = false;
-  return true;
+  const std::string message =
+      "Finished trajectory " + std::to_string(trajectory_id) + ".";
+  status_response.code = cartographer_ros_msgs::StatusCode::OK;
+  status_response.message = message;
+  return status_response;
 }
 
 bool Node::HandleStartTrajectory(
@@ -431,14 +448,20 @@ bool Node::HandleStartTrajectory(
   TrajectoryOptions options;
   if (!FromRosMessage(request.options, &options) ||
       !ValidateTrajectoryOptions(options)) {
-    LOG(ERROR) << "Invalid trajectory options.";
-    return false;
+    const std::string error = "Invalid trajectory options.";
+    LOG(ERROR) << error;
+    response.status.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
+    response.status.message = error;
+  } else if (!ValidateTopicNames(request.topics, options)) {
+    const std::string error = "Invalid topics.";
+    LOG(ERROR) << error;
+    response.status.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
+    response.status.message = error;
+  } else {
+    response.trajectory_id = AddTrajectory(options, request.topics);
+    response.status.code = cartographer_ros_msgs::StatusCode::OK;
+    response.status.message = "Success.";
   }
-  if (!ValidateTopicNames(request.topics, options)) {
-    LOG(ERROR) << "Invalid topics.";
-    return false;
-  }
-  response.trajectory_id = AddTrajectory(options, request.topics);
   return true;
 }
 
@@ -486,14 +509,21 @@ bool Node::HandleFinishTrajectory(
     ::cartographer_ros_msgs::FinishTrajectory::Request& request,
     ::cartographer_ros_msgs::FinishTrajectory::Response& response) {
   carto::common::MutexLocker lock(&mutex_);
-  return FinishTrajectoryUnderLock(request.trajectory_id);
+  response.status = FinishTrajectoryUnderLock(request.trajectory_id);
+  return true;
 }
 
 bool Node::HandleWriteState(
     ::cartographer_ros_msgs::WriteState::Request& request,
     ::cartographer_ros_msgs::WriteState::Response& response) {
   carto::common::MutexLocker lock(&mutex_);
-  map_builder_bridge_.SerializeState(request.filename);
+  if (map_builder_bridge_.SerializeState(request.filename)) {
+    response.status.code = cartographer_ros_msgs::StatusCode::OK;
+    response.status.message = "State written to '" + request.filename + "'.";
+  } else {
+    response.status.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
+    response.status.message = "Failed to write '" + request.filename + "'.";
+  }
   return true;
 }
 
@@ -502,14 +532,16 @@ void Node::FinishAllTrajectories() {
   for (auto& entry : is_active_trajectory_) {
     const int trajectory_id = entry.first;
     if (entry.second) {
-      CHECK(FinishTrajectoryUnderLock(trajectory_id));
+      CHECK_EQ(FinishTrajectoryUnderLock(trajectory_id).code,
+               cartographer_ros_msgs::StatusCode::OK);
     }
   }
 }
 
 bool Node::FinishTrajectory(const int trajectory_id) {
   carto::common::MutexLocker lock(&mutex_);
-  return FinishTrajectoryUnderLock(trajectory_id);
+  return FinishTrajectoryUnderLock(trajectory_id).code ==
+         cartographer_ros_msgs::StatusCode::OK;
 }
 
 void Node::RunFinalOptimization() {
@@ -600,7 +632,8 @@ void Node::HandlePointCloud2Message(
 
 void Node::SerializeState(const std::string& filename) {
   carto::common::MutexLocker lock(&mutex_);
-  map_builder_bridge_.SerializeState(filename);
+  CHECK(map_builder_bridge_.SerializeState(filename))
+      << "Could not write state.";
 }
 
 void Node::LoadMap(const std::string& map_filename) {
