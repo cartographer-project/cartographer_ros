@@ -14,3 +14,4 @@
 
 int32 trajectory_id
 ---
+cartographer_ros_msgs/StatusResponse status

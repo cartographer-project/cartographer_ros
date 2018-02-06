@@ -21,6 +21,8 @@
 #include "cartographer/io/proto_stream.h"
 #include "cartographer/mapping/pose_graph.h"
 #include "cartographer_ros/msg_conversion.h"
+#include "cartographer_ros_msgs/StatusCode.h"
+#include "cartographer_ros_msgs/StatusResponse.h"
 
 namespace cartographer_ros {
 
@@ -118,13 +120,13 @@ void MapBuilderBridge::RunFinalOptimization() {
   map_builder_->pose_graph()->RunFinalOptimization();
 }
 
-void MapBuilderBridge::SerializeState(const std::string& filename) {
+bool MapBuilderBridge::SerializeState(const std::string& filename) {
   cartographer::io::ProtoStreamWriter writer(filename);
   map_builder_->SerializeState(&writer);
-  CHECK(writer.Close()) << "Could not write state.";
+  return writer.Close();
 }
 
-bool MapBuilderBridge::HandleSubmapQuery(
+void MapBuilderBridge::HandleSubmapQuery(
     cartographer_ros_msgs::SubmapQuery::Request& request,
     cartographer_ros_msgs::SubmapQuery::Response& response) {
   cartographer::mapping::proto::SubmapQuery::Response response_proto;
@@ -134,7 +136,9 @@ bool MapBuilderBridge::HandleSubmapQuery(
       map_builder_->SubmapToProto(submap_id, &response_proto);
   if (!error.empty()) {
     LOG(ERROR) << error;
-    return false;
+    response.status.code = cartographer_ros_msgs::StatusCode::NOT_FOUND;
+    response.status.message = error;
+    return;
   }
 
   CHECK(response_proto.textures_size() > 0)
@@ -152,7 +156,8 @@ bool MapBuilderBridge::HandleSubmapQuery(
     texture.slice_pose = ToGeometryMsgPose(
         cartographer::transform::ToRigid3(texture_proto.slice_pose()));
   }
-  return true;
+  response.status.message = "Success.";
+  response.status.code = cartographer_ros_msgs::StatusCode::OK;
 }
 
 cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {

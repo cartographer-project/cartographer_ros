@@ -35,6 +35,7 @@
 #include "cartographer_ros_msgs/FinishTrajectory.h"
 #include "cartographer_ros_msgs/SensorTopics.h"
 #include "cartographer_ros_msgs/StartTrajectory.h"
+#include "cartographer_ros_msgs/StatusResponse.h"
 #include "cartographer_ros_msgs/SubmapEntry.h"
 #include "cartographer_ros_msgs/SubmapList.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
@@ -155,7 +156,8 @@ class Node {
   bool ValidateTrajectoryOptions(const TrajectoryOptions& options);
   bool ValidateTopicNames(const ::cartographer_ros_msgs::SensorTopics& topics,
                           const TrajectoryOptions& options);
-  bool FinishTrajectoryUnderLock(int trajectory_id) REQUIRES(mutex_);
+  cartographer_ros_msgs::StatusResponse FinishTrajectoryUnderLock(
+      int trajectory_id) REQUIRES(mutex_);
 
   const NodeOptions node_options_;
 
