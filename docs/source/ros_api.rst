@@ -96,6 +96,11 @@ submap_list (`cartographer_ros_msgs/SubmapList`_)
 Services
 --------
 
+All services responses include also a ``StatusResponse`` that comprises a ``code`` and a ``message`` field.
+For consistency, the integer ``code`` is equivalent to the status codes used in the `gRPC`_ API.
+
+.. _gRPC: https://developers.google.com/maps-booking/reference/grpc-api/status_codes
+
 submap_query (`cartographer_ros_msgs/SubmapQuery`_)
   Fetches the requested submap.
 

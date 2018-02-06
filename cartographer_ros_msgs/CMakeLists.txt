@@ -24,6 +24,8 @@ find_package(catkin REQUIRED COMPONENTS message_generation ${PACKAGE_DEPENDENCIE
 
 add_message_files(
   FILES
+    StatusCode.msg
+    StatusResponse.msg
     SubmapList.msg
     SubmapEntry.msg
     SubmapTexture.msg
