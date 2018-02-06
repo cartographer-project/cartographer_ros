@@ -1,4 +1,4 @@
-.. Copyright 2016 The Cartographer Authors
+.. Copyright 2018 The Cartographer Authors
 
 .. Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -45,8 +45,20 @@ Most of its options can be found in `pose_graph.lua`_
 
 On a higher abstraction, the job of local SLAM is to generate good submaps and the job of global SLAM is to tie them most consistently together.
 
-Tuning local SLAM
------------------
+Built-in tools
+--------------
+
+Cartographer provides built-in tools for SLAM evaluation that can be particularly useful for measuring the local SLAM quality.
+They are stand-alone executables that ship with the core ``cartographer`` library and are hence independent, but compatible with ``cartographer_ros``.
+Therefore, please head to the `Cartographer Read the Docs Evaluation site`_ for a conceptual overview and a guide on how to use the tools in practice.
+
+These tools assume that you have serialized the SLAM state to a ``.pbstream`` file.
+With ``cartographer_ros``, you can invoke the ``assets_writer`` to serialize the state - see the :ref:`assets_writer` section for more information.
+
+.. _Cartographer Read the Docs Evaluation site: https://google-cartographer.readthedocs.io/en/latest/evaluation.html
+
+Example: tuning local SLAM
+--------------------------
 
 For this example we'll start at ``cartographer`` commit `aba4575`_ and ``cartographer_ros`` commit `99c23b6`_ and look at the bag ``b2-2016-04-27-12-31-41.bag`` from our test data set.
 
@@ -101,7 +113,7 @@ Tuning the correlative scan matcher
 TODO
 
 Tuning the ``CeresScanMatcher``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In our case, the scan matcher can freely move the match forward and backwards without impacting the score.
 We'd like to penalize this situation by making the scan matcher pay more for deviating from the prior that it got.
@@ -124,6 +136,18 @@ Experimenting with this value yields a better result at ``2e2``.
 
 Here, the scan matcher used rotation to still slightly mess up the result though.
 Setting the ``rotation_weight`` to ``4e2`` leaves us with a reasonable result.
+
+Verification
+^^^^^^^^^^^^
+
+To make sure that we did not overtune for this particular issue, we need to run the configuration against other collected data.
+In this case, the new parameters did reveal slipping, for example at the beginning of ``b2-2016-04-05-14-44-52.bag``, so we had to lower the ``translation_weight`` to ``1e2``.
+This setting is worse for the case we wanted to fix, but no longer slips.
+Before checking them in, we normalize all weights, since they only have relative meaning.
+The result of this tuning was `PR 428`_.
+In general, always try to tune for a platform, not a particular bag.
+
+.. _PR 428: https://github.com/googlecartographer/cartographer/pull/428
 
 Special Cases
 -------------
@@ -190,16 +214,4 @@ With these settings, global SLAM will usually be too slow and cannot keep up.
 As a next step, we strongly decrease ``global_sampling_ratio`` and ``constraint_builder.sampling_ratio``
 to compensate for the large number of constraints.
 We then tune for lower latency as explained above until the system reliably works in real time.
-
-Verification
-------------
-
-To make sure that we did not overtune for this particular issue, we need to run the configuration against other collected data.
-In this case, the new parameters did reveal slipping, for example at the beginning of ``b2-2016-04-05-14-44-52.bag``, so we had to lower the ``translation_weight`` to ``1e2``.
-This setting is worse for the case we wanted to fix, but no longer slips.
-Before checking them in, we normalize all weights, since they only have relative meaning.
-The result of this tuning was `PR 428`_.
-In general, always try to tune for a platform, not a particular bag.
-
-.. _PR 428: https://github.com/googlecartographer/cartographer/pull/428
 

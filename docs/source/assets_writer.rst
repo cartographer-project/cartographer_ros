@@ -1,4 +1,4 @@
-.. Copyright 2016 The Cartographer Authors
+.. Copyright 2018 The Cartographer Authors
 
 .. Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
 
 .. cartographer SHA: 30f7de1a325d6604c780f2f74d9a345ec369d12d
 .. cartographer_ros SHA: 44459e18102305745c56f92549b87d8e91f434fe
+
+.. _assets_writer:
 
 Assets writer
 =============
