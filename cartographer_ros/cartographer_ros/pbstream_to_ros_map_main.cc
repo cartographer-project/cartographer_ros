@@ -22,7 +22,7 @@
 #include "cartographer/mapping/proto/pose_graph.pb.h"
 #include "cartographer/mapping/proto/serialization.pb.h"
 #include "cartographer/mapping/proto/submap.pb.h"
-#include "cartographer/mapping/submaps.h"
+#include "cartographer/mapping/proto/trajectory_builder_options.pb.h"
 #include "cartographer/mapping_2d/probability_grid.h"
 #include "cartographer/mapping_2d/submaps.h"
 #include "cartographer/mapping_3d/submaps.h"
@@ -45,6 +45,9 @@ void Run(const std::string& pbstream_filename, const std::string& map_filestem,
 
   ::cartographer::mapping::proto::PoseGraph pose_graph;
   CHECK(reader.ReadProto(&pose_graph));
+  ::cartographer::mapping::proto::AllTrajectoryBuilderOptions
+      all_trajectory_builder_options;
+  CHECK(reader.ReadProto(&all_trajectory_builder_options));
 
   LOG(INFO) << "Loading submap slices from serialized data.";
   std::map<::cartographer::mapping::SubmapId, ::cartographer::io::SubmapSlice>
