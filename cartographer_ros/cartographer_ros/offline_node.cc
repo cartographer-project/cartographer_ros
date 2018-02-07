@@ -54,7 +54,7 @@ DEFINE_bool(use_bag_transforms, true,
             "Whether to read, use and republish transforms from bags.");
 DEFINE_string(load_state_filename, "",
               "If non-empty, filename of a .pbstream file to load, containing "
-                  "a saved SLAM state.");
+              "a saved SLAM state.");
 DEFINE_bool(load_frozen_state, true,
             "Load the saved state as frozen (non-optimized) trajectories.");
 DEFINE_bool(keep_running, false,
@@ -79,7 +79,7 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
   CHECK(!FLAGS_configuration_basenames.empty())
       << "-configuration_basenames is missing.";
   CHECK(!(FLAGS_bag_filenames.empty() && FLAGS_load_state_filename.empty()))
-  << "-bag_filenames and -load_state_filename cannot both be unspecified.";
+      << "-bag_filenames and -load_state_filename cannot both be unspecified.";
   const auto bag_filenames =
       cartographer_ros::SplitString(FLAGS_bag_filenames, ',');
   cartographer_ros::NodeOptions node_options;
@@ -323,7 +323,7 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
       output_filename =
           FLAGS_load_state_filename.substr(
               0, FLAGS_load_state_filename.size() - suffix.size()) +
-              std::string("_new");
+          std::string("_new");
     }
     const std::string state_output_filename = output_filename + suffix;
     LOG(INFO) << "Writing state to '" << state_output_filename << "'...";

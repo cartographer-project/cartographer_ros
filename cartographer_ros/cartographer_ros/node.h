@@ -108,7 +108,7 @@ class Node {
   // Serializes the complete Node state.
   void SerializeState(const std::string& filename);
 
-  // Loads a persisted state to use as a map.
+  // Loads a serialized SLAM state from a .pbstream file.
   void LoadState(const std::string& state_filename, bool load_frozen_state);
 
   ::ros::NodeHandle* node_handle();
