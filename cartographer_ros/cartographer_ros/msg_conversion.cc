@@ -322,8 +322,10 @@ std::unique_ptr<nav_msgs::OccupancyGrid> CreateOccupancyGridMsg(
       const uint32_t packed = pixel_data[y * width + x];
       const unsigned char color = packed >> 16;
       const unsigned char observed = packed >> 8;
-      const int value = observed == 0 ? -1 : ::cartographer::common::RoundToInt(
-                                                 (1. - color / 255.) * 100.);
+      const int value =
+          observed == 0
+              ? -1
+              : ::cartographer::common::RoundToInt((1. - color / 255.) * 100.);
       CHECK_LE(-1, value);
       CHECK_GE(100, value);
       occupancy_grid->data.push_back(value);
