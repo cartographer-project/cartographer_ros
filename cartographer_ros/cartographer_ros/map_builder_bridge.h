@@ -102,6 +102,8 @@ class MapBuilderBridge {
   std::unique_ptr<cartographer::mapping::MapBuilderInterface> map_builder_;
   tf2_ros::Buffer* const tf_buffer_;
 
+  std::unordered_map<std::string /* landmark ID */, int> landmark_to_index_;
+
   // These are keyed with 'trajectory_id'.
   std::unordered_map<int, TrajectoryOptions> trajectory_options_;
   std::unordered_map<int, std::unique_ptr<SensorBridge>> sensor_bridges_;

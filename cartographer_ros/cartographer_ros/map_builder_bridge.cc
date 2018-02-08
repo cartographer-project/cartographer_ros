@@ -56,8 +56,9 @@ visualization_msgs::Marker CreateTrajectoryMarker(const int trajectory_id,
   return marker;
 }
 
-int GetLandmarkIndex(const std::string& landmark_id) {
-  static auto* landmark_id_to_index = new std::unordered_map<std::string, int>;
+int GetLandmarkIndex(
+    const std::string& landmark_id,
+    std::unordered_map<std::string, int>* landmark_id_to_index) {
   auto it = landmark_id_to_index->find(landmark_id);
   if (it == landmark_id_to_index->end()) {
     const int new_index = landmark_id_to_index->size();
@@ -67,12 +68,11 @@ int GetLandmarkIndex(const std::string& landmark_id) {
   return it->second;
 }
 
-visualization_msgs::Marker CreateLandmarkMarker(const std::string& landmark_id,
+visualization_msgs::Marker CreateLandmarkMarker(int landmark_index,
                                                 const Rigid3d& landmark_pose,
                                                 const std::string& frame_id) {
   visualization_msgs::Marker marker;
   marker.ns = "Landmarks";
-  int landmark_index = GetLandmarkIndex(landmark_id);
   marker.id = landmark_index;
   marker.type = visualization_msgs::Marker::SPHERE;
   marker.header.stamp = ::ros::Time::now();
@@ -266,7 +266,8 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetLandmarkPosesList() {
       map_builder_->pose_graph()->GetLandmarkPoses();
   for (const auto& id_to_pose : landmark_poses) {
     landmark_poses_list.markers.push_back(CreateLandmarkMarker(
-        id_to_pose.first, id_to_pose.second, node_options_.map_frame));
+        GetLandmarkIndex(id_to_pose.first, &landmark_to_index_),
+        id_to_pose.second, node_options_.map_frame));
   }
   return landmark_poses_list;
 }
