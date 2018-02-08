@@ -19,11 +19,13 @@
 
 #include "cartographer/common/port.h"
 #include "cartographer/common/time.h"
+#include "cartographer/io/submap_painter.h"
 #include "cartographer/sensor/point_cloud.h"
 #include "cartographer/transform/rigid_transform.h"
 #include "geometry_msgs/Pose.h"
 #include "geometry_msgs/Transform.h"
 #include "geometry_msgs/TransformStamped.h"
+#include "nav_msgs/OccupancyGrid.h"
 #include "pcl/point_cloud.h"
 #include "pcl/point_types.h"
 #include "pcl_conversions/pcl_conversions.h"
@@ -78,6 +80,13 @@ Eigen::Vector3d LatLongAltToEcef(double latitude, double longitude,
 // frame that has z pointing upwards.
 cartographer::transform::Rigid3d ComputeLocalFrameFromLatLong(double latitude,
                                                               double longitude);
+
+// Points to an occupancy grid message at a specific resolution from painted
+// submap slices obtained via ::cartographer::io::PaintSubmapSlices(...).
+std::unique_ptr<nav_msgs::OccupancyGrid> CreateOccupancyGridMsg(
+    const cartographer::io::PaintSubmapSlicesResult& painted_slices,
+    const double resolution, const std::string& frame_id,
+    const ros::Time& time);
 
 }  // namespace cartographer_ros
 
