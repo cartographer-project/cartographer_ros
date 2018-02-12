@@ -30,6 +30,7 @@ namespace {
 using ::cartographer::transform::Rigid3d;
 
 constexpr double kTrajectoryLineStripMarkerScale = 0.07;
+constexpr double kLandmarkMarkerScale = 0.3;
 constexpr double kConstraintMarkerScale = 0.025;
 
 ::std_msgs::ColorRGBA ToMessage(const cartographer::io::FloatColor& color) {
@@ -62,7 +63,7 @@ int GetLandmarkIndex(
   auto it = landmark_id_to_index->find(landmark_id);
   if (it == landmark_id_to_index->end()) {
     const int new_index = landmark_id_to_index->size();
-    landmark_id_to_index->at(landmark_id) = new_index;
+    landmark_id_to_index->emplace(landmark_id, new_index);
     return new_index;
   }
   return it->second;
@@ -74,9 +75,12 @@ visualization_msgs::Marker CreateLandmarkMarker(int landmark_index,
   visualization_msgs::Marker marker;
   marker.ns = "Landmarks";
   marker.id = landmark_index;
-  marker.type = visualization_msgs::Marker::SPHERE;
+  marker.type = visualization_msgs::Marker::CUBE;
   marker.header.stamp = ::ros::Time::now();
   marker.header.frame_id = frame_id;
+  marker.scale.x = kLandmarkMarkerScale;
+  marker.scale.y = kLandmarkMarkerScale;
+  marker.scale.z = kLandmarkMarkerScale;
   marker.color = ToMessage(cartographer::io::GetColor(landmark_index));
   marker.pose = ToGeometryMsgPose(landmark_pose);
   return marker;
