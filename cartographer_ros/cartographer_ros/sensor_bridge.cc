@@ -192,7 +192,7 @@ void SensorBridge::HandleLaserScan(
     // send all other sensor data first.
     const carto::common::Time subdivision_time =
         time + carto::common::FromSeconds(time_to_subdivision_end);
-    for (auto& point : subdivision) {
+    for (Eigen::Vector4f& point : subdivision) {
       point[3] -= time_to_subdivision_end;
     }
     CHECK_EQ(subdivision.back()[3], 0);

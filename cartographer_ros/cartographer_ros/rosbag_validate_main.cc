@@ -177,7 +177,7 @@ class RangeDataChecker {
     const cartographer::sensor::TimedPointCloud& point_cloud =
         std::get<0>(point_cloud_with_intensities).points;
     Eigen::Vector4f points_sum = Eigen::Vector4f::Zero();
-    for (const auto& point : point_cloud) {
+    for (const Eigen::Vector4f& point : point_cloud) {
       points_sum += point;
     }
     return {point_cloud.size(), points_sum};
