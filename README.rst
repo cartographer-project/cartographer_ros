@@ -32,10 +32,10 @@ Getting started
 ===============
 
 * Learn to use Cartographer with ROS at `our Read the Docs site`_.
-* Please join the `mailing list`_ and ask questions.
+* You can ask a question by `creating an issue`_.
 
 .. _our Read the Docs site: https://google-cartographer-ros.readthedocs.io
-.. _mailing list: https://groups.google.com/forum/#!forum/google-cartographer
+.. _creating an issue: https://github.com/googlecartographer/cartographer_ros/issues/new?labels=question
 
 Contributing
 ============
