@@ -20,8 +20,8 @@
 #include "cartographer/common/lua_parameter_dictionary.h"
 #include "cartographer/io/file_writer.h"
 #include "cartographer/io/points_processor.h"
-#include "cartographer/mapping_2d/proto/range_data_inserter_options_2d.pb.h"
 #include "cartographer/mapping_2d/probability_grid.h"
+#include "cartographer/mapping_2d/proto/range_data_inserter_options_2d.pb.h"
 #include "cartographer/mapping_2d/range_data_inserter_2d.h"
 
 namespace cartographer_ros {
