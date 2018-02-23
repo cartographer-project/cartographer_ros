@@ -25,7 +25,7 @@ namespace cartographer_ros {
 
 RosMapWritingPointsProcessor::RosMapWritingPointsProcessor(
     const double resolution,
-    const ::cartographer::mapping_2d::proto::RangeDataInserterOptions&
+    const ::cartographer::mapping::proto::RangeDataInserterOptions2D&
         range_data_inserter_options,
     ::cartographer::io::FileWriterFactory file_writer_factory,
     const std::string& filestem,
@@ -44,7 +44,7 @@ RosMapWritingPointsProcessor::FromDictionary(
     ::cartographer::io::PointsProcessor* const next) {
   return ::cartographer::common::make_unique<RosMapWritingPointsProcessor>(
       dictionary->GetDouble("resolution"),
-      ::cartographer::mapping_2d::CreateRangeDataInserterOptions(
+      ::cartographer::mapping::CreateRangeDataInserterOptions2D(
           dictionary->GetDictionary("range_data_inserter").get()),
       file_writer_factory, dictionary->GetString("filestem"), next);
 }
