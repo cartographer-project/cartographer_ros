@@ -152,12 +152,20 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
       },
       false /* oneshot */, false /* autostart */);
 
-  const auto bag_expected_sensor_ids =
-      node.ComputeDefaultSensorIdsForMultipleBags(
-          bag_trajectory_options, true /*  include_multiple_bag_prefix */);
-  const auto bag_expected_sensor_ids_without_prefixes =
-      node.ComputeDefaultSensorIdsForMultipleBags(
-          bag_trajectory_options, false /*  include_multiple_bag_prefix */);
+  std::vector<
+      std::set<cartographer::mapping::TrajectoryBuilderInterface::SensorId>>
+      bag_expected_sensor_ids;
+  if (configuration_basenames.size() == 1) {
+    bag_expected_sensor_ids = node.ComputeDefaultSensorIdsForMultipleBags(
+        std::vector<TrajectoryOptions>(1, bag_trajectory_options.front()));
+    bag_expected_sensor_ids.insert(bag_expected_sensor_ids.end(),
+                                   bag_filenames.size() - 1,
+                                   bag_expected_sensor_ids.front());
+  } else {
+    bag_expected_sensor_ids =
+        node.ComputeDefaultSensorIdsForMultipleBags(bag_trajectory_options);
+  }
+  CHECK_EQ(bag_expected_sensor_ids.size(), bag_filenames.size());
 
   std::map<std::pair<int /* bag_index */, std::string>,
            cartographer::mapping::TrajectoryBuilderInterface::SensorId>
@@ -169,32 +177,11 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
     if (!::ros::ok()) {
       return;
     }
-    for (size_t sensor_index = 0;
-         sensor_index < bag_expected_sensor_ids.at(current_bag_index).size();
-         ++sensor_index) {
-      const auto& expected_sensor_id =
-          bag_expected_sensor_ids.at(current_bag_index).at(sensor_index);
-      std::string resolved_topic =
-          node.node_handle()->resolveName(expected_sensor_id.id);
-      // If the user has not specified a remapping for this sensor in this bag,
-      // use "sensor" instead of "bag_n_sensor" for resolving the topic name.
-      if (bag_filenames.size() > 1 &&
-          ros::names::getUnresolvedRemappings().count(expected_sensor_id.id) ==
-              0) {
-        const auto& expected_sensor_id_without_prefix =
-            bag_expected_sensor_ids_without_prefixes.at(current_bag_index)
-                .at(sensor_index);
-        CHECK_EQ(expected_sensor_id_without_prefix.id,
-                 expected_sensor_id.id.substr(
-                     expected_sensor_id.id.size() -
-                     expected_sensor_id_without_prefix.id.size()));
-        resolved_topic = node.node_handle()->resolveName(
-            expected_sensor_id_without_prefix.id);
-      }
-      LOG(INFO) << "Sensor " << expected_sensor_id.id << " resolved to "
-                << resolved_topic;
-      const auto bag_resolved_topic =
-          std::make_pair(static_cast<int>(current_bag_index), resolved_topic);
+    for (const auto& expected_sensor_id :
+         bag_expected_sensor_ids.at(current_bag_index)) {
+      const auto bag_resolved_topic = std::make_pair(
+          static_cast<int>(current_bag_index),
+          node.node_handle()->resolveName(expected_sensor_id.id));
       if (bag_topic_to_sensor_id.count(bag_resolved_topic) != 0) {
         LOG(ERROR) << "Sensor " << expected_sensor_id.id << " of bag "
                    << current_bag_index << " resolves to topic "
@@ -252,11 +239,9 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
     // Lazily add trajectories only when the first message arrives in order
     // to avoid blocking the sensor queue.
     if (bag_index_to_trajectory_id.count(bag_index) == 0) {
-      trajectory_id = node.AddOfflineTrajectory(
-          std::set<cartographer::mapping::TrajectoryBuilderInterface::SensorId>(
-              bag_expected_sensor_ids.at(bag_index).begin(),
-              bag_expected_sensor_ids.at(bag_index).end()),
-          bag_trajectory_options.at(bag_index));
+      trajectory_id =
+          node.AddOfflineTrajectory(bag_expected_sensor_ids.at(bag_index),
+                                    bag_trajectory_options.at(bag_index));
       CHECK(bag_index_to_trajectory_id
                 .emplace(std::piecewise_construct,
                          std::forward_as_tuple(bag_index),
