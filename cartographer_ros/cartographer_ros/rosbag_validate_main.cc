@@ -168,10 +168,10 @@ class RangeDataChecker {
           << current_time_stamp;
       double overlap =
           (previous_time_stamp_it->second - current_time_first_point).toSec();
-      auto it = frame_id_to_overlap_duration_.find(frame_id);
-      if (it == frame_id_to_overlap_duration_.end() ||
-          overlap > frame_id_to_overlap_duration_.at(frame_id)) {
-        frame_id_to_overlap_duration_[frame_id] = overlap;
+      auto it = frame_id_to_max_overlap_duration_.find(frame_id);
+      if (it == frame_id_to_max_overlap_duration_.end() ||
+          overlap > frame_id_to_max_overlap_duration_.at(frame_id)) {
+        frame_id_to_max_overlap_duration_[frame_id] = overlap;
       }
     }
     if (current_checksum.first == 0) {
@@ -194,7 +194,7 @@ class RangeDataChecker {
   }
 
   void PrintReport() {
-    for (auto& it : frame_id_to_overlap_duration_) {
+    for (auto& it : frame_id_to_max_overlap_duration_) {
       LOG(WARNING) << "Sensor with frame_id \"" << it.first
                    << "\" range measurements have longest overlap of "
                    << it.second << " s";
@@ -238,7 +238,7 @@ class RangeDataChecker {
 
   std::map<std::string, RangeChecksum> frame_id_to_range_checksum_;
   std::map<std::string, ros::Time> frame_id_to_previous_time_stamp_;
-  std::map<std::string, double> frame_id_to_overlap_duration_;
+  std::map<std::string, double> frame_id_to_max_overlap_duration_;
 };
 
 void Run(const std::string& bag_filename, const bool dump_timing) {
