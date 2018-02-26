@@ -111,7 +111,9 @@ void MapBuilderBridge::LoadState(const std::string& state_filename,
   const std::string suffix = ".pbstream";
   CHECK_EQ(state_filename.substr(
                std::max<int>(state_filename.size() - suffix.size(), 0)),
-           suffix);
+           suffix)
+      << "The file containing the state to be loaded must be a "
+         ".pbstream file.";
   LOG(INFO) << "Loading saved state '" << state_filename << "'...";
   cartographer::io::ProtoStreamReader stream(state_filename);
   map_builder_->LoadState(&stream, load_frozen_state);

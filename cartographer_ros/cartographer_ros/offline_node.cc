@@ -312,19 +312,9 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
   LOG(INFO) << "Peak memory usage: " << usage.ru_maxrss << " KiB";
 #endif
 
-  if (::ros::ok()) {
-    std::string output_filename;
+  if (::ros::ok() && bag_filenames.size() > 0) {
+    const std::string output_filename = bag_filenames.front();
     const std::string suffix = ".pbstream";
-    if (bag_filenames.size() > 0) {
-      output_filename = bag_filenames.front();
-    } else {
-      // Reuse loaded state name, but avoid overwriting the same state file
-      // by appending "_new".
-      output_filename =
-          FLAGS_load_state_filename.substr(
-              0, FLAGS_load_state_filename.size() - suffix.size()) +
-          std::string("_new");
-    }
     const std::string state_output_filename = output_filename + suffix;
     LOG(INFO) << "Writing state to '" << state_output_filename << "'...";
     node.SerializeState(state_output_filename);
