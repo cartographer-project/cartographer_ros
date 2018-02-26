@@ -23,6 +23,7 @@ options = {
   published_frame = "base_link",
   odom_frame = "odom",
   provide_odom_frame = true,
+  publish_frame_projected_to_2d = false,
   use_odometry = false,
   use_nav_sat = false,
   num_laser_scans = 0,
