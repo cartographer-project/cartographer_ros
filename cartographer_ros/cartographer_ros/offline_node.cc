@@ -156,11 +156,11 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
       std::set<cartographer::mapping::TrajectoryBuilderInterface::SensorId>>
       bag_expected_sensor_ids;
   if (configuration_basenames.size() == 1) {
-    bag_expected_sensor_ids = node.ComputeDefaultSensorIdsForMultipleBags(
-        std::vector<TrajectoryOptions>(1, bag_trajectory_options.front()));
-    bag_expected_sensor_ids.insert(bag_expected_sensor_ids.end(),
-                                   bag_filenames.size() - 1,
-                                   bag_expected_sensor_ids.front());
+    const auto current_bag_expected_sensor_ids =
+        node.ComputeDefaultSensorIdsForMultipleBags(
+            {bag_trajectory_options.front()});
+    bag_expected_sensor_ids = {bag_filenames.size(),
+                               current_bag_expected_sensor_ids.front()};
   } else {
     bag_expected_sensor_ids =
         node.ComputeDefaultSensorIdsForMultipleBags(bag_trajectory_options);
