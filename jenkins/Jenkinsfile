@@ -57,7 +57,7 @@ podTemplate(label: 'node-1', containers: [
     }
 }
 
-podTemplate(label: 'node-1', containers: [
+podTemplate(label: 'node-2', containers: [
     containerTemplate(
           name: 'jnlp',
           image: 'eu.gcr.io/cartographer-141408/kinetic-jenkins-slave:latest',
@@ -75,7 +75,7 @@ podTemplate(label: 'node-1', containers: [
           persistentVolumeClaim(claimName: 'data-claim-compile', mountPath: '/data'),
     ]
 ) {
-    node('node-1') {
+    node('node-2') {
       stage('Run Backpack Pipeline') {
         sh 'gcloud auth activate-service-account --key-file=/opt/config/gcloud-svc-account.json'
         sh 'GOOGLE_APPLICATION_CREDENTIALS="/opt/config/gcloud-svc-account.json" GOOGLE_CLOUD_DISABLE_GRPC=True python /worker.py --worker_id 0 --num_workers 1 --pipeline_id backpack'
