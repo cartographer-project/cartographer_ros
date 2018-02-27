@@ -26,9 +26,9 @@ ADD https://api.github.com/repos/googlecartographer/cartographer/git/refs/heads/
 
 # wstool needs the updated rosinstall file to clone the correct repos.
 COPY cartographer_ros.rosinstall cartographer_ros/
-COPY scripts/prepare_catkin_workspace.sh cartographer_ros/scripts/
+COPY scripts/prepare_jenkins_catkin_workspace.sh cartographer_ros/scripts/
 RUN CARTOGRAPHER_VERSION=$CARTOGRAPHER_VERSION \
-    cartographer_ros/scripts/prepare_catkin_workspace.sh
+    cartographer_ros/scripts/prepare_jenkins_catkin_workspace.sh
 
 # rosdep needs the updated package.xml files to install the correct debs.
 COPY cartographer_ros/package.xml catkin_ws/src/cartographer_ros/cartographer_ros/
@@ -68,6 +68,9 @@ RUN cartographer_ros/scripts/install.sh --pkg cartographer_rviz && \
     cartographer_ros/scripts/install.sh --pkg cartographer_rviz \
         --catkin-make-args run_tests && \
     cartographer_ros/scripts/catkin_test_results.sh build_isolated/cartographer_rviz
+
+RUN cartographer_ros/scripts/install.sh --pkg cartographer_toru
+RUN cartographer_ros/scripts/install.sh --pkg cartographer_fetch
 
 COPY scripts/ros_entrypoint.sh /
 # A BTRFS bug may prevent us from cleaning up these directories.
