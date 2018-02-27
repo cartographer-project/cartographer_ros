@@ -52,8 +52,11 @@ DEFINE_string(urdf_filenames, "",
               "static links for the sensor configuration(s).");
 DEFINE_bool(use_bag_transforms, true,
             "Whether to read, use and republish transforms from bags.");
-DEFINE_string(pbstream_filename, "",
-              "If non-empty, filename of a pbstream to load.");
+DEFINE_string(load_state_filename, "",
+              "If non-empty, filename of a .pbstream file to load, containing "
+              "a saved SLAM state.");
+DEFINE_bool(load_frozen_state, true,
+            "Load the saved state as frozen (non-optimized) trajectories.");
 DEFINE_bool(keep_running, false,
             "Keep running the offline node after all messages from the bag "
             "have been processed.");
@@ -75,7 +78,8 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
       << "-configuration_directory is missing.";
   CHECK(!FLAGS_configuration_basenames.empty())
       << "-configuration_basenames is missing.";
-  CHECK(!FLAGS_bag_filenames.empty()) << "-bag_filenames is missing.";
+  CHECK(!(FLAGS_bag_filenames.empty() && FLAGS_load_state_filename.empty()))
+      << "-bag_filenames and -load_state_filename cannot both be unspecified.";
   const auto bag_filenames =
       cartographer_ros::SplitString(FLAGS_bag_filenames, ',');
   cartographer_ros::NodeOptions node_options;
@@ -95,7 +99,9 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
     }
     bag_trajectory_options.push_back(current_trajectory_options);
   }
-  CHECK_EQ(bag_trajectory_options.size(), bag_filenames.size());
+  if (bag_filenames.size() > 0) {
+    CHECK_EQ(bag_trajectory_options.size(), bag_filenames.size());
+  }
 
   // Since we preload the transform buffer, we should never have to wait for a
   // transform. When we finish processing the bag, we will simply drop any
@@ -122,10 +128,8 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
   tf_buffer.setUsingDedicatedThread(true);
 
   Node node(node_options, std::move(map_builder), &tf_buffer);
-  if (!FLAGS_pbstream_filename.empty()) {
-    // TODO(jihoonl): LoadMap should be replaced by some better deserialization
-    // of full SLAM state as non-frozen trajectories once possible
-    node.LoadMap(FLAGS_pbstream_filename);
+  if (!FLAGS_load_state_filename.empty()) {
+    node.LoadState(FLAGS_load_state_filename, FLAGS_load_frozen_state);
   }
 
   ::ros::Publisher tf_publisher =
@@ -308,10 +312,12 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
   LOG(INFO) << "Peak memory usage: " << usage.ru_maxrss << " KiB";
 #endif
 
-  if (::ros::ok()) {
-    const std::string output_filename = bag_filenames.front() + ".pbstream";
-    LOG(INFO) << "Writing state to '" << output_filename << "'...";
-    node.SerializeState(output_filename);
+  if (::ros::ok() && bag_filenames.size() > 0) {
+    const std::string output_filename = bag_filenames.front();
+    const std::string suffix = ".pbstream";
+    const std::string state_output_filename = output_filename + suffix;
+    LOG(INFO) << "Writing state to '" << state_output_filename << "'...";
+    node.SerializeState(state_output_filename);
   }
   if (FLAGS_keep_running) {
     ::ros::waitForShutdown();

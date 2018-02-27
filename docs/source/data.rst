@@ -281,3 +281,24 @@ Data
 `2011-09-14-10-19-20.bag <https://storage.googleapis.com/cartographer-public-data/bags/pr2/2011-09-14-10-19-20.bag>`_
 `2011-09-15-08-32-46.bag <https://storage.googleapis.com/cartographer-public-data/bags/pr2/2011-09-15-08-32-46.bag>`_
 ===================================================================================================================== =======================
+
+Magazino
+========
+
+Datasets recorded on `Magazino robots <https://www.magazino.eu/?lang=en>`_.
+
+See the `cartographer_magazino <https://github.com/magazino/cartographer_magazino>`_
+repository for an integration of Magazino robot data for Cartographer.
+
+See the ``LICENSE`` file in ``cartographer_magazino`` for details on the dataset
+license. 
+
+Data
+----
+
+=================================================================================================================================== ======== ======== ============
+`ROS Bag <http://wiki.ros.org/Bags>`_                                                                                               Duration Size     Known Issues
+=================================================================================================================================== ======== ======== ============
+`hallway_return.bag <https://storage.googleapis.com/cartographer-public-data/bags/toru/hallway_return.bag>`_              350 s    102.8 MB
+`hallway_localization.bag <https://storage.googleapis.com/cartographer-public-data/bags/toru/hallway_localization.bag>`_  137 s    40.4 MB
+=================================================================================================================================== ======== ======== ============
