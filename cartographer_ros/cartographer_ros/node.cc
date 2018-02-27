@@ -657,9 +657,10 @@ void Node::SerializeState(const std::string& filename) {
       << "Could not write state.";
 }
 
-void Node::LoadMap(const std::string& map_filename) {
+void Node::LoadState(const std::string& state_filename,
+                     const bool load_frozen_state) {
   carto::common::MutexLocker lock(&mutex_);
-  map_builder_bridge_.LoadMap(map_filename);
+  map_builder_bridge_.LoadState(state_filename, load_frozen_state);
 }
 
 }  // namespace cartographer_ros
