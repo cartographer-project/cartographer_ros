@@ -57,7 +57,7 @@ void Run() {
   Node node(node_options, std::move(map_builder), &tf_buffer);
 
   if (!FLAGS_map_filename.empty()) {
-    node.LoadMap(FLAGS_map_filename);
+    node.LoadState(FLAGS_map_filename, true);
   }
 
   if (FLAGS_start_trajectory_with_default_topics) {
@@ -80,7 +80,7 @@ void Run() {
 
 int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
-  google::ParseCommandLineFlags(&argc, &argv, true);
+  google::ParseCommandLineFlags(&argc, &argv, true /* load_frozen_state */);
 
   CHECK(!FLAGS_configuration_directory.empty())
       << "-configuration_directory is missing.";
