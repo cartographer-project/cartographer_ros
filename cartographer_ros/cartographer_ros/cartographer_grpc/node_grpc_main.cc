@@ -37,7 +37,9 @@ DEFINE_bool(
 DEFINE_string(
     save_map_filename, "",
     "If non-empty, serialize state and write it to disk before shutting down.");
-DEFINE_string(map_filename, "", "If non-empty, filename of a map to load.");
+DEFINE_string(load_state_filename, "",
+              "If non-empty, filename of a .pbstream file "
+              "to load, containing a saved SLAM state.");
 
 namespace cartographer_ros {
 namespace cartographer_grpc {
@@ -56,8 +58,8 @@ void Run() {
       ::cartographer_grpc::mapping::MapBuilderStub>(FLAGS_server_address);
   Node node(node_options, std::move(map_builder), &tf_buffer);
 
-  if (!FLAGS_map_filename.empty()) {
-    node.LoadMap(FLAGS_map_filename);
+  if (!FLAGS_load_state_filename.empty()) {
+    node.LoadState(FLAGS_load_state_filename, true /* load_frozen_state */);
   }
 
   if (FLAGS_start_trajectory_with_default_topics) {
