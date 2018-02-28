@@ -82,3 +82,29 @@ podTemplate(label: 'node-2', containers: [
       }
     }
 }
+
+podTemplate(label: 'node-3', containers: [
+    containerTemplate(
+          name: 'jnlp',
+          image: 'eu.gcr.io/cartographer-141408/kinetic-jenkins-slave:latest',
+          ttyEnabled: false,
+          command: '',
+          privileged: true,
+          alwaysPullImage: true,
+          workingDir: '/home/jenkins',
+          args: '${computer.jnlpmac} ${computer.name}'
+        )
+    ],
+    volumes: [
+          secretVolume(mountPath: '/opt/config', secretName: 'gcloud-svc-account'),
+          hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock'),
+          persistentVolumeClaim(claimName: 'data-claim-compile', mountPath: '/data'),
+    ]
+) {
+    node('node-3') {
+      stage('Run Toru Pipeline') {
+        sh 'gcloud auth activate-service-account --key-file=/opt/config/gcloud-svc-account.json'
+        sh 'GOOGLE_APPLICATION_CREDENTIALS="/opt/config/gcloud-svc-account.json" GOOGLE_CLOUD_DISABLE_GRPC=True python /worker.py --worker_id 0 --num_workers 1 --pipeline_id toru'
+      }
+    }
+}
