@@ -37,7 +37,8 @@ DEFINE_bool(
 DEFINE_string(
     save_map_filename, "",
     "If non-empty, serialize state and write it to disk before shutting down.");
-DEFINE_string(load_state_filename, "", "If non-empty, filename of a .pbstream file "
+DEFINE_string(load_state_filename, "",
+              "If non-empty, filename of a .pbstream file "
               "to load, containing a saved SLAM state.");
 
 namespace cartographer_ros {
