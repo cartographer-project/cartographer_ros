@@ -55,6 +55,7 @@ cartographer_ros_msgs::SensorTopics DefaultSensorTopics() {
   topics.imu_topic = kImuTopic;
   topics.odometry_topic = kOdometryTopic;
   topics.nav_sat_fix_topic = kNavSatFixTopic;
+  topics.landmark_topic = kLandmarkTopic;
   return topics;
 }
 
@@ -171,7 +172,8 @@ void Node::AddSensorSamplers(const int trajectory_id,
       std::piecewise_construct, std::forward_as_tuple(trajectory_id),
       std::forward_as_tuple(
           options.rangefinder_sampling_ratio, options.odometry_sampling_ratio,
-          options.fixed_frame_pose_sampling_ratio, options.imu_sampling_ratio));
+          options.fixed_frame_pose_sampling_ratio, options.imu_sampling_ratio,
+          options.landmarks_sampling_ratio));
 }
 
 void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
@@ -318,7 +320,10 @@ Node::ComputeExpectedSensorIds(
     expected_topics.insert(
         SensorId{SensorType::FIXED_FRAME_POSE, topics.nav_sat_fix_topic});
   }
-
+  // Landmark is optional.
+  if (options.use_landmarks) {
+    expected_topics.insert(SensorId{SensorType::LANDMARK, kLandmarkTopic});
+  }
   return expected_topics;
 }
 
@@ -394,6 +399,14 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
     subscribers_[trajectory_id].push_back(
         {SubscribeWithHandler<sensor_msgs::NavSatFix>(
              &Node::HandleNavSatFixMessage, trajectory_id, topic, &node_handle_,
+             this),
+         topic});
+  }
+  if (options.use_landmarks) {
+    std::string topic = topics.landmark_topic;
+    subscribers_[trajectory_id].push_back(
+        {SubscribeWithHandler<cartographer_ros_msgs::LandmarkList>(
+             &Node::HandleLandmarkMessage, trajectory_id, topic, &node_handle_,
              this),
          topic});
   }
@@ -601,6 +614,17 @@ void Node::HandleNavSatFixMessage(const int trajectory_id,
   }
   map_builder_bridge_.sensor_bridge(trajectory_id)
       ->HandleNavSatFixMessage(sensor_id, msg);
+}
+
+void Node::HandleLandmarkMessage(
+    const int trajectory_id, const std::string& sensor_id,
+    const cartographer_ros_msgs::LandmarkList::ConstPtr& msg) {
+  carto::common::MutexLocker lock(&mutex_);
+  if (!sensor_samplers_.at(trajectory_id).landmark_sampler.Pulse()) {
+    return;
+  }
+  map_builder_bridge_.sensor_bridge(trajectory_id)
+      ->HandleLandmarkMessage(sensor_id, msg);
 }
 
 void Node::HandleImuMessage(const int trajectory_id,

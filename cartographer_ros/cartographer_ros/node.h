@@ -95,6 +95,9 @@ class Node {
                              const nav_msgs::Odometry::ConstPtr& msg);
   void HandleNavSatFixMessage(int trajectory_id, const std::string& sensor_id,
                               const sensor_msgs::NavSatFix::ConstPtr& msg);
+  void HandleLandmarkMessage(
+      int trajectory_id, const std::string& sensor_id,
+      const cartographer_ros_msgs::LandmarkList::ConstPtr& msg);
   void HandleImuMessage(int trajectory_id, const std::string& sensor_id,
                         const sensor_msgs::Imu::ConstPtr& msg);
   void HandleLaserScanMessage(int trajectory_id, const std::string& sensor_id,
@@ -180,16 +183,19 @@ class Node {
     TrajectorySensorSamplers(const double rangefinder_sampling_ratio,
                              const double odometry_sampling_ratio,
                              const double fixed_frame_pose_sampling_ratio,
-                             const double imu_sampling_ratio)
+                             const double imu_sampling_ratio,
+                             const double landmark_sampling_ratio)
         : rangefinder_sampler(rangefinder_sampling_ratio),
           odometry_sampler(odometry_sampling_ratio),
           fixed_frame_pose_sampler(fixed_frame_pose_sampling_ratio),
-          imu_sampler(imu_sampling_ratio) {}
+          imu_sampler(imu_sampling_ratio),
+          landmark_sampler(landmark_sampling_ratio) {}
 
     ::cartographer::common::FixedRatioSampler rangefinder_sampler;
     ::cartographer::common::FixedRatioSampler odometry_sampler;
     ::cartographer::common::FixedRatioSampler fixed_frame_pose_sampler;
     ::cartographer::common::FixedRatioSampler imu_sampler;
+    ::cartographer::common::FixedRatioSampler landmark_sampler;
   };
 
   // These are keyed with 'trajectory_id'.

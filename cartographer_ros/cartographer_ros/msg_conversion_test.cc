@@ -15,15 +15,25 @@
  */
 
 #include "cartographer_ros/msg_conversion.h"
+#include "cartographer/transform/rigid_transform_test_helpers.h"
 
 #include <cmath>
 #include <random>
 
+#include "cartographer_ros/time_conversion.h"
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "sensor_msgs/LaserScan.h"
 
 namespace cartographer_ros {
 namespace {
+
+using ::cartographer::sensor::LandmarkData;
+using ::cartographer::sensor::LandmarkObservation;
+using ::testing::AllOf;
+using ::testing::DoubleNear;
+using ::testing::ElementsAre;
+using ::testing::Field;
 
 TEST(MsgConversion, LaserScanToPointCloud) {
   sensor_msgs::LaserScan laser_scan;
@@ -80,6 +90,50 @@ TEST(MsgConversion, LaserScanToPointCloudWithInfinityAndNaN) {
       point_cloud[0].isApprox(Eigen::Vector4f(0.f, 2.f, 0.f, 0.f), 1e-6));
   EXPECT_TRUE(
       point_cloud[1].isApprox(Eigen::Vector4f(-3.f, 0.f, 0.f, 0.f), 1e-6));
+}
+
+::testing::Matcher<const LandmarkObservation&> EqualsLandmark(
+    const LandmarkObservation& expected) {
+  return ::testing::AllOf(
+      Field(&LandmarkObservation::id, expected.id),
+      Field(&LandmarkObservation::landmark_to_tracking_transform,
+            ::cartographer::transform::IsNearly(
+                expected.landmark_to_tracking_transform, 1e-2)),
+      Field(&LandmarkObservation::translation_weight,
+            DoubleNear(expected.translation_weight, 0.01)),
+      Field(&LandmarkObservation::rotation_weight,
+            DoubleNear(expected.rotation_weight, 0.01)));
+}
+
+TEST(MsgConversion, LandmarkListToLandmarkData) {
+  cartographer_ros_msgs::LandmarkList message;
+  message.header.stamp.fromSec(10);
+
+  cartographer_ros_msgs::LandmarkEntry landmark_0;
+  landmark_0.id = "landmark_0";
+  landmark_0.tracking_from_landmark_transform.position.x = 1.0;
+  landmark_0.tracking_from_landmark_transform.position.y = 2.0;
+  landmark_0.tracking_from_landmark_transform.position.z = 3.0;
+  landmark_0.tracking_from_landmark_transform.orientation.w = 1.0;
+  landmark_0.tracking_from_landmark_transform.orientation.x = 0.0;
+  landmark_0.tracking_from_landmark_transform.orientation.y = 0.0;
+  landmark_0.tracking_from_landmark_transform.orientation.z = 0.0;
+  landmark_0.translation_weight = 1.0;
+  landmark_0.rotation_weight = 2.0;
+  message.landmark.push_back(landmark_0);
+
+  LandmarkData actual_landmark_data = ToLandmarkData(message);
+  EXPECT_THAT(actual_landmark_data,
+              AllOf(Field(&LandmarkData::time, FromRos(message.header.stamp)),
+                    Field(&LandmarkData::landmark_observations,
+                          ElementsAre(EqualsLandmark(LandmarkObservation{
+                              "landmark_0",
+                              ::cartographer::transform::Rigid3d(
+                                  Eigen::Vector3d(1., 2., 3.),
+                                  Eigen::Quaterniond(1., 0., 0., 0.)),
+                              1.f,
+                              2.f,
+                          })))));
 }
 
 TEST(MsgConversion, LatLongAltToEcef) {

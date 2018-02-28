@@ -35,6 +35,7 @@ struct TrajectoryOptions {
   bool provide_odom_frame;
   bool use_odometry;
   bool use_nav_sat;
+  bool use_landmarks;
   bool publish_frame_projected_to_2d;
   int num_laser_scans;
   int num_multi_echo_laser_scans;
@@ -44,6 +45,7 @@ struct TrajectoryOptions {
   double odometry_sampling_ratio;
   double fixed_frame_pose_sampling_ratio;
   double imu_sampling_ratio;
+  double landmarks_sampling_ratio;
 };
 
 ::cartographer::mapping::proto::InitialTrajectoryPose

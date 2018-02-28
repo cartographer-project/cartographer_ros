@@ -18,3 +18,4 @@ string point_cloud2_topic
 string imu_topic
 string odometry_topic
 string nav_sat_fix_topic
+string landmark_topic
