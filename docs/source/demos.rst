@@ -30,7 +30,7 @@ Pure localization
     roslaunch cartographer_ros offline_backpack_2d.launch bag_filenames:=${HOME}/Downloads/b2-2016-04-05-14-44-52.bag
     # Run pure localization:
     roslaunch cartographer_ros demo_backpack_2d_localization.launch \
-       map_filename:=${HOME}/Downloads/b2-2016-04-05-14-44-52.bag.pbstream \
+       load_state_filename:=${HOME}/Downloads/b2-2016-04-05-14-44-52.bag.pbstream \
        bag_filename:=${HOME}/Downloads/b2-2016-04-27-12-31-41.bag
 
     # Pure localization demo in 3D: We use 2 different 3D bags from the Deutsche
@@ -42,7 +42,7 @@ Pure localization
     roslaunch cartographer_ros offline_backpack_3d.launch bag_filenames:=${HOME}/Downloads/b3-2016-04-05-13-54-42.bag
     # Run pure localization:
     roslaunch cartographer_ros demo_backpack_3d_localization.launch \
-       map_filename:=${HOME}/Downloads/b3-2016-04-05-13-54-42.bag.pbstream \
+       load_state_filename:=${HOME}/Downloads/b3-2016-04-05-13-54-42.bag.pbstream \
        bag_filename:=${HOME}/Downloads/b3-2016-04-05-15-52-20.bag
 
 Revo LDS
