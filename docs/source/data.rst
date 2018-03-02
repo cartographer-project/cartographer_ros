@@ -299,6 +299,6 @@ Data
 =================================================================================================================================== ======== ======== ============
 `ROS Bag <http://wiki.ros.org/Bags>`_                                                                                               Duration Size     Known Issues
 =================================================================================================================================== ======== ======== ============
-`hallway_return.bag <https://storage.googleapis.com/cartographer-public-data/bags/toru/hallway_return.bag>`_              350 s    102.8 MB
-`hallway_localization.bag <https://storage.googleapis.com/cartographer-public-data/bags/toru/hallway_localization.bag>`_  137 s    40.4 MB
+`hallway_return.bag <https://storage.googleapis.com/cartographer-public-data/bags/toru/hallway_return.bag>`_                        350 s    102.8 MB
+`hallway_localization.bag <https://storage.googleapis.com/cartographer-public-data/bags/toru/hallway_localization.bag>`_            137 s    40.4 MB
 =================================================================================================================================== ======== ======== ============
