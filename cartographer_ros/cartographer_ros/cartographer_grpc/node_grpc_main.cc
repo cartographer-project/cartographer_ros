@@ -42,7 +42,6 @@ DEFINE_string(load_state_filename, "",
               "to load, containing a saved SLAM state.");
 
 namespace cartographer_ros {
-namespace cartographer_grpc {
 namespace {
 
 void Run() {
@@ -54,8 +53,9 @@ void Run() {
   std::tie(node_options, trajectory_options) =
       LoadOptions(FLAGS_configuration_directory, FLAGS_configuration_basename);
 
-  auto map_builder = cartographer::common::make_unique<
-      ::cartographer_grpc::mapping::MapBuilderStub>(FLAGS_server_address);
+  auto map_builder =
+      cartographer::common::make_unique<::cartographer::cloud::MapBuilderStub>(
+          FLAGS_server_address);
   Node node(node_options, std::move(map_builder), &tf_buffer);
 
   if (!FLAGS_load_state_filename.empty()) {
@@ -77,7 +77,6 @@ void Run() {
 }
 
 }  // namespace
-}  // namespace cartographer_grpc
 }  // namespace cartographer_ros
 
 int main(int argc, char** argv) {
@@ -93,6 +92,6 @@ int main(int argc, char** argv) {
   ::ros::start();
 
   cartographer_ros::ScopedRosLogSink ros_log_sink;
-  cartographer_ros::cartographer_grpc::Run();
+  cartographer_ros::Run();
   ::ros::shutdown();
 }
