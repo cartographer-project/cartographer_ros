@@ -40,7 +40,6 @@
 #include "sensor_msgs/PointCloud2.h"
 
 namespace cartographer_ros {
-
 namespace {
 
 // The ros::sensor_msgs::PointCloud2 binary data contains 4 floats for each
@@ -48,8 +47,12 @@ namespace {
 // properly.
 constexpr float kPointCloudComponentFourMagic = 1.;
 
+using ::cartographer::sensor::LandmarkData;
+using ::cartographer::sensor::LandmarkObservation;
 using ::cartographer::sensor::PointCloudWithIntensities;
 using ::cartographer::transform::Rigid3d;
+using ::cartographer_ros_msgs::LandmarkEntry;
+using ::cartographer_ros_msgs::LandmarkList;
 
 sensor_msgs::PointCloud2 PreparePointCloud2Message(const int64_t timestamp,
                                                    const std::string& frame_id,
@@ -203,6 +206,17 @@ ToPointCloudWithIntensities(const sensor_msgs::PointCloud2& message) {
     }
   }
   return std::make_tuple(point_cloud, FromRos(message.header.stamp));
+}
+
+LandmarkData ToLandmarkData(const LandmarkList& landmark_list) {
+  LandmarkData landmark_data;
+  landmark_data.time = FromRos(landmark_list.header.stamp);
+  for (const LandmarkEntry& entry : landmark_list.landmark) {
+    landmark_data.landmark_observations.push_back(
+        {entry.id, ToRigid3d(entry.tracking_from_landmark_transform),
+         entry.translation_weight, entry.rotation_weight});
+  }
+  return landmark_data;
 }
 
 Rigid3d ToRigid3d(const geometry_msgs::TransformStamped& transform) {

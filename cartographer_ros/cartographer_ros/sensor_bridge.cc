@@ -98,6 +98,12 @@ void SensorBridge::HandleNavSatFixMessage(
                                      msg->altitude)))});
 }
 
+void SensorBridge::HandleLandmarkMessage(
+    const std::string& sensor_id,
+    const cartographer_ros_msgs::LandmarkList::ConstPtr& msg) {
+  trajectory_builder_->AddSensorData(sensor_id, ToLandmarkData(*msg));
+}
+
 std::unique_ptr<carto::sensor::ImuData> SensorBridge::ToImuData(
     const sensor_msgs::Imu::ConstPtr& msg) {
   CHECK_NE(msg->linear_acceleration_covariance[0], -1)

@@ -292,6 +292,11 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
         node.HandleNavSatFixMessage(trajectory_id, sensor_id,
                                     msg.instantiate<sensor_msgs::NavSatFix>());
       }
+      if (msg.isType<cartographer_ros_msgs::LandmarkList>()) {
+        node.HandleLandmarkMessage(
+            trajectory_id, sensor_id,
+            msg.instantiate<cartographer_ros_msgs::LandmarkList>());
+      }
     }
     clock.clock = msg.getTime();
     clock_publisher.publish(clock);
