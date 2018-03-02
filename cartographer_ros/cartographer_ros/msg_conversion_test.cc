@@ -35,6 +35,8 @@ using ::testing::DoubleNear;
 using ::testing::ElementsAre;
 using ::testing::Field;
 
+constexpr double kEps = 1e-6;
+
 TEST(MsgConversion, LaserScanToPointCloud) {
   sensor_msgs::LaserScan laser_scan;
   for (int i = 0; i < 8; ++i) {
@@ -49,25 +51,25 @@ TEST(MsgConversion, LaserScanToPointCloud) {
   const auto point_cloud =
       std::get<0>(ToPointCloudWithIntensities(laser_scan)).points;
   EXPECT_TRUE(
-      point_cloud[0].isApprox(Eigen::Vector4f(1.f, 0.f, 0.f, 0.f), 1e-6));
+      point_cloud[0].isApprox(Eigen::Vector4f(1.f, 0.f, 0.f, 0.f), kEps));
   EXPECT_TRUE(point_cloud[1].isApprox(
       Eigen::Vector4f(1.f / std::sqrt(2.f), 1.f / std::sqrt(2.f), 0.f, 0.f),
-      1e-6));
+      kEps));
   EXPECT_TRUE(
-      point_cloud[2].isApprox(Eigen::Vector4f(0.f, 1.f, 0.f, 0.f), 1e-6));
+      point_cloud[2].isApprox(Eigen::Vector4f(0.f, 1.f, 0.f, 0.f), kEps));
   EXPECT_TRUE(point_cloud[3].isApprox(
       Eigen::Vector4f(-1.f / std::sqrt(2.f), 1.f / std::sqrt(2.f), 0.f, 0.f),
-      1e-6));
+      kEps));
   EXPECT_TRUE(
-      point_cloud[4].isApprox(Eigen::Vector4f(-1.f, 0.f, 0.f, 0.f), 1e-6));
+      point_cloud[4].isApprox(Eigen::Vector4f(-1.f, 0.f, 0.f, 0.f), kEps));
   EXPECT_TRUE(point_cloud[5].isApprox(
       Eigen::Vector4f(-1.f / std::sqrt(2.f), -1.f / std::sqrt(2.f), 0.f, 0.f),
-      1e-6));
+      kEps));
   EXPECT_TRUE(
-      point_cloud[6].isApprox(Eigen::Vector4f(0.f, -1.f, 0.f, 0.f), 1e-6));
+      point_cloud[6].isApprox(Eigen::Vector4f(0.f, -1.f, 0.f, 0.f), kEps));
   EXPECT_TRUE(point_cloud[7].isApprox(
       Eigen::Vector4f(1.f / std::sqrt(2.f), -1.f / std::sqrt(2.f), 0.f, 0.f),
-      1e-6));
+      kEps));
 }
 
 TEST(MsgConversion, LaserScanToPointCloudWithInfinityAndNaN) {
@@ -87,9 +89,9 @@ TEST(MsgConversion, LaserScanToPointCloudWithInfinityAndNaN) {
       std::get<0>(ToPointCloudWithIntensities(laser_scan)).points;
   ASSERT_EQ(2, point_cloud.size());
   EXPECT_TRUE(
-      point_cloud[0].isApprox(Eigen::Vector4f(0.f, 2.f, 0.f, 0.f), 1e-6));
+      point_cloud[0].isApprox(Eigen::Vector4f(0.f, 2.f, 0.f, 0.f), kEps));
   EXPECT_TRUE(
-      point_cloud[1].isApprox(Eigen::Vector4f(-3.f, 0.f, 0.f, 0.f), 1e-6));
+      point_cloud[1].isApprox(Eigen::Vector4f(-3.f, 0.f, 0.f, 0.f), kEps));
 }
 
 ::testing::Matcher<const LandmarkObservation&> EqualsLandmark(
@@ -98,11 +100,11 @@ TEST(MsgConversion, LaserScanToPointCloudWithInfinityAndNaN) {
       Field(&LandmarkObservation::id, expected.id),
       Field(&LandmarkObservation::landmark_to_tracking_transform,
             ::cartographer::transform::IsNearly(
-                expected.landmark_to_tracking_transform, 1e-2)),
+                expected.landmark_to_tracking_transform, kEps)),
       Field(&LandmarkObservation::translation_weight,
-            DoubleNear(expected.translation_weight, 0.01)),
+            DoubleNear(expected.translation_weight, kEps)),
       Field(&LandmarkObservation::rotation_weight,
-            DoubleNear(expected.rotation_weight, 0.01)));
+            DoubleNear(expected.rotation_weight, kEps)));
 }
 
 TEST(MsgConversion, LandmarkListToLandmarkData) {
@@ -144,23 +146,23 @@ TEST(MsgConversion, LatLongAltToEcef) {
   EXPECT_TRUE(plus_ten_meters.isApprox(Eigen::Vector3d(6378147, 0, 0)))
       << plus_ten_meters;
   Eigen::Vector3d north_pole = LatLongAltToEcef(90, 0, 0);
-  EXPECT_TRUE(north_pole.isApprox(Eigen::Vector3d(0, 0, 6356752.3142), 1e-9))
+  EXPECT_TRUE(north_pole.isApprox(Eigen::Vector3d(0, 0, 6356752.3142), kEps))
       << north_pole;
   Eigen::Vector3d also_north_pole = LatLongAltToEcef(90, 90, 0);
   EXPECT_TRUE(
-      also_north_pole.isApprox(Eigen::Vector3d(0, 0, 6356752.3142), 1e-9))
+      also_north_pole.isApprox(Eigen::Vector3d(0, 0, 6356752.3142), kEps))
       << also_north_pole;
   Eigen::Vector3d south_pole = LatLongAltToEcef(-90, 0, 0);
-  EXPECT_TRUE(south_pole.isApprox(Eigen::Vector3d(0, 0, -6356752.3142), 1e-9))
+  EXPECT_TRUE(south_pole.isApprox(Eigen::Vector3d(0, 0, -6356752.3142), kEps))
       << south_pole;
   Eigen::Vector3d above_south_pole = LatLongAltToEcef(-90, 60, 20);
   EXPECT_TRUE(
-      above_south_pole.isApprox(Eigen::Vector3d(0, 0, -6356772.3142), 1e-9))
+      above_south_pole.isApprox(Eigen::Vector3d(0, 0, -6356772.3142), kEps))
       << above_south_pole;
   Eigen::Vector3d somewhere_on_earth =
       LatLongAltToEcef(48.1372149, 11.5748024, 517.1);
   EXPECT_TRUE(somewhere_on_earth.isApprox(
-      Eigen::Vector3d(4177983, 855702, 4727457), 1e-6))
+      Eigen::Vector3d(4177983, 855702, 4727457), kEps))
       << somewhere_on_earth;
 }
 
@@ -197,7 +199,7 @@ TEST(MsgConversion, ComputeLocalFrameFromLatLong) {
         ComputeLocalFrameFromLatLong(latitude, longitude);
     EXPECT_TRUE((transform_to_local_frame *
                  LatLongAltToEcef(latitude, longitude, altitude))
-                    .isApprox(altitude * Eigen::Vector3d::UnitZ(), 1e-6))
+                    .isApprox(altitude * Eigen::Vector3d::UnitZ(), kEps))
         << transform_to_local_frame *
                LatLongAltToEcef(latitude, longitude, altitude)
         << "\n"
