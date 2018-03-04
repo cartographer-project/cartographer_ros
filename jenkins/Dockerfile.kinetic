@@ -28,7 +28,7 @@ ADD https://api.github.com/repos/googlecartographer/cartographer/git/refs/heads/
 COPY cartographer_ros.rosinstall cartographer_ros/
 COPY scripts/prepare_jenkins_catkin_workspace.sh cartographer_ros/scripts/
 
-# Invalidate the Docker cache to ensure this command is always executed.
+# Invalidates the Docker cache to ensure this command is always executed.
 ARG CACHEBUST=1
 RUN CARTOGRAPHER_VERSION=$CARTOGRAPHER_VERSION \
     cartographer_ros/scripts/prepare_jenkins_catkin_workspace.sh
