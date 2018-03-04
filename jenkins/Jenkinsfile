@@ -21,7 +21,7 @@ podTemplate(label: 'node-0', containers: [
         sh 'gcloud auth activate-service-account --key-file=/opt/config/gcloud-svc-account.json'
         sh 'cd /data && rm -Rf *'
         sh 'cd /data && git clone https://github.com/googlecartographer/cartographer_ros'
-        sh 'cd /data/cartographer_ros && docker build -f jenkins/Dockerfile.kinetic -t kinetic-jenkins-slave .'
+        sh 'cd /data/cartographer_ros && docker build -f jenkins/Dockerfile.kinetic -t kinetic-jenkins-slave --build-arg CACHEBUST=$(date +%s)  .'
       }
       stage('Push') {
         sh 'docker tag kinetic-jenkins-slave eu.gcr.io/cartographer-141408/kinetic-jenkins-slave'
