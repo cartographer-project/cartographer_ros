@@ -37,12 +37,12 @@ class PlayableBag {
               ros::Time end_time, ros::Duration buffer_delay,
               FilteringEarlyMessageHandler filtering_early_message_handler);
 
-  ros::Time PeekMessageTime();
+  ros::Time PeekMessageTime() const;
   rosbag::MessageInstance GetNextMessage();
-  bool IsMessageAvailable();
-  std::tuple<ros::Time, ros::Time> GetBeginEndTime();
+  bool IsMessageAvailable() const;
+  std::tuple<ros::Time, ros::Time> GetBeginEndTime() const;
 
-  int bag_id();
+  int bag_id() const;
 
  private:
   void AdvanceOneMessage();
@@ -72,7 +72,8 @@ class PlayableBagMultiplexer {
              bool /* is_last_message_in_bag */>
   GetNextMessage();
 
-  bool IsMessageAvailable();
+  bool IsMessageAvailable() const;
+  ros::Time PeekMessageTime() const;
 
  private:
   struct BagMessageItem {
