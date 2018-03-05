@@ -22,7 +22,6 @@
 #include <time.h>
 #include <chrono>
 
-#include "cartographer/common/optional.h"
 #include "cartographer_ros/node.h"
 #include "cartographer_ros/playable_bag.h"
 #include "cartographer_ros/split_string.h"
@@ -237,7 +236,7 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
 
   // TODO(gaschler): Warn if resolved topics are not in bags.
   std::unordered_map<int, int> bag_index_to_trajectory_id;
-  cartographer::common::optional<ros::Time> begin_time;
+  const ros::Time begin_time = playable_bag_multiplexer.PeekMessageTime();
   while (playable_bag_multiplexer.IsMessageAvailable()) {
     if (!::ros::ok()) {
       return;
@@ -248,11 +247,7 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
     const int bag_index = std::get<1>(next_msg_tuple);
     const bool is_last_message_in_bag = std::get<2>(next_msg_tuple);
 
-    if (!begin_time.has_value()) {
-      begin_time = msg.getTime();
-    }
-    if (msg.getTime() <
-        (begin_time.value() + ros::Duration(FLAGS_skip_seconds))) {
+    if (msg.getTime() < (begin_time + ros::Duration(FLAGS_skip_seconds))) {
       continue;
     }
 
