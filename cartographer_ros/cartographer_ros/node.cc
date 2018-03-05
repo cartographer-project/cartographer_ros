@@ -260,8 +260,8 @@ void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
 
 void Node::PublishTrajectoryNodeList(
     const ::ros::WallTimerEvent& unused_timer_event) {
-  carto::common::MutexLocker lock(&mutex_);
   if (trajectory_node_list_publisher_.getNumSubscribers() > 0) {
+    carto::common::MutexLocker lock(&mutex_);
     trajectory_node_list_publisher_.publish(
         map_builder_bridge_.GetTrajectoryNodeList());
   }
@@ -269,8 +269,8 @@ void Node::PublishTrajectoryNodeList(
 
 void Node::PublishLandmarkPosesList(
     const ::ros::WallTimerEvent& unused_timer_event) {
-  carto::common::MutexLocker lock(&mutex_);
   if (landmark_poses_list_publisher_.getNumSubscribers() > 0) {
+    carto::common::MutexLocker lock(&mutex_);
     landmark_poses_list_publisher_.publish(
         map_builder_bridge_.GetLandmarkPosesList());
   }
@@ -278,8 +278,8 @@ void Node::PublishLandmarkPosesList(
 
 void Node::PublishConstraintList(
     const ::ros::WallTimerEvent& unused_timer_event) {
-  carto::common::MutexLocker lock(&mutex_);
   if (constraint_list_publisher_.getNumSubscribers() > 0) {
+    carto::common::MutexLocker lock(&mutex_);
     constraint_list_publisher_.publish(map_builder_bridge_.GetConstraintList());
   }
 }
