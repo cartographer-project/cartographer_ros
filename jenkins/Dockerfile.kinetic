@@ -27,6 +27,9 @@ ADD https://api.github.com/repos/googlecartographer/cartographer/git/refs/heads/
 # wstool needs the updated rosinstall file to clone the correct repos.
 COPY cartographer_ros.rosinstall cartographer_ros/
 COPY scripts/prepare_jenkins_catkin_workspace.sh cartographer_ros/scripts/
+
+# Invalidates the Docker cache to ensure this command is always executed.
+ARG CACHEBUST=1
 RUN CARTOGRAPHER_VERSION=$CARTOGRAPHER_VERSION \
     cartographer_ros/scripts/prepare_jenkins_catkin_workspace.sh
 
