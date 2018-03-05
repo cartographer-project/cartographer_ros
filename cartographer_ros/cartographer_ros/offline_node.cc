@@ -61,7 +61,7 @@ DEFINE_bool(load_frozen_state, true,
 DEFINE_bool(keep_running, false,
             "Keep running the offline node after all messages from the bag "
             "have been processed.");
-DEFINE_double(skip, 0,
+DEFINE_double(skip_seconds, 0,
               "Optional amount of seconds to skip from the beginning "
               "(i.e. when the earliest bag starts.). ");
 
@@ -251,7 +251,8 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
     if (!begin_time.has_value()) {
       begin_time = msg.getTime();
     }
-    if (msg.getTime() < (begin_time.value() + ros::Duration(FLAGS_skip))) {
+    if (msg.getTime() <
+        (begin_time.value() + ros::Duration(FLAGS_skip_seconds))) {
       continue;
     }
 
