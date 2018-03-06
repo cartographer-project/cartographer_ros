@@ -60,6 +60,9 @@ DEFINE_bool(load_frozen_state, true,
 DEFINE_bool(keep_running, false,
             "Keep running the offline node after all messages from the bag "
             "have been processed.");
+DEFINE_double(skip_seconds, 0,
+              "Optional amount of seconds to skip from the beginning "
+              "(i.e. when the earliest bag starts.). ");
 
 namespace cartographer_ros {
 
@@ -233,11 +236,20 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
 
   // TODO(gaschler): Warn if resolved topics are not in bags.
   std::unordered_map<int, int> bag_index_to_trajectory_id;
+  const ros::Time begin_time = playable_bag_multiplexer.PeekMessageTime();
   while (playable_bag_multiplexer.IsMessageAvailable()) {
+    if (!::ros::ok()) {
+      return;
+    }
+
     const auto next_msg_tuple = playable_bag_multiplexer.GetNextMessage();
     const rosbag::MessageInstance& msg = std::get<0>(next_msg_tuple);
     const int bag_index = std::get<1>(next_msg_tuple);
     const bool is_last_message_in_bag = std::get<2>(next_msg_tuple);
+
+    if (msg.getTime() < (begin_time + ros::Duration(FLAGS_skip_seconds))) {
+      continue;
+    }
 
     int trajectory_id;
     // Lazily add trajectories only when the first message arrives in order
@@ -257,9 +269,6 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
       trajectory_id = bag_index_to_trajectory_id.at(bag_index);
     }
 
-    if (!::ros::ok()) {
-      return;
-    }
     const auto bag_topic = std::make_pair(
         bag_index,
         node.node_handle()->resolveName(msg.getTopic(), false /* resolve */));
