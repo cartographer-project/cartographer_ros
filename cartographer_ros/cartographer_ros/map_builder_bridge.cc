@@ -317,7 +317,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
       if (node_id_data.id.node_index == num_inter_submap_constrained_nodes) {
         marker_alpha = 0.2;
       } else if (node_id_data.id.node_index ==
-          num_inter_trajectory_constrained_nodes) {
+                 num_inter_trajectory_constrained_nodes) {
         marker_alpha = 0.6;
       } else if (node_id_data.id.node_index == 0) {
         marker_alpha = 1.0;
@@ -330,7 +330,6 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
         marker.points.push_back(node_point);
         marker.color.a = marker_alpha;
       }
-
     }
     PushAndResetLineMarker(&marker, &trajectory_node_list.markers);
   }
