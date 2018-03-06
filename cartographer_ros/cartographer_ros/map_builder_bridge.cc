@@ -248,8 +248,8 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
   visualization_msgs::MarkerArray trajectory_node_list;
   // Compute the number of constrained nodes for each trajectory for
   // inter-submap and inter-trajectory constraints.
-  std::map<int , int > trajectory_to_num_inter_submap_constrained_nodes;
-  std::map<int , int > trajectory_to_num_inter_trajectory_constrained_nodes;
+  std::map<int, int> trajectory_to_num_inter_submap_constrained_nodes;
+  std::map<int, int> trajectory_to_num_inter_trajectory_constrained_nodes;
   const auto constraints = map_builder_->pose_graph()->constraints();
   for (const auto& constraint : constraints) {
     if (constraint.tag ==
@@ -260,8 +260,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
             constraint.node_id.trajectory_id);
         if (it != trajectory_to_num_inter_submap_constrained_nodes.end()) {
           it->second = std::max(it->second, constraint.node_id.node_index);
-        }
-        else {
+        } else {
           trajectory_to_num_inter_submap_constrained_nodes.emplace(
               constraint.node_id.trajectory_id, constraint.node_id.node_index);
         }
@@ -270,8 +269,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
             constraint.node_id.trajectory_id);
         if (it != trajectory_to_num_inter_trajectory_constrained_nodes.end()) {
           it->second = std::max(it->second, constraint.node_id.node_index);
-        }
-        else {
+        } else {
           trajectory_to_num_inter_trajectory_constrained_nodes.emplace(
               constraint.node_id.trajectory_id, constraint.node_id.node_index);
         }
@@ -294,16 +292,16 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
     }
     int num_inter_trajectory_constrained_nodes = 0;
     auto it_inter_trajectory_constrained_nodes =
-        trajectory_to_num_inter_trajectory_constrained_nodes
-            .find(trajectory_id);
+        trajectory_to_num_inter_trajectory_constrained_nodes.find(
+            trajectory_id);
     if (it_inter_trajectory_constrained_nodes !=
         trajectory_to_num_inter_submap_constrained_nodes.end()) {
       num_inter_trajectory_constrained_nodes =
           it_inter_trajectory_constrained_nodes->second;
     }
-    num_inter_submap_constrained_nodes = std::max(
-        num_inter_submap_constrained_nodes,
-        num_inter_trajectory_constrained_nodes);
+    num_inter_submap_constrained_nodes =
+        std::max(num_inter_submap_constrained_nodes,
+                 num_inter_trajectory_constrained_nodes);
 
     for (const auto& node_id_data : node_poses.trajectory(trajectory_id)) {
       if (!node_id_data.data.has_constant_data) {
@@ -313,8 +311,9 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
       const ::geometry_msgs::Point node_point =
           ToGeometryMsgPoint(node_id_data.data.global_pose.translation());
       marker.points.push_back(node_point);
-      bool is_switch_node = node_id_data.id.node_index ==
-          num_inter_trajectory_constrained_nodes ||
+      bool is_switch_node =
+          node_id_data.id.node_index ==
+              num_inter_trajectory_constrained_nodes ||
           node_id_data.id.node_index == num_inter_submap_constrained_nodes;
       // Work around the 16384 point limit in RViz by splitting the
       // trajectory into multiple markers.
@@ -323,16 +322,13 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
         // Push back the last point, so the two markers appear connected.
         marker.points.push_back(node_point);
       }
-      if(is_switch_node || node_id_data.id.node_index == 0) {
-        if (node_id_data.id.node_index ==
-            num_inter_submap_constrained_nodes) {
+      if (is_switch_node || node_id_data.id.node_index == 0) {
+        if (node_id_data.id.node_index == num_inter_submap_constrained_nodes) {
           marker.color.a = 0.2;
-        }
-        else if (node_id_data.id.node_index ==
-            num_inter_trajectory_constrained_nodes) {
+        } else if (node_id_data.id.node_index ==
+                   num_inter_trajectory_constrained_nodes) {
           marker.color.a = 0.6;
-        }
-        else if (node_id_data.id.node_index == 0) {
+        } else if (node_id_data.id.node_index == 0) {
           marker.color.a = 1.0;
         }
       }
