@@ -88,10 +88,8 @@ visualization_msgs::Marker CreateLandmarkMarker(int landmark_index,
 
 void PushAndResetLineMarker(visualization_msgs::Marker* marker,
                             std::vector<visualization_msgs::Marker>* markers) {
-  if (marker->points.size() > 1) {
-    markers->push_back(*marker);
-    ++marker->id;
-  }
+  markers->push_back(*marker);
+  ++marker->id;
   marker->points.clear();
 }
 
@@ -284,28 +282,37 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
     visualization_msgs::Marker marker =
         CreateTrajectoryMarker(trajectory_id, node_options_.map_frame);
 
-    int num_inter_submap_constrained_nodes = 0;
+    int last_inter_submap_constrained_node =
+        node_poses.trajectory(trajectory_id).begin()->id.node_index;
     auto it_inter_submap_constrained_nodes =
         trajectory_to_last_inter_submap_constrained_node.find(trajectory_id);
     if (it_inter_submap_constrained_nodes !=
         trajectory_to_last_inter_submap_constrained_node.end()) {
-      num_inter_submap_constrained_nodes =
+      last_inter_submap_constrained_node =
           it_inter_submap_constrained_nodes->second;
     }
-    int num_inter_trajectory_constrained_nodes = 0;
+    int last_inter_trajectory_constrained_node =
+        node_poses.trajectory(trajectory_id).begin()->id.node_index;
     auto it_inter_trajectory_constrained_nodes =
         trajectory_to_last_inter_trajectory_constrained_node.find(
             trajectory_id);
     if (it_inter_trajectory_constrained_nodes !=
-        trajectory_to_last_inter_submap_constrained_node.end()) {
-      num_inter_trajectory_constrained_nodes =
+        trajectory_to_last_inter_trajectory_constrained_node.end()) {
+      last_inter_trajectory_constrained_node =
           it_inter_trajectory_constrained_nodes->second;
     }
-    num_inter_submap_constrained_nodes =
-        std::max(num_inter_submap_constrained_nodes,
-                 num_inter_trajectory_constrained_nodes);
+    last_inter_submap_constrained_node =
+        std::max(last_inter_submap_constrained_node,
+                 last_inter_trajectory_constrained_node);
 
-    float marker_alpha = 1.0;
+    if(map_builder_->pose_graph()->IsTrajectoryFrozen(trajectory_id)) {
+      auto node_poses_it = node_poses.trajectory(trajectory_id).end();
+      last_inter_submap_constrained_node = (--node_poses_it)->id.node_index;
+      last_inter_trajectory_constrained_node =
+          last_inter_submap_constrained_node;
+    }
+
+    marker.color.a = 1.0;
     for (const auto& node_id_data : node_poses.trajectory(trajectory_id)) {
       if (!node_id_data.data.has_constant_data) {
         PushAndResetLineMarker(&marker, &trajectory_node_list.markers);
@@ -314,21 +321,26 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
       const ::geometry_msgs::Point node_point =
           ToGeometryMsgPoint(node_id_data.data.global_pose.translation());
       marker.points.push_back(node_point);
-      if (node_id_data.id.node_index == num_inter_submap_constrained_nodes) {
-        marker_alpha = 0.2;
-      } else if (node_id_data.id.node_index ==
-                 num_inter_trajectory_constrained_nodes) {
-        marker_alpha = 0.6;
-      } else if (node_id_data.id.node_index == 0) {
-        marker_alpha = 1.0;
+
+      if (node_id_data.id.node_index ==
+          last_inter_trajectory_constrained_node) {
+        PushAndResetLineMarker(&marker, &trajectory_node_list.markers);
+        marker.points.push_back(node_point);
+        marker.color.a = 0.5;
+      }
+      if (node_id_data.id.node_index ==
+          last_inter_submap_constrained_node) {
+        PushAndResetLineMarker(&marker, &trajectory_node_list.markers);
+        marker.points.push_back(node_point);
+        marker.color.a = 0.25;
       }
       // Work around the 16384 point limit in RViz by splitting the
       // trajectory into multiple markers.
-      if (marker.points.size() == 16384 || marker_alpha != marker.color.a) {
+      //TODO(kdaun): Keep track of the marker to reset it
+      if (marker.points.size() == 16384) {
         PushAndResetLineMarker(&marker, &trajectory_node_list.markers);
         // Push back the last point, so the two markers appear connected.
         marker.points.push_back(node_point);
-        marker.color.a = marker_alpha;
       }
     }
     PushAndResetLineMarker(&marker, &trajectory_node_list.markers);
