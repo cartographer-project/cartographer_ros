@@ -305,7 +305,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
         std::max(last_inter_submap_constrained_node,
                  last_inter_trajectory_constrained_node);
 
-    if(map_builder_->pose_graph()->IsTrajectoryFrozen(trajectory_id)) {
+    if (map_builder_->pose_graph()->IsTrajectoryFrozen(trajectory_id)) {
       auto node_poses_it = node_poses.trajectory(trajectory_id).end();
       last_inter_submap_constrained_node = (--node_poses_it)->id.node_index;
       last_inter_trajectory_constrained_node =
@@ -328,15 +328,14 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
         marker.points.push_back(node_point);
         marker.color.a = 0.5;
       }
-      if (node_id_data.id.node_index ==
-          last_inter_submap_constrained_node) {
+      if (node_id_data.id.node_index == last_inter_submap_constrained_node) {
         PushAndResetLineMarker(&marker, &trajectory_node_list.markers);
         marker.points.push_back(node_point);
         marker.color.a = 0.25;
       }
       // Work around the 16384 point limit in RViz by splitting the
       // trajectory into multiple markers.
-      //TODO(kdaun): Keep track of the marker to reset it
+      // TODO(kdaun): Keep track of the marker to reset it
       if (marker.points.size() == 16384) {
         PushAndResetLineMarker(&marker, &trajectory_node_list.markers);
         // Push back the last point, so the two markers appear connected.
