@@ -335,7 +335,6 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
       }
       // Work around the 16384 point limit in RViz by splitting the
       // trajectory into multiple markers.
-      // TODO(kdaun): Keep track of the marker to reset it
       if (marker.points.size() == 16384) {
         PushAndResetLineMarker(&marker, &trajectory_node_list.markers);
         // Push back the last point, so the two markers appear connected.
@@ -343,6 +342,22 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
       }
     }
     PushAndResetLineMarker(&marker, &trajectory_node_list.markers);
+    if (trajectory_to_last_trajectory_node_marker_id_.find(trajectory_id) ==
+        trajectory_to_last_trajectory_node_marker_id_.end()) {
+      trajectory_to_last_trajectory_node_marker_id_[trajectory_id] =
+          static_cast<size_t>(marker.id - 1);
+    } else {
+      size_t current_last_marker_id = static_cast<size_t>(marker.id - 1);
+      marker.action = visualization_msgs::Marker::DELETE;
+      while (static_cast<size_t>(marker.id - 1) <
+             trajectory_to_last_trajectory_node_marker_id_[trajectory_id]) {
+        trajectory_node_list.markers.push_back(marker);
+        ++marker.id;
+      }
+      marker.action = visualization_msgs::Marker::ADD;
+      trajectory_to_last_trajectory_node_marker_id_[trajectory_id] =
+          current_last_marker_id;
+    }
   }
   return trajectory_node_list;
 }
