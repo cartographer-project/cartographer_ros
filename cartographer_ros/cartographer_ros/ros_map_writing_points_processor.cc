@@ -18,7 +18,7 @@
 
 #include "cartographer/common/make_unique.h"
 #include "cartographer/io/image.h"
-#include "cartographer/io/probability_grid_points_processor.h"
+#include "cartographer/io/probability_grid_utils.h"
 #include "cartographer_ros/ros_map.h"
 
 namespace cartographer_ros {
