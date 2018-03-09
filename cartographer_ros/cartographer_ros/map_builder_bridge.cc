@@ -244,8 +244,8 @@ MapBuilderBridge::GetTrajectoryStates() {
 
 visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
   visualization_msgs::MarkerArray trajectory_node_list;
-  // Compute the number of constrained nodes for each trajectory for
-  // inter-submap and inter-trajectory constraints.
+  // Find the last node indices for each trajectory that have either
+  // inter-submap or inter-trajectory constraints.
   std::map<int, int /* node_index */>
       trajectory_to_last_inter_submap_constrained_node;
   std::map<int, int /* node_index */>
@@ -342,21 +342,17 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
       }
     }
     PushAndResetLineMarker(&marker, &trajectory_node_list.markers);
-    if (trajectory_to_last_trajectory_node_marker_id_.find(trajectory_id) ==
-        trajectory_to_last_trajectory_node_marker_id_.end()) {
-      trajectory_to_last_trajectory_node_marker_id_[trajectory_id] =
-          static_cast<size_t>(marker.id - 1);
+    size_t current_last_marker_id = static_cast<size_t>(marker.id - 1);
+    if (trajectory_to_highest_marker_id_.count(trajectory_id) == 0) {
+      trajectory_to_highest_marker_id_[trajectory_id] = current_last_marker_id;
     } else {
-      size_t current_last_marker_id = static_cast<size_t>(marker.id - 1);
       marker.action = visualization_msgs::Marker::DELETE;
-      while (static_cast<size_t>(marker.id - 1) <
-             trajectory_to_last_trajectory_node_marker_id_[trajectory_id]) {
+      while (static_cast<size_t>(marker.id) <=
+             trajectory_to_highest_marker_id_[trajectory_id]) {
         trajectory_node_list.markers.push_back(marker);
         ++marker.id;
       }
-      marker.action = visualization_msgs::Marker::ADD;
-      trajectory_to_last_trajectory_node_marker_id_[trajectory_id] =
-          current_last_marker_id;
+      trajectory_to_highest_marker_id_[trajectory_id] = current_last_marker_id;
     }
   }
   return trajectory_node_list;
