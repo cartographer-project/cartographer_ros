@@ -263,14 +263,14 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
           constraint.submap_id.trajectory_id) {
         trajectory_to_last_inter_submap_constrained_node[constraint.node_id
                                                              .trajectory_id] =
-            std::max(trajectory_to_last_inter_submap_constrained_node
-                         [constraint.node_id.trajectory_id],
+            std::max(trajectory_to_last_inter_submap_constrained_node.at(
+                         constraint.node_id.trajectory_id),
                      constraint.node_id.node_index);
       } else {
         trajectory_to_last_inter_trajectory_constrained_node
             [constraint.node_id.trajectory_id] =
-                std::max(trajectory_to_last_inter_submap_constrained_node
-                             [constraint.node_id.trajectory_id],
+                std::max(trajectory_to_last_inter_submap_constrained_node.at(
+                             constraint.node_id.trajectory_id),
                          constraint.node_id.node_index);
       }
     }
@@ -281,10 +281,10 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
         CreateTrajectoryMarker(trajectory_id, node_options_.map_frame);
     int last_inter_submap_constrained_node = std::max(
         node_poses.trajectory(trajectory_id).begin()->id.node_index,
-        trajectory_to_last_inter_submap_constrained_node[trajectory_id]);
+        trajectory_to_last_inter_submap_constrained_node.at(trajectory_id));
     int last_inter_trajectory_constrained_node = std::max(
         node_poses.trajectory(trajectory_id).begin()->id.node_index,
-        trajectory_to_last_inter_trajectory_constrained_node[trajectory_id]);
+        trajectory_to_last_inter_trajectory_constrained_node.at(trajectory_id));
     last_inter_submap_constrained_node =
         std::max(last_inter_submap_constrained_node,
                  last_inter_trajectory_constrained_node);
