@@ -244,70 +244,54 @@ MapBuilderBridge::GetTrajectoryStates() {
 
 visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
   visualization_msgs::MarkerArray trajectory_node_list;
+  const auto node_poses = map_builder_->pose_graph()->GetTrajectoryNodePoses();
   // Find the last node indices for each trajectory that have either
   // inter-submap or inter-trajectory constraints.
   std::map<int, int /* node_index */>
       trajectory_to_last_inter_submap_constrained_node;
   std::map<int, int /* node_index */>
       trajectory_to_last_inter_trajectory_constrained_node;
+  for (const int trajectory_id : node_poses.trajectory_ids()) {
+    trajectory_to_last_inter_submap_constrained_node[trajectory_id] = 0;
+    trajectory_to_last_inter_trajectory_constrained_node[trajectory_id] = 0;
+  }
   const auto constraints = map_builder_->pose_graph()->constraints();
   for (const auto& constraint : constraints) {
     if (constraint.tag ==
         cartographer::mapping::PoseGraph::Constraint::INTER_SUBMAP) {
       if (constraint.node_id.trajectory_id ==
           constraint.submap_id.trajectory_id) {
-        auto it = trajectory_to_last_inter_submap_constrained_node.find(
-            constraint.node_id.trajectory_id);
-        if (it != trajectory_to_last_inter_submap_constrained_node.end()) {
-          it->second = std::max(it->second, constraint.node_id.node_index);
-        } else {
-          trajectory_to_last_inter_submap_constrained_node.emplace(
-              constraint.node_id.trajectory_id, constraint.node_id.node_index);
-        }
+        trajectory_to_last_inter_submap_constrained_node[constraint.node_id
+                                                             .trajectory_id] =
+            std::max(trajectory_to_last_inter_submap_constrained_node
+                         [constraint.node_id.trajectory_id],
+                     constraint.node_id.node_index);
       } else {
-        auto it = trajectory_to_last_inter_trajectory_constrained_node.find(
-            constraint.node_id.trajectory_id);
-        if (it != trajectory_to_last_inter_trajectory_constrained_node.end()) {
-          it->second = std::max(it->second, constraint.node_id.node_index);
-        } else {
-          trajectory_to_last_inter_trajectory_constrained_node.emplace(
-              constraint.node_id.trajectory_id, constraint.node_id.node_index);
-        }
+        trajectory_to_last_inter_trajectory_constrained_node
+            [constraint.node_id.trajectory_id] =
+                std::max(trajectory_to_last_inter_submap_constrained_node
+                             [constraint.node_id.trajectory_id],
+                         constraint.node_id.node_index);
       }
     }
   }
 
-  const auto node_poses = map_builder_->pose_graph()->GetTrajectoryNodePoses();
   for (const int trajectory_id : node_poses.trajectory_ids()) {
     visualization_msgs::Marker marker =
         CreateTrajectoryMarker(trajectory_id, node_options_.map_frame);
-
-    int last_inter_submap_constrained_node =
-        node_poses.trajectory(trajectory_id).begin()->id.node_index;
-    auto it_inter_submap_constrained_nodes =
-        trajectory_to_last_inter_submap_constrained_node.find(trajectory_id);
-    if (it_inter_submap_constrained_nodes !=
-        trajectory_to_last_inter_submap_constrained_node.end()) {
-      last_inter_submap_constrained_node =
-          it_inter_submap_constrained_nodes->second;
-    }
-    int last_inter_trajectory_constrained_node =
-        node_poses.trajectory(trajectory_id).begin()->id.node_index;
-    auto it_inter_trajectory_constrained_nodes =
-        trajectory_to_last_inter_trajectory_constrained_node.find(
-            trajectory_id);
-    if (it_inter_trajectory_constrained_nodes !=
-        trajectory_to_last_inter_trajectory_constrained_node.end()) {
-      last_inter_trajectory_constrained_node =
-          it_inter_trajectory_constrained_nodes->second;
-    }
+    int last_inter_submap_constrained_node = std::max(
+        node_poses.trajectory(trajectory_id).begin()->id.node_index,
+        trajectory_to_last_inter_submap_constrained_node[trajectory_id]);
+    int last_inter_trajectory_constrained_node = std::max(
+        node_poses.trajectory(trajectory_id).begin()->id.node_index,
+        trajectory_to_last_inter_trajectory_constrained_node[trajectory_id]);
     last_inter_submap_constrained_node =
         std::max(last_inter_submap_constrained_node,
                  last_inter_trajectory_constrained_node);
 
     if (map_builder_->pose_graph()->IsTrajectoryFrozen(trajectory_id)) {
-      auto node_poses_it = node_poses.trajectory(trajectory_id).end();
-      last_inter_submap_constrained_node = (--node_poses_it)->id.node_index;
+      last_inter_submap_constrained_node =
+          (--node_poses.trajectory(trajectory_id).end())->id.node_index;
       last_inter_trajectory_constrained_node =
           last_inter_submap_constrained_node;
     }
