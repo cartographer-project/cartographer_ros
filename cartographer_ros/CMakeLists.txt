@@ -40,7 +40,6 @@ include("${CARTOGRAPHER_CMAKE_DIR}/functions.cmake")
 set(BUILD_SHARED_LIBS OFF)
 option(BUILD_GRPC "build features that require Cartographer gRPC support" false)
 google_initialize_cartographer_project()
-google_enable_testing()
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
 
@@ -61,11 +60,6 @@ endif()
 include_directories(
   ${urdfdom_headers_INCLUDE_DIRS}
 )
-
-# Override Catkin's GTest configuration to use GMock.
-set(GTEST_FOUND TRUE)
-set(GTEST_INCLUDE_DIRS ${GMOCK_INCLUDE_DIRS})
-set(GTEST_LIBRARIES ${GMOCK_LIBRARIES})
 
 catkin_package(
   CATKIN_DEPENDS
@@ -134,6 +128,7 @@ set(TARGET_COMPILE_FLAGS "${TARGET_COMPILE_FLAGS} ${GOOG_CXX_FLAGS}")
 set_target_properties(${PROJECT_NAME} PROPERTIES
   COMPILE_FLAGS ${TARGET_COMPILE_FLAGS})
 
+google_enable_testing()
 if (CATKIN_ENABLE_TESTING)
   foreach(TEST_SOURCE_FILENAME ${ALL_TESTS})
     get_filename_component(TEST_NAME ${TEST_SOURCE_FILENAME} NAME_WE)
@@ -146,6 +141,7 @@ if (CATKIN_ENABLE_TESTING)
     target_link_libraries(${TEST_NAME} ${catkin_LIBRARIES})
     add_dependencies(${TEST_NAME} ${catkin_EXPORTED_TARGETS})
     target_link_libraries(${TEST_NAME} cartographer)
+    target_link_libraries(${TEST_NAME} standalone_gmock_main)
     target_link_libraries(${TEST_NAME} ${PROJECT_NAME})
     set_target_properties(${TEST_NAME} PROPERTIES COMPILE_FLAGS ${TARGET_COMPILE_FLAGS})
   endforeach()
