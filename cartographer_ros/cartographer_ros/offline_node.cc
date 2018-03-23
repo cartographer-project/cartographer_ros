@@ -239,7 +239,8 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
   const ros::Time begin_time =
       // If no bags were loaded, we cannot peek the time of first message.
       playable_bag_multiplexer.IsMessageAvailable()
-      ? playable_bag_multiplexer.PeekMessageTime() : ros::Time();
+          ? playable_bag_multiplexer.PeekMessageTime()
+          : ros::Time();
   while (playable_bag_multiplexer.IsMessageAvailable()) {
     if (!::ros::ok()) {
       return;
