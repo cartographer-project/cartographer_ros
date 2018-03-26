@@ -62,10 +62,10 @@ include_directories(
   ${urdfdom_headers_INCLUDE_DIRS}
 )
 
-# Override Catkin's GTest configuration to use GMock.
+# Override Catkin's GTest configuration to use our GMock.
 set(GTEST_FOUND TRUE)
-set(GTEST_INCLUDE_DIRS ${GMOCK_INCLUDE_DIRS})
-set(GTEST_LIBRARIES ${GMOCK_LIBRARIES})
+set(GTEST_INCLUDE_DIRS "")
+set(GTEST_LIBRARIES standalone_gmock_main)
 
 catkin_package(
   CATKIN_DEPENDS
@@ -146,6 +146,7 @@ if (CATKIN_ENABLE_TESTING)
     target_link_libraries(${TEST_NAME} ${catkin_LIBRARIES})
     add_dependencies(${TEST_NAME} ${catkin_EXPORTED_TARGETS})
     target_link_libraries(${TEST_NAME} cartographer)
+    target_link_libraries(${TEST_NAME} standalone_gmock_main)
     target_link_libraries(${TEST_NAME} ${PROJECT_NAME})
     set_target_properties(${TEST_NAME} PROPERTIES COMPILE_FLAGS ${TARGET_COMPILE_FLAGS})
   endforeach()

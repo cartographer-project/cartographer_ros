@@ -32,7 +32,6 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <build_depend>google-mock</build_depend>
   <build_depend>g++-static</build_depend>
   <build_depend>protobuf-dev</build_depend>
   <build_depend>python-sphinx</build_depend>
@@ -59,8 +58,6 @@
   <depend>tf2_ros</depend>
   <depend>urdf</depend>
   <depend>visualization_msgs</depend>
-
-  <test_depend>rosunit</test_depend>
 
   <export>
       <rviz plugin="${prefix}/rviz_plugin_description.xml" />
