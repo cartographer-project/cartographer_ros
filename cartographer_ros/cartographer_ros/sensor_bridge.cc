@@ -181,6 +181,9 @@ void SensorBridge::HandleLaserScan(
     const std::string& sensor_id, const carto::common::Time time,
     const std::string& frame_id,
     const carto::sensor::PointCloudWithIntensities& points) {
+  if (points.points.empty()) {
+    return;
+  }
   CHECK_LE(points.points.back()[3], 0);
   // TODO(gaschler): Use per-point time instead of subdivisions.
   for (int i = 0; i != num_subdivisions_per_laser_scan_; ++i) {
