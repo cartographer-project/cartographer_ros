@@ -30,5 +30,6 @@ before_install: scripts/load_docker_cache.sh
 
 install: true
 script:
-  - docker build ${TRAVIS_BUILD_DIR} -t cartographer_ros:${ROS_RELEASE} -f Dockerfile.${ROS_RELEASE}
+  # Important: add a 'GITHUB_TOKEN' environment to the settings in Travis.
+  - docker build ${TRAVIS_BUILD_DIR} -t cartographer_ros:${ROS_RELEASE} -f Dockerfile.${ROS_RELEASE} github_token=${GITHUB_TOKEN}
   - scripts/save_docker_cache.sh
