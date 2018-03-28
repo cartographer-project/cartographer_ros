@@ -58,22 +58,15 @@ struct PointXYZIT {
   float unused_padding[2];
 };
 
-} // namespace
+}  // namespace
 
-POINT_CLOUD_REGISTER_POINT_STRUCT (PointXYZT,
-                                   (float, x, x)
-                                   (float, y, y)
-                                   (float, z, z)
-                                   (float, time, time)
-)
+POINT_CLOUD_REGISTER_POINT_STRUCT(
+    PointXYZT, (float, x, x)(float, y, y)(float, z, z)(float, time, time))
 
-POINT_CLOUD_REGISTER_POINT_STRUCT (PointXYZIT,
-                                   (float, x, x)
-                                   (float, y, y)
-                                   (float, z, z)
-                                   (float, intensity, intensity)
-                                   (float, time, time)
-)
+POINT_CLOUD_REGISTER_POINT_STRUCT(
+    PointXYZIT,
+    (float, x, x)(float, y, y)(float, z, z)(float, intensity,
+                                            intensity)(float, time, time))
 
 namespace cartographer_ros {
 namespace {
@@ -224,7 +217,7 @@ ToPointCloudWithIntensities(const sensor_msgs::PointCloud2& msg) {
   // We check for intensity field here to avoid run-time warnings if we pass in
   // a PointCloud2 without intensity.
   if (PointCloud2HasField(msg, "intensity")) {
-    if(PointCloud2HasField(msg, "time")) {
+    if (PointCloud2HasField(msg, "time")) {
       pcl::PointCloud<PointXYZIT> pcl_point_cloud;
       pcl::fromROSMsg(msg, pcl_point_cloud);
       for (const auto& point : pcl_point_cloud) {
@@ -234,7 +227,7 @@ ToPointCloudWithIntensities(const sensor_msgs::PointCloud2& msg) {
     } else {
       pcl::PointCloud<pcl::PointXYZI> pcl_point_cloud;
       pcl::fromROSMsg(msg, pcl_point_cloud);
-      for (const auto &point : pcl_point_cloud) {
+      for (const auto& point : pcl_point_cloud) {
         point_cloud.points.emplace_back(point.x, point.y, point.z, 0.f);
         point_cloud.intensities.push_back(point.intensity);
       }
@@ -244,14 +237,14 @@ ToPointCloudWithIntensities(const sensor_msgs::PointCloud2& msg) {
     if (PointCloud2HasField(msg, "time")) {
       pcl::PointCloud<PointXYZT> pcl_point_cloud;
       pcl::fromROSMsg(msg, pcl_point_cloud);
-      for (const auto &point : pcl_point_cloud) {
+      for (const auto& point : pcl_point_cloud) {
         point_cloud.points.emplace_back(point.x, point.y, point.z, point.time);
         point_cloud.intensities.push_back(1.0);
       }
     } else {
       pcl::PointCloud<pcl::PointXYZ> pcl_point_cloud;
       pcl::fromROSMsg(msg, pcl_point_cloud);
-      for (const auto &point : pcl_point_cloud) {
+      for (const auto& point : pcl_point_cloud) {
         point_cloud.points.emplace_back(point.x, point.y, point.z, 0.f);
         point_cloud.intensities.push_back(1.0);
       }
@@ -272,7 +265,7 @@ std::tuple<::cartographer::sensor::TimedPointCloud,
            ::cartographer::common::Time>
 ToTimedPointCloud(const sensor_msgs::PointCloud2& msg) {
   cartographer::sensor::TimedPointCloud point_cloud;
-  if(PointCloud2HasField(msg, "time")) {
+  if (PointCloud2HasField(msg, "time")) {
     pcl::PointCloud<PointXYZT> pcl_point_cloud;
     pcl::fromROSMsg(msg, pcl_point_cloud);
     for (const auto& point : pcl_point_cloud) {
@@ -281,7 +274,7 @@ ToTimedPointCloud(const sensor_msgs::PointCloud2& msg) {
   } else {
     pcl::PointCloud<pcl::PointXYZ> pcl_point_cloud;
     pcl::fromROSMsg(msg, pcl_point_cloud);
-    for (const auto &point : pcl_point_cloud) {
+    for (const auto& point : pcl_point_cloud) {
       point_cloud.emplace_back(point.x, point.y, point.z, 0.f);
     }
   }
