@@ -27,6 +27,7 @@ env:
   - ROS_RELEASE=lunar DOCKER_CACHE_FILE=/home/travis/docker/lunar-cache.tar.gz
 
 before_install: 
+  - echo "The GitHub token is ${GITHUB_TOKEN}"
   - if [[ -z $GITHUB_TOKEN ]]; then echo "ERROR - A GitHub access token is required for the build. Please add one as an environment variable GITHUB_TOKEN to your Travis build settings as described on https://docs.travis-ci.com/user/environment-variables/#Defining-Variables-in-Repository-Settings" >&2; exit 1; fi
   - scripts/load_docker_cache.sh
 
