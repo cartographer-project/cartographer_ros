@@ -172,7 +172,7 @@ Visualization Manager:
     - Class: rviz/MarkerArray
       Enabled: true
       Marker Topic: /trajectory_node_list
-      Name: MarkerArray
+      Name: Trajectories
       Namespaces:
         "": true
       Queue Size: 100
@@ -181,6 +181,14 @@ Visualization Manager:
       Enabled: true
       Marker Topic: /landmark_poses_list
       Name: Landmark Poses
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /constraint_list
+      Name: Constraints
       Namespaces:
         "": true
       Queue Size: 100
