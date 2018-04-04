@@ -102,12 +102,12 @@ install(TARGETS cartographer_pbstream_map_publisher
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-google_binary(cartographer_trajectory_comparison
+google_binary(cartographer_dev_trajectory_comparison
   SRCS
-    trajectory_comparison_main.cc
+  dev/trajectory_comparison_main.cc
 )
 
-install(TARGETS cartographer_trajectory_comparison
+install(TARGETS cartographer_dev_trajectory_comparison
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

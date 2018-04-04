@@ -28,7 +28,7 @@
 #include "cartographer_ros/time_conversion.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
-#include "msg_conversion.h"
+#include "cartographer_ros/msg_conversion.h"
 #include "ros/ros.h"
 #include "ros/time.h"
 #include "rosbag/bag.h"
@@ -45,7 +45,7 @@ DEFINE_string(pbstream_filename, "",
 namespace cartographer_ros {
 namespace {
 
-double FractionSmallerThan(std::vector<double>& v, double x) {
+double FractionSmallerThan(const std::vector<double>& v, double x) {
   std::size_t i = 0;
   for (double value : v) {
     if (value < x) {
@@ -119,6 +119,8 @@ void Run(const std::string& pbstream_filename,
             << QuantilesToString(deviation_translation);
   LOG(INFO) << "Distribution of rotation difference:\n"
             << QuantilesToString(deviation_rotation);
+  LOG(INFO) << "Fraction of translation difference smaller than 1m: "
+            << FractionSmallerThan(deviation_translation, 1);
   LOG(INFO) << "Fraction of translation difference smaller than 0.1m: "
             << FractionSmallerThan(deviation_translation, 0.1);
   LOG(INFO) << "Fraction of translation difference smaller than 0.05m: "
