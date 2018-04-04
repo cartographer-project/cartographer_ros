@@ -46,28 +46,22 @@ namespace cartographer_ros {
 namespace {
 
 double FractionSmallerThan(const std::vector<double>& v, double x) {
-  std::size_t i = 0;
-  for (double value : v) {
-    if (value < x) {
-      ++i;
-    }
-  }
-  return static_cast<double>(i) / v.size();
+  return static_cast<double>(std::count_if(
+             v.begin(), v.end(), [=](double value) { return value < x; })) /
+         v.size();
 }
 
-std::string QuantilesToString(std::vector<double>& v) {
-  if (v.empty()) {
-    return "(empty vector)";
-  }
-  std::sort(v.begin(), v.end());
+std::string QuantilesToString(std::vector<double>* v) {
+  if (v->empty()) return "(empty vector)";
+  std::sort(v->begin(), v->end());
   std::stringstream result;
-  const int num_quantiles = 10;
-  for (int i = 0; i < num_quantiles; ++i) {
-    auto value = v.at(v.size() * i / num_quantiles);
-    auto percentage = 100 * i / num_quantiles;
+  const int kNumQuantiles = 10;
+  for (int i = 0; i < kNumQuantiles; ++i) {
+    auto value = v->at(v->size() * i / kNumQuantiles);
+    auto percentage = 100 * i / kNumQuantiles;
     result << percentage << "%: " << value << "\n";
   }
-  result << "100%: " << v.back() << "\n";
+  result << "100%: " << v->back() << "\n";
   return result.str();
 }
 
@@ -92,8 +86,8 @@ void Run(const std::string& pbstream_filename,
     }
     auto tf_message = message.instantiate<tf2_msgs::TFMessage>();
     for (const auto& transform : tf_message->transforms) {
-      if (!(transform.header.frame_id == "map" &&
-            transform.child_frame_id == "base_link")) {
+      if (transform.header.frame_id != "map" ||
+          transform.child_frame_id != "base_link") {
         continue;
       }
       const cartographer::common::Time transform_time =
@@ -116,9 +110,9 @@ void Run(const std::string& pbstream_filename,
   }
   bag.close();
   LOG(INFO) << "Distribution of translation difference:\n"
-            << QuantilesToString(deviation_translation);
+            << QuantilesToString(&deviation_translation);
   LOG(INFO) << "Distribution of rotation difference:\n"
-            << QuantilesToString(deviation_rotation);
+            << QuantilesToString(&deviation_rotation);
   LOG(INFO) << "Fraction of translation difference smaller than 1m: "
             << FractionSmallerThan(deviation_translation, 1);
   LOG(INFO) << "Fraction of translation difference smaller than 0.1m: "
