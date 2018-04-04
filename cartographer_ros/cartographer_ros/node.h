@@ -130,6 +130,9 @@ class Node {
   bool HandleSubmapQuery(
       cartographer_ros_msgs::SubmapQuery::Request& request,
       cartographer_ros_msgs::SubmapQuery::Response& response);
+  bool HandleTrajectoryOptionsQuery(
+      cartographer_ros_msgs::TrajectoryOptionsQuery::Request& request,
+      cartographer_ros_msgs::TrajectoryOptionsQuery::Response& response);
   bool HandleStartTrajectory(
       cartographer_ros_msgs::StartTrajectory::Request& request,
       cartographer_ros_msgs::StartTrajectory::Response& response);

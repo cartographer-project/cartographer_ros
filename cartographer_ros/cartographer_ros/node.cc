@@ -103,6 +103,9 @@ Node::Node(
           kConstraintListTopic, kLatestOnlyPublisherQueueSize);
   service_servers_.push_back(node_handle_.advertiseService(
       kSubmapQueryServiceName, &Node::HandleSubmapQuery, this));
+  service_servers_.push_back(
+      node_handle_.advertiseService(kTrajectoryOptionsQueryServiceName,
+                                    &Node::HandleTrajectoryOptionsQuery, this));
   service_servers_.push_back(node_handle_.advertiseService(
       kStartTrajectoryServiceName, &Node::HandleStartTrajectory, this));
   service_servers_.push_back(node_handle_.advertiseService(
@@ -140,6 +143,14 @@ bool Node::HandleSubmapQuery(
     ::cartographer_ros_msgs::SubmapQuery::Response& response) {
   carto::common::MutexLocker lock(&mutex_);
   map_builder_bridge_.HandleSubmapQuery(request, response);
+  return true;
+}
+
+bool Node::HandleTrajectoryOptionsQuery(
+    ::cartographer_ros_msgs::TrajectoryOptionsQuery::Request& request,
+    ::cartographer_ros_msgs::TrajectoryOptionsQuery::Response& response) {
+  carto::common::MutexLocker lock(&mutex_);
+  map_builder_bridge_.HandleTrajectoryOptionsQuery(request, response);
   return true;
 }
 

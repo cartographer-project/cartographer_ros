@@ -33,6 +33,7 @@
 #include "cartographer_ros_msgs/SubmapEntry.h"
 #include "cartographer_ros_msgs/SubmapList.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
+#include "cartographer_ros_msgs/TrajectoryOptionsQuery.h"
 #include "nav_msgs/OccupancyGrid.h"
 #include "visualization_msgs/MarkerArray.h"
 
@@ -76,6 +77,10 @@ class MapBuilderBridge {
   void HandleSubmapQuery(
       cartographer_ros_msgs::SubmapQuery::Request& request,
       cartographer_ros_msgs::SubmapQuery::Response& response);
+
+  void HandleTrajectoryOptionsQuery(
+      cartographer_ros_msgs::TrajectoryOptionsQuery::Request& request,
+      cartographer_ros_msgs::TrajectoryOptionsQuery::Response& response);
 
   cartographer_ros_msgs::SubmapList GetSubmapList();
   std::unordered_map<int, TrajectoryState> GetTrajectoryStates()
