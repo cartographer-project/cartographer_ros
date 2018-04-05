@@ -110,6 +110,7 @@ LaserScanToPointCloudWithIntensities(const LaserMessageType& msg) {
   }
   PointCloudWithIntensities point_cloud;
   float angle = msg.angle_min;
+  const double duration = msg.time_increment * msg.ranges.size();
   for (size_t i = 0; i < msg.ranges.size(); ++i) {
     const auto& echoes = msg.ranges[i];
     if (HasEcho(echoes)) {
@@ -132,10 +133,9 @@ LaserScanToPointCloudWithIntensities(const LaserMessageType& msg) {
     }
     angle += msg.angle_increment;
   }
-  ::cartographer::common::Time timestamp = FromRos(msg.header.stamp);
+  ::cartographer::common::Time timestamp =
+      FromRos(msg.header.stamp) + cartographer::common::FromSeconds(duration);
   if (!point_cloud.points.empty()) {
-    const double duration = point_cloud.points.back()[3];
-    timestamp += cartographer::common::FromSeconds(duration);
     for (Eigen::Vector4f& point : point_cloud.points) {
       point[3] -= duration;
     }
