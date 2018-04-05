@@ -50,6 +50,8 @@
 
 namespace cartographer_ros {
 
+namespace {
+
 constexpr char kTfStaticTopic[] = "/tf_static";
 namespace carto = ::cartographer;
 
@@ -95,6 +97,8 @@ std::unique_ptr<carto::io::PointsBatch> HandleMessage(
   }
   return points_batch;
 }
+
+}  // namespace
 
 void RunAssetsWriterPipeline(const std::string& pose_graph_filename,
                              const std::vector<std::string>& bag_filenames,
