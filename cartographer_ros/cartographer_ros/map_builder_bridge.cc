@@ -213,6 +213,25 @@ cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
   return submap_list;
 }
 
+void MapBuilderBridge::HandleTrajectoryOptionsQuery(
+    cartographer_ros_msgs::TrajectoryOptionsQuery::Request& request,
+    cartographer_ros_msgs::TrajectoryOptionsQuery::Response& response) {
+  if (!trajectory_options_.count(request.trajectory_id)) {
+    std::string error = "Requested trajectory with ID " +
+                        std::to_string(request.trajectory_id) +
+                        " doesn't exist.";
+    LOG(ERROR) << error;
+    response.status.code = cartographer_ros_msgs::StatusCode::NOT_FOUND;
+    response.status.message = error;
+    return;
+  } else {
+    response.trajectory_options =
+        ToRosMessage(trajectory_options_[request.trajectory_id]);
+    response.status.code = cartographer_ros_msgs::StatusCode::OK;
+    response.status.message = "Success.";
+  }
+}
+
 std::unordered_map<int, MapBuilderBridge::TrajectoryState>
 MapBuilderBridge::GetTrajectoryStates() {
   std::unordered_map<int, TrajectoryState> trajectory_states;
