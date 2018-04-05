@@ -202,10 +202,12 @@ void SensorBridge::HandleLaserScan(
     const carto::common::Time subdivision_time =
         time + carto::common::FromSeconds(time_to_subdivision_end);
     auto it = sensor_to_previous_subdivision_time_.find(sensor_id);
-    if (it->second >= subdivision_time) {
+    if (it != sensor_to_previous_subdivision_time_.end() &&
+        it->second >= subdivision_time) {
       LOG(WARNING) << "Ignored subdivision of a LaserScan message from sensor "
-                   << sensor_id << " because of a time-overlap with "
-                   << "previous message.";
+                   << sensor_id << " because previous subdivision time "
+                   << it->second << " is not before current subdivision time "
+                   << subdivision_time;
       continue;
     }
     sensor_to_previous_subdivision_time_[sensor_id] = subdivision_time;
