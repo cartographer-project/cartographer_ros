@@ -49,7 +49,6 @@
 #include "urdf/model.h"
 
 namespace cartographer_ros {
-
 namespace {
 
 constexpr char kTfStaticTopic[] = "/tf_static";
