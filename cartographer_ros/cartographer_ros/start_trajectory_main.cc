@@ -25,6 +25,7 @@
 #include "cartographer_ros/ros_log_sink.h"
 #include "cartographer_ros/trajectory_options.h"
 #include "cartographer_ros_msgs/StartTrajectory.h"
+#include "cartographer_ros_msgs/StatusCode.h"
 #include "cartographer_ros_msgs/TrajectoryOptions.h"
 #include "gflags/gflags.h"
 #include "ros/ros.h"
@@ -85,7 +86,14 @@ bool Run() {
       node_handle.resolveName(kOdometryTopic, true);
 
   if (!client.call(srv)) {
-    LOG(ERROR) << "Error starting trajectory.";
+    LOG(ERROR) << "Failed to call " << kStartTrajectoryServiceName << ".";
+    return false;
+  }
+  if (srv.response.status.code != cartographer_ros_msgs::StatusCode::OK) {
+    LOG(ERROR) << "Error starting trajectory - message: '"
+               << srv.response.status.message
+               << "' (status code: " << std::to_string(srv.response.status.code)
+               << ").";
     return false;
   }
   LOG(INFO) << "Started trajectory " << srv.response.trajectory_id;
