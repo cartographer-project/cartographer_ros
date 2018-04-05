@@ -54,11 +54,11 @@ constexpr char kTfStaticTopic[] = "/tf_static";
 namespace carto = ::cartographer;
 
 template <typename T>
-std::unique_ptr<carto::io::PointsBatch>
-HandleMessage(const T &message, const std::string &tracking_frame,
-              const tf2_ros::Buffer &tf_buffer,
-              const carto::transform::TransformInterpolationBuffer
-                  &transform_interpolation_buffer) {
+std::unique_ptr<carto::io::PointsBatch> HandleMessage(
+    const T &message, const std::string &tracking_frame,
+    const tf2_ros::Buffer &tf_buffer,
+    const carto::transform::TransformInterpolationBuffer
+        &transform_interpolation_buffer) {
   const carto::common::Time start_time = FromRos(message.header.stamp);
 
   auto points_batch = carto::common::make_unique<carto::io::PointsBatch>();
@@ -146,9 +146,9 @@ void RunAssetsWriterPipeline(const std::string &pose_graph_filename,
           ::cartographer::common::LuaParameterDictionary *const dictionary,
           ::cartographer::io::PointsProcessor *const next)
           -> std::unique_ptr<::cartographer::io::PointsProcessor> {
-            return RosMapWritingPointsProcessor::FromDictionary(
-                file_writer_factory, dictionary, next);
-          });
+        return RosMapWritingPointsProcessor::FromDictionary(file_writer_factory,
+                                                            dictionary, next);
+      });
 
   std::vector<std::unique_ptr<carto::io::PointsProcessor>> pipeline =
       builder.CreatePipeline(
@@ -201,9 +201,8 @@ void RunAssetsWriterPipeline(const std::string &pose_graph_filename,
           }
         }
 
-        while (!delayed_messages.empty() &&
-               delayed_messages.front().getTime() <
-                   message.getTime() - kDelay) {
+        while (!delayed_messages.empty() && delayed_messages.front().getTime() <
+                                                message.getTime() - kDelay) {
           const rosbag::MessageInstance &delayed_message =
               delayed_messages.front();
 
@@ -239,4 +238,4 @@ void RunAssetsWriterPipeline(const std::string &pose_graph_filename,
            carto::io::PointsProcessor::FlushResult::kRestartStream);
 }
 
-} // namespace cartographer_ros
+}  // namespace cartographer_ros

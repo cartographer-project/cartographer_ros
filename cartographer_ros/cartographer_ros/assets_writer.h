@@ -32,6 +32,6 @@ void RunAssetsWriterPipeline(const std::string &pose_graph_filename,
                              const std::string &output_file_prefix,
                              const bool use_bag_transforms);
 
-} // namespace cartographer_ros
+}  // namespace cartographer_ros
 
 #endif /* end of include guard: CARTOGRAPHER_ROS_ASSETS_WRITER_H_ */
