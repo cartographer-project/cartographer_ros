@@ -22,16 +22,16 @@
 
 namespace cartographer_ros {
 
-// configures a point processing pipeline and
-// pushes the points of the scans through it
-void RunAssetsWriterPipeline(const std::string &pose_graph_filename,
-                             const std::vector<std::string> &bag_filenames,
-                             const std::string &configuration_directory,
-                             const std::string &configuration_basename,
-                             const std::string &urdf_filename,
-                             const std::string &output_file_prefix,
+// Configures a point processing pipeline and pushes the points from the bag
+// through it
+void RunAssetsWriterPipeline(const std::string& pose_graph_filename,
+                             const std::vector<std::string>& bag_filenames,
+                             const std::string& configuration_directory,
+                             const std::string& configuration_basename,
+                             const std::string& urdf_filename,
+                             const std::string& output_file_prefix,
                              const bool use_bag_transforms);
 
 }  // namespace cartographer_ros
 
-#endif /* end of include guard: CARTOGRAPHER_ROS_ASSETS_WRITER_H_ */
+#endif  // CARTOGRAPHER_ROS_ASSETS_WRITER_H_

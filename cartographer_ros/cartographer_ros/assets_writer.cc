@@ -55,10 +55,10 @@ namespace carto = ::cartographer;
 
 template <typename T>
 std::unique_ptr<carto::io::PointsBatch> HandleMessage(
-    const T &message, const std::string &tracking_frame,
-    const tf2_ros::Buffer &tf_buffer,
-    const carto::transform::TransformInterpolationBuffer
-        &transform_interpolation_buffer) {
+    const T& message, const std::string& tracking_frame,
+    const tf2_ros::Buffer& tf_buffer,
+    const carto::transform::TransformInterpolationBuffer&
+        transform_interpolation_buffer) {
   const carto::common::Time start_time = FromRos(message.header.stamp);
 
   auto points_batch = carto::common::make_unique<carto::io::PointsBatch>();
@@ -96,12 +96,12 @@ std::unique_ptr<carto::io::PointsBatch> HandleMessage(
   return points_batch;
 }
 
-void RunAssetsWriterPipeline(const std::string &pose_graph_filename,
-                             const std::vector<std::string> &bag_filenames,
-                             const std::string &configuration_directory,
-                             const std::string &configuration_basename,
-                             const std::string &urdf_filename,
-                             const std::string &output_file_prefix,
+void RunAssetsWriterPipeline(const std::string& pose_graph_filename,
+                             const std::vector<std::string>& bag_filenames,
+                             const std::string& configuration_directory,
+                             const std::string& configuration_basename,
+                             const std::string& urdf_filename,
+                             const std::string& output_file_prefix,
                              const bool use_bag_transforms) {
   auto file_resolver =
       carto::common::make_unique<carto::common::ConfigurationFileResolver>(
@@ -127,7 +127,7 @@ void RunAssetsWriterPipeline(const std::string &pose_graph_filename,
   const std::string file_prefix = !output_file_prefix.empty()
                                       ? output_file_prefix
                                       : bag_filenames.front() + "_";
-  const auto file_writer_factory = [file_prefix](const std::string &filename) {
+  const auto file_writer_factory = [file_prefix](const std::string& filename) {
     return carto::common::make_unique<carto::io::StreamFileWriter>(file_prefix +
                                                                    filename);
   };
@@ -143,8 +143,8 @@ void RunAssetsWriterPipeline(const std::string &pose_graph_filename,
   builder.Register(
       RosMapWritingPointsProcessor::kConfigurationFileActionName,
       [file_writer_factory](
-          ::cartographer::common::LuaParameterDictionary *const dictionary,
-          ::cartographer::io::PointsProcessor *const next)
+          ::cartographer::common::LuaParameterDictionary* const dictionary,
+          ::cartographer::io::PointsProcessor* const next)
           -> std::unique_ptr<::cartographer::io::PointsProcessor> {
         return RosMapWritingPointsProcessor::FromDictionary(file_writer_factory,
                                                             dictionary, next);
@@ -159,9 +159,9 @@ void RunAssetsWriterPipeline(const std::string &pose_graph_filename,
   do {
     for (size_t trajectory_id = 0; trajectory_id < bag_filenames.size();
          ++trajectory_id) {
-      const carto::mapping::proto::Trajectory &trajectory_proto =
+      const carto::mapping::proto::Trajectory& trajectory_proto =
           pose_graph_proto.trajectory(trajectory_id);
-      const std::string &bag_filename = bag_filenames[trajectory_id];
+      const std::string& bag_filename = bag_filenames[trajectory_id];
       LOG(INFO) << "Processing " << bag_filename << "...";
       if (trajectory_proto.node_size() == 0) {
         continue;
@@ -188,14 +188,14 @@ void RunAssetsWriterPipeline(const std::string &pose_graph_filename,
       // the assumption of higher frequency tf this should ensure that tf can
       // always interpolate.
       const ::ros::Duration kDelay(1.);
-      for (const rosbag::MessageInstance &message : view) {
+      for (const rosbag::MessageInstance& message : view) {
         if (use_bag_transforms && message.isType<tf2_msgs::TFMessage>()) {
           auto tf_message = message.instantiate<tf2_msgs::TFMessage>();
-          for (const auto &transform : tf_message->transforms) {
+          for (const auto& transform : tf_message->transforms) {
             try {
               tf_buffer.setTransform(transform, "unused_authority",
                                      message.getTopic() == kTfStaticTopic);
-            } catch (const tf2::TransformException &ex) {
+            } catch (const tf2::TransformException& ex) {
               LOG(WARNING) << ex.what();
             }
           }
@@ -203,7 +203,7 @@ void RunAssetsWriterPipeline(const std::string &pose_graph_filename,
 
         while (!delayed_messages.empty() && delayed_messages.front().getTime() <
                                                 message.getTime() - kDelay) {
-          const rosbag::MessageInstance &delayed_message =
+          const rosbag::MessageInstance& delayed_message =
               delayed_messages.front();
 
           std::unique_ptr<carto::io::PointsBatch> points_batch;
