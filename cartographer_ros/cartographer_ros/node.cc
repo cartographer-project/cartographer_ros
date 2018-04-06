@@ -443,6 +443,16 @@ bool Node::ValidateTopicNames(
 cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
     const int trajectory_id) {
   cartographer_ros_msgs::StatusResponse status_response;
+
+  // First, check if we can actually finish the trajectory.
+  if (map_builder_bridge_.GetFrozenTrajectoryIds().count(trajectory_id)) {
+    const std::string error =
+        "Trajectory " + std::to_string(trajectory_id) + " is frozen.";
+    LOG(INFO) << error;
+    status_response.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
+    status_response.message = error;
+    return status_response;
+  }
   if (is_active_trajectory_.count(trajectory_id) == 0) {
     const std::string error =
         "Trajectory " + std::to_string(trajectory_id) + " is not created yet.";
