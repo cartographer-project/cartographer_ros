@@ -16,7 +16,6 @@
 
 #include "cartographer_ros/assets_writer.h"
 #include "cartographer_ros/split_string.h"
-
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 
