@@ -65,14 +65,12 @@ CreatePoseGraph(const std::string& pose_graph_filename,
   carto::io::ProtoStreamReader reader(pose_graph_filename);
   CHECK(reader.ReadProto(&pose_graph_proto));
   CHECK(reader.ReadProto(&all_trajectory_builder_options));
-
   CHECK_EQ(pose_graph_proto.trajectory_size(), num_bag_files)
       << "Pose graphs contains " << pose_graph_proto.trajectory_size()
       << " trajectories while " << num_bag_files
       << " bags were provided. This tool requires one bag for each "
          "trajectory in the same order as the correponding trajectories in the "
          "pose graph proto.";
-
   return std::make_tuple(pose_graph_proto, all_trajectory_builder_options);
 }
 
