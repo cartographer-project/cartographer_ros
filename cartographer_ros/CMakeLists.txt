@@ -149,6 +149,8 @@ if (CATKIN_ENABLE_TESTING)
     target_link_libraries(${TEST_NAME} ${PROJECT_NAME})
     set_target_properties(${TEST_NAME} PROPERTIES COMPILE_FLAGS ${TARGET_COMPILE_FLAGS})
   endforeach()
+  find_package(rostest REQUIRED)
+  add_rostest(tests/backpack_2d.test cartographer_ros/result_subscriber_test.cc)
 endif()
 
 install(DIRECTORY launch urdf configuration_files
