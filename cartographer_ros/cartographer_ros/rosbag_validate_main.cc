@@ -151,29 +151,35 @@ class RangeDataChecker {
     const std::string& frame_id = message.header.frame_id;
     ros::Time current_time_stamp = message.header.stamp;
     RangeChecksum current_checksum;
-    ros::Duration range_duration;
-    ReadRangeMessage(message, &current_checksum, &range_duration);
-    ros::Time current_time_first_point = current_time_stamp - range_duration;
-    auto previous_time_stamp_it =
-        frame_id_to_previous_time_stamp_.find(frame_id);
-    if (previous_time_stamp_it != frame_id_to_previous_time_stamp_.end() &&
-        previous_time_stamp_it->second >= current_time_first_point) {
-      LOG_FIRST_N(WARNING, 3)
-          << "Sensor with frame_id \"" << frame_id
-          << "\" measurements overlap in time "
-          << "Previous range message, ending at time stamp "
-          << previous_time_stamp_it->second
-          << ", must finish before current range message, "
-          << "which ranges from " << current_time_first_point << " to "
-          << current_time_stamp;
-      double overlap =
-          (previous_time_stamp_it->second - current_time_first_point).toSec();
+    cartographer::common::Time time_from, time_to;
+    ReadRangeMessage(message, &current_checksum, &time_from, &time_to);
+    auto previous_time_to_it = frame_id_to_previous_time_to_.find(frame_id);
+    if (previous_time_to_it != frame_id_to_previous_time_to_.end() &&
+        previous_time_to_it->second >= time_from) {
+      if (previous_time_to_it->second >= time_to) {
+        LOG_FIRST_N(ERROR, 3) << "Sensor with frame_id \"" << frame_id
+                              << "\" is not sequential in time."
+                              << "Previous range message ends at time "
+                              << previous_time_to_it->second
+                              << ", current one at time " << time_to;
+      } else {
+        LOG_FIRST_N(WARNING, 3)
+            << "Sensor with frame_id \"" << frame_id
+            << "\" measurements overlap in time. "
+            << "Previous range message, ending at time stamp "
+            << previous_time_to_it->second
+            << ", must finish before current range message, "
+            << "which ranges from " << time_from << " to " << time_to;
+      }
+      double overlap = cartographer::common::ToSeconds(
+          previous_time_to_it->second - time_from);
       auto it = frame_id_to_max_overlap_duration_.find(frame_id);
       if (it == frame_id_to_max_overlap_duration_.end() ||
           overlap > frame_id_to_max_overlap_duration_.at(frame_id)) {
         frame_id_to_max_overlap_duration_[frame_id] = overlap;
       }
     }
+    frame_id_to_previous_time_to_[frame_id] = time_to;
     if (current_checksum.first == 0) {
       return;
     }
@@ -190,7 +196,6 @@ class RangeDataChecker {
       }
     }
     frame_id_to_range_checksum_[frame_id] = current_checksum;
-    frame_id_to_previous_time_stamp_[frame_id] = message.header.stamp;
   }
 
   void PrintReport() {
@@ -208,10 +213,13 @@ class RangeDataChecker {
   template <typename MessageType>
   static void ReadRangeMessage(const MessageType& message,
                                RangeChecksum* range_checksum,
-                               ros::Duration* range_duration) {
-    auto point_cloud_with_intensities = ToPointCloudWithIntensities(message);
+                               cartographer::common::Time* from,
+                               cartographer::common::Time* to) {
+    auto point_cloud_time = ToPointCloudWithIntensities(message);
     const cartographer::sensor::TimedPointCloud& point_cloud =
-        std::get<0>(point_cloud_with_intensities).points;
+        std::get<0>(point_cloud_time).points;
+    *to = std::get<1>(point_cloud_time);
+    *from = *to + cartographer::common::FromSeconds(point_cloud[0][3]);
     Eigen::Vector4f points_sum = Eigen::Vector4f::Zero();
     for (const Eigen::Vector4f& point : point_cloud) {
       points_sum += point;
@@ -226,18 +234,18 @@ class RangeDataChecker {
             << first_point_relative_time << " s, must negative or zero.";
       }
       if (last_point_relative_time != 0) {
-        LOG_FIRST_N(ERROR, 1)
+        LOG_FIRST_N(INFO, 1)
             << "Sensor with frame_id \"" << message.header.frame_id
             << "\" has range data whose last point has relative time "
-            << last_point_relative_time << " s, must be zero.";
+            << last_point_relative_time << " s, should be zero.";
       }
     }
     *range_checksum = {point_cloud.size(), points_sum};
-    *range_duration = ros::Duration(-point_cloud[0][3]);
   }
 
   std::map<std::string, RangeChecksum> frame_id_to_range_checksum_;
-  std::map<std::string, ros::Time> frame_id_to_previous_time_stamp_;
+  std::map<std::string, cartographer::common::Time>
+      frame_id_to_previous_time_to_;
   std::map<std::string, double> frame_id_to_max_overlap_duration_;
 };
 
