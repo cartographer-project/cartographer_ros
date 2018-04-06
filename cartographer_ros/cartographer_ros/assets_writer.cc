@@ -56,7 +56,7 @@ namespace carto = ::cartographer;
 
 std::tuple<carto::mapping::proto::PoseGraph,
            carto::mapping::proto::AllTrajectoryBuilderOptions>
-CreatePoseGraph(const std::string& pose_graph_filename, 
+CreatePoseGraph(const std::string& pose_graph_filename,
                 const int num_bag_files) {
   carto::mapping::proto::PoseGraph pose_graph_proto;
   carto::mapping::proto::AllTrajectoryBuilderOptions
@@ -88,15 +88,14 @@ CreatePipelineBuilder(
       carto::common::make_unique<carto::io::PointsProcessorPipelineBuilder>();
   carto::io::RegisterBuiltInPointsProcessors(trajectories, file_writer_factory,
                                              builder.get());
-  builder->Register(
-      RosMapWritingPointsProcessor::kConfigurationFileActionName,
-      [file_writer_factory](
-          carto::common::LuaParameterDictionary* const dictionary,
-          carto::io::PointsProcessor* const next)
-          -> std::unique_ptr<carto::io::PointsProcessor> {
-        return RosMapWritingPointsProcessor::FromDictionary(file_writer_factory,
-                                                            dictionary, next);
-      });
+  builder->Register(RosMapWritingPointsProcessor::kConfigurationFileActionName,
+                    [file_writer_factory](
+                        carto::common::LuaParameterDictionary* const dictionary,
+                        carto::io::PointsProcessor* const next)
+                        -> std::unique_ptr<carto::io::PointsProcessor> {
+                      return RosMapWritingPointsProcessor::FromDictionary(
+                          file_writer_factory, dictionary, next);
+                    });
   return std::move(builder);
 }
 
@@ -109,9 +108,9 @@ std::unique_ptr<carto::common::LuaParameterDictionary> CreateLuaDictionary(
 
   const std::string code =
       file_resolver->GetFileContentOrDie(configuration_basename);
-  auto lua_parameter_dictionary = 
-        carto::common::make_unique<carto::common::LuaParameterDictionary>(
-            code, std::move(file_resolver));
+  auto lua_parameter_dictionary =
+      carto::common::make_unique<carto::common::LuaParameterDictionary>(
+          code, std::move(file_resolver));
 
   return std::move(lua_parameter_dictionary);
 }
@@ -256,7 +255,6 @@ void RunAssetsWriterPipeline(const std::string& pose_graph_filename,
                              const std::string& urdf_filename,
                              const std::string& output_file_prefix,
                              const bool use_bag_transforms) {
-
   carto::mapping::proto::PoseGraph pose_graph_proto;
   carto::mapping::proto::AllTrajectoryBuilderOptions
       all_trajectory_builder_options;
@@ -268,8 +266,8 @@ void RunAssetsWriterPipeline(const std::string& pose_graph_filename,
       pose_graph_proto.trajectory().begin(),
       pose_graph_proto.trajectory().end());
   const std::string& file_prefix = !output_file_prefix.empty()
-                                      ? output_file_prefix
-                                      : bag_filenames.front() + "_";
+                                       ? output_file_prefix
+                                       : bag_filenames.front() + "_";
   auto pipeline_builder = CreatePipelineBuilder(all_trajectories, file_prefix);
 
   auto lua_parameter_dictionary =
