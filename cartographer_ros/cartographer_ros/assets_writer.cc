@@ -270,11 +270,9 @@ void RunAssetsWriterPipeline(const std::string& pose_graph_filename,
 
   auto lua_parameter_dictionary =
       CreateLuaDictionary(configuration_directory, configuration_basename);
-
   std::vector<std::unique_ptr<carto::io::PointsProcessor>> pipeline =
       pipeline_builder->CreatePipeline(
           lua_parameter_dictionary->GetDictionary("pipeline").get());
-
   const std::string& tracking_frame =
       lua_parameter_dictionary->GetString("tracking_frame");
 
