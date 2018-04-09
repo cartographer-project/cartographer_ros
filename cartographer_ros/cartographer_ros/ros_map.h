@@ -38,4 +38,4 @@ void WriteYaml(const double resolution, const Eigen::Vector2d& origin,
 
 }  // namespace cartographer_ros
 
-#endif /* end of include guard: CARTOGRAPHER_ROS_ROS_MAP_H_ */
+#endif  // CARTOGRAPHER_ROS_ROS_MAP_H_
