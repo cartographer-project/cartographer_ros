@@ -157,9 +157,10 @@ void MapBuilderBridge::RunFinalOptimization() {
   map_builder_->pose_graph()->RunFinalOptimization();
 }
 
-bool MapBuilderBridge::SerializeState(const std::string& filename) {
+bool MapBuilderBridge::SerializeState(const std::string& filename,
+                                      const std::set<int> trajectory_ids) {
   cartographer::io::ProtoStreamWriter writer(filename);
-  map_builder_->SerializeState(&writer);
+  map_builder_->SerializeState(&writer, trajectory_ids);
   return writer.Close();
 }
 

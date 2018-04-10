@@ -564,7 +564,9 @@ bool Node::HandleWriteState(
     ::cartographer_ros_msgs::WriteState::Request& request,
     ::cartographer_ros_msgs::WriteState::Response& response) {
   carto::common::MutexLocker lock(&mutex_);
-  if (map_builder_bridge_.SerializeState(request.filename)) {
+  const std::set<int> trajectory_ids(request.trajectory_ids.begin(),
+                                     request.trajectory_ids.end());
+  if (map_builder_bridge_.SerializeState(request.filename, trajectory_ids)) {
     response.status.code = cartographer_ros_msgs::StatusCode::OK;
     response.status.message = "State written to '" + request.filename + "'.";
   } else {
