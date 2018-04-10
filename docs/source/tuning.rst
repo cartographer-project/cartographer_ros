@@ -233,4 +233,3 @@ We can set these weights depending on how much we trust either local SLAM or the
 By default, odometry is weighted into global optimization similar to local slam (scan matching) poses.
 However, odometry from wheel encoders often has a high uncertainty in rotation.
 In this case, the rotation weight can be reduced, even down to zero.
-
