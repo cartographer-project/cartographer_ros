@@ -31,6 +31,7 @@ namespace {
 TEST(ResultSubscriberTest, ReceiveMovingBaseLink) {
   ::ros::init(std::map<std::string, std::string>{}, "result_subscriber_test");
   ScopedRosLogSink ros_log_sink;
+  ros::start();
   ::ros::NodeHandle node_handle;
   ::tf2_ros::Buffer buffer(ros::Duration(60));
   ::tf2_ros::TransformListener listener(buffer);

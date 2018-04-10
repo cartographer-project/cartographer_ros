@@ -25,6 +25,6 @@
     <remap from="echoes" to="horizontal_laser_2d" />
   </node>
   <test test-name="subscribe_moving_base_link" pkg="cartographer_ros"
-      type="result_subscriber_test">
+      type="tests_rostest1">
   </test>
 </launch>

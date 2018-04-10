@@ -156,7 +156,15 @@ if (CATKIN_ENABLE_TESTING)
     set_target_properties(${TEST_NAME} PROPERTIES COMPILE_FLAGS ${TARGET_COMPILE_FLAGS})
   endforeach()
   find_package(rostest REQUIRED)
-  add_rostest(tests/offline_backpack_2d.test cartographer_ros/result_subscriber_test.cc)
+  add_rostest_gtest(
+    tests_rostest1
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/offline_backpack_2d.test
+    ${CMAKE_CURRENT_SOURCE_DIR}/cartographer_ros/result_subscriber_test.cc)
+  target_link_libraries(
+    tests_rostest1
+    ${catkin_LIBRARIES}
+    ${PROJECT_NAME}
+  )
 endif()
 
 install(DIRECTORY launch urdf configuration_files
