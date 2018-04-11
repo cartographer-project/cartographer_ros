@@ -28,9 +28,13 @@
 namespace cartographer_ros {
 namespace {
 
-TEST(ResultSubscriberTest, MinimalTest) {
-  std::cout << "MinimalTest1";
-  EXPECT_TRUE(true);
+TEST(ResultSubscriberTest, ReceiveMovingBaseLink) {
+  ::ros::init(std::map<std::string, std::string>{}, "result_subscriber_test");
+  ScopedRosLogSink ros_log_sink;
+  ::ros::Time::init();
+  ::ros::start();
+  ::ros::NodeHandle node_handle;
+  EXPECT_TRUE(ros::service::waitForService("submap_query", ros::Duration(3)));
 }
 
 }  // namespace

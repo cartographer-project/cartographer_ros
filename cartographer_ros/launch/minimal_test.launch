@@ -25,6 +25,6 @@
     <remap from="echoes" to="horizontal_laser_2d" />
   </node>
   <test test-name="minimal_test" pkg="cartographer_ros"
-      type="tests_rostest1">
+      type="tests_rostest1" time-limit="10">
   </test>
 </launch>

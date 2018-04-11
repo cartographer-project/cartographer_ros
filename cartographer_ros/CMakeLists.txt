@@ -159,7 +159,7 @@ if (CATKIN_ENABLE_TESTING)
   add_rostest_gtest(
     tests_rostest1
     ${CMAKE_CURRENT_SOURCE_DIR}/launch/minimal_test.launch
-    ${CMAKE_CURRENT_SOURCE_DIR}/cartographer_ros/result_subscriber_test.cc)
+    ${CMAKE_CURRENT_SOURCE_DIR}/cartographer_ros/result_subscriber_test_node.cc)
   target_link_libraries(
     tests_rostest1
     ${PROJECT_NAME}
