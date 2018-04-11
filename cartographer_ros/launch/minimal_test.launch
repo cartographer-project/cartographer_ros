@@ -24,7 +24,7 @@
           -bag_filenames $(find cartographer_ros)/tests/data/b0-2014-07-21-12-42-53-short.bag">
     <remap from="echoes" to="horizontal_laser_2d" />
   </node>
-  <test test-name="subscribe_moving_base_link" pkg="cartographer_ros"
+  <test test-name="minimal_test" pkg="cartographer_ros"
       type="tests_rostest1">
   </test>
 </launch>
