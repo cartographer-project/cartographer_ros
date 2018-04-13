@@ -56,8 +56,7 @@ namespace carto = ::cartographer;
 
 std::tuple<std::unique_ptr<carto::mapping::proto::PoseGraph>,
            std::unique_ptr<carto::mapping::proto::AllTrajectoryBuilderOptions>>
-CreatePoseGraph(const std::string& pose_graph_filename,
-                const int num_bag_files) {
+LoadPoseGraph(const std::string& pose_graph_filename) {
   auto pose_graph_proto =
       carto::common::make_unique<carto::mapping::proto::PoseGraph>();
   auto all_trajectory_builder_options = carto::common::make_unique<
@@ -66,12 +65,7 @@ CreatePoseGraph(const std::string& pose_graph_filename,
   carto::io::ProtoStreamReader reader(pose_graph_filename);
   CHECK(reader.ReadProto(pose_graph_proto.get()));
   CHECK(reader.ReadProto(all_trajectory_builder_options.get()));
-  CHECK_EQ(pose_graph_proto->trajectory_size(), num_bag_files)
-      << "Pose graphs contains " << pose_graph_proto->trajectory_size()
-      << " trajectories while " << num_bag_files
-      << " bags were provided. This tool requires one bag for each "
-         "trajectory in the same order as the correponding trajectories in the "
-         "pose graph proto.";
+
   return std::make_tuple(std::move(pose_graph_proto),
                          std::move(all_trajectory_builder_options));
 }
@@ -263,9 +257,13 @@ void AssetWriter::Configure(const std::string& pose_graph_filename,
   urdf_filename_ = urdf_filename;
   use_bag_transforms_ = use_bag_transforms;
 
-  std::tie(pose_graph_, trajectory_options_) =
-      CreatePoseGraph(pose_graph_filename, bag_filenames.size());
-
+  std::tie(pose_graph_, trajectory_options_) = LoadPoseGraph(pose_graph_filename);
+  CHECK_EQ(pose_graph_->trajectory_size(), bag_filenames.size())
+      << "Pose graphs contains " << pose_graph_->trajectory_size()
+      << " trajectories while " << bag_filenames.size()
+      << " bags were provided. This tool requires one bag for each "
+         "trajectory in the same order as the correponding trajectories in the "
+         "pose graph proto.";
   // This vector must outlive the pipeline.
   all_trajectories_.resize(pose_graph_->trajectory_size());
   std::copy(pose_graph_->trajectory().begin(), pose_graph_->trajectory().end(),
