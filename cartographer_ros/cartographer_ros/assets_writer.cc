@@ -159,6 +159,8 @@ std::unique_ptr<carto::io::PointsBatch> HandleMessage(
 
 }  // namespace
 
+AssetWriter::AssetWriter() : is_configured_(false) {}
+
 void AssetWriter::Run() {
   CHECK(is_configured_);
   std::vector<std::unique_ptr<carto::io::PointsProcessor>> pipeline =
@@ -248,8 +250,6 @@ void AssetWriter::Run() {
   } while (pipeline.back()->Flush() ==
            carto::io::PointsProcessor::FlushResult::kRestartStream);
 }
-
-AssetWriter::AssetWriter() : is_configured_(false) {}
 
 void AssetWriter::Configure(const std::string& pose_graph_filename,
                             const std::vector<std::string>& bag_filenames,
