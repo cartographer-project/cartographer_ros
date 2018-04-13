@@ -153,13 +153,13 @@ std::unique_ptr<carto::io::PointsBatch> HandleMessage(
 
 }  // namespace
 
-AssetWriter::AssetWriter(const std::string& pose_graph_filename,
-                         const std::vector<std::string>& bag_filenames,
-                         const std::string& configuration_directory,
-                         const std::string& configuration_basename,
-                         const std::string& urdf_filename,
-                         const std::string& output_file_prefix,
-                         const bool use_bag_transforms)
+AssetsWriter::AssetsWriter(const std::string& pose_graph_filename,
+                           const std::vector<std::string>& bag_filenames,
+                           const std::string& configuration_directory,
+                           const std::string& configuration_basename,
+                           const std::string& urdf_filename,
+                           const std::string& output_file_prefix,
+                           const bool use_bag_transforms)
     : bag_filenames_(bag_filenames),
       urdf_filename_(urdf_filename),
       use_bag_transforms_(use_bag_transforms) {
@@ -167,7 +167,7 @@ AssetWriter::AssetWriter(const std::string& pose_graph_filename,
        output_file_prefix);
 }
 
-void AssetWriter::Run() {
+void AssetsWriter::Run() {
   std::vector<std::unique_ptr<carto::io::PointsProcessor>> pipeline =
       point_pipeline_builder_->CreatePipeline(
           lua_parameter_dictionary_->GetDictionary("pipeline").get());
@@ -256,10 +256,10 @@ void AssetWriter::Run() {
            carto::io::PointsProcessor::FlushResult::kRestartStream);
 }
 
-void AssetWriter::Init(const std::string& pose_graph_filename,
-                       const std::string& configuration_directory,
-                       const std::string& configuration_basename,
-                       const std::string& output_file_prefix) {
+void AssetsWriter::Init(const std::string& pose_graph_filename,
+                        const std::string& configuration_directory,
+                        const std::string& configuration_basename,
+                        const std::string& output_file_prefix) {
   std::tie(pose_graph_, trajectory_options_) =
       LoadPoseGraph(pose_graph_filename);
   CHECK_EQ(pose_graph_->trajectory_size(), bag_filenames_.size())
