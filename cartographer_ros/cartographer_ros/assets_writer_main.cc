@@ -54,8 +54,7 @@ int main(int argc, char** argv) {
   CHECK(!FLAGS_pose_graph_filename.empty())
       << "-pose_graph_filename is missing.";
 
-  ::cartographer_ros::AssetWriter asset_writer;
-  asset_writer.Configure(
+  ::cartographer_ros::AssetWriter asset_writer(
       FLAGS_pose_graph_filename,
       cartographer_ros::SplitString(FLAGS_bag_filenames, ','),
       FLAGS_configuration_directory, FLAGS_configuration_basename,

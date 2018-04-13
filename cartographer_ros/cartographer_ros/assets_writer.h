@@ -29,22 +29,24 @@ namespace cartographer_ros {
 
 class AssetWriter {
  public:
-  AssetWriter();
-
   // Configures a point processing pipeline.
-  void Configure(const std::string& pose_graph_filename,
-                 const std::vector<std::string>& bag_filenames,
-                 const std::string& configuration_directory,
-                 const std::string& configuration_basename,
-                 const std::string& urdf_filename,
-                 const std::string& output_file_prefix,
-                 const bool use_bag_transforms);
-  // Configure must be called before Run().
-  // pushes the points from the bag through the point processing pipeline.
+  AssetWriter(const std::string& pose_graph_filename,
+              const std::vector<std::string>& bag_filenames,
+              const std::string& configuration_directory,
+              const std::string& configuration_basename,
+              const std::string& urdf_filename,
+              const std::string& output_file_prefix,
+              const bool use_bag_transforms);
+
+  // Pushes the points from the bag through the point processing pipeline.
   void Run();
 
  private:
-  bool is_configured_;
+  void Init(const std::string& pose_graph_filename,
+            const std::string& configuration_directory,
+            const std::string& configuration_basename,
+            const std::string& output_file_prefix);
+
   std::vector<std::string> bag_filenames_;
   std::string urdf_filename_;
   bool use_bag_transforms_;

@@ -93,7 +93,7 @@ CreatePipelineBuilder(
   return builder;
 }
 
-std::unique_ptr<carto::common::LuaParameterDictionary> CreateLuaDictionary(
+std::unique_ptr<carto::common::LuaParameterDictionary> LoadLuaDictionary(
     const std::string& configuration_directory,
     const std::string& configuration_basename) {
   auto file_resolver =
@@ -153,10 +153,21 @@ std::unique_ptr<carto::io::PointsBatch> HandleMessage(
 
 }  // namespace
 
-AssetWriter::AssetWriter() : is_configured_(false) {}
+AssetWriter::AssetWriter(const std::string& pose_graph_filename,
+                         const std::vector<std::string>& bag_filenames,
+                         const std::string& configuration_directory,
+                         const std::string& configuration_basename,
+                         const std::string& urdf_filename,
+                         const std::string& output_file_prefix,
+                         const bool use_bag_transforms)
+    : bag_filenames_(bag_filenames),
+      urdf_filename_(urdf_filename),
+      use_bag_transforms_(use_bag_transforms) {
+  Init(pose_graph_filename, configuration_directory, configuration_basename,
+       output_file_prefix);
+}
 
 void AssetWriter::Run() {
-  CHECK(is_configured_);
   std::vector<std::unique_ptr<carto::io::PointsProcessor>> pipeline =
       point_pipeline_builder_->CreatePipeline(
           lua_parameter_dictionary_->GetDictionary("pipeline").get());
@@ -245,22 +256,15 @@ void AssetWriter::Run() {
            carto::io::PointsProcessor::FlushResult::kRestartStream);
 }
 
-void AssetWriter::Configure(const std::string& pose_graph_filename,
-                            const std::vector<std::string>& bag_filenames,
-                            const std::string& configuration_directory,
-                            const std::string& configuration_basename,
-                            const std::string& urdf_filename,
-                            const std::string& output_file_prefix,
-                            const bool use_bag_transforms) {
-  is_configured_ = false;
-  bag_filenames_ = bag_filenames;
-  urdf_filename_ = urdf_filename;
-  use_bag_transforms_ = use_bag_transforms;
-
-  std::tie(pose_graph_, trajectory_options_) = LoadPoseGraph(pose_graph_filename);
-  CHECK_EQ(pose_graph_->trajectory_size(), bag_filenames.size())
+void AssetWriter::Init(const std::string& pose_graph_filename,
+                       const std::string& configuration_directory,
+                       const std::string& configuration_basename,
+                       const std::string& output_file_prefix) {
+  std::tie(pose_graph_, trajectory_options_) =
+      LoadPoseGraph(pose_graph_filename);
+  CHECK_EQ(pose_graph_->trajectory_size(), bag_filenames_.size())
       << "Pose graphs contains " << pose_graph_->trajectory_size()
-      << " trajectories while " << bag_filenames.size()
+      << " trajectories while " << bag_filenames_.size()
       << " bags were provided. This tool requires one bag for each "
          "trajectory in the same order as the correponding trajectories in the "
          "pose graph proto.";
@@ -271,13 +275,11 @@ void AssetWriter::Configure(const std::string& pose_graph_filename,
 
   const std::string file_prefix = !output_file_prefix.empty()
                                       ? output_file_prefix
-                                      : bag_filenames.front() + "_";
-
+                                      : bag_filenames_.front() + "_";
   point_pipeline_builder_ =
       CreatePipelineBuilder(all_trajectories_, file_prefix);
   lua_parameter_dictionary_ =
-      CreateLuaDictionary(configuration_directory, configuration_basename);
-  is_configured_ = true;
+      LoadLuaDictionary(configuration_directory, configuration_basename);
 }
 
 }  // namespace cartographer_ros
