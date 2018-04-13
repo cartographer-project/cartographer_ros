@@ -56,8 +56,7 @@ namespace carto = ::cartographer;
 
 std::tuple<carto::mapping::proto::PoseGraph,
            carto::mapping::proto::AllTrajectoryBuilderOptions>
-CreatePoseGraph(const std::string& pose_graph_filename,
-                const int num_bag_files) {
+LoadPoseGraph(const std::string& pose_graph_filename) {
   carto::mapping::proto::PoseGraph pose_graph_proto;
   carto::mapping::proto::AllTrajectoryBuilderOptions
       all_trajectory_builder_options;
@@ -65,12 +64,6 @@ CreatePoseGraph(const std::string& pose_graph_filename,
   carto::io::ProtoStreamReader reader(pose_graph_filename);
   CHECK(reader.ReadProto(&pose_graph_proto));
   CHECK(reader.ReadProto(&all_trajectory_builder_options));
-  CHECK_EQ(pose_graph_proto.trajectory_size(), num_bag_files)
-      << "Pose graphs contains " << pose_graph_proto.trajectory_size()
-      << " trajectories while " << num_bag_files
-      << " bags were provided. This tool requires one bag for each "
-         "trajectory in the same order as the correponding trajectories in the "
-         "pose graph proto.";
   return std::make_tuple(pose_graph_proto, all_trajectory_builder_options);
 }
 
@@ -94,7 +87,7 @@ CreatePipelineBuilder(
                       return RosMapWritingPointsProcessor::FromDictionary(
                           file_writer_factory, dictionary, next);
                     });
-  return std::move(builder);
+  return builder;
 }
 
 std::unique_ptr<carto::common::LuaParameterDictionary> CreateLuaDictionary(
@@ -109,8 +102,7 @@ std::unique_ptr<carto::common::LuaParameterDictionary> CreateLuaDictionary(
   auto lua_parameter_dictionary =
       carto::common::make_unique<carto::common::LuaParameterDictionary>(
           code, std::move(file_resolver));
-
-  return std::move(lua_parameter_dictionary);
+  return lua_parameter_dictionary;
 }
 
 template <typename T>
@@ -257,7 +249,14 @@ void RunAssetsWriterPipeline(const std::string& pose_graph_filename,
   carto::mapping::proto::AllTrajectoryBuilderOptions
       all_trajectory_builder_options;
   std::tie(pose_graph_proto, all_trajectory_builder_options) =
-      CreatePoseGraph(pose_graph_filename, bag_filenames.size());
+      LoadPoseGraph(pose_graph_filename);
+
+  CHECK_EQ(pose_graph_proto.trajectory_size(), bag_filenames.size())
+      << "Pose graphs contains " << pose_graph_proto.trajectory_size()
+      << " trajectories while " << bag_filenames.size()
+      << " bags were provided. This tool requires one bag for each "
+         "trajectory in the same order as the correponding trajectories in the "
+         "pose graph proto.";
 
   // This vector must outlive the pipeline.
   std::vector<carto::mapping::proto::Trajectory> all_trajectories(
