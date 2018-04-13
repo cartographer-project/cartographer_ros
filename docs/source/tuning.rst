@@ -215,3 +215,21 @@ As a next step, we strongly decrease ``global_sampling_ratio`` and ``constraint_
 to compensate for the large number of constraints.
 We then tune for lower latency as explained above until the system reliably works in real time.
 
+Odometry in Global Optimization
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If a separate odometry source is used as an input for local SLAM (``use_odometry = true``), we can also tune the global SLAM to benefit from this additional information.
+
+There are in total four parameters that allow us to tune the individual weights of local SLAM and odometry in the optimization:
+
+  .. code-block:: lua
+
+    POSE_GRAPH.optimization_problem.local_slam_pose_translation_weight
+    POSE_GRAPH.optimization_problem.local_slam_pose_rotation_weight
+    POSE_GRAPH.optimization_problem.odometry_translation_weight
+    POSE_GRAPH.optimization_problem.odometry_rotation_weight
+
+We can set these weights depending on how much we trust either local SLAM or the odometry.
+By default, odometry is weighted into global optimization similar to local slam (scan matching) poses.
+However, odometry from wheel encoders often has a high uncertainty in rotation.
+In this case, the rotation weight can be reduced, even down to zero.
