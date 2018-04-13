@@ -17,20 +17,46 @@
 #include <string>
 #include <vector>
 
+#include "cartographer/common/configuration_file_resolver.h"
+#include "cartographer/io/points_processor_pipeline_builder.h"
+#include "cartographer/mapping/proto/pose_graph.pb.h"
+#include "cartographer/mapping/proto/trajectory_builder_options.pb.h"
+
 #ifndef CARTOGRAPHER_ROS_ASSETS_WRITER_H_
 #define CARTOGRAPHER_ROS_ASSETS_WRITER_H_
 
 namespace cartographer_ros {
 
-// Configures a point processing pipeline and pushes the points from the bag
-// through it.
-void RunAssetsWriterPipeline(const std::string& pose_graph_filename,
-                             const std::vector<std::string>& bag_filenames,
-                             const std::string& configuration_directory,
-                             const std::string& configuration_basename,
-                             const std::string& urdf_filename,
-                             const std::string& output_file_prefix,
-                             bool use_bag_transforms);
+class AssetWriter {
+ public:
+  AssetWriter();
+
+  // Configures a point processing pipeline.
+  void Configure(const std::string& pose_graph_filename,
+                 const std::vector<std::string>& bag_filenames,
+                 const std::string& configuration_directory,
+                 const std::string& configuration_basename,
+                 const std::string& urdf_filename,
+                 const std::string& output_file_prefix,
+                 const bool use_bag_transforms);
+  // Configure must be called before Run().
+  // pushes the points from the bag through the point processing pipeline.
+  void Run();
+
+ private:
+  bool is_configured_;
+  std::vector<std::string> bag_filenames_;
+  std::string urdf_filename_;
+  bool use_bag_transforms_;
+  std::vector<::cartographer::mapping::proto::Trajectory> all_trajectories_;
+  std::unique_ptr<::cartographer::mapping::proto::PoseGraph> pose_graph_;
+  std::unique_ptr<::cartographer::mapping::proto::AllTrajectoryBuilderOptions>
+      trajectory_options_;
+  std::unique_ptr<::cartographer::common::LuaParameterDictionary>
+      lua_parameter_dictionary_;
+  std::unique_ptr<::cartographer::io::PointsProcessorPipelineBuilder>
+      point_pipeline_builder_;
+};
 
 }  // namespace cartographer_ros
 

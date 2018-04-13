@@ -54,24 +54,26 @@ namespace {
 constexpr char kTfStaticTopic[] = "/tf_static";
 namespace carto = ::cartographer;
 
-std::tuple<carto::mapping::proto::PoseGraph,
-           carto::mapping::proto::AllTrajectoryBuilderOptions>
+std::tuple<std::unique_ptr<carto::mapping::proto::PoseGraph>,
+           std::unique_ptr<carto::mapping::proto::AllTrajectoryBuilderOptions>>
 CreatePoseGraph(const std::string& pose_graph_filename,
                 const int num_bag_files) {
-  carto::mapping::proto::PoseGraph pose_graph_proto;
-  carto::mapping::proto::AllTrajectoryBuilderOptions
-      all_trajectory_builder_options;
+  auto pose_graph_proto =
+      carto::common::make_unique<carto::mapping::proto::PoseGraph>();
+  auto all_trajectory_builder_options = carto::common::make_unique<
+      carto::mapping::proto::AllTrajectoryBuilderOptions>();
 
   carto::io::ProtoStreamReader reader(pose_graph_filename);
-  CHECK(reader.ReadProto(&pose_graph_proto));
-  CHECK(reader.ReadProto(&all_trajectory_builder_options));
-  CHECK_EQ(pose_graph_proto.trajectory_size(), num_bag_files)
-      << "Pose graphs contains " << pose_graph_proto.trajectory_size()
+  CHECK(reader.ReadProto(pose_graph_proto.get()));
+  CHECK(reader.ReadProto(all_trajectory_builder_options.get()));
+  CHECK_EQ(pose_graph_proto->trajectory_size(), num_bag_files)
+      << "Pose graphs contains " << pose_graph_proto->trajectory_size()
       << " trajectories while " << num_bag_files
       << " bags were provided. This tool requires one bag for each "
          "trajectory in the same order as the correponding trajectories in the "
          "pose graph proto.";
-  return std::make_tuple(pose_graph_proto, all_trajectory_builder_options);
+  return std::make_tuple(std::move(pose_graph_proto),
+                         std::move(all_trajectory_builder_options));
 }
 
 std::unique_ptr<carto::io::PointsProcessorPipelineBuilder>
@@ -94,7 +96,7 @@ CreatePipelineBuilder(
                       return RosMapWritingPointsProcessor::FromDictionary(
                           file_writer_factory, dictionary, next);
                     });
-  return std::move(builder);
+  return builder;
 }
 
 std::unique_ptr<carto::common::LuaParameterDictionary> CreateLuaDictionary(
@@ -109,8 +111,7 @@ std::unique_ptr<carto::common::LuaParameterDictionary> CreateLuaDictionary(
   auto lua_parameter_dictionary =
       carto::common::make_unique<carto::common::LuaParameterDictionary>(
           code, std::move(file_resolver));
-
-  return std::move(lua_parameter_dictionary);
+  return lua_parameter_dictionary;
 }
 
 template <typename T>
@@ -156,25 +157,29 @@ std::unique_ptr<carto::io::PointsBatch> HandleMessage(
   return points_batch;
 }
 
-void RunPipeline(
-    const std::vector<std::unique_ptr<carto::io::PointsProcessor>>& pipeline,
-    const std::vector<std::string>& bag_filenames,
-    const carto::mapping::proto::PoseGraph& pose_graph_proto,
-    const std::string tracking_frame, const std::string& urdf_filename,
-    const bool use_bag_transforms) {
+}  // namespace
+
+void AssetWriter::Run() {
+  CHECK(is_configured_);
+  std::vector<std::unique_ptr<carto::io::PointsProcessor>> pipeline =
+      point_pipeline_builder_->CreatePipeline(
+          lua_parameter_dictionary_->GetDictionary("pipeline").get());
+  const std::string& tracking_frame =
+      lua_parameter_dictionary_->GetString("tracking_frame");
+
   do {
-    for (size_t trajectory_id = 0; trajectory_id < bag_filenames.size();
+    for (size_t trajectory_id = 0; trajectory_id < bag_filenames_.size();
          ++trajectory_id) {
       const carto::mapping::proto::Trajectory& trajectory_proto =
-          pose_graph_proto.trajectory(trajectory_id);
-      const std::string& bag_filename = bag_filenames[trajectory_id];
+          pose_graph_->trajectory(trajectory_id);
+      const std::string& bag_filename = bag_filenames_[trajectory_id];
       LOG(INFO) << "Processing " << bag_filename << "...";
       if (trajectory_proto.node_size() == 0) {
         continue;
       }
       tf2_ros::Buffer tf_buffer;
-      if (!urdf_filename.empty()) {
-        ReadStaticTransformsFromUrdf(urdf_filename, &tf_buffer);
+      if (!urdf_filename_.empty()) {
+        ReadStaticTransformsFromUrdf(urdf_filename_, &tf_buffer);
       }
 
       const carto::transform::TransformInterpolationBuffer
@@ -195,7 +200,7 @@ void RunPipeline(
       // always interpolate.
       const ::ros::Duration kDelay(1.);
       for (const rosbag::MessageInstance& message : view) {
-        if (use_bag_transforms && message.isType<tf2_msgs::TFMessage>()) {
+        if (use_bag_transforms_ && message.isType<tf2_msgs::TFMessage>()) {
           auto tf_message = message.instantiate<tf2_msgs::TFMessage>();
           for (const auto& transform : tf_message->transforms) {
             try {
@@ -244,40 +249,37 @@ void RunPipeline(
            carto::io::PointsProcessor::FlushResult::kRestartStream);
 }
 
-}  // namespace
+AssetWriter::AssetWriter() : is_configured_(false) {}
 
-void RunAssetsWriterPipeline(const std::string& pose_graph_filename,
-                             const std::vector<std::string>& bag_filenames,
-                             const std::string& configuration_directory,
-                             const std::string& configuration_basename,
-                             const std::string& urdf_filename,
-                             const std::string& output_file_prefix,
-                             const bool use_bag_transforms) {
-  carto::mapping::proto::PoseGraph pose_graph_proto;
-  carto::mapping::proto::AllTrajectoryBuilderOptions
-      all_trajectory_builder_options;
-  std::tie(pose_graph_proto, all_trajectory_builder_options) =
+void AssetWriter::Configure(const std::string& pose_graph_filename,
+                            const std::vector<std::string>& bag_filenames,
+                            const std::string& configuration_directory,
+                            const std::string& configuration_basename,
+                            const std::string& urdf_filename,
+                            const std::string& output_file_prefix,
+                            const bool use_bag_transforms) {
+  is_configured_ = false;
+  bag_filenames_ = bag_filenames;
+  urdf_filename_ = urdf_filename;
+  use_bag_transforms_ = use_bag_transforms;
+
+  std::tie(pose_graph_, trajectory_options_) =
       CreatePoseGraph(pose_graph_filename, bag_filenames.size());
 
   // This vector must outlive the pipeline.
-  std::vector<carto::mapping::proto::Trajectory> all_trajectories(
-      pose_graph_proto.trajectory().begin(),
-      pose_graph_proto.trajectory().end());
-  const std::string& file_prefix = !output_file_prefix.empty()
-                                       ? output_file_prefix
-                                       : bag_filenames.front() + "_";
-  auto pipeline_builder = CreatePipelineBuilder(all_trajectories, file_prefix);
+  all_trajectories_.resize(pose_graph_->trajectory_size());
+  std::copy(pose_graph_->trajectory().begin(), pose_graph_->trajectory().end(),
+            all_trajectories_.begin());
 
-  auto lua_parameter_dictionary =
+  const std::string file_prefix = !output_file_prefix.empty()
+                                      ? output_file_prefix
+                                      : bag_filenames.front() + "_";
+
+  point_pipeline_builder_ =
+      CreatePipelineBuilder(all_trajectories_, file_prefix);
+  lua_parameter_dictionary_ =
       CreateLuaDictionary(configuration_directory, configuration_basename);
-  std::vector<std::unique_ptr<carto::io::PointsProcessor>> pipeline =
-      pipeline_builder->CreatePipeline(
-          lua_parameter_dictionary->GetDictionary("pipeline").get());
-  const std::string& tracking_frame =
-      lua_parameter_dictionary->GetString("tracking_frame");
-
-  RunPipeline(pipeline, bag_filenames, pose_graph_proto, tracking_frame,
-              urdf_filename, use_bag_transforms);
+  is_configured_ = true;
 }
 
 }  // namespace cartographer_ros
