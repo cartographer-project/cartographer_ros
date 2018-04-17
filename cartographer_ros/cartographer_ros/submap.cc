@@ -33,7 +33,7 @@ std::unique_ptr<::cartographer::io::SubmapTextures> FetchSubmapTextures(
   if (!client->call(srv)) {
     return nullptr;
   }
-  //CHECK(!srv.response.textures.empty());
+  // CHECK(!srv.response.textures.empty());
   if (srv.response.textures.empty()) {
     return nullptr;
   }
