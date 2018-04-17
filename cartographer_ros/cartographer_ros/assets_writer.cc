@@ -72,7 +72,6 @@ CreatePipelineBuilder(
       carto::common::make_unique<carto::io::PointsProcessorPipelineBuilder>();
   carto::io::RegisterBuiltInPointsProcessors(trajectories, file_writer_factory,
                                              builder.get());
-
   builder->Register(RosMapWritingPointsProcessor::kConfigurationFileActionName,
                     [file_writer_factory](
                         carto::common::LuaParameterDictionary* const dictionary,
@@ -81,7 +80,6 @@ CreatePipelineBuilder(
                       return RosMapWritingPointsProcessor::FromDictionary(
                           file_writer_factory, dictionary, next);
                     });
-
   return builder;
 }
 
