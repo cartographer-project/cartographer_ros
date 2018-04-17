@@ -17,20 +17,35 @@
 #include <string>
 #include <vector>
 
+#include "cartographer/common/configuration_file_resolver.h"
+#include "cartographer/io/points_processor_pipeline_builder.h"
+#include "cartographer/mapping/proto/pose_graph.pb.h"
+#include "cartographer/mapping/proto/trajectory_builder_options.pb.h"
+
 #ifndef CARTOGRAPHER_ROS_ASSETS_WRITER_H_
 #define CARTOGRAPHER_ROS_ASSETS_WRITER_H_
 
 namespace cartographer_ros {
 
-// Configures a point processing pipeline and pushes the points from the bag
-// through it.
-void RunAssetsWriterPipeline(const std::string& pose_graph_filename,
-                             const std::vector<std::string>& bag_filenames,
-                             const std::string& configuration_directory,
-                             const std::string& configuration_basename,
-                             const std::string& urdf_filename,
-                             const std::string& output_file_prefix,
-                             bool use_bag_transforms);
+class AssetsWriter {
+ public:
+  AssetsWriter(const std::string& pose_graph_filename,
+               const std::vector<std::string>& bag_filenames,
+               const std::string& output_file_prefix);
+
+  // Configures a points processing pipeline and pushes the points from the
+  // bag through the pipeline.
+  void Run(const std::string& configuration_directory,
+           const std::string& configuration_basename,
+           const std::string& urdf_filename, bool use_bag_transforms);
+
+ private:
+  std::vector<std::string> bag_filenames_;
+  std::vector<::cartographer::mapping::proto::Trajectory> all_trajectories_;
+  ::cartographer::mapping::proto::PoseGraph pose_graph_;
+  std::unique_ptr<::cartographer::io::PointsProcessorPipelineBuilder>
+      point_pipeline_builder_;
+};
 
 }  // namespace cartographer_ros
 
