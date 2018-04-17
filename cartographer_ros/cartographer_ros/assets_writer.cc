@@ -158,9 +158,8 @@ AssetsWriter::AssetsWriter(const std::string& pose_graph_filename,
          "pose graph proto.";
 
   // This vector must outlive the pipeline.
-  all_trajectories_.resize(pose_graph_.trajectory_size());
-  std::copy(pose_graph_.trajectory().begin(), pose_graph_.trajectory().end(),
-            all_trajectories_.begin());
+  all_trajectories_ = std::vector<::cartographer::mapping::proto::Trajectory>(
+      pose_graph_.trajectory().begin(), pose_graph_.trajectory().end());
 
   const std::string file_prefix = !output_file_prefix.empty()
                                       ? output_file_prefix
