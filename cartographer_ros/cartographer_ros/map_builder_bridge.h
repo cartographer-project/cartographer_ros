@@ -77,6 +77,7 @@ class MapBuilderBridge {
       cartographer_ros_msgs::SubmapQuery::Request& request,
       cartographer_ros_msgs::SubmapQuery::Response& response);
 
+  std::set<int> GetFrozenTrajectoryIds();
   cartographer_ros_msgs::SubmapList GetSubmapList();
   std::unordered_map<int, TrajectoryState> GetTrajectoryStates()
       EXCLUDES(mutex_);
