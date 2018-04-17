@@ -54,19 +54,12 @@ namespace {
 constexpr char kTfStaticTopic[] = "/tf_static";
 namespace carto = ::cartographer;
 
-std::tuple<carto::mapping::proto::PoseGraph,
-           carto::mapping::proto::AllTrajectoryBuilderOptions>
-LoadPoseGraph(const std::string& pose_graph_filename) {
+carto::mapping::proto::PoseGraph LoadPoseGraph(
+    const std::string& pose_graph_filename) {
   carto::mapping::proto::PoseGraph pose_graph_proto;
-  carto::mapping::proto::AllTrajectoryBuilderOptions
-      all_trajectory_builder_options;
-
   carto::io::ProtoStreamReader reader(pose_graph_filename);
   CHECK(reader.ReadProto(&pose_graph_proto));
-  CHECK(reader.ReadProto(&all_trajectory_builder_options));
-
-  return std::make_tuple(std::move(pose_graph_proto),
-                         std::move(all_trajectory_builder_options));
+  return pose_graph_proto;
 }
 
 std::unique_ptr<carto::io::PointsProcessorPipelineBuilder>
@@ -154,22 +147,16 @@ std::unique_ptr<carto::io::PointsBatch> HandleMessage(
 
 AssetsWriter::AssetsWriter(const std::string& pose_graph_filename,
                            const std::vector<std::string>& bag_filenames,
-                           const std::string& configuration_directory,
-                           const std::string& configuration_basename,
-                           const std::string& urdf_filename,
-                           const std::string& output_file_prefix,
-                           const bool use_bag_transforms)
+                           const std::string& output_file_prefix)
     : bag_filenames_(bag_filenames),
-      urdf_filename_(urdf_filename),
-      use_bag_transforms_(use_bag_transforms) {
-  std::tie(pose_graph_, trajectory_options_) =
-      LoadPoseGraph(pose_graph_filename);
+      pose_graph_(LoadPoseGraph(pose_graph_filename)) {
   CHECK_EQ(pose_graph_.trajectory_size(), bag_filenames_.size())
       << "Pose graphs contains " << pose_graph_.trajectory_size()
       << " trajectories while " << bag_filenames_.size()
       << " bags were provided. This tool requires one bag for each "
          "trajectory in the same order as the correponding trajectories in the "
          "pose graph proto.";
+
   // This vector must outlive the pipeline.
   all_trajectories_.resize(pose_graph_.trajectory_size());
   std::copy(pose_graph_.trajectory().begin(), pose_graph_.trajectory().end(),
@@ -180,16 +167,20 @@ AssetsWriter::AssetsWriter(const std::string& pose_graph_filename,
                                       : bag_filenames_.front() + "_";
   point_pipeline_builder_ =
       CreatePipelineBuilder(all_trajectories_, file_prefix);
-  lua_parameter_dictionary_ =
-      LoadLuaDictionary(configuration_directory, configuration_basename);
 }
 
-void AssetsWriter::Run() {
+void AssetsWriter::Run(const std::string& configuration_directory,
+                       const std::string& configuration_basename,
+                       const std::string& urdf_filename,
+                       const bool use_bag_transforms) {
+  const auto lua_parameter_dictionary =
+      LoadLuaDictionary(configuration_directory, configuration_basename);
+
   std::vector<std::unique_ptr<carto::io::PointsProcessor>> pipeline =
       point_pipeline_builder_->CreatePipeline(
-          lua_parameter_dictionary_->GetDictionary("pipeline").get());
-  const std::string& tracking_frame =
-      lua_parameter_dictionary_->GetString("tracking_frame");
+          lua_parameter_dictionary->GetDictionary("pipeline").get());
+  const std::string tracking_frame =
+      lua_parameter_dictionary->GetString("tracking_frame");
 
   do {
     for (size_t trajectory_id = 0; trajectory_id < bag_filenames_.size();
@@ -202,8 +193,8 @@ void AssetsWriter::Run() {
         continue;
       }
       tf2_ros::Buffer tf_buffer;
-      if (!urdf_filename_.empty()) {
-        ReadStaticTransformsFromUrdf(urdf_filename_, &tf_buffer);
+      if (!urdf_filename.empty()) {
+        ReadStaticTransformsFromUrdf(urdf_filename, &tf_buffer);
       }
 
       const carto::transform::TransformInterpolationBuffer
@@ -224,7 +215,7 @@ void AssetsWriter::Run() {
       // always interpolate.
       const ::ros::Duration kDelay(1.);
       for (const rosbag::MessageInstance& message : view) {
-        if (use_bag_transforms_ && message.isType<tf2_msgs::TFMessage>()) {
+        if (use_bag_transforms && message.isType<tf2_msgs::TFMessage>()) {
           auto tf_message = message.instantiate<tf2_msgs::TFMessage>();
           for (const auto& transform : tf_message->transforms) {
             try {

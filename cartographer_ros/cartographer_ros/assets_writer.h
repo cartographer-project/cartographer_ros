@@ -32,25 +32,17 @@ class AssetsWriter {
   // Configures a point processing pipeline.
   AssetsWriter(const std::string& pose_graph_filename,
                const std::vector<std::string>& bag_filenames,
-               const std::string& configuration_directory,
-               const std::string& configuration_basename,
-               const std::string& urdf_filename,
-               const std::string& output_file_prefix,
-               const bool use_bag_transforms);
+               const std::string& output_file_prefix);
 
   // Pushes the points from the bag through the point processing pipeline.
-  void Run();
+  void Run(const std::string& configuration_directory,
+           const std::string& configuration_basename,
+           const std::string& urdf_filename, bool use_bag_transforms);
 
  private:
   std::vector<std::string> bag_filenames_;
-  std::string urdf_filename_;
-  bool use_bag_transforms_;
   std::vector<::cartographer::mapping::proto::Trajectory> all_trajectories_;
   ::cartographer::mapping::proto::PoseGraph pose_graph_;
-  ::cartographer::mapping::proto::AllTrajectoryBuilderOptions
-      trajectory_options_;
-  std::unique_ptr<::cartographer::common::LuaParameterDictionary>
-      lua_parameter_dictionary_;
   std::unique_ptr<::cartographer::io::PointsProcessorPipelineBuilder>
       point_pipeline_builder_;
 };
