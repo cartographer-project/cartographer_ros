@@ -42,7 +42,6 @@ class AssetsWriter {
   void Run();
 
  private:
-
   std::vector<std::string> bag_filenames_;
   std::string urdf_filename_;
   bool use_bag_transforms_;

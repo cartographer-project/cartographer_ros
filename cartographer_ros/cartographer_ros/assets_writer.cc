@@ -58,7 +58,8 @@ std::tuple<carto::mapping::proto::PoseGraph,
            carto::mapping::proto::AllTrajectoryBuilderOptions>
 LoadPoseGraph(const std::string& pose_graph_filename) {
   carto::mapping::proto::PoseGraph pose_graph_proto;
-  carto::mapping::proto::AllTrajectoryBuilderOptions all_trajectory_builder_options;
+  carto::mapping::proto::AllTrajectoryBuilderOptions
+      all_trajectory_builder_options;
 
   carto::io::ProtoStreamReader reader(pose_graph_filename);
   CHECK(reader.ReadProto(&pose_graph_proto));
@@ -160,8 +161,7 @@ AssetsWriter::AssetsWriter(const std::string& pose_graph_filename,
                            const bool use_bag_transforms)
     : bag_filenames_(bag_filenames),
       urdf_filename_(urdf_filename),
-      use_bag_transforms_(use_bag_transforms)
-       {
+      use_bag_transforms_(use_bag_transforms) {
   std::tie(pose_graph_, trajectory_options_) =
       LoadPoseGraph(pose_graph_filename);
   CHECK_EQ(pose_graph_.trajectory_size(), bag_filenames_.size())
