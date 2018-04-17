@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include "cartographer/common/lua_parameter_dictionary.h"
 #include "cartographer_ros/assets_writer.h"
+#include "cartographer_ros/ros_map_writing_points_processor.h"
 #include "cartographer_ros/split_string.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
