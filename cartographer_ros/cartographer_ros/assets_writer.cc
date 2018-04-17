@@ -54,17 +54,15 @@ namespace {
 constexpr char kTfStaticTopic[] = "/tf_static";
 namespace carto = ::cartographer;
 
-std::tuple<std::unique_ptr<carto::mapping::proto::PoseGraph>,
-           std::unique_ptr<carto::mapping::proto::AllTrajectoryBuilderOptions>>
+std::tuple<carto::mapping::proto::PoseGraph,
+           carto::mapping::proto::AllTrajectoryBuilderOptions>
 LoadPoseGraph(const std::string& pose_graph_filename) {
-  auto pose_graph_proto =
-      carto::common::make_unique<carto::mapping::proto::PoseGraph>();
-  auto all_trajectory_builder_options = carto::common::make_unique<
-      carto::mapping::proto::AllTrajectoryBuilderOptions>();
+  carto::mapping::proto::PoseGraph pose_graph_proto;
+  carto::mapping::proto::AllTrajectoryBuilderOptions all_trajectory_builder_options;
 
   carto::io::ProtoStreamReader reader(pose_graph_filename);
-  CHECK(reader.ReadProto(pose_graph_proto.get()));
-  CHECK(reader.ReadProto(all_trajectory_builder_options.get()));
+  CHECK(reader.ReadProto(&pose_graph_proto));
+  CHECK(reader.ReadProto(&all_trajectory_builder_options));
 
   return std::make_tuple(std::move(pose_graph_proto),
                          std::move(all_trajectory_builder_options));
@@ -162,9 +160,28 @@ AssetsWriter::AssetsWriter(const std::string& pose_graph_filename,
                            const bool use_bag_transforms)
     : bag_filenames_(bag_filenames),
       urdf_filename_(urdf_filename),
-      use_bag_transforms_(use_bag_transforms) {
-  Init(pose_graph_filename, configuration_directory, configuration_basename,
-       output_file_prefix);
+      use_bag_transforms_(use_bag_transforms)
+       {
+  std::tie(pose_graph_, trajectory_options_) =
+      LoadPoseGraph(pose_graph_filename);
+  CHECK_EQ(pose_graph_.trajectory_size(), bag_filenames_.size())
+      << "Pose graphs contains " << pose_graph_.trajectory_size()
+      << " trajectories while " << bag_filenames_.size()
+      << " bags were provided. This tool requires one bag for each "
+         "trajectory in the same order as the correponding trajectories in the "
+         "pose graph proto.";
+  // This vector must outlive the pipeline.
+  all_trajectories_.resize(pose_graph_.trajectory_size());
+  std::copy(pose_graph_.trajectory().begin(), pose_graph_.trajectory().end(),
+            all_trajectories_.begin());
+
+  const std::string file_prefix = !output_file_prefix.empty()
+                                      ? output_file_prefix
+                                      : bag_filenames_.front() + "_";
+  point_pipeline_builder_ =
+      CreatePipelineBuilder(all_trajectories_, file_prefix);
+  lua_parameter_dictionary_ =
+      LoadLuaDictionary(configuration_directory, configuration_basename);
 }
 
 void AssetsWriter::Run() {
@@ -178,7 +195,7 @@ void AssetsWriter::Run() {
     for (size_t trajectory_id = 0; trajectory_id < bag_filenames_.size();
          ++trajectory_id) {
       const carto::mapping::proto::Trajectory& trajectory_proto =
-          pose_graph_->trajectory(trajectory_id);
+          pose_graph_.trajectory(trajectory_id);
       const std::string& bag_filename = bag_filenames_[trajectory_id];
       LOG(INFO) << "Processing " << bag_filename << "...";
       if (trajectory_proto.node_size() == 0) {
@@ -254,32 +271,6 @@ void AssetsWriter::Run() {
     }
   } while (pipeline.back()->Flush() ==
            carto::io::PointsProcessor::FlushResult::kRestartStream);
-}
-
-void AssetsWriter::Init(const std::string& pose_graph_filename,
-                        const std::string& configuration_directory,
-                        const std::string& configuration_basename,
-                        const std::string& output_file_prefix) {
-  std::tie(pose_graph_, trajectory_options_) =
-      LoadPoseGraph(pose_graph_filename);
-  CHECK_EQ(pose_graph_->trajectory_size(), bag_filenames_.size())
-      << "Pose graphs contains " << pose_graph_->trajectory_size()
-      << " trajectories while " << bag_filenames_.size()
-      << " bags were provided. This tool requires one bag for each "
-         "trajectory in the same order as the correponding trajectories in the "
-         "pose graph proto.";
-  // This vector must outlive the pipeline.
-  all_trajectories_.resize(pose_graph_->trajectory_size());
-  std::copy(pose_graph_->trajectory().begin(), pose_graph_->trajectory().end(),
-            all_trajectories_.begin());
-
-  const std::string file_prefix = !output_file_prefix.empty()
-                                      ? output_file_prefix
-                                      : bag_filenames_.front() + "_";
-  point_pipeline_builder_ =
-      CreatePipelineBuilder(all_trajectories_, file_prefix);
-  lua_parameter_dictionary_ =
-      LoadLuaDictionary(configuration_directory, configuration_basename);
 }
 
 }  // namespace cartographer_ros

@@ -42,17 +42,13 @@ class AssetsWriter {
   void Run();
 
  private:
-  void Init(const std::string& pose_graph_filename,
-            const std::string& configuration_directory,
-            const std::string& configuration_basename,
-            const std::string& output_file_prefix);
 
   std::vector<std::string> bag_filenames_;
   std::string urdf_filename_;
   bool use_bag_transforms_;
   std::vector<::cartographer::mapping::proto::Trajectory> all_trajectories_;
-  std::unique_ptr<::cartographer::mapping::proto::PoseGraph> pose_graph_;
-  std::unique_ptr<::cartographer::mapping::proto::AllTrajectoryBuilderOptions>
+  ::cartographer::mapping::proto::PoseGraph pose_graph_;
+  ::cartographer::mapping::proto::AllTrajectoryBuilderOptions
       trajectory_options_;
   std::unique_ptr<::cartographer::common::LuaParameterDictionary>
       lua_parameter_dictionary_;
