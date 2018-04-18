@@ -178,9 +178,6 @@ void MapBuilderBridge::HandleSubmapQuery(
     return;
   }
 
-  CHECK(response_proto.textures_size() > 0)
-      << "empty textures given for submap: " << submap_id;
-
   response.submap_version = response_proto.submap_version();
   for (const auto& texture_proto : response_proto.textures()) {
     response.textures.emplace_back();
@@ -195,6 +192,17 @@ void MapBuilderBridge::HandleSubmapQuery(
   }
   response.status.message = "Success.";
   response.status.code = cartographer_ros_msgs::StatusCode::OK;
+}
+
+std::set<int> MapBuilderBridge::GetFrozenTrajectoryIds() {
+  std::set<int> frozen_trajectory_ids;
+  const auto node_poses = map_builder_->pose_graph()->GetTrajectoryNodePoses();
+  for (const int trajectory_id : node_poses.trajectory_ids()) {
+    if (map_builder_->pose_graph()->IsTrajectoryFrozen(trajectory_id)) {
+      frozen_trajectory_ids.insert(trajectory_id);
+    }
+  }
+  return frozen_trajectory_ids;
 }
 
 cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
