@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_ROS_MSG_CONVERSION_H_
-#define CARTOGRAPHER_ROS_MSG_CONVERSION_H_
+#ifndef CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_MSG_CONVERSION_H
+#define CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_MSG_CONVERSION_H
 
 #include "cartographer/common/port.h"
 #include "cartographer/common/time.h"
@@ -95,4 +95,4 @@ std::unique_ptr<nav_msgs::OccupancyGrid> CreateOccupancyGridMsg(
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAPHER_ROS_MSG_CONVERSION_H_
+#endif  // CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_MSG_CONVERSION_H

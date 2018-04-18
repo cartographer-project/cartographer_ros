@@ -17,8 +17,8 @@
 #include <string>
 #include <vector>
 
-#ifndef CARTOGRAPHER_ROS_ASSETS_WRITER_H_
-#define CARTOGRAPHER_ROS_ASSETS_WRITER_H_
+#ifndef CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_ASSETS_WRITER_H
+#define CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_ASSETS_WRITER_H
 
 namespace cartographer_ros {
 
@@ -34,4 +34,4 @@ void RunAssetsWriterPipeline(const std::string& pose_graph_filename,
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAPHER_ROS_ASSETS_WRITER_H_
+#endif  // CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_ASSETS_WRITER_H

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_ROS_TRAJECTORY_OPTIONS_H_
-#define CARTOGRAPHER_ROS_TRAJECTORY_OPTIONS_H_
+#ifndef CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_TRAJECTORY_OPTIONS_H
+#define CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_TRAJECTORY_OPTIONS_H
 
 #include <string>
 
@@ -69,4 +69,4 @@ cartographer_ros_msgs::TrajectoryOptions ToRosMessage(
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAPHER_ROS_TRAJECTORY_OPTIONS_H_
+#endif  // CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_TRAJECTORY_OPTIONS_H

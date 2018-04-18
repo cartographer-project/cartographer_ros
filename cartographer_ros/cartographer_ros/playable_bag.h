@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_ROS_PLAYABLE_BAG_H_
-#define CARTOGRAPHER_ROS_PLAYABLE_BAG_H_
+#ifndef CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_PLAYABLE_BAG_H
+#define CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_PLAYABLE_BAG_H
 #include <functional>
 #include <queue>
 
@@ -94,4 +94,4 @@ class PlayableBagMultiplexer {
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAPHER_ROS_PLAYABLE_BAG_H_
+#endif  // CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_PLAYABLE_BAG_H

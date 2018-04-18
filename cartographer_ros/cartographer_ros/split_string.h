@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_ROS_SPLIT_STRING_H_
-#define CARTOGRAPHER_ROS_SPLIT_STRING_H_
+#ifndef CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_SPLIT_STRING_H
+#define CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_SPLIT_STRING_H
 
 #include <string>
 #include <vector>
@@ -27,4 +27,4 @@ std::vector<std::string> SplitString(const std::string& input, char delimiter);
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAPHER_ROS_SPLIT_STRING_H_
+#endif  // CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_SPLIT_STRING_H

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_ROS_SUBMAP_H_
-#define CARTOGRAPHER_ROS_SUBMAP_H_
+#ifndef CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_SUBMAP_H
+#define CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_SUBMAP_H
 
 #include <memory>
 #include <string>
@@ -37,4 +37,4 @@ std::unique_ptr<::cartographer::io::SubmapTextures> FetchSubmapTextures(
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAPHER_ROS_SUBMAP_H_
+#endif  // CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_SUBMAP_H
