@@ -51,4 +51,5 @@ generate_messages(
 catkin_package(
   CATKIN_DEPENDS
     ${PACKAGE_DEPENDENCIES}
+    message_runtime
 )
