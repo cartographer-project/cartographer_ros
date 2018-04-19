@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_ROS_SENSOR_BRIDGE_H_
-#define CARTOGRAPHER_ROS_SENSOR_BRIDGE_H_
+#ifndef CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_SENSOR_BRIDGE_H
+#define CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_SENSOR_BRIDGE_H
 
 #include <memory>
 
@@ -26,6 +26,7 @@
 #include "cartographer/transform/rigid_transform.h"
 #include "cartographer/transform/transform.h"
 #include "cartographer_ros/tf_bridge.h"
+#include "cartographer_ros_msgs/LandmarkList.h"
 #include "geometry_msgs/Transform.h"
 #include "geometry_msgs/TransformStamped.h"
 #include "nav_msgs/OccupancyGrid.h"
@@ -55,6 +56,10 @@ class SensorBridge {
                              const nav_msgs::Odometry::ConstPtr& msg);
   void HandleNavSatFixMessage(const std::string& sensor_id,
                               const sensor_msgs::NavSatFix::ConstPtr& msg);
+  void HandleLandmarkMessage(
+      const std::string& sensor_id,
+      const cartographer_ros_msgs::LandmarkList::ConstPtr& msg);
+
   std::unique_ptr<::cartographer::sensor::ImuData> ToImuData(
       const sensor_msgs::Imu::ConstPtr& msg);
   void HandleImuMessage(const std::string& sensor_id,
@@ -80,6 +85,8 @@ class SensorBridge {
                          const ::cartographer::sensor::TimedPointCloud& ranges);
 
   const int num_subdivisions_per_laser_scan_;
+  std::map<std::string, cartographer::common::Time>
+      sensor_to_previous_subdivision_time_;
   const TfBridge tf_bridge_;
   ::cartographer::mapping::TrajectoryBuilderInterface* const
       trajectory_builder_;
@@ -90,4 +97,4 @@ class SensorBridge {
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAPHER_ROS_SENSOR_BRIDGE_H_
+#endif  // CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_SENSOR_BRIDGE_H

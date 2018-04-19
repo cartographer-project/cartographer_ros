@@ -197,6 +197,7 @@ class Job(object):
     self.assets_writer_launch_file = entity['assets_writer_launch_file']
     self.assets_writer_config_file = entity['assets_writer_config_file']
     self.rosbag = entity['rosbag']
+    self.ros_package = entity['ros_package']
 
   def __repr__(self):
     return 'Job: id : {} launch_file: {} rosbag: {}'.format(
@@ -218,18 +219,20 @@ class Job(object):
 
     # Creates pbstream
     output = run_ros_cmd(ros_distro,
-                         '/usr/bin/time -v roslaunch cartographer_ros {} '
+                         '/usr/bin/time -v roslaunch {} {} '
                          'bag_filenames:={}/{} no_rviz:=true'.format(
-                             self.launch_file, scratch_dir, rosbag_filename))
+                             self.ros_package, self.launch_file, scratch_dir,
+                             rosbag_filename))
     info = extract_stats(output)
 
     # Creates assets.
     run_ros_cmd(
-        ros_distro, '/usr/bin/time -v roslaunch cartographer_ros {} '
+        ros_distro, '/usr/bin/time -v roslaunch {} {} '
         'bag_filenames:={}/{} pose_graph_filename:='
         '{}/{}.pbstream config_file:={}'.format(
-            self.assets_writer_launch_file, scratch_dir, rosbag_filename,
-            scratch_dir, rosbag_filename, self.assets_writer_config_file))
+            self.ros_package, self.assets_writer_launch_file, scratch_dir,
+            rosbag_filename, scratch_dir, rosbag_filename,
+            self.assets_writer_config_file))
 
     # Copies assets to bucket.
     run_cmd('gsutil cp {}/{}.pbstream '

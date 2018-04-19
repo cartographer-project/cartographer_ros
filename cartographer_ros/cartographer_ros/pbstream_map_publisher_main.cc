@@ -21,13 +21,13 @@
 
 #include "cartographer/io/proto_stream.h"
 #include "cartographer/io/submap_painter.h"
+#include "cartographer/mapping/2d/probability_grid.h"
+#include "cartographer/mapping/2d/submap_2d.h"
+#include "cartographer/mapping/3d/submap_3d.h"
 #include "cartographer/mapping/proto/pose_graph.pb.h"
 #include "cartographer/mapping/proto/serialization.pb.h"
 #include "cartographer/mapping/proto/submap.pb.h"
-#include "cartographer/mapping/submaps.h"
-#include "cartographer/mapping_2d/probability_grid.h"
-#include "cartographer/mapping_2d/submaps.h"
-#include "cartographer/mapping_3d/submaps.h"
+#include "cartographer/mapping/proto/trajectory_builder_options.pb.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/node_constants.h"
 #include "cartographer_ros/ros_log_sink.h"
@@ -53,6 +53,9 @@ void Run(const std::string& pbstream_filename, const std::string& map_topic,
 
   ::cartographer::mapping::proto::PoseGraph pose_graph;
   CHECK(reader.ReadProto(&pose_graph));
+  ::cartographer::mapping::proto::AllTrajectoryBuilderOptions
+      all_trajectory_builder_options;
+  CHECK(reader.ReadProto(&all_trajectory_builder_options));
 
   LOG(INFO) << "Loading submap slices from serialized data.";
   std::map<::cartographer::mapping::SubmapId, ::cartographer::io::SubmapSlice>

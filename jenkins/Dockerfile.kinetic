@@ -26,9 +26,12 @@ ADD https://api.github.com/repos/googlecartographer/cartographer/git/refs/heads/
 
 # wstool needs the updated rosinstall file to clone the correct repos.
 COPY cartographer_ros.rosinstall cartographer_ros/
-COPY scripts/prepare_catkin_workspace.sh cartographer_ros/scripts/
+COPY scripts/prepare_jenkins_catkin_workspace.sh cartographer_ros/scripts/
+
+# Invalidates the Docker cache to ensure this command is always executed.
+ARG CACHEBUST=1
 RUN CARTOGRAPHER_VERSION=$CARTOGRAPHER_VERSION \
-    cartographer_ros/scripts/prepare_catkin_workspace.sh
+    cartographer_ros/scripts/prepare_jenkins_catkin_workspace.sh
 
 # rosdep needs the updated package.xml files to install the correct debs.
 COPY cartographer_ros/package.xml catkin_ws/src/cartographer_ros/cartographer_ros/
@@ -69,6 +72,9 @@ RUN cartographer_ros/scripts/install.sh --pkg cartographer_rviz && \
         --catkin-make-args run_tests && \
     cartographer_ros/scripts/catkin_test_results.sh build_isolated/cartographer_rviz
 
+RUN cartographer_ros/scripts/install.sh --pkg cartographer_toru
+RUN cartographer_ros/scripts/install.sh --pkg cartographer_fetch
+
 COPY scripts/ros_entrypoint.sh /
 # A BTRFS bug may prevent us from cleaning up these directories.
 # https://btrfs.wiki.kernel.org/index.php/Problem_FAQ#I_cannot_delete_an_empty_directory
@@ -81,9 +87,9 @@ ENV HOME /home/jenkins
 RUN addgroup --system --gid 10000 jenkins
 RUN adduser --system --ingroup jenkins --home $HOME --uid 10000 jenkins
 
-LABEL Description="This is a base image, which provides the Jenkins agent executable (slave.jar)" Vendor="Jenkins project" Version="3.10"
+LABEL Description="This is a base image, which provides the Jenkins agent executable (slave.jar)" Vendor="Jenkins project" Version="3.17"
 
-ARG VERSION=3.10
+ARG VERSION=3.17
 ARG AGENT_WORKDIR=/home/jenkins/agent
 
 RUN curl --create-dirs -sSLo /usr/share/jenkins/slave.jar https://repo.jenkins-ci.org/public/org/jenkins-ci/main/remoting/${VERSION}/remoting-${VERSION}.jar \

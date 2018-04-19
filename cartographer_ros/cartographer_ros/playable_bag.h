@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_ROS_PLAYABLE_BAG_H_
-#define CARTOGRAPHER_ROS_PLAYABLE_BAG_H_
+#ifndef CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_PLAYABLE_BAG_H
+#define CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_PLAYABLE_BAG_H
 #include <functional>
 #include <queue>
 
@@ -37,12 +37,12 @@ class PlayableBag {
               ros::Time end_time, ros::Duration buffer_delay,
               FilteringEarlyMessageHandler filtering_early_message_handler);
 
-  ros::Time PeekMessageTime();
+  ros::Time PeekMessageTime() const;
   rosbag::MessageInstance GetNextMessage();
-  bool IsMessageAvailable();
-  std::tuple<ros::Time, ros::Time> GetBeginEndTime();
+  bool IsMessageAvailable() const;
+  std::tuple<ros::Time, ros::Time> GetBeginEndTime() const;
 
-  int bag_id();
+  int bag_id() const;
 
  private:
   void AdvanceOneMessage();
@@ -72,7 +72,8 @@ class PlayableBagMultiplexer {
              bool /* is_last_message_in_bag */>
   GetNextMessage();
 
-  bool IsMessageAvailable();
+  bool IsMessageAvailable() const;
+  ros::Time PeekMessageTime() const;
 
  private:
   struct BagMessageItem {
@@ -93,4 +94,4 @@ class PlayableBagMultiplexer {
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAPHER_ROS_PLAYABLE_BAG_H_
+#endif  // CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_PLAYABLE_BAG_H

@@ -52,11 +52,17 @@ DEFINE_string(urdf_filenames, "",
               "static links for the sensor configuration(s).");
 DEFINE_bool(use_bag_transforms, true,
             "Whether to read, use and republish transforms from bags.");
-DEFINE_string(pbstream_filename, "",
-              "If non-empty, filename of a pbstream to load.");
+DEFINE_string(load_state_filename, "",
+              "If non-empty, filename of a .pbstream file to load, containing "
+              "a saved SLAM state.");
+DEFINE_bool(load_frozen_state, true,
+            "Load the saved state as frozen (non-optimized) trajectories.");
 DEFINE_bool(keep_running, false,
             "Keep running the offline node after all messages from the bag "
             "have been processed.");
+DEFINE_double(skip_seconds, 0,
+              "Optional amount of seconds to skip from the beginning "
+              "(i.e. when the earliest bag starts.). ");
 
 namespace cartographer_ros {
 
@@ -75,7 +81,8 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
       << "-configuration_directory is missing.";
   CHECK(!FLAGS_configuration_basenames.empty())
       << "-configuration_basenames is missing.";
-  CHECK(!FLAGS_bag_filenames.empty()) << "-bag_filenames is missing.";
+  CHECK(!(FLAGS_bag_filenames.empty() && FLAGS_load_state_filename.empty()))
+      << "-bag_filenames and -load_state_filename cannot both be unspecified.";
   const auto bag_filenames =
       cartographer_ros::SplitString(FLAGS_bag_filenames, ',');
   cartographer_ros::NodeOptions node_options;
@@ -95,7 +102,9 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
     }
     bag_trajectory_options.push_back(current_trajectory_options);
   }
-  CHECK_EQ(bag_trajectory_options.size(), bag_filenames.size());
+  if (bag_filenames.size() > 0) {
+    CHECK_EQ(bag_trajectory_options.size(), bag_filenames.size());
+  }
 
   // Since we preload the transform buffer, we should never have to wait for a
   // transform. When we finish processing the bag, we will simply drop any
@@ -122,10 +131,8 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
   tf_buffer.setUsingDedicatedThread(true);
 
   Node node(node_options, std::move(map_builder), &tf_buffer);
-  if (!FLAGS_pbstream_filename.empty()) {
-    // TODO(jihoonl): LoadMap should be replaced by some better deserialization
-    // of full SLAM state as non-frozen trajectories once possible
-    node.LoadMap(FLAGS_pbstream_filename);
+  if (!FLAGS_load_state_filename.empty()) {
+    node.LoadState(FLAGS_load_state_filename, FLAGS_load_frozen_state);
   }
 
   ::ros::Publisher tf_publisher =
@@ -152,8 +159,21 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
       },
       false /* oneshot */, false /* autostart */);
 
-  auto bag_expected_sensor_ids =
-      node.ComputeDefaultSensorIdsForMultipleBags(bag_trajectory_options);
+  std::vector<
+      std::set<cartographer::mapping::TrajectoryBuilderInterface::SensorId>>
+      bag_expected_sensor_ids;
+  if (configuration_basenames.size() == 1) {
+    const auto current_bag_expected_sensor_ids =
+        node.ComputeDefaultSensorIdsForMultipleBags(
+            {bag_trajectory_options.front()});
+    bag_expected_sensor_ids = {bag_filenames.size(),
+                               current_bag_expected_sensor_ids.front()};
+  } else {
+    bag_expected_sensor_ids =
+        node.ComputeDefaultSensorIdsForMultipleBags(bag_trajectory_options);
+  }
+  CHECK_EQ(bag_expected_sensor_ids.size(), bag_filenames.size());
+
   std::map<std::pair<int /* bag_index */, std::string>,
            cartographer::mapping::TrajectoryBuilderInterface::SensorId>
       bag_topic_to_sensor_id;
@@ -216,11 +236,24 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
 
   // TODO(gaschler): Warn if resolved topics are not in bags.
   std::unordered_map<int, int> bag_index_to_trajectory_id;
+  const ros::Time begin_time =
+      // If no bags were loaded, we cannot peek the time of first message.
+      playable_bag_multiplexer.IsMessageAvailable()
+          ? playable_bag_multiplexer.PeekMessageTime()
+          : ros::Time();
   while (playable_bag_multiplexer.IsMessageAvailable()) {
+    if (!::ros::ok()) {
+      return;
+    }
+
     const auto next_msg_tuple = playable_bag_multiplexer.GetNextMessage();
     const rosbag::MessageInstance& msg = std::get<0>(next_msg_tuple);
     const int bag_index = std::get<1>(next_msg_tuple);
     const bool is_last_message_in_bag = std::get<2>(next_msg_tuple);
+
+    if (msg.getTime() < (begin_time + ros::Duration(FLAGS_skip_seconds))) {
+      continue;
+    }
 
     int trajectory_id;
     // Lazily add trajectories only when the first message arrives in order
@@ -240,9 +273,6 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
       trajectory_id = bag_index_to_trajectory_id.at(bag_index);
     }
 
-    if (!::ros::ok()) {
-      return;
-    }
     const auto bag_topic = std::make_pair(
         bag_index,
         node.node_handle()->resolveName(msg.getTopic(), false /* resolve */));
@@ -274,6 +304,11 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
       if (msg.isType<sensor_msgs::NavSatFix>()) {
         node.HandleNavSatFixMessage(trajectory_id, sensor_id,
                                     msg.instantiate<sensor_msgs::NavSatFix>());
+      }
+      if (msg.isType<cartographer_ros_msgs::LandmarkList>()) {
+        node.HandleLandmarkMessage(
+            trajectory_id, sensor_id,
+            msg.instantiate<cartographer_ros_msgs::LandmarkList>());
       }
     }
     clock.clock = msg.getTime();
@@ -308,10 +343,12 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
   LOG(INFO) << "Peak memory usage: " << usage.ru_maxrss << " KiB";
 #endif
 
-  if (::ros::ok()) {
-    const std::string output_filename = bag_filenames.front() + ".pbstream";
-    LOG(INFO) << "Writing state to '" << output_filename << "'...";
-    node.SerializeState(output_filename);
+  if (::ros::ok() && bag_filenames.size() > 0) {
+    const std::string output_filename = bag_filenames.front();
+    const std::string suffix = ".pbstream";
+    const std::string state_output_filename = output_filename + suffix;
+    LOG(INFO) << "Writing state to '" << state_output_filename << "'...";
+    node.SerializeState(state_output_filename);
   }
   if (FLAGS_keep_running) {
     ::ros::waitForShutdown();

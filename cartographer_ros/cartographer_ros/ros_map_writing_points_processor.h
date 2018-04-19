@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_ROS_ROS_MAP_WRITING_POINTS_PROCESSOR_H_
-#define CARTOGRAPHER_ROS_ROS_MAP_WRITING_POINTS_PROCESSOR_H_
+#ifndef CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_ROS_MAP_WRITING_POINTS_PROCESSOR_H
+#define CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_ROS_MAP_WRITING_POINTS_PROCESSOR_H
 
 #include "cartographer/common/lua_parameter_dictionary.h"
 #include "cartographer/io/file_writer.h"
 #include "cartographer/io/points_processor.h"
-#include "cartographer/mapping_2d/proto/range_data_inserter_options.pb.h"
-#include "cartographer/mapping_2d/range_data_inserter.h"
+#include "cartographer/mapping/2d/probability_grid.h"
+#include "cartographer/mapping/2d/proto/range_data_inserter_options_2d.pb.h"
+#include "cartographer/mapping/2d/range_data_inserter_2d.h"
 
 namespace cartographer_ros {
 
@@ -33,7 +34,7 @@ class RosMapWritingPointsProcessor
   constexpr static const char* kConfigurationFileActionName = "write_ros_map";
   RosMapWritingPointsProcessor(
       double resolution,
-      const ::cartographer::mapping_2d::proto::RangeDataInserterOptions&
+      const ::cartographer::mapping::proto::RangeDataInserterOptions2D&
           range_data_inserter_options,
       ::cartographer::io::FileWriterFactory file_writer_factory,
       const std::string& filestem, PointsProcessor* next);
@@ -55,10 +56,10 @@ class RosMapWritingPointsProcessor
   const std::string filestem_;
   PointsProcessor* const next_;
   ::cartographer::io::FileWriterFactory file_writer_factory_;
-  ::cartographer::mapping_2d::RangeDataInserter range_data_inserter_;
-  ::cartographer::mapping_2d::ProbabilityGrid probability_grid_;
+  ::cartographer::mapping::RangeDataInserter2D range_data_inserter_;
+  ::cartographer::mapping::ProbabilityGrid probability_grid_;
 };
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAPHER_ROS_ROS_MAP_WRITING_POINTS_PROCESSOR_H_
+#endif  // CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_ROS_MAP_WRITING_POINTS_PROCESSOR_H

@@ -1,0 +1,110 @@
+podTemplate(label: 'node-0', containers: [
+    containerTemplate(
+          name: 'jnlp',
+          image: 'eggsy84/gcp-jenkins-slave-k8s-seed:latest',
+          ttyEnabled: false,
+          command: '',
+          privileged: true,
+          alwaysPullImage: false,
+          workingDir: '/home/jenkins',
+          args: '${computer.jnlpmac} ${computer.name}'
+        )
+    ],
+    volumes: [
+          secretVolume(mountPath: '/opt/config', secretName: 'gcloud-svc-account'),
+          hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock'),
+          persistentVolumeClaim(claimName: 'data-claim-compile', mountPath: '/data'),
+    ]
+) {
+    node('node-0') {
+      stage('Compile') {
+        sh 'gcloud auth activate-service-account --key-file=/opt/config/gcloud-svc-account.json'
+        sh 'cd /data && rm -Rf *'
+        sh 'cd /data && git clone https://github.com/googlecartographer/cartographer_ros'
+        sh 'cd /data/cartographer_ros && docker build -f jenkins/Dockerfile.kinetic -t kinetic-jenkins-slave --build-arg CACHEBUST=$(date +%s)  .'
+      }
+      stage('Push') {
+        sh 'docker tag kinetic-jenkins-slave eu.gcr.io/cartographer-141408/kinetic-jenkins-slave'
+        sh 'gcloud docker -- push eu.gcr.io/cartographer-141408/kinetic-jenkins-slave'
+        sh 'cd /data && rm -Rf *'
+      }
+    }
+}
+
+podTemplate(label: 'node-1', containers: [
+    containerTemplate(
+          name: 'jnlp',
+          image: 'eu.gcr.io/cartographer-141408/kinetic-jenkins-slave:latest',
+          ttyEnabled: false,
+          command: '',
+          privileged: true,
+          alwaysPullImage: true,
+          workingDir: '/home/jenkins',
+          args: '${computer.jnlpmac} ${computer.name}'
+        )
+    ],
+    volumes: [
+          secretVolume(mountPath: '/opt/config', secretName: 'gcloud-svc-account'),
+          hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock'),
+          persistentVolumeClaim(claimName: 'data-claim-compile', mountPath: '/data'),
+    ]
+) {
+    node('node-1') {
+      stage('Run Fetch Pipeline') {
+        sh 'gcloud auth activate-service-account --key-file=/opt/config/gcloud-svc-account.json'
+        sh 'GOOGLE_APPLICATION_CREDENTIALS="/opt/config/gcloud-svc-account.json" GOOGLE_CLOUD_DISABLE_GRPC=True python /worker.py --worker_id 0 --num_workers 1 --pipeline_id fetch'
+      }
+    }
+}
+
+podTemplate(label: 'node-2', containers: [
+    containerTemplate(
+          name: 'jnlp',
+          image: 'eu.gcr.io/cartographer-141408/kinetic-jenkins-slave:latest',
+          ttyEnabled: false,
+          command: '',
+          privileged: true,
+          alwaysPullImage: true,
+          workingDir: '/home/jenkins',
+          args: '${computer.jnlpmac} ${computer.name}'
+        )
+    ],
+    volumes: [
+          secretVolume(mountPath: '/opt/config', secretName: 'gcloud-svc-account'),
+          hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock'),
+          persistentVolumeClaim(claimName: 'data-claim-compile', mountPath: '/data'),
+    ]
+) {
+    node('node-2') {
+      stage('Run Backpack Pipeline') {
+        sh 'gcloud auth activate-service-account --key-file=/opt/config/gcloud-svc-account.json'
+        sh 'GOOGLE_APPLICATION_CREDENTIALS="/opt/config/gcloud-svc-account.json" GOOGLE_CLOUD_DISABLE_GRPC=True python /worker.py --worker_id 0 --num_workers 1 --pipeline_id backpack'
+      }
+    }
+}
+
+podTemplate(label: 'node-3', containers: [
+    containerTemplate(
+          name: 'jnlp',
+          image: 'eu.gcr.io/cartographer-141408/kinetic-jenkins-slave:latest',
+          ttyEnabled: false,
+          command: '',
+          privileged: true,
+          alwaysPullImage: true,
+          workingDir: '/home/jenkins',
+          args: '${computer.jnlpmac} ${computer.name}'
+        )
+    ],
+    volumes: [
+          secretVolume(mountPath: '/opt/config', secretName: 'gcloud-svc-account'),
+          hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock'),
+          persistentVolumeClaim(claimName: 'data-claim-compile', mountPath: '/data'),
+    ]
+) {
+    node('node-3') {
+      stage('Run Toru Pipeline') {
+        sh 'gcloud auth activate-service-account --key-file=/opt/config/gcloud-svc-account.json'
+        sh 'GOOGLE_APPLICATION_CREDENTIALS="/opt/config/gcloud-svc-account.json" GOOGLE_CLOUD_DISABLE_GRPC=True python /worker.py --worker_id 0 --num_workers 1 --pipeline_id toru'
+      }
+    }
+}

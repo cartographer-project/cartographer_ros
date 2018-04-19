@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cartographer_grpc/mapping/map_builder_stub.h"
+#include "cartographer/cloud/client/map_builder_stub.h"
 #include "cartographer_ros/offline_node.h"
 #include "cartographer_ros/ros_log_sink.h"
 #include "gflags/gflags.h"
@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
   const cartographer_ros::MapBuilderFactory map_builder_factory =
       [](const ::cartographer::mapping::proto::MapBuilderOptions&) {
         return ::cartographer::common::make_unique<
-            ::cartographer_grpc::mapping::MapBuilderStub>(FLAGS_server_address);
+            ::cartographer::cloud::MapBuilderStub>(FLAGS_server_address);
       };
 
   cartographer_ros::RunOfflineNode(map_builder_factory);

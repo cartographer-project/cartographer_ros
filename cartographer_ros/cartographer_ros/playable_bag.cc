@@ -45,12 +45,12 @@ PlayableBag::PlayableBag(
   AdvanceUntilMessageAvailable();
 }
 
-ros::Time PlayableBag::PeekMessageTime() {
+ros::Time PlayableBag::PeekMessageTime() const {
   CHECK(IsMessageAvailable());
   return buffered_messages_.front().getTime();
 }
 
-std::tuple<ros::Time, ros::Time> PlayableBag::GetBeginEndTime() {
+std::tuple<ros::Time, ros::Time> PlayableBag::GetBeginEndTime() const {
   return std::make_tuple(view_->getBeginTime(), view_->getEndTime());
 }
 
@@ -67,13 +67,13 @@ rosbag::MessageInstance PlayableBag::GetNextMessage() {
   return msg;
 }
 
-bool PlayableBag::IsMessageAvailable() {
+bool PlayableBag::IsMessageAvailable() const {
   return !buffered_messages_.empty() &&
          (buffered_messages_.front().getTime() <
           buffered_messages_.back().getTime() - buffer_delay_);
 }
 
-int PlayableBag::bag_id() { return bag_id_; }
+int PlayableBag::bag_id() const { return bag_id_; }
 
 void PlayableBag::AdvanceOneMessage() {
   CHECK(!finished_);
@@ -106,7 +106,7 @@ void PlayableBagMultiplexer::AddPlayableBag(PlayableBag playable_bag) {
                      static_cast<int>(playable_bags_.size() - 1)});
 }
 
-bool PlayableBagMultiplexer::IsMessageAvailable() {
+bool PlayableBagMultiplexer::IsMessageAvailable() const {
   return !next_message_queue_.empty();
 }
 
@@ -124,6 +124,11 @@ PlayableBagMultiplexer::GetNextMessage() {
   }
   return std::make_tuple(std::move(msg), current_bag.bag_id(),
                          !current_bag.IsMessageAvailable());
+}
+
+ros::Time PlayableBagMultiplexer::PeekMessageTime() const {
+  CHECK(IsMessageAvailable());
+  return next_message_queue_.top().message_timestamp;
 }
 
 }  // namespace cartographer_ros

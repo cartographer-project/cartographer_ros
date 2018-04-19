@@ -24,6 +24,8 @@ find_package(catkin REQUIRED COMPONENTS message_generation ${PACKAGE_DEPENDENCIE
 
 add_message_files(
   FILES
+    LandmarkEntry.msg
+    LandmarkList.msg
     StatusCode.msg
     StatusResponse.msg
     SubmapList.msg
@@ -49,4 +51,5 @@ generate_messages(
 catkin_package(
   CATKIN_DEPENDS
     ${PACKAGE_DEPENDENCIES}
+    message_runtime
 )

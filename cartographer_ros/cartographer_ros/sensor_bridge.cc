@@ -98,6 +98,12 @@ void SensorBridge::HandleNavSatFixMessage(
                                      msg->altitude)))});
 }
 
+void SensorBridge::HandleLandmarkMessage(
+    const std::string& sensor_id,
+    const cartographer_ros_msgs::LandmarkList::ConstPtr& msg) {
+  trajectory_builder_->AddSensorData(sensor_id, ToLandmarkData(*msg));
+}
+
 std::unique_ptr<carto::sensor::ImuData> SensorBridge::ToImuData(
     const sensor_msgs::Imu::ConstPtr& msg) {
   CHECK_NE(msg->linear_acceleration_covariance[0], -1)
@@ -175,6 +181,9 @@ void SensorBridge::HandleLaserScan(
     const std::string& sensor_id, const carto::common::Time time,
     const std::string& frame_id,
     const carto::sensor::PointCloudWithIntensities& points) {
+  if (points.points.empty()) {
+    return;
+  }
   CHECK_LE(points.points.back()[3], 0);
   // TODO(gaschler): Use per-point time instead of subdivisions.
   for (int i = 0; i != num_subdivisions_per_laser_scan_; ++i) {
@@ -192,7 +201,17 @@ void SensorBridge::HandleLaserScan(
     // send all other sensor data first.
     const carto::common::Time subdivision_time =
         time + carto::common::FromSeconds(time_to_subdivision_end);
-    for (auto& point : subdivision) {
+    auto it = sensor_to_previous_subdivision_time_.find(sensor_id);
+    if (it != sensor_to_previous_subdivision_time_.end() &&
+        it->second >= subdivision_time) {
+      LOG(WARNING) << "Ignored subdivision of a LaserScan message from sensor "
+                   << sensor_id << " because previous subdivision time "
+                   << it->second << " is not before current subdivision time "
+                   << subdivision_time;
+      continue;
+    }
+    sensor_to_previous_subdivision_time_[sensor_id] = subdivision_time;
+    for (Eigen::Vector4f& point : subdivision) {
       point[3] -= time_to_subdivision_end;
     }
     CHECK_EQ(subdivision.back()[3], 0);
