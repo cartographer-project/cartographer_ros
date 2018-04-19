@@ -35,7 +35,9 @@ std::unique_ptr<::cartographer::io::SubmapTextures> FetchSubmapTextures(
       srv.response.status.code != ::cartographer_ros_msgs::StatusCode::OK) {
     return nullptr;
   }
-  CHECK(!srv.response.textures.empty());
+  if (srv.response.textures.empty()) {
+    return nullptr;
+  }
   auto response =
       ::cartographer::common::make_unique<::cartographer::io::SubmapTextures>();
   response->version = srv.response.submap_version;

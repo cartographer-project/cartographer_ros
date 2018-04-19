@@ -1,4 +1,4 @@
-# Copyright 2016 The Cartographer Authors
+# Copyright 2018 The Cartographer Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,7 +26,9 @@ env:
   - ROS_RELEASE=kinetic DOCKER_CACHE_FILE=/home/travis/docker/kinetic-cache.tar.gz
   - ROS_RELEASE=lunar DOCKER_CACHE_FILE=/home/travis/docker/lunar-cache.tar.gz
 
-before_install: 
+before_install:
+  # $GITHUB_TOKEN must be a valid GitHub access token without access rights (https://github.com/settings/tokens).
+  # Either add your token to the 'env' section above or add it as an unencrypted variable in the Travis settings.
   - scripts/check_access_token.sh $GITHUB_TOKEN
   - scripts/load_docker_cache.sh
 
