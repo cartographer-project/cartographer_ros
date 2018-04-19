@@ -33,11 +33,22 @@ class AssetsWriter {
                const std::vector<std::string>& bag_filenames,
                const std::string& output_file_prefix);
 
+  // Registers a new PointsProcessor type uniquly identified by 'name' which
+  // will be created using 'factory'.
+  void RegisterPointsProcessor(
+      const std::string& name,
+      cartographer::io::PointsProcessorPipelineBuilder::FactoryFunction
+          factory);
+
   // Configures a points processing pipeline and pushes the points from the
   // bag through the pipeline.
   void Run(const std::string& configuration_directory,
            const std::string& configuration_basename,
            const std::string& urdf_filename, bool use_bag_transforms);
+
+  // Creates a FileWriterFactory which creates a FileWriter for storing assets.
+  static ::cartographer::io::FileWriterFactory CreateFileWriterFactory(
+      const std::string& file_path);
 
  private:
   std::vector<std::string> bag_filenames_;
