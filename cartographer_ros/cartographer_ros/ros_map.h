@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_ROS_ROS_MAP_H_
-#define CARTOGRAPHER_ROS_ROS_MAP_H_
+#ifndef CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_ROS_MAP_H
+#define CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_ROS_MAP_H
 
 #include <string>
 
@@ -38,4 +38,4 @@ void WriteYaml(const double resolution, const Eigen::Vector2d& origin,
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAPHER_ROS_ROS_MAP_H_
+#endif  // CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_ROS_MAP_H

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_ROS_NODE_H_
-#define CARTOGRAPHER_ROS_NODE_H_
+#ifndef CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_NODE_H
+#define CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_NODE_H
 
 #include <map>
 #include <memory>
@@ -212,4 +212,4 @@ class Node {
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAPHER_ROS_NODE_H_
+#endif  // CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_NODE_H

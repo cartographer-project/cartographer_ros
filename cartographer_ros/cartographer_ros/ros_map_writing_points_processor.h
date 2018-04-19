@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_ROS_ROS_MAP_WRITING_POINTS_PROCESSOR_H_
-#define CARTOGRAPHER_ROS_ROS_MAP_WRITING_POINTS_PROCESSOR_H_
+#ifndef CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_ROS_MAP_WRITING_POINTS_PROCESSOR_H
+#define CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_ROS_MAP_WRITING_POINTS_PROCESSOR_H
 
 #include "cartographer/common/lua_parameter_dictionary.h"
 #include "cartographer/io/file_writer.h"
@@ -62,4 +62,4 @@ class RosMapWritingPointsProcessor
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAPHER_ROS_ROS_MAP_WRITING_POINTS_PROCESSOR_H_
+#endif  // CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_ROS_MAP_WRITING_POINTS_PROCESSOR_H

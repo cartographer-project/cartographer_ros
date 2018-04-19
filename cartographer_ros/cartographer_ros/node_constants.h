@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_ROS_NODE_CONSTANTS_H_
-#define CARTOGRAPHER_ROS_NODE_CONSTANTS_H_
+#ifndef CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_NODE_CONSTANTS_H
+#define CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_NODE_CONSTANTS_H
 
 #include <string>
 #include <vector>
@@ -51,4 +51,4 @@ std::vector<std::string> ComputeRepeatedTopicNames(const std::string& topic,
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAPHER_ROS_NODE_CONSTANTS_H_
+#endif  // CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_NODE_CONSTANTS_H
