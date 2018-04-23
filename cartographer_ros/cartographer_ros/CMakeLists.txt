@@ -69,6 +69,11 @@ install(TARGETS cartographer_occupancy_grid_node
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
+google_binary(cartographer_rosbag_publisher
+  SRCS
+    rosbag_publisher_main.cc
+)
+
 google_binary(cartographer_rosbag_validate
   SRCS
     rosbag_validate_main.cc
