@@ -105,12 +105,12 @@ class DrawableSubmap : public QObject {
   ::rviz::Axes pose_axes_;
   ::rviz::MovableText submap_id_text_;
   std::chrono::milliseconds last_query_timestamp_ GUARDED_BY(mutex_);
-  bool query_in_progress_ GUARDED_BY(mutex_);
-  int metadata_version_ GUARDED_BY(mutex_);
+  bool query_in_progress_ GUARDED_BY(mutex_) = false;
+  int metadata_version_ GUARDED_BY(mutex_) = -1;
   std::future<void> rpc_request_future_;
   std::unique_ptr<::cartographer::io::SubmapTextures> submap_textures_
       GUARDED_BY(mutex_);
-  float current_alpha_;
+  float current_alpha_ = 0.f;
   std::unique_ptr<::rviz::BoolProperty> visibility_;
 };
 

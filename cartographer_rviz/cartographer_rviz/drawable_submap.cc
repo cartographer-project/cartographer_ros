@@ -60,10 +60,7 @@ DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
                           .arg(id.trajectory_id)
                           .arg(id.submap_index)
                           .toStdString()),
-      last_query_timestamp_(0),
-      query_in_progress_(false),
-      metadata_version_(-1),
-      current_alpha_(0.f) {
+      last_query_timestamp_(0) {
   for (int slice_index = 0; slice_index < kNumberOfSlicesPerSubmap;
        ++slice_index) {
     ogre_slices_.emplace_back(::cartographer::common::make_unique<OgreSlice>(
