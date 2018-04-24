@@ -39,7 +39,6 @@ constexpr int kMaxOnGoingRequestsPerTrajectory = 6;
 constexpr char kMaterialsDirectory[] = "/ogre_media/materials";
 constexpr char kGlsl120Directory[] = "/glsl120";
 constexpr char kScriptsDirectory[] = "/scripts";
-constexpr char kDefaultMapFrame[] = "map";
 constexpr char kDefaultTrackingFrame[] = "base_link";
 constexpr char kDefaultSubmapQueryServiceName[] = "/submap_query";
 
