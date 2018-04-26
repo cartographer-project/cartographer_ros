@@ -21,8 +21,8 @@
 #include "cartographer/io/file_writer.h"
 #include "cartographer/io/points_processor.h"
 #include "cartographer/mapping/2d/probability_grid.h"
-#include "cartographer/mapping/2d/proto/range_data_inserter_options_2d.pb.h"
-#include "cartographer/mapping/2d/range_data_inserter_2d.h"
+#include "cartographer/mapping/2d/probability_grid_range_data_inserter_2d.h"
+#include "cartographer/mapping/2d/proto/probability_grid_range_data_inserter_options_2d.pb.h"
 
 namespace cartographer_ros {
 
@@ -34,8 +34,9 @@ class RosMapWritingPointsProcessor
   constexpr static const char* kConfigurationFileActionName = "write_ros_map";
   RosMapWritingPointsProcessor(
       double resolution,
-      const ::cartographer::mapping::proto::RangeDataInserterOptions2D&
-          range_data_inserter_options,
+      const ::cartographer::mapping::proto::
+          ProbabilityGridRangeDataInserterOptions2D&
+              range_data_inserter_options,
       ::cartographer::io::FileWriterFactory file_writer_factory,
       const std::string& filestem, PointsProcessor* next);
   RosMapWritingPointsProcessor(const RosMapWritingPointsProcessor&) = delete;
@@ -56,7 +57,8 @@ class RosMapWritingPointsProcessor
   const std::string filestem_;
   PointsProcessor* const next_;
   ::cartographer::io::FileWriterFactory file_writer_factory_;
-  ::cartographer::mapping::RangeDataInserter2D range_data_inserter_;
+  ::cartographer::mapping::ProbabilityGridRangeDataInserter2D
+      range_data_inserter_;
   ::cartographer::mapping::ProbabilityGrid probability_grid_;
 };
 
