@@ -30,7 +30,7 @@ Pure localization
     roslaunch cartographer_ros offline_backpack_2d.launch bag_filenames:=${HOME}/Downloads/b2-2016-04-05-14-44-52.bag
     # Run pure localization:
     roslaunch cartographer_ros demo_backpack_2d_localization.launch \
-       load_state_filename:=${HOME}/Downloads/b2-2016-04-05-14-44-52.bag.pbstream \
+       map_filename:=${HOME}/Downloads/b2-2016-04-05-14-44-52.bag.pbstream \
        bag_filename:=${HOME}/Downloads/b2-2016-04-27-12-31-41.bag
 
     # Pure localization demo in 3D: We use 2 different 3D bags from the Deutsche
