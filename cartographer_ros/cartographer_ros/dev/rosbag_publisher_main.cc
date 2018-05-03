@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 
-#include <chrono>
-#include <thread>
-
 #include "cartographer/common/time.h"
 #include "cartographer_ros/ros_log_sink.h"
 #include "cartographer_ros/time_conversion.h"
@@ -25,7 +22,6 @@
 #include "ros/ros.h"
 #include "ros/time.h"
 #include "rosbag/bag.h"
-#include "rosbag/structures.h"
 #include "rosbag/view.h"
 #include "sensor_msgs/Imu.h"
 #include "sensor_msgs/LaserScan.h"
@@ -36,7 +32,6 @@
 DEFINE_string(bag_filename, "", "Bag to publish.");
 
 const int kQueueSize = 1;
-const ros::Duration kRunDuration(20);
 
 template <typename MessagePtrType>
 void PublishWithModifiedTimestamp(MessagePtrType message,
@@ -60,6 +55,16 @@ void PublishWithModifiedTimestamp<tf2_msgs::TFMessage::Ptr>(
 
 int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
+  google::SetUsageMessage(
+      "\n\n"
+      "This replays and publishes messages from a given bag file, modifying "
+      "their header timestamps to match current ROS time.\n\n"
+      "Messages are published in the same sequence and with the same delay "
+      "they were recorded."
+      "Contrary to rosbag play, it does not publish a clock, so time is"
+      "hopefully smoother and it should be possible to reproduce timing"
+      "issues.\n"
+      "It only plays message types related to Cartographer.\n");
   google::ParseCommandLineFlags(&argc, &argv, true);
   CHECK(!FLAGS_bag_filename.empty()) << "-bag_filename is missing.";
 
@@ -75,7 +80,8 @@ int main(int argc, char** argv) {
   bool use_sim_time;
   node_handle.getParam("/use_sim_time", use_sim_time);
   if (use_sim_time) {
-    LOG(ERROR) << "use_sim_time is not supported, may behave weird.";
+    LOG(ERROR) << "use_sim_time is true but not supported. Expect conflicting "
+                  "ros::Time and message header times or weird behavior.";
   }
   std::map<std::string, ros::Publisher> topic_to_publisher;
   for (const rosbag::ConnectionInfo* c : view.getConnections()) {
@@ -94,9 +100,6 @@ int main(int argc, char** argv) {
   ros::Duration bag_to_current = current_start - bag_start;
   for (const rosbag::MessageInstance& message : view) {
     ros::Duration after_bag_start = message.getTime() - bag_start;
-    if (after_bag_start > kRunDuration) {
-      break;
-    }
     if (!::ros::ok()) {
       break;
     }
@@ -133,7 +136,7 @@ int main(int argc, char** argv) {
     double simulation_delay = cartographer::common::ToSeconds(
         cartographer_ros::FromRos(current_time) -
         cartographer_ros::FromRos(planned_publish_time));
-    if (std::abs(simulation_delay) > 0.0001) {
+    if (std::abs(simulation_delay) > 0.001) {
       LOG(WARNING) << "Playback delayed by " << simulation_delay
                    << " s. planned_publish_time: " << planned_publish_time
                    << " current_time: " << current_time;
