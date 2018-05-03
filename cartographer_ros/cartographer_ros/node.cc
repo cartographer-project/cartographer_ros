@@ -221,9 +221,8 @@ void Node::PublishTrajectoryStates(const ::ros::WallTimerEvent& timer_event) {
       if (trajectory_state.trajectory_options.publish_frame_projected_to_2d) {
         return carto::transform::Embed3D(
             carto::transform::Project2D(extrapolator.ExtrapolatePose(now)));
-      } else {
-        return extrapolator.ExtrapolatePose(now);
       }
+      return extrapolator.ExtrapolatePose(now);
     }();
 
     const Rigid3d tracking_to_map =
