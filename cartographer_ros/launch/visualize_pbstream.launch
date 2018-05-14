@@ -21,9 +21,9 @@
       type="cartographer_offline_node" args="
           -configuration_directory $(find cartographer_ros)/configuration_files
           -configuration_basenames visualize_pbstream.lua
-          -keep_running true
+          -keep_running=true
           -load_state_filename $(arg pbstream_filename)
-          -load_frozen_state false"
+          -load_frozen_state=false"
       output="screen">
   </node>
 </launch>
