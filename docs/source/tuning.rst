@@ -215,7 +215,7 @@ As a next step, we strongly decrease ``global_sampling_ratio`` and ``constraint_
 to compensate for the large number of constraints.
 We then tune for lower latency as explained above until the system reliably works in real time.
 
-If you run in ``pure_localization``, ``submaps.resultion`` **should be matching** with the ``.pbstream`` you are running on.
+If you run in ``pure_localization``, ``submaps.resolution`` **should be matching** with the ``.pbstream`` you are running on.
 Using different resolutions is currently untested and may not work as expected.
 
 Odometry in Global Optimization
