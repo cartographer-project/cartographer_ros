@@ -19,7 +19,7 @@
 -->
 
 <launch>
-  <arg name="urdf_filename" default="$(find cartographer_ros)/urdf/backback_2d.urdf"/> 
+  <arg name="urdf_filename" default="$(find cartographer_ros)/urdf/backpack_2d.urdf"/>
 
   <node name="cartographer_assets_writer" pkg="cartographer_ros" required="true"
       type="cartographer_assets_writer" args="
