@@ -166,7 +166,7 @@ Global SLAM builds up a queue of background tasks.
 When global SLAM cannot keep up the queue, drift can accumulate indefinitely,
 so global SLAM should be tuned to work in real time.
 
-There are many options to tune the different components for speed, and we list them ordered from 
+There are many options to tune the different components for speed, and we list them ordered from
 the recommended, straightforward ones to the those that are more intrusive.
 It is recommended to only explore one option at a time, starting with the first.
 Configuration parameters are documented in the `Cartographer documentation`_.
@@ -214,6 +214,9 @@ With these settings, global SLAM will usually be too slow and cannot keep up.
 As a next step, we strongly decrease ``global_sampling_ratio`` and ``constraint_builder.sampling_ratio``
 to compensate for the large number of constraints.
 We then tune for lower latency as explained above until the system reliably works in real time.
+
+If you run in ``pure_localization``, ``submaps.resolution`` **should be matching** with the resolution of the submaps in the ``.pbstream`` you are running on.
+Using different resolutions is currently untested and may not work as expected.
 
 Odometry in Global Optimization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
