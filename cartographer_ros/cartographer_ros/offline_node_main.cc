@@ -33,8 +33,7 @@ int main(int argc, char** argv) {
       [](const ::cartographer::mapping::proto::MapBuilderOptions&
              map_builder_options) {
         return ::cartographer::common::make_unique<
-            ::cartographer::mapping::MapBuilder>(
-            map_builder_options, nullptr /* global_slam_result_callback */);
+            ::cartographer::mapping::MapBuilder>(map_builder_options);
       };
 
   cartographer_ros::RunOfflineNode(map_builder_factory);
