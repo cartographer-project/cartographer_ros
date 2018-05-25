@@ -46,9 +46,11 @@ class AssetsWriter {
            const std::string& configuration_basename,
            const std::string& urdf_filename, bool use_bag_transforms);
 
-  // Creates a FileWriterFactory which creates a FileWriter for storing assets.
-  static ::cartographer::io::FileWriterFactory CreateFileWriterFactory(
-      const std::string& file_path);
+  // Returns all trajectories of the pose graph.
+  const std::vector<::cartographer::mapping::proto::Trajectory>& trajectories()
+      const {
+    return all_trajectories_;
+  }
 
  private:
   std::vector<std::string> bag_filenames_;
@@ -57,6 +59,10 @@ class AssetsWriter {
   std::unique_ptr<::cartographer::io::PointsProcessorPipelineBuilder>
       point_pipeline_builder_;
 };
+
+// Creates a FileWriterFactory which creates a FileWriter for storing assets.
+::cartographer::io::FileWriterFactory CreateFileWriterFactory(
+    const std::string& file_path);
 
 }  // namespace cartographer_ros
 

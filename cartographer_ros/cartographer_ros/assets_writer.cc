@@ -66,8 +66,7 @@ std::unique_ptr<carto::io::PointsProcessorPipelineBuilder>
 CreatePipelineBuilder(
     const std::vector<carto::mapping::proto::Trajectory>& trajectories,
     const std::string file_prefix) {
-  const auto file_writer_factory =
-      AssetsWriter::CreateFileWriterFactory(file_prefix);
+  const auto file_writer_factory = CreateFileWriterFactory(file_prefix);
   auto builder =
       carto::common::make_unique<carto::io::PointsProcessorPipelineBuilder>();
   carto::io::RegisterBuiltInPointsProcessors(trajectories, file_writer_factory,
@@ -267,7 +266,7 @@ void AssetsWriter::Run(const std::string& configuration_directory,
            carto::io::PointsProcessor::FlushResult::kRestartStream);
 }
 
-::cartographer::io::FileWriterFactory AssetsWriter::CreateFileWriterFactory(
+::cartographer::io::FileWriterFactory CreateFileWriterFactory(
     const std::string& file_path) {
   const auto file_writer_factory = [file_path](const std::string& filename) {
     return carto::common::make_unique<carto::io::StreamFileWriter>(file_path +
