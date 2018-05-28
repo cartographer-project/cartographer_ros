@@ -40,7 +40,7 @@ DEFINE_string(
     save_state_filename, "",
     "If non-empty, serialize state and write it to disk before shutting down.");
 DEFINE_double(tf_buffer_cache_time_seconds, 1e2,
-              "Determines the buffer length for caching TF.")
+              "Determines the buffer length for caching TF.");
 
     namespace cartographer_ros {
   namespace {
