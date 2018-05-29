@@ -306,7 +306,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
 
     marker.color.a = 1.0;
     for (const auto& node_id_data : node_poses.trajectory(trajectory_id)) {
-      if (!node_id_data.data.has_constant_data) {
+      if (!node_id_data.data.constant_pose_data.has_value()) {
         PushAndResetLineMarker(&marker, &trajectory_node_list.markers);
         continue;
       }
