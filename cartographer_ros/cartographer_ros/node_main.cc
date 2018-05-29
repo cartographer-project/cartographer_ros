@@ -39,15 +39,13 @@ DEFINE_bool(
 DEFINE_string(
     save_state_filename, "",
     "If non-empty, serialize state and write it to disk before shutting down.");
-DEFINE_double(tf_buffer_cache_time_seconds, 1e2,
-              "Determines the buffer length for caching TF.");
 
 namespace cartographer_ros {
 namespace {
 
 void Run() {
-  tf2_ros::Buffer tf_buffer{
-      ::ros::Duration(FLAGS_tf_buffer_cache_time_seconds)};
+  constexpr double kTfBufferCacheTimeInSeconds = 10.;
+  tf2_ros::Buffer tf_buffer{::ros::Duration(kTfBufferCacheTimeInSeconds)};
   tf2_ros::TransformListener tf(tf_buffer);
   NodeOptions node_options;
   TrajectoryOptions trajectory_options;
