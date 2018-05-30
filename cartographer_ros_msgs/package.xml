@@ -21,12 +21,16 @@
   <description>
     ROS messages for the cartographer_ros package.
   </description>
-  <maintainer email="google-cartographer@googlegroups.com">
+  <maintainer email="cartographer-owners@googlegroups.com">
     The Cartographer Authors
   </maintainer>
   <license>Apache 2.0</license>
 
   <url>https://github.com/googlecartographer/cartographer_ros</url>
+
+  <author email="google-cartographer@googlegroups.com">
+    The Cartographer Authors
+  </author>
 
   <buildtool_depend>catkin</buildtool_depend>
 
