@@ -17,8 +17,8 @@
 #include <map>
 #include <string>
 
-#include "cartographer/io/mapping_state_deserializer.h"
 #include "cartographer/io/proto_stream.h"
+#include "cartographer/io/proto_stream_deserializer.h"
 #include "cartographer/io/submap_painter.h"
 #include "cartographer/mapping/2d/probability_grid.h"
 #include "cartographer/mapping/2d/submap_2d.h"
@@ -43,7 +43,7 @@ namespace {
 void Run(const std::string& pbstream_filename, const std::string& map_filestem,
          const double resolution) {
   ::cartographer::io::ProtoStreamReader reader(pbstream_filename);
-  ::cartographer::io::MappingStateDeserializer deserializer(&reader);
+  ::cartographer::io::ProtoStreamDeserializer deserializer(&reader);
 
   const auto& pose_graph = deserializer.pose_graph();
 
@@ -51,7 +51,7 @@ void Run(const std::string& pbstream_filename, const std::string& map_filestem,
   std::map<::cartographer::mapping::SubmapId, ::cartographer::io::SubmapSlice>
       submap_slices;
   ::cartographer::mapping::proto::SerializedData proto;
-  while (deserializer.GetNextSerializedData(&proto)) {
+  while (deserializer.ReadNextSerializedData(&proto)) {
     if (proto.has_submap()) {
       const auto& submap = proto.submap();
       const ::cartographer::mapping::SubmapId id{
