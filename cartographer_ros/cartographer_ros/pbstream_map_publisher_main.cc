@@ -20,6 +20,7 @@
 #include <string>
 
 #include "cartographer/io/proto_stream.h"
+#include "cartographer/io/proto_stream_deserializer.h"
 #include "cartographer/io/submap_painter.h"
 #include "cartographer/mapping/2d/probability_grid.h"
 #include "cartographer/mapping/2d/submap_2d.h"
@@ -50,31 +51,23 @@ namespace {
 void Run(const std::string& pbstream_filename, const std::string& map_topic,
          const std::string& map_frame_id, const double resolution) {
   ::cartographer::io::ProtoStreamReader reader(pbstream_filename);
-
-  ::cartographer::mapping::proto::PoseGraph pose_graph;
-  CHECK(reader.ReadProto(&pose_graph));
-  ::cartographer::mapping::proto::AllTrajectoryBuilderOptions
-      all_trajectory_builder_options;
-  CHECK(reader.ReadProto(&all_trajectory_builder_options));
+  ::cartographer::io::ProtoStreamDeserializer deserializer(&reader);
 
   LOG(INFO) << "Loading submap slices from serialized data.";
   std::map<::cartographer::mapping::SubmapId, ::cartographer::io::SubmapSlice>
       submap_slices;
-  for (;;) {
-    ::cartographer::mapping::proto::SerializedData proto;
-    if (!reader.ReadProto(&proto)) {
-      break;
-    }
+  ::cartographer::mapping::proto::SerializedData proto;
+  while (deserializer.ReadNextSerializedData(&proto)) {
     if (proto.has_submap()) {
       const auto& submap = proto.submap();
       const ::cartographer::mapping::SubmapId id{
           submap.submap_id().trajectory_id(),
           submap.submap_id().submap_index()};
       const ::cartographer::transform::Rigid3d global_submap_pose =
-          ::cartographer::transform::ToRigid3(
-              pose_graph.trajectory(id.trajectory_id)
-                  .submap(id.submap_index)
-                  .pose());
+          ::cartographer::transform::ToRigid3(deserializer.pose_graph()
+                                                  .trajectory(id.trajectory_id)
+                                                  .submap(id.submap_index)
+                                                  .pose());
       FillSubmapSlice(global_submap_pose, submap, &submap_slices[id]);
     }
   }

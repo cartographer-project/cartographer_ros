@@ -27,6 +27,7 @@
 #include "cartographer/io/points_processor.h"
 #include "cartographer/io/points_processor_pipeline_builder.h"
 #include "cartographer/io/proto_stream.h"
+#include "cartographer/io/proto_stream_deserializer.h"
 #include "cartographer/mapping/proto/pose_graph.pb.h"
 #include "cartographer/mapping/proto/trajectory_builder_options.pb.h"
 #include "cartographer/sensor/point_cloud.h"
@@ -53,14 +54,6 @@ namespace {
 
 constexpr char kTfStaticTopic[] = "/tf_static";
 namespace carto = ::cartographer;
-
-carto::mapping::proto::PoseGraph LoadPoseGraph(
-    const std::string& pose_graph_filename) {
-  carto::mapping::proto::PoseGraph pose_graph_proto;
-  carto::io::ProtoStreamReader reader(pose_graph_filename);
-  CHECK(reader.ReadProto(&pose_graph_proto));
-  return pose_graph_proto;
-}
 
 std::unique_ptr<carto::io::PointsProcessorPipelineBuilder>
 CreatePipelineBuilder(
@@ -147,7 +140,8 @@ AssetsWriter::AssetsWriter(const std::string& pose_graph_filename,
                            const std::vector<std::string>& bag_filenames,
                            const std::string& output_file_prefix)
     : bag_filenames_(bag_filenames),
-      pose_graph_(LoadPoseGraph(pose_graph_filename)) {
+      pose_graph_(
+          carto::io::DeserializePoseGraphFromFile(pose_graph_filename)) {
   CHECK_EQ(pose_graph_.trajectory_size(), bag_filenames_.size())
       << "Pose graphs contains " << pose_graph_.trajectory_size()
       << " trajectories while " << bag_filenames_.size()
