@@ -24,6 +24,7 @@
 #include "cartographer/common/make_unique.h"
 #include "cartographer/common/math.h"
 #include "cartographer/io/file_writer.h"
+#include "cartographer/io/mapping_state_deserializer.h"
 #include "cartographer/io/points_processor.h"
 #include "cartographer/io/points_processor_pipeline_builder.h"
 #include "cartographer/io/proto_stream.h"
@@ -56,10 +57,9 @@ namespace carto = ::cartographer;
 
 carto::mapping::proto::PoseGraph LoadPoseGraph(
     const std::string& pose_graph_filename) {
-  carto::mapping::proto::PoseGraph pose_graph_proto;
   carto::io::ProtoStreamReader reader(pose_graph_filename);
-  CHECK(reader.ReadProto(&pose_graph_proto));
-  return pose_graph_proto;
+  carto::io::MappingStateDeserializer deserializer(&reader);
+  return deserializer.pose_graph();
 }
 
 std::unique_ptr<carto::io::PointsProcessorPipelineBuilder>
