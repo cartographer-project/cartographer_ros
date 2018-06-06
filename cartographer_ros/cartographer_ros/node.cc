@@ -126,9 +126,9 @@ Node::Node(
   timers_.push_back(node_handle_.createTimer(
       ::ros::Duration(node_options_.trajectory_publish_period_sec),
       &Node::PublishLandmarkPosesList, this));
-  timers_.push_back(node_handle_.createTimer(
-      ::ros::Duration(kConstraintPublishPeriodSec),
-      &Node::PublishConstraintList, this));
+  timers_.push_back(
+      node_handle_.createTimer(::ros::Duration(kConstraintPublishPeriodSec),
+                               &Node::PublishConstraintList, this));
 }
 
 Node::~Node() { FinishAllTrajectories(); }
@@ -278,8 +278,7 @@ void Node::PublishLandmarkPosesList(
   }
 }
 
-void Node::PublishConstraintList(
-    const ::ros::TimerEvent& unused_timer_event) {
+void Node::PublishConstraintList(const ::ros::TimerEvent& unused_timer_event) {
   if (constraint_list_publisher_.getNumSubscribers() > 0) {
     carto::common::MutexLocker lock(&mutex_);
     constraint_list_publisher_.publish(map_builder_bridge_.GetConstraintList());

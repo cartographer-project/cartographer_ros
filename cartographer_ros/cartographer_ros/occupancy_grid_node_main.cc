@@ -91,9 +91,8 @@ Node::Node(const double resolution, const double publish_period_sec)
           node_handle_.advertise<::nav_msgs::OccupancyGrid>(
               kOccupancyGridTopic, kLatestOnlyPublisherQueueSize,
               true /* latched */)),
-      occupancy_grid_publisher_timer_(
-          node_handle_.createTimer(::ros::Duration(publish_period_sec),
-                                   &Node::DrawAndPublish, this)) {}
+      occupancy_grid_publisher_timer_(node_handle_.createTimer(
+          ::ros::Duration(publish_period_sec), &Node::DrawAndPublish, this)) {}
 
 void Node::HandleSubmapList(
     const cartographer_ros_msgs::SubmapList::ConstPtr& msg) {
