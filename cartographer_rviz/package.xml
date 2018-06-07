@@ -38,9 +38,9 @@
 
   <build_depend>g++-static</build_depend>
 
-  <depend>cartographer</depend>
-  <depend>cartographer_ros</depend>
-  <depend>cartographer_ros_msgs</depend>
+  <depend version_gte="1.0.0">cartographer</depend>
+  <depend version_gte="1.0.0">cartographer_ros</depend>
+  <depend version_gte="1.0.0">cartographer_ros_msgs</depend>
   <depend>eigen_conversions</depend>
   <depend>libqt5-core</depend>
   <depend>libqt5-gui</depend>
