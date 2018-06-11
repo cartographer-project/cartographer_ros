@@ -218,7 +218,9 @@ void SensorBridge::HandleLaserScan(
 void SensorBridge::HandleRangefinder(
     const std::string& sensor_id, const carto::common::Time time,
     const std::string& frame_id, const carto::sensor::TimedPointCloud& ranges) {
-  CHECK_LE(ranges.back()[3], 0);
+  if (!ranges.empty()) {
+    CHECK_LE(ranges.back()[3], 0);
+  }
   const auto sensor_to_tracking =
       tf_bridge_.LookupToTracking(time, CheckNoLeadingSlash(frame_id));
   if (sensor_to_tracking != nullptr) {
