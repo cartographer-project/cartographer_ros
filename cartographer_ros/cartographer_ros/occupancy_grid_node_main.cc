@@ -58,7 +58,7 @@ class Node {
 
  private:
   void HandleSubmapList(const cartographer_ros_msgs::SubmapList::ConstPtr& msg);
-  void DrawAndPublish(const ::ros::WallTimerEvent& timer_event);
+  void DrawAndPublish(const ::ros::TimerEvent& timer_event);
   void PublishOccupancyGrid(const std::string& frame_id, const ros::Time& time,
                             const Eigen::Array2f& origin,
                             cairo_surface_t* surface);
@@ -71,7 +71,7 @@ class Node {
   ::ros::Subscriber submap_list_subscriber_ GUARDED_BY(mutex_);
   ::ros::Publisher occupancy_grid_publisher_ GUARDED_BY(mutex_);
   std::map<SubmapId, SubmapSlice> submap_slices_ GUARDED_BY(mutex_);
-  ::ros::WallTimer occupancy_grid_publisher_timer_;
+  ::ros::Timer occupancy_grid_publisher_timer_;
   std::string last_frame_id_;
   ros::Time last_timestamp_;
 };
@@ -91,9 +91,8 @@ Node::Node(const double resolution, const double publish_period_sec)
           node_handle_.advertise<::nav_msgs::OccupancyGrid>(
               kOccupancyGridTopic, kLatestOnlyPublisherQueueSize,
               true /* latched */)),
-      occupancy_grid_publisher_timer_(
-          node_handle_.createWallTimer(::ros::WallDuration(publish_period_sec),
-                                       &Node::DrawAndPublish, this)) {}
+      occupancy_grid_publisher_timer_(node_handle_.createTimer(
+          ::ros::Duration(publish_period_sec), &Node::DrawAndPublish, this)) {}
 
 void Node::HandleSubmapList(
     const cartographer_ros_msgs::SubmapList::ConstPtr& msg) {
@@ -153,7 +152,7 @@ void Node::HandleSubmapList(
   last_frame_id_ = msg->header.frame_id;
 }
 
-void Node::DrawAndPublish(const ::ros::WallTimerEvent& unused_timer_event) {
+void Node::DrawAndPublish(const ::ros::TimerEvent& unused_timer_event) {
   if (submap_slices_.empty() || last_frame_id_.empty()) {
     return;
   }
