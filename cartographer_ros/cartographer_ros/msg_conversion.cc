@@ -263,6 +263,7 @@ ToPointCloudWithIntensities(const sensor_msgs::PointCloud2& msg) {
     timestamp += cartographer::common::FromSeconds(duration);
     for (Eigen::Vector4f& point : point_cloud.points) {
       point[3] -= duration;
+      CHECK_LE(point[3], 0) << "Encountered a point with a larger stamp than the last point in the cloud.";
     }
   }
   return std::make_tuple(point_cloud, timestamp);
