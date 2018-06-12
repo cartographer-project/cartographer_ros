@@ -224,7 +224,7 @@ ToPointCloudWithIntensities(const sensor_msgs::PointCloud2& msg) {
   // We check for intensity field here to avoid run-time warnings if we pass in
   // a PointCloud2 without intensity.
   if (PointCloud2HasField(msg, "intensity")) {
-    if(PointCloud2HasField(msg, "time")) {
+    if (PointCloud2HasField(msg, "time")) {
       pcl::PointCloud<PointXYZIT> pcl_point_cloud;
       pcl::fromROSMsg(msg, pcl_point_cloud);
       for (const auto& point : pcl_point_cloud) {
@@ -234,7 +234,7 @@ ToPointCloudWithIntensities(const sensor_msgs::PointCloud2& msg) {
     } else {
       pcl::PointCloud<pcl::PointXYZI> pcl_point_cloud;
       pcl::fromROSMsg(msg, pcl_point_cloud);
-      for (const auto &point : pcl_point_cloud) {
+      for (const auto& point : pcl_point_cloud) {
         point_cloud.points.emplace_back(point.x, point.y, point.z, 0.f);
         point_cloud.intensities.push_back(point.intensity);
       }
@@ -244,14 +244,14 @@ ToPointCloudWithIntensities(const sensor_msgs::PointCloud2& msg) {
     if (PointCloud2HasField(msg, "time")) {
       pcl::PointCloud<PointXYZT> pcl_point_cloud;
       pcl::fromROSMsg(msg, pcl_point_cloud);
-      for (const auto &point : pcl_point_cloud) {
+      for (const auto& point : pcl_point_cloud) {
         point_cloud.points.emplace_back(point.x, point.y, point.z, point.time);
         point_cloud.intensities.push_back(1.0);
       }
     } else {
       pcl::PointCloud<pcl::PointXYZ> pcl_point_cloud;
       pcl::fromROSMsg(msg, pcl_point_cloud);
-      for (const auto &point : pcl_point_cloud) {
+      for (const auto& point : pcl_point_cloud) {
         point_cloud.points.emplace_back(point.x, point.y, point.z, 0.f);
         point_cloud.intensities.push_back(1.0);
       }
@@ -263,7 +263,8 @@ ToPointCloudWithIntensities(const sensor_msgs::PointCloud2& msg) {
     timestamp += cartographer::common::FromSeconds(duration);
     for (Eigen::Vector4f& point : point_cloud.points) {
       point[3] -= duration;
-      CHECK_LE(point[3], 0) << "Encountered a point with a larger stamp than the last point in the cloud.";
+      CHECK_LE(point[3], 0) << "Encountered a point with a larger stamp than "
+                               "the last point in the cloud.";
     }
   }
   return std::make_tuple(point_cloud, timestamp);
@@ -273,7 +274,7 @@ std::tuple<::cartographer::sensor::TimedPointCloud,
            ::cartographer::common::Time>
 ToTimedPointCloud(const sensor_msgs::PointCloud2& msg) {
   cartographer::sensor::TimedPointCloud point_cloud;
-  if(PointCloud2HasField(msg, "time")) {
+  if (PointCloud2HasField(msg, "time")) {
     pcl::PointCloud<PointXYZT> pcl_point_cloud;
     pcl::fromROSMsg(msg, pcl_point_cloud);
     for (const auto& point : pcl_point_cloud) {
@@ -282,7 +283,7 @@ ToTimedPointCloud(const sensor_msgs::PointCloud2& msg) {
   } else {
     pcl::PointCloud<pcl::PointXYZ> pcl_point_cloud;
     pcl::fromROSMsg(msg, pcl_point_cloud);
-    for (const auto &point : pcl_point_cloud) {
+    for (const auto& point : pcl_point_cloud) {
       point_cloud.emplace_back(point.x, point.y, point.z, 0.f);
     }
   }
@@ -292,7 +293,8 @@ ToTimedPointCloud(const sensor_msgs::PointCloud2& msg) {
     timestamp += cartographer::common::FromSeconds(duration);
     for (Eigen::Vector4f& point : point_cloud) {
       point[3] -= duration;
-      CHECK_LE(point[3], 0) << "Encountered a point with a larger stamp than the last point in the cloud.";
+      CHECK_LE(point[3], 0) << "Encountered a point with a larger stamp than "
+                               "the last point in the cloud.";
     }
   }
   return std::make_tuple(point_cloud, timestamp);
