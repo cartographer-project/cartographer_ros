@@ -58,22 +58,15 @@ struct PointXYZIT {
   float unused_padding[2];
 };
 
-} // namespace
+}  // namespace
 
-POINT_CLOUD_REGISTER_POINT_STRUCT (PointXYZT,
-                                   (float, x, x)
-                                   (float, y, y)
-                                   (float, z, z)
-                                   (float, time, time)
-)
+POINT_CLOUD_REGISTER_POINT_STRUCT(
+    PointXYZT, (float, x, x)(float, y, y)(float, z, z)(float, time, time))
 
-POINT_CLOUD_REGISTER_POINT_STRUCT (PointXYZIT,
-                                   (float, x, x)
-                                   (float, y, y)
-                                   (float, z, z)
-                                   (float, intensity, intensity)
-                                   (float, time, time)
-)
+POINT_CLOUD_REGISTER_POINT_STRUCT(
+    PointXYZIT,
+    (float, x, x)(float, y, y)(float, z, z)(float, intensity,
+                                            intensity)(float, time, time))
 
 namespace cartographer_ros {
 namespace {
