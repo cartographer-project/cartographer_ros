@@ -263,36 +263,6 @@ ToPointCloudWithIntensities(const sensor_msgs::PointCloud2& msg) {
   return std::make_tuple(point_cloud, timestamp);
 }
 
-std::tuple<::cartographer::sensor::TimedPointCloud,
-           ::cartographer::common::Time>
-ToTimedPointCloud(const sensor_msgs::PointCloud2& msg) {
-  cartographer::sensor::TimedPointCloud point_cloud;
-  if (PointCloud2HasField(msg, "time")) {
-    pcl::PointCloud<PointXYZT> pcl_point_cloud;
-    pcl::fromROSMsg(msg, pcl_point_cloud);
-    for (const auto& point : pcl_point_cloud) {
-      point_cloud.emplace_back(point.x, point.y, point.z, point.time);
-    }
-  } else {
-    pcl::PointCloud<pcl::PointXYZ> pcl_point_cloud;
-    pcl::fromROSMsg(msg, pcl_point_cloud);
-    for (const auto& point : pcl_point_cloud) {
-      point_cloud.emplace_back(point.x, point.y, point.z, 0.f);
-    }
-  }
-  ::cartographer::common::Time timestamp = FromRos(msg.header.stamp);
-  if (!point_cloud.empty()) {
-    const double duration = point_cloud.back()[3];
-    timestamp += cartographer::common::FromSeconds(duration);
-    for (Eigen::Vector4f& point : point_cloud) {
-      point[3] -= duration;
-      CHECK_LE(point[3], 0) << "Encountered a point with a larger stamp than "
-                               "the last point in the cloud.";
-    }
-  }
-  return std::make_tuple(point_cloud, timestamp);
-}
-
 LandmarkData ToLandmarkData(const LandmarkList& landmark_list) {
   LandmarkData landmark_data;
   landmark_data.time = FromRos(landmark_list.header.stamp);

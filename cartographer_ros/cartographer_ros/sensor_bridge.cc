@@ -165,10 +165,10 @@ void SensorBridge::HandleMultiEchoLaserScanMessage(
 void SensorBridge::HandlePointCloud2Message(
     const std::string& sensor_id,
     const sensor_msgs::PointCloud2::ConstPtr& msg) {
-  carto::sensor::TimedPointCloud point_cloud;
+  carto::sensor::PointCloudWithIntensities point_cloud;
   carto::common::Time time;
-  std::tie(point_cloud, time) = ToTimedPointCloud(*msg);
-  HandleRangefinder(sensor_id, time, msg->header.frame_id, point_cloud);
+  std::tie(point_cloud, time) = ToPointCloudWithIntensities(*msg);
+  HandleRangefinder(sensor_id, time, msg->header.frame_id, point_cloud.points);
 }
 
 const TfBridge& SensorBridge::tf_bridge() const { return tf_bridge_; }
