@@ -44,6 +44,8 @@
 
 namespace {
 
+// Sizes of PCL point types have to be 4n floats for alignment, as described in
+// http://pointclouds.org/documentation/tutorials/adding_custom_ptype.php
 struct PointXYZT {
   float x;
   float y;
@@ -220,6 +222,8 @@ ToPointCloudWithIntensities(const sensor_msgs::PointCloud2& msg) {
     if (PointCloud2HasField(msg, "time")) {
       pcl::PointCloud<PointXYZIT> pcl_point_cloud;
       pcl::fromROSMsg(msg, pcl_point_cloud);
+      point_cloud.points.reserve(pcl_point_cloud.size());
+      point_cloud.intensities.reserve(pcl_point_cloud.size());
       for (const auto& point : pcl_point_cloud) {
         point_cloud.points.emplace_back(point.x, point.y, point.z, point.time);
         point_cloud.intensities.push_back(point.intensity);
@@ -227,26 +231,32 @@ ToPointCloudWithIntensities(const sensor_msgs::PointCloud2& msg) {
     } else {
       pcl::PointCloud<pcl::PointXYZI> pcl_point_cloud;
       pcl::fromROSMsg(msg, pcl_point_cloud);
+      point_cloud.points.reserve(pcl_point_cloud.size());
+      point_cloud.intensities.reserve(pcl_point_cloud.size());
       for (const auto& point : pcl_point_cloud) {
         point_cloud.points.emplace_back(point.x, point.y, point.z, 0.f);
         point_cloud.intensities.push_back(point.intensity);
       }
     }
   } else {
-    // If we don't have an intensity field, just copy XYZ and fill in 1.0.
+    // If we don't have an intensity field, just copy XYZ and fill in 1.0f.
     if (PointCloud2HasField(msg, "time")) {
       pcl::PointCloud<PointXYZT> pcl_point_cloud;
       pcl::fromROSMsg(msg, pcl_point_cloud);
+      point_cloud.points.reserve(pcl_point_cloud.size());
+      point_cloud.intensities.reserve(pcl_point_cloud.size());
       for (const auto& point : pcl_point_cloud) {
         point_cloud.points.emplace_back(point.x, point.y, point.z, point.time);
-        point_cloud.intensities.push_back(1.0);
+        point_cloud.intensities.push_back(1.0f);
       }
     } else {
       pcl::PointCloud<pcl::PointXYZ> pcl_point_cloud;
       pcl::fromROSMsg(msg, pcl_point_cloud);
+      point_cloud.points.reserve(pcl_point_cloud.size());
+      point_cloud.intensities.reserve(pcl_point_cloud.size());
       for (const auto& point : pcl_point_cloud) {
         point_cloud.points.emplace_back(point.x, point.y, point.z, 0.f);
-        point_cloud.intensities.push_back(1.0);
+        point_cloud.intensities.push_back(1.0f);
       }
     }
   }
