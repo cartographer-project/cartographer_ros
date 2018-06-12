@@ -32,12 +32,43 @@
 #include "geometry_msgs/Vector3.h"
 #include "glog/logging.h"
 #include "nav_msgs/OccupancyGrid.h"
+#include "pcl/point_cloud.h"
+#include "pcl/point_types.h"
+#include "pcl_conversions/pcl_conversions.h"
 #include "ros/ros.h"
 #include "ros/serialization.h"
 #include "sensor_msgs/Imu.h"
 #include "sensor_msgs/LaserScan.h"
 #include "sensor_msgs/MultiEchoLaserScan.h"
 #include "sensor_msgs/PointCloud2.h"
+
+namespace {
+
+// Sizes of PCL point types have to be 4n floats for alignment, as described in
+// http://pointclouds.org/documentation/tutorials/adding_custom_ptype.php
+struct PointXYZT {
+  float x;
+  float y;
+  float z;
+  float time;
+};
+
+struct PointXYZIT {
+  PCL_ADD_POINT4D;
+  float intensity;
+  float time;
+  float unused_padding[2];
+};
+
+}  // namespace
+
+POINT_CLOUD_REGISTER_POINT_STRUCT(
+    PointXYZT, (float, x, x)(float, y, y)(float, z, z)(float, time, time))
+
+POINT_CLOUD_REGISTER_POINT_STRUCT(
+    PointXYZIT,
+    (float, x, x)(float, y, y)(float, z, z)(float, intensity,
+                                            intensity)(float, time, time))
 
 namespace cartographer_ros {
 namespace {
@@ -183,29 +214,63 @@ ToPointCloudWithIntensities(const sensor_msgs::MultiEchoLaserScan& msg) {
 
 std::tuple<::cartographer::sensor::PointCloudWithIntensities,
            ::cartographer::common::Time>
-ToPointCloudWithIntensities(const sensor_msgs::PointCloud2& message) {
+ToPointCloudWithIntensities(const sensor_msgs::PointCloud2& msg) {
   PointCloudWithIntensities point_cloud;
   // We check for intensity field here to avoid run-time warnings if we pass in
   // a PointCloud2 without intensity.
-  if (PointCloud2HasField(message, "intensity")) {
-    pcl::PointCloud<pcl::PointXYZI> pcl_point_cloud;
-    pcl::fromROSMsg(message, pcl_point_cloud);
-    for (const auto& point : pcl_point_cloud) {
-      point_cloud.points.emplace_back(point.x, point.y, point.z, 0.f);
-      point_cloud.intensities.push_back(point.intensity);
+  if (PointCloud2HasField(msg, "intensity")) {
+    if (PointCloud2HasField(msg, "time")) {
+      pcl::PointCloud<PointXYZIT> pcl_point_cloud;
+      pcl::fromROSMsg(msg, pcl_point_cloud);
+      point_cloud.points.reserve(pcl_point_cloud.size());
+      point_cloud.intensities.reserve(pcl_point_cloud.size());
+      for (const auto& point : pcl_point_cloud) {
+        point_cloud.points.emplace_back(point.x, point.y, point.z, point.time);
+        point_cloud.intensities.push_back(point.intensity);
+      }
+    } else {
+      pcl::PointCloud<pcl::PointXYZI> pcl_point_cloud;
+      pcl::fromROSMsg(msg, pcl_point_cloud);
+      point_cloud.points.reserve(pcl_point_cloud.size());
+      point_cloud.intensities.reserve(pcl_point_cloud.size());
+      for (const auto& point : pcl_point_cloud) {
+        point_cloud.points.emplace_back(point.x, point.y, point.z, 0.f);
+        point_cloud.intensities.push_back(point.intensity);
+      }
     }
   } else {
-    pcl::PointCloud<pcl::PointXYZ> pcl_point_cloud;
-    pcl::fromROSMsg(message, pcl_point_cloud);
-
-    // If we don't have an intensity field, just copy XYZ and fill in
-    // 1.0.
-    for (const auto& point : pcl_point_cloud) {
-      point_cloud.points.emplace_back(point.x, point.y, point.z, 0.f);
-      point_cloud.intensities.push_back(1.0);
+    // If we don't have an intensity field, just copy XYZ and fill in 1.0f.
+    if (PointCloud2HasField(msg, "time")) {
+      pcl::PointCloud<PointXYZT> pcl_point_cloud;
+      pcl::fromROSMsg(msg, pcl_point_cloud);
+      point_cloud.points.reserve(pcl_point_cloud.size());
+      point_cloud.intensities.reserve(pcl_point_cloud.size());
+      for (const auto& point : pcl_point_cloud) {
+        point_cloud.points.emplace_back(point.x, point.y, point.z, point.time);
+        point_cloud.intensities.push_back(1.0f);
+      }
+    } else {
+      pcl::PointCloud<pcl::PointXYZ> pcl_point_cloud;
+      pcl::fromROSMsg(msg, pcl_point_cloud);
+      point_cloud.points.reserve(pcl_point_cloud.size());
+      point_cloud.intensities.reserve(pcl_point_cloud.size());
+      for (const auto& point : pcl_point_cloud) {
+        point_cloud.points.emplace_back(point.x, point.y, point.z, 0.f);
+        point_cloud.intensities.push_back(1.0f);
+      }
     }
   }
-  return std::make_tuple(point_cloud, FromRos(message.header.stamp));
+  ::cartographer::common::Time timestamp = FromRos(msg.header.stamp);
+  if (!point_cloud.points.empty()) {
+    const double duration = point_cloud.points.back()[3];
+    timestamp += cartographer::common::FromSeconds(duration);
+    for (Eigen::Vector4f& point : point_cloud.points) {
+      point[3] -= duration;
+      CHECK_LE(point[3], 0) << "Encountered a point with a larger stamp than "
+                               "the last point in the cloud.";
+    }
+  }
+  return std::make_tuple(point_cloud, timestamp);
 }
 
 LandmarkData ToLandmarkData(const LandmarkList& landmark_list) {

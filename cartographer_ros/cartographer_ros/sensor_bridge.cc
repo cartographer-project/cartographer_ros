@@ -165,14 +165,10 @@ void SensorBridge::HandleMultiEchoLaserScanMessage(
 void SensorBridge::HandlePointCloud2Message(
     const std::string& sensor_id,
     const sensor_msgs::PointCloud2::ConstPtr& msg) {
-  pcl::PointCloud<pcl::PointXYZ> pcl_point_cloud;
-  pcl::fromROSMsg(*msg, pcl_point_cloud);
-  carto::sensor::TimedPointCloud point_cloud;
-  for (const auto& point : pcl_point_cloud) {
-    point_cloud.emplace_back(point.x, point.y, point.z, 0.f);
-  }
-  HandleRangefinder(sensor_id, FromRos(msg->header.stamp), msg->header.frame_id,
-                    point_cloud);
+  carto::sensor::PointCloudWithIntensities point_cloud;
+  carto::common::Time time;
+  std::tie(point_cloud, time) = ToPointCloudWithIntensities(*msg);
+  HandleRangefinder(sensor_id, time, msg->header.frame_id, point_cloud.points);
 }
 
 const TfBridge& SensorBridge::tf_bridge() const { return tf_bridge_; }
@@ -222,6 +218,9 @@ void SensorBridge::HandleLaserScan(
 void SensorBridge::HandleRangefinder(
     const std::string& sensor_id, const carto::common::Time time,
     const std::string& frame_id, const carto::sensor::TimedPointCloud& ranges) {
+  if (!ranges.empty()) {
+    CHECK_LE(ranges.back()[3], 0);
+  }
   const auto sensor_to_tracking =
       tf_bridge_.LookupToTracking(time, CheckNoLeadingSlash(frame_id));
   if (sensor_to_tracking != nullptr) {

@@ -17,7 +17,6 @@
 #ifndef CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_MSG_CONVERSION_H
 #define CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_MSG_CONVERSION_H
 
-#include "cartographer/common/port.h"
 #include "cartographer/common/time.h"
 #include "cartographer/io/submap_painter.h"
 #include "cartographer/sensor/landmark_data.h"
@@ -28,9 +27,6 @@
 #include "geometry_msgs/Transform.h"
 #include "geometry_msgs/TransformStamped.h"
 #include "nav_msgs/OccupancyGrid.h"
-#include "pcl/point_cloud.h"
-#include "pcl/point_types.h"
-#include "pcl_conversions/pcl_conversions.h"
 #include "sensor_msgs/Imu.h"
 #include "sensor_msgs/LaserScan.h"
 #include "sensor_msgs/MultiEchoLaserScan.h"
@@ -63,7 +59,7 @@ ToPointCloudWithIntensities(const sensor_msgs::MultiEchoLaserScan& msg);
 
 std::tuple<::cartographer::sensor::PointCloudWithIntensities,
            ::cartographer::common::Time>
-ToPointCloudWithIntensities(const sensor_msgs::PointCloud2& message);
+ToPointCloudWithIntensities(const sensor_msgs::PointCloud2& msg);
 
 ::cartographer::sensor::LandmarkData ToLandmarkData(
     const cartographer_ros_msgs::LandmarkList& landmark_list);
