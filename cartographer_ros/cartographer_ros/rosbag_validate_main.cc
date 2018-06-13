@@ -314,9 +314,10 @@ void Run(const std::string& bag_filename, const bool dump_timing) {
       if (delta_t_sec <= 0) {
         LOG_FIRST_N(ERROR, 3)
             << "Sensor with frame_id \"" << frame_id
-            << "\" jumps backwards in time. Make sure that the bag contains "
-               "the data for each frame_id sorted by header.stamp, i.e. the "
-               "order in which they were acquired from the sensor.";
+            << "\" jumps backwards in time, i.e. timestamps are not strictly "
+               "increasing. Make sure that the bag contains the data for each "
+               "frame_id sorted by header.stamp, i.e. the order in which they "
+               "were acquired from the sensor.";
       }
       entry.time_deltas.push_back(delta_t_sec);
     }
