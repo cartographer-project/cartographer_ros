@@ -114,21 +114,21 @@ Node::Node(
       node_handle_.advertise<sensor_msgs::PointCloud2>(
           kScanMatchedPointCloudTopic, kLatestOnlyPublisherQueueSize);
 
-  timers_.push_back(node_handle_.createTimer(
-      ::ros::Duration(node_options_.submap_publish_period_sec),
+  wall_timers_.push_back(node_handle_.createWallTimer(
+      ::ros::WallDuration(node_options_.submap_publish_period_sec),
       &Node::PublishSubmapList, this));
-  timers_.push_back(node_handle_.createTimer(
+  publish_trajectory_states_timer_ = node_handle_.createTimer(
       ::ros::Duration(node_options_.pose_publish_period_sec),
-      &Node::PublishTrajectoryStates, this));
-  timers_.push_back(node_handle_.createTimer(
-      ::ros::Duration(node_options_.trajectory_publish_period_sec),
+      &Node::PublishTrajectoryStates, this);
+  wall_timers_.push_back(node_handle_.createWallTimer(
+      ::ros::WallDuration(node_options_.trajectory_publish_period_sec),
       &Node::PublishTrajectoryNodeList, this));
-  timers_.push_back(node_handle_.createTimer(
-      ::ros::Duration(node_options_.trajectory_publish_period_sec),
+  wall_timers_.push_back(node_handle_.createWallTimer(
+      ::ros::WallDuration(node_options_.trajectory_publish_period_sec),
       &Node::PublishLandmarkPosesList, this));
-  timers_.push_back(
-      node_handle_.createTimer(::ros::Duration(kConstraintPublishPeriodSec),
-                               &Node::PublishConstraintList, this));
+  wall_timers_.push_back(node_handle_.createWallTimer(
+      ::ros::WallDuration(kConstraintPublishPeriodSec),
+      &Node::PublishConstraintList, this));
 }
 
 Node::~Node() { FinishAllTrajectories(); }
@@ -143,7 +143,7 @@ bool Node::HandleSubmapQuery(
   return true;
 }
 
-void Node::PublishSubmapList(const ::ros::TimerEvent& unused_timer_event) {
+void Node::PublishSubmapList(const ::ros::WallTimerEvent& unused_timer_event) {
   carto::common::MutexLocker lock(&mutex_);
   submap_list_publisher_.publish(map_builder_bridge_.GetSubmapList());
 }
@@ -261,7 +261,7 @@ void Node::PublishTrajectoryStates(const ::ros::TimerEvent& timer_event) {
 }
 
 void Node::PublishTrajectoryNodeList(
-    const ::ros::TimerEvent& unused_timer_event) {
+    const ::ros::WallTimerEvent& unused_timer_event) {
   if (trajectory_node_list_publisher_.getNumSubscribers() > 0) {
     carto::common::MutexLocker lock(&mutex_);
     trajectory_node_list_publisher_.publish(
@@ -270,7 +270,7 @@ void Node::PublishTrajectoryNodeList(
 }
 
 void Node::PublishLandmarkPosesList(
-    const ::ros::TimerEvent& unused_timer_event) {
+    const ::ros::WallTimerEvent& unused_timer_event) {
   if (landmark_poses_list_publisher_.getNumSubscribers() > 0) {
     carto::common::MutexLocker lock(&mutex_);
     landmark_poses_list_publisher_.publish(
@@ -278,7 +278,8 @@ void Node::PublishLandmarkPosesList(
   }
 }
 
-void Node::PublishConstraintList(const ::ros::TimerEvent& unused_timer_event) {
+void Node::PublishConstraintList(
+    const ::ros::WallTimerEvent& unused_timer_event) {
   if (constraint_list_publisher_.getNumSubscribers() > 0) {
     carto::common::MutexLocker lock(&mutex_);
     constraint_list_publisher_.publish(map_builder_bridge_.GetConstraintList());

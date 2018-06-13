@@ -149,13 +149,13 @@ class Node {
   void LaunchSubscribers(const TrajectoryOptions& options,
                          const cartographer_ros_msgs::SensorTopics& topics,
                          int trajectory_id);
-  void PublishSubmapList(const ::ros::TimerEvent& timer_event);
+  void PublishSubmapList(const ::ros::WallTimerEvent& timer_event);
   void AddExtrapolator(int trajectory_id, const TrajectoryOptions& options);
   void AddSensorSamplers(int trajectory_id, const TrajectoryOptions& options);
   void PublishTrajectoryStates(const ::ros::TimerEvent& timer_event);
-  void PublishTrajectoryNodeList(const ::ros::TimerEvent& timer_event);
-  void PublishLandmarkPosesList(const ::ros::TimerEvent& timer_event);
-  void PublishConstraintList(const ::ros::TimerEvent& timer_event);
+  void PublishTrajectoryNodeList(const ::ros::WallTimerEvent& timer_event);
+  void PublishLandmarkPosesList(const ::ros::WallTimerEvent& timer_event);
+  void PublishConstraintList(const ::ros::WallTimerEvent& timer_event);
   void SpinOccupancyGridThreadForever();
   bool ValidateTrajectoryOptions(const TrajectoryOptions& options);
   bool ValidateTopicNames(const ::cartographer_ros_msgs::SensorTopics& topics,
@@ -205,9 +205,14 @@ class Node {
   std::unordered_set<std::string> subscribed_topics_;
   std::unordered_map<int, bool> is_active_trajectory_ GUARDED_BY(mutex_);
 
-  // We have to keep the timer handles of ::ros::Timers around, otherwise
+  // We have to keep the timer handles of ::ros::WallTimers around, otherwise
   // they do not fire.
-  std::vector<::ros::Timer> timers_;
+  std::vector<::ros::WallTimer> wall_timers_;
+  // The timer for publishing trajectory states (i.e. pose transforms) is a
+  // regular timer which is not triggered when simulation time is standing
+  // still. This prevents overflowing the transform listener buffer by
+  // publishing the same transforms over and over again.
+  ::ros::Timer publish_trajectory_states_timer_;
 };
 
 }  // namespace cartographer_ros
