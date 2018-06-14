@@ -40,6 +40,10 @@
 DEFINE_double(resolution, 0.05,
               "Resolution of a grid cell in the published occupancy grid.");
 DEFINE_double(publish_period_sec, 1.0, "OccupancyGrid publishing period.");
+DEFINE_bool(ignore_frozen_submaps, false,
+            "Don't include frozen submaps in the occupancy grid.");
+DEFINE_bool(ignore_unfrozen_submaps, false,
+            "Don't include unfrozen submaps in the occupancy grid.");
 
 namespace cartographer_ros {
 namespace {
@@ -113,6 +117,10 @@ void Node::HandleSubmapList(
   for (const auto& submap_msg : msg->submap) {
     const SubmapId id{submap_msg.trajectory_id, submap_msg.submap_index};
     submap_ids_to_delete.erase(id);
+    if ((submap_msg.is_frozen && FLAGS_ignore_frozen_submaps) ||
+        (!submap_msg.is_frozen && FLAGS_ignore_unfrozen_submaps)) {
+      continue;
+    }
     SubmapSlice& submap_slice = submap_slices_[id];
     submap_slice.pose = ToRigid3d(submap_msg.pose);
     submap_slice.metadata_version = submap_msg.submap_version;
@@ -171,6 +179,9 @@ void Node::DrawAndPublish(const ::ros::WallTimerEvent& unused_timer_event) {
 int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
   google::ParseCommandLineFlags(&argc, &argv, true);
+
+  CHECK(!(FLAGS_ignore_frozen_submaps && FLAGS_ignore_unfrozen_submaps))
+      << "Ignoring both frozen and unfrozen submaps makes no sense.";
 
   ::ros::init(argc, argv, "cartographer_occupancy_grid_node");
   ::ros::start();
