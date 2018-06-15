@@ -212,6 +212,7 @@ void AssetsWriter::Run(const std::string& configuration_directory,
       // always interpolate.
       const ::ros::Duration kDelay(1.);
       for (const rosbag::MessageInstance& message : view) {
+        tf_buffer.clear();
         if (use_bag_transforms && message.isType<tf2_msgs::TFMessage>()) {
           auto tf_message = message.instantiate<tf2_msgs::TFMessage>();
           for (const auto& transform : tf_message->transforms) {
