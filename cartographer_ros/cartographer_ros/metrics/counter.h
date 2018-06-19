@@ -26,6 +26,8 @@ class Counter {
  public:
   void Increment(const double increment) { gauge_.Increment(increment); }
 
+  void Increment() { gauge_.Increment(); }
+
   double Value() { return gauge_.Value(); }
 
  private:

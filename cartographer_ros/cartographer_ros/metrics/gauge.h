@@ -26,7 +26,11 @@ class Gauge {
  public:
   void Decrement(const double decrement) { Add(-1. * decrement); }
 
+  void Decrement() { Decrement(1.); }
+
   void Increment(const double increment) { Add(increment); }
+
+  void Increment() { Increment(1.); }
 
   double Value() { return value_.load(); }
 
