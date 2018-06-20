@@ -16,10 +16,10 @@
 
 #include "cartographer/mapping/map_builder.h"
 #include "cartographer/metrics/register.h"
+#include "cartographer_ros/metrics/family_factory.h"
 #include "cartographer_ros/node.h"
 #include "cartographer_ros/node_options.h"
 #include "cartographer_ros/ros_log_sink.h"
-#include "cartographer_ros/metrics/family_factory.h"
 #include "gflags/gflags.h"
 #include "tf2_ros/transform_listener.h"
 

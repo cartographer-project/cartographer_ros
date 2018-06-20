@@ -82,7 +82,7 @@ class Histogram : public ::cartographer::metrics::Histogram {
   std::vector<double> bucket_counts_ GUARDED_BY(mutex_);
   double sum_ GUARDED_BY(mutex_);
 };
-} // namespace metrics
-} // namespace cartographer_ros
+}  // namespace metrics
+}  // namespace cartographer_ros
 
 #endif  // CARTOGRAPHER_ROS_METRICS_HISTOGRAM_H

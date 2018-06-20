@@ -50,10 +50,10 @@ class FamilyFactory : public ::cartographer::metrics::FamilyFactory {
   std::vector<std::unique_ptr<
       ::cartographer::metrics::Family<::cartographer::metrics::Histogram>>>
       histograms_;
-  
+
   // TODO MichaelGrupp: add a registry_
 };
-} // namespace metrics
-} // namespace cartographer_ros
+}  // namespace metrics
+}  // namespace cartographer_ros
 
 #endif  // CARTOGRAPHER_ROS_METRICS_FAMILY_FACTORY_H
