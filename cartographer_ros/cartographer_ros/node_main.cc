@@ -46,6 +46,7 @@ namespace cartographer_ros {
 namespace {
 
 void Run() {
+  // TODO MichaelGrupp: not exposed at the moment, just to illustrate.
   metrics::FamilyFactory registry;
   ::cartographer::metrics::RegisterAllMetrics(&registry);
 
