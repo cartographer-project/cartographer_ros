@@ -15,9 +15,11 @@
  */
 
 #include "cartographer/mapping/map_builder.h"
+#include "cartographer/metrics/register.h"
 #include "cartographer_ros/node.h"
 #include "cartographer_ros/node_options.h"
 #include "cartographer_ros/ros_log_sink.h"
+#include "cartographer_ros/metrics/family_factory.h"
 #include "gflags/gflags.h"
 #include "tf2_ros/transform_listener.h"
 
@@ -44,6 +46,9 @@ namespace cartographer_ros {
 namespace {
 
 void Run() {
+  metrics::FamilyFactory registry;
+  ::cartographer::metrics::RegisterAllMetrics(&registry);
+
   constexpr double kTfBufferCacheTimeInSeconds = 10.;
   tf2_ros::Buffer tf_buffer{::ros::Duration(kTfBufferCacheTimeInSeconds)};
   tf2_ros::TransformListener tf(tf_buffer);

@@ -19,32 +19,38 @@
 
 #include <atomic>
 
+#include "cartographer/metrics/gauge.h"
+
 namespace cartographer_ros {
 namespace metrics {
 
-class Gauge {
+class Gauge : public ::cartographer::metrics::Gauge {
  public:
-  void Decrement(const double decrement) { Add(-1. * decrement); }
+  void Decrement(const double decrement) override { Add(-1. * decrement); }
 
-  void Decrement() { Decrement(1.); }
+  void Decrement() override { Decrement(1.); }
 
-  void Increment(const double increment) { Add(increment); }
+  void Increment(const double increment) override { Add(increment); }
 
-  void Increment() { Increment(1.); }
+  void Increment() override { Increment(1.); }
 
+  void Set(double value) override {
+    double expected = value_.load();
+    while (!value_.compare_exchange_weak(expected, value)) {
+      ;
+    }
+  }
   double Value() { return value_.load(); }
 
  private:
   void Add(const double value) {
-    double expected = value_.load();
-    while (!value_.compare_exchange_weak(expected, expected + value)) {
-      ;
-    }
+    double current = Value();
+    Set(current + value);
   }
 
   std::atomic<double> value_{0.};
 };
-}
-}
+} // namespace metrics
+} // namespace cartographer_ros
 
-#endif
+#endif  // CARTOGRAPHER_ROS_METRICS_GAUGE_H

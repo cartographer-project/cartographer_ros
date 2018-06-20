@@ -17,23 +17,26 @@
 #ifndef CARTOGRAPHER_ROS_METRICS_COUNTER_H
 #define CARTOGRAPHER_ROS_METRICS_COUNTER_H
 
+#include "cartographer/metrics/counter.h"
 #include "cartographer_ros/metrics/gauge.h"
 
 namespace cartographer_ros {
 namespace metrics {
 
-class Counter {
+class Counter : public ::cartographer::metrics::Counter {
  public:
-  void Increment(const double increment) { gauge_.Increment(increment); }
+  void Increment(const double increment) override {
+    gauge_.Increment(increment);
+  }
 
-  void Increment() { gauge_.Increment(); }
+  void Increment() override { gauge_.Increment(); }
 
   double Value() { return gauge_.Value(); }
 
  private:
   Gauge gauge_;
 };
-}
-}
+} // namespace metrics
+} // namespace cartographer_ros
 
-#endif
+#endif  // CARTOGRAPHER_ROS_METRICS_COUNTER_H

@@ -34,7 +34,7 @@ constexpr double kInfiniteBoundary = std::numeric_limits<double>::infinity();
 
 using BucketBoundaries = ::cartographer::metrics::Histogram::BucketBoundaries;
 
-class Histogram {
+class Histogram : public ::cartographer::metrics::Histogram {
  public:
   Histogram(const BucketBoundaries& bucket_boundaries)
       : bucket_boundaries_(bucket_boundaries),
@@ -44,7 +44,7 @@ class Histogram {
                          std::end(bucket_boundaries_)));
   }
 
-  void Observe(double value) {
+  void Observe(double value) override {
     ::cartographer::common::MutexLocker lock(&mutex_);
     auto bucket_index =
         std::distance(bucket_boundaries_.begin(),
@@ -82,7 +82,7 @@ class Histogram {
   std::vector<double> bucket_counts_ GUARDED_BY(mutex_);
   double sum_ GUARDED_BY(mutex_);
 };
-}
-}
+} // namespace metrics
+} // namespace cartographer_ros
 
-#endif
+#endif  // CARTOGRAPHER_ROS_METRICS_HISTOGRAM_H
