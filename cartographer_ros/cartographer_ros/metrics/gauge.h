@@ -26,11 +26,11 @@ namespace metrics {
 
 class Gauge : public ::cartographer::metrics::Gauge {
  public:
-  void Decrement(const double decrement) override { Add(-1. * decrement); }
+  void Decrement(const double by_value) override { Add(-1. * by_value); }
 
   void Decrement() override { Decrement(1.); }
 
-  void Increment(const double increment) override { Add(increment); }
+  void Increment(const double by_value) override { Add(by_value); }
 
   void Increment() override { Increment(1.); }
 
@@ -50,7 +50,7 @@ class Gauge : public ::cartographer::metrics::Gauge {
 
   std::atomic<double> value_{0.};
 };
-} // namespace metrics
-} // namespace cartographer_ros
+}  // namespace metrics
+}  // namespace cartographer_ros
 
 #endif  // CARTOGRAPHER_ROS_METRICS_GAUGE_H

@@ -70,7 +70,7 @@ TEST(Metrics, HistogramFixedWidthTest) {
 
   // Values above the last bucket boundary should go to the "infinite" bucket.
   histogram.Observe(3.5);
-  //     1    2      3    inf
+  //     1     2     3    inf
   //  1  |  0  |  2  |  1  |
   EXPECT_EQ(histogram.CountsByBucket()[kInfiniteBoundary], 1);
 }

@@ -25,9 +25,7 @@ namespace metrics {
 
 class Counter : public ::cartographer::metrics::Counter {
  public:
-  void Increment(const double increment) override {
-    gauge_.Increment(increment);
-  }
+  void Increment(const double by_value) override { gauge_.Increment(by_value); }
 
   void Increment() override { gauge_.Increment(); }
 
@@ -36,7 +34,7 @@ class Counter : public ::cartographer::metrics::Counter {
  private:
   Gauge gauge_;
 };
-} // namespace metrics
-} // namespace cartographer_ros
+}  // namespace metrics
+}  // namespace cartographer_ros
 
 #endif  // CARTOGRAPHER_ROS_METRICS_COUNTER_H
