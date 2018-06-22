@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
+#include "cartographer_ros/node.h"
+#include "cartographer/common/make_unique.h"
 #include "cartographer/mapping/map_builder.h"
 #include "cartographer/metrics/register.h"
-#include "cartographer_ros/metrics/family_factory.h"
-#include "cartographer_ros/node.h"
 #include "cartographer_ros/node_options.h"
 #include "cartographer_ros/ros_log_sink.h"
+#include "cartographer_ros/metrics/family_factory.h"
 #include "gflags/gflags.h"
 #include "tf2_ros/transform_listener.h"
 
@@ -46,9 +47,9 @@ namespace cartographer_ros {
 namespace {
 
 void Run() {
-  // TODO MichaelGrupp: not exposed at the moment, just to illustrate.
-  metrics::FamilyFactory registry;
-  ::cartographer::metrics::RegisterAllMetrics(&registry);
+  auto metrics_registry =
+      ::cartographer::common::make_unique<metrics::FamilyFactory>();
+  ::cartographer::metrics::RegisterAllMetrics(metrics_registry.get());
 
   constexpr double kTfBufferCacheTimeInSeconds = 10.;
   tf2_ros::Buffer tf_buffer{::ros::Duration(kTfBufferCacheTimeInSeconds)};
@@ -61,7 +62,8 @@ void Run() {
   auto map_builder =
       cartographer::common::make_unique<cartographer::mapping::MapBuilder>(
           node_options.map_builder_options);
-  Node node(node_options, std::move(map_builder), &tf_buffer);
+  Node node(node_options, std::move(map_builder), &tf_buffer,
+            std::move(metrics_registry));
   if (!FLAGS_load_state_filename.empty()) {
     node.LoadState(FLAGS_load_state_filename, FLAGS_load_frozen_state);
   }

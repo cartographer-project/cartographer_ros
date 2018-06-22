@@ -29,9 +29,11 @@
 #include "cartographer/mapping/map_builder_interface.h"
 #include "cartographer/mapping/pose_extrapolator.h"
 #include "cartographer_ros/map_builder_bridge.h"
+#include "cartographer_ros/metrics/family_factory.h"
 #include "cartographer_ros/node_constants.h"
 #include "cartographer_ros/node_options.h"
 #include "cartographer_ros/trajectory_options.h"
+#include "cartographer_ros_msgs/CollectMetrics.h"
 #include "cartographer_ros_msgs/FinishTrajectory.h"
 #include "cartographer_ros_msgs/SensorTopics.h"
 #include "cartographer_ros_msgs/StartTrajectory.h"
@@ -57,7 +59,9 @@ class Node {
  public:
   Node(const NodeOptions& node_options,
        std::unique_ptr<cartographer::mapping::MapBuilderInterface> map_builder,
-       tf2_ros::Buffer* tf_buffer);
+       tf2_ros::Buffer* tf_buffer,
+       std::unique_ptr<cartographer_ros::metrics::FamilyFactory>
+           metrics_registry);
   ~Node();
 
   Node(const Node&) = delete;
@@ -138,6 +142,10 @@ class Node {
       cartographer_ros_msgs::FinishTrajectory::Response& response);
   bool HandleWriteState(cartographer_ros_msgs::WriteState::Request& request,
                         cartographer_ros_msgs::WriteState::Response& response);
+
+  bool HandleCollectMetrics(
+      cartographer_ros_msgs::CollectMetrics::Request& request,
+      cartographer_ros_msgs::CollectMetrics::Response& response);
   // Returns the set of SensorIds expected for a trajectory.
   // 'SensorId::id' is the expected ROS topic name.
   std::set<::cartographer::mapping::TrajectoryBuilderInterface::SensorId>
@@ -213,6 +221,8 @@ class Node {
   // still. This prevents overflowing the transform listener buffer by
   // publishing the same transforms over and over again.
   ::ros::Timer publish_trajectory_states_timer_;
+
+  std::unique_ptr<cartographer_ros::metrics::FamilyFactory> metrics_registry_;
 };
 
 }  // namespace cartographer_ros

@@ -19,9 +19,9 @@
 #include <numeric>
 
 #include "cartographer/metrics/histogram.h"
-#include "cartographer_ros/metrics/counter.h"
-#include "cartographer_ros/metrics/gauge.h"
-#include "cartographer_ros/metrics/histogram.h"
+#include "cartographer_ros/metrics/internal/counter.h"
+#include "cartographer_ros/metrics/internal/gauge.h"
+#include "cartographer_ros/metrics/internal/histogram.h"
 #include "gtest/gtest.h"
 
 namespace cartographer_ros {

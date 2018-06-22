@@ -21,10 +21,17 @@
 #include <string>
 
 #include "cartographer/metrics/family_factory.h"
+#include "cartographer_ros/metrics/internal/counter.h"
+#include "cartographer_ros/metrics/internal/family.h"
+#include "cartographer_ros/metrics/internal/gauge.h"
+#include "cartographer_ros/metrics/internal/histogram.h"
+#include "cartographer_ros_msgs/Metrics.h"
 
 namespace cartographer_ros {
 namespace metrics {
 
+// Realizes the factory / registry interface for the metrics in libcartographer
+// and provides a wrapper to collect ROS messages from the metrics it owns.
 class FamilyFactory : public ::cartographer::metrics::FamilyFactory {
  public:
   FamilyFactory();
@@ -40,18 +47,12 @@ class FamilyFactory : public ::cartographer::metrics::FamilyFactory {
                      const ::cartographer::metrics::Histogram::BucketBoundaries&
                          boundaries) override;
 
- private:
-  std::vector<std::unique_ptr<
-      ::cartographer::metrics::Family<::cartographer::metrics::Counter>>>
-      counters_;
-  std::vector<std::unique_ptr<
-      ::cartographer::metrics::Family<::cartographer::metrics::Gauge>>>
-      gauges_;
-  std::vector<std::unique_ptr<
-      ::cartographer::metrics::Family<::cartographer::metrics::Histogram>>>
-      histograms_;
+  cartographer_ros_msgs::Metrics CollectMetrics() const;
 
-  // TODO MichaelGrupp: add a registry_
+ private:
+  std::vector<std::unique_ptr<CounterFamily>> counter_families_;
+  std::vector<std::unique_ptr<GaugeFamily>> gauge_families_;
+  std::vector<std::unique_ptr<HistogramFamily>> histogram_families_;
 };
 }  // namespace metrics
 }  // namespace cartographer_ros

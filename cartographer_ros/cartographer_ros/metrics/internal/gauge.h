@@ -18,14 +18,20 @@
 #define CARTOGRAPHER_ROS_METRICS_GAUGE_H
 
 #include <atomic>
+#include <map>
+#include <string>
 
 #include "cartographer/metrics/gauge.h"
+#include "cartographer_ros_msgs/Gauge.h"
 
 namespace cartographer_ros {
 namespace metrics {
 
 class Gauge : public ::cartographer::metrics::Gauge {
  public:
+  Gauge() {}
+  Gauge(const std::map<std::string, std::string>& labels) : labels_(labels) {}
+
   void Decrement(const double by_value) override { Add(-1. * by_value); }
 
   void Decrement() override { Decrement(1.); }
@@ -40,7 +46,19 @@ class Gauge : public ::cartographer::metrics::Gauge {
       ;
     }
   }
-  double Value() { return value_.load(); }
+  double Value() const { return value_.load(); }
+
+  cartographer_ros_msgs::Gauge ToRosMessage() {
+    cartographer_ros_msgs::Gauge msg;
+    for (const auto& label : labels_) {
+      cartographer_ros_msgs::Label label_msg;
+      label_msg.first = label.first;
+      label_msg.second = label.second;
+      msg.labels.push_back(label_msg);
+    }
+    msg.value = Value();
+    return msg;
+  }
 
  private:
   void Add(const double value) {
@@ -48,6 +66,7 @@ class Gauge : public ::cartographer::metrics::Gauge {
     Set(current + value);
   }
 
+  const std::map<std::string, std::string> labels_;
   std::atomic<double> value_{0.};
 };
 }  // namespace metrics

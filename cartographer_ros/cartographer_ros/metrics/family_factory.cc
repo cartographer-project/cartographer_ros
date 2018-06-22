@@ -17,82 +17,33 @@
 #include "cartographer_ros/metrics/family_factory.h"
 
 #include "cartographer/common/make_unique.h"
-#include "cartographer_ros/metrics/counter.h"
-#include "cartographer_ros/metrics/gauge.h"
-#include "cartographer_ros/metrics/histogram.h"
+#include "cartographer_ros/metrics/internal/counter.h"
+#include "cartographer_ros/metrics/internal/gauge.h"
+#include "cartographer_ros/metrics/internal/histogram.h"
+#include "cartographer_ros_msgs/Metrics.h"
 
 namespace cartographer_ros {
 namespace metrics {
-namespace {
-
 using BucketBoundaries = ::cartographer::metrics::Histogram::BucketBoundaries;
 
-class CounterFamily
-    : public ::cartographer::metrics::Family<::cartographer::metrics::Counter> {
- public:
-  Counter* Add(const std::map<std::string, std::string>& labels) override {
-    auto wrapper = ::cartographer::common::make_unique<Counter>();
-    auto* ptr = wrapper.get();
-    wrappers_.emplace_back(std::move(wrapper));
-    return ptr;
-  }
-
- private:
-  std::vector<std::unique_ptr<Counter>> wrappers_;
-};
-
-class GaugeFamily
-    : public ::cartographer::metrics::Family<::cartographer::metrics::Gauge> {
- public:
-  Gauge* Add(const std::map<std::string, std::string>& labels) override {
-    auto wrapper = ::cartographer::common::make_unique<Gauge>();
-    auto* ptr = wrapper.get();
-    wrappers_.emplace_back(std::move(wrapper));
-    return ptr;
-  }
-
- private:
-  std::vector<std::unique_ptr<Gauge>> wrappers_;
-};
-
-class HistogramFamily : public ::cartographer::metrics::Family<
-                            ::cartographer::metrics::Histogram> {
- public:
-  HistogramFamily(const BucketBoundaries& boundaries)
-      : boundaries_(boundaries) {}
-
-  Histogram* Add(const std::map<std::string, std::string>& labels) override {
-    auto wrapper = ::cartographer::common::make_unique<Histogram>(boundaries_);
-    auto* ptr = wrapper.get();
-    wrappers_.emplace_back(std::move(wrapper));
-    return ptr;
-  }
-
- private:
-  std::vector<std::unique_ptr<Histogram>> wrappers_;
-  const BucketBoundaries boundaries_;
-};
-
-}  // namespace
-
-// TODO MichaelGrupp: initialize registry_
 FamilyFactory::FamilyFactory() {}
-
 ::cartographer::metrics::Family<::cartographer::metrics::Counter>*
 FamilyFactory::NewCounterFamily(const std::string& name,
                                 const std::string& description) {
-  auto wrapper = ::cartographer::common::make_unique<CounterFamily>();
+  auto wrapper =
+      ::cartographer::common::make_unique<CounterFamily>(name, description);
   auto* ptr = wrapper.get();
-  counters_.emplace_back(std::move(wrapper));
+  counter_families_.emplace_back(std::move(wrapper));
   return ptr;
 }
 
 ::cartographer::metrics::Family<::cartographer::metrics::Gauge>*
 FamilyFactory::NewGaugeFamily(const std::string& name,
                               const std::string& description) {
-  auto wrapper = ::cartographer::common::make_unique<GaugeFamily>();
+  auto wrapper =
+      ::cartographer::common::make_unique<GaugeFamily>(name, description);
   auto* ptr = wrapper.get();
-  gauges_.emplace_back(std::move(wrapper));
+  gauge_families_.emplace_back(std::move(wrapper));
   return ptr;
 }
 
@@ -100,11 +51,25 @@ FamilyFactory::NewGaugeFamily(const std::string& name,
 FamilyFactory::NewHistogramFamily(const std::string& name,
                                   const std::string& description,
                                   const BucketBoundaries& boundaries) {
-  auto wrapper =
-      ::cartographer::common::make_unique<HistogramFamily>(boundaries);
+  auto wrapper = ::cartographer::common::make_unique<HistogramFamily>(
+      name, description, boundaries);
   auto* ptr = wrapper.get();
-  histograms_.emplace_back(std::move(wrapper));
+  histogram_families_.emplace_back(std::move(wrapper));
   return ptr;
+}
+
+cartographer_ros_msgs::Metrics FamilyFactory::CollectMetrics() const {
+  cartographer_ros_msgs::Metrics metrics_msg;
+  for (const auto& counter_family : counter_families_) {
+    metrics_msg.counter_families.push_back(counter_family->ToRosMessage());
+  }
+  for (const auto& gauge_family : gauge_families_) {
+    metrics_msg.gauge_families.push_back(gauge_family->ToRosMessage());
+  }
+  for (const auto& histogram_family : histogram_families_) {
+    metrics_msg.histogram_families.push_back(histogram_family->ToRosMessage());
+  }
+  return metrics_msg;
 }
 
 }  // namespace metrics
