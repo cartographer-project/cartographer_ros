@@ -585,6 +585,7 @@ bool Node::HandleCollectMetrics(
     ::cartographer_ros_msgs::CollectMetrics::Response& response) {
   carto::common::MutexLocker lock(&mutex_);
   response.metrics = metrics_registry_->CollectMetrics();
+  response.metrics.header.stamp = ros::Time::now();
   response.status.code = cartographer_ros_msgs::StatusCode::OK;
   response.status.message = "Successfully collected metrics.";
   return true;
