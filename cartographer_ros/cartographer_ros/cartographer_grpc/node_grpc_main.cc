@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-#include "cartographer_ros/node.h"
 #include "cartographer/cloud/client/map_builder_stub.h"
 #include "cartographer/common/make_unique.h"
 #include "cartographer/metrics/register.h"
 #include "cartographer_ros/metrics/family_factory.h"
+#include "cartographer_ros/node.h"
 #include "cartographer_ros/node_options.h"
 #include "cartographer_ros/ros_log_sink.h"
 #include "gflags/gflags.h"
