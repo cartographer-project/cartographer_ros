@@ -221,20 +221,20 @@ cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
   return submap_list;
 }
 
-std::unordered_map<int, MapBuilderBridge::TrajectoryState>
-MapBuilderBridge::GetTrajectoryStates() {
-  std::unordered_map<int, TrajectoryState> trajectory_states;
+std::unordered_map<int, MapBuilderBridge::LocalTrajectoryData>
+MapBuilderBridge::GetLocalTrajectoryData() {
+  std::unordered_map<int, LocalTrajectoryData> trajectory_states;
   for (const auto& entry : sensor_bridges_) {
     const int trajectory_id = entry.first;
     const SensorBridge& sensor_bridge = *entry.second;
 
-    std::shared_ptr<const TrajectoryState::LocalSlamData> local_slam_data;
+    std::shared_ptr<const LocalTrajectoryData::LocalSlamData> local_slam_data;
     {
       cartographer::common::MutexLocker lock(&mutex_);
-      if (trajectory_state_data_.count(trajectory_id) == 0) {
+      if (local_slam_data_.count(trajectory_id) == 0) {
         continue;
       }
-      local_slam_data = trajectory_state_data_.at(trajectory_id);
+      local_slam_data = local_slam_data_.at(trajectory_id);
     }
 
     // Make sure there is a trajectory with 'trajectory_id'.
@@ -497,12 +497,12 @@ void MapBuilderBridge::OnLocalSlamResult(
     ::cartographer::sensor::RangeData range_data_in_local,
     const std::unique_ptr<const ::cartographer::mapping::
                               TrajectoryBuilderInterface::InsertionResult>) {
-  std::shared_ptr<const TrajectoryState::LocalSlamData> local_slam_data =
-      std::make_shared<TrajectoryState::LocalSlamData>(
-          TrajectoryState::LocalSlamData{time, local_pose,
-                                         std::move(range_data_in_local)});
+  std::shared_ptr<const LocalTrajectoryData::LocalSlamData> local_slam_data =
+      std::make_shared<LocalTrajectoryData::LocalSlamData>(
+          LocalTrajectoryData::LocalSlamData{time, local_pose,
+                                             std::move(range_data_in_local)});
   cartographer::common::MutexLocker lock(&mutex_);
-  trajectory_state_data_[trajectory_id] = std::move(local_slam_data);
+  local_slam_data_[trajectory_id] = std::move(local_slam_data);
 }
 
 }  // namespace cartographer_ros
