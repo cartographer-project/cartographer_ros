@@ -40,8 +40,8 @@ namespace cartographer_ros {
 
 class MapBuilderBridge {
  public:
-  struct TrajectoryState {
-    // Contains the trajectory state data received from local SLAM, after
+  struct LocalTrajectoryData {
+    // Contains the trajectory data received from local SLAM, after
     // it had processed accumulated 'range_data_in_local' and estimated
     // current 'local_pose' at 'time'.
     struct LocalSlamData {
@@ -79,7 +79,7 @@ class MapBuilderBridge {
 
   std::set<int> GetFrozenTrajectoryIds();
   cartographer_ros_msgs::SubmapList GetSubmapList();
-  std::unordered_map<int, TrajectoryState> GetTrajectoryStates()
+  std::unordered_map<int, LocalTrajectoryData> GetLocalTrajectoryData()
       EXCLUDES(mutex_);
   visualization_msgs::MarkerArray GetTrajectoryNodeList();
   visualization_msgs::MarkerArray GetLandmarkPosesList();
@@ -98,8 +98,9 @@ class MapBuilderBridge {
 
   cartographer::common::Mutex mutex_;
   const NodeOptions node_options_;
-  std::unordered_map<int, std::shared_ptr<const TrajectoryState::LocalSlamData>>
-      trajectory_state_data_ GUARDED_BY(mutex_);
+  std::unordered_map<int,
+                     std::shared_ptr<const LocalTrajectoryData::LocalSlamData>>
+      local_slam_data_ GUARDED_BY(mutex_);
   std::unique_ptr<cartographer::mapping::MapBuilderInterface> map_builder_;
   tf2_ros::Buffer* const tf_buffer_;
 
