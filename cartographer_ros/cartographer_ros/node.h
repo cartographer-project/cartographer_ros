@@ -208,11 +208,11 @@ class Node {
   // We have to keep the timer handles of ::ros::WallTimers around, otherwise
   // they do not fire.
   std::vector<::ros::WallTimer> wall_timers_;
-  // The timer for publishing trajectory states (i.e. pose transforms) is a
-  // regular timer which is not triggered when simulation time is standing
-  // still. This prevents overflowing the transform listener buffer by
-  // publishing the same transforms over and over again.
-  ::ros::Timer publish_trajectory_states_timer_;
+  // The timer for publishing local trajectory data (i.e. pose transforms and
+  // range data point clouds) is a regular timer which is not triggered when
+  // simulation time is standing still. This prevents overflowing the transform
+  // listener buffer by publishing the same transforms over and over again.
+  ::ros::Timer publish_local_trajectory_data_timer_;
 };
 
 }  // namespace cartographer_ros
