@@ -223,7 +223,7 @@ cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
 
 std::unordered_map<int, MapBuilderBridge::LocalTrajectoryData>
 MapBuilderBridge::GetLocalTrajectoryData() {
-  std::unordered_map<int, LocalTrajectoryData> trajectory_states;
+  std::unordered_map<int, LocalTrajectoryData> local_trajectory_data;
   for (const auto& entry : sensor_bridges_) {
     const int trajectory_id = entry.first;
     const SensorBridge& sensor_bridge = *entry.second;
@@ -239,7 +239,7 @@ MapBuilderBridge::GetLocalTrajectoryData() {
 
     // Make sure there is a trajectory with 'trajectory_id'.
     CHECK_EQ(trajectory_options_.count(trajectory_id), 1);
-    trajectory_states[trajectory_id] = {
+    local_trajectory_data[trajectory_id] = {
         local_slam_data,
         map_builder_->pose_graph()->GetLocalToGlobalTransform(trajectory_id),
         sensor_bridge.tf_bridge().LookupToTracking(
@@ -247,7 +247,7 @@ MapBuilderBridge::GetLocalTrajectoryData() {
             trajectory_options_[trajectory_id].published_frame),
         trajectory_options_[trajectory_id]};
   }
-  return trajectory_states;
+  return local_trajectory_data;
 }
 
 visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
