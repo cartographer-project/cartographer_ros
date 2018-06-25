@@ -26,6 +26,7 @@
 #include "cartographer/common/make_unique.h"
 #include "cartographer/common/port.h"
 #include "cartographer/common/time.h"
+#include "cartographer/mapping/pose_graph_interface.h"
 #include "cartographer/mapping/proto/submap_visualization.pb.h"
 #include "cartographer/sensor/point_cloud.h"
 #include "cartographer/transform/rigid_transform.h"
@@ -81,6 +82,7 @@ template <typename MessageType>
 namespace carto = ::cartographer;
 
 using carto::transform::Rigid3d;
+using TrajectoryState = ::cartographer::mapping::PoseGraphInterface::TrajectoryState;
 
 Node::Node(
     const NodeOptions& node_options,
@@ -341,7 +343,6 @@ int Node::AddTrajectory(const TrajectoryOptions& options,
   AddExtrapolator(trajectory_id, options);
   AddSensorSamplers(trajectory_id, options);
   LaunchSubscribers(options, topics, trajectory_id);
-  is_active_trajectory_[trajectory_id] = true;
   for (const auto& sensor_id : expected_sensor_ids) {
     subscribed_topics_.insert(sensor_id.id);
   }
@@ -444,10 +445,20 @@ bool Node::ValidateTopicNames(
 
 cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
     const int trajectory_id) {
+  auto trajectory_states = map_builder_bridge_.GetTrajectoryStates();
+
   cartographer_ros_msgs::StatusResponse status_response;
 
   // First, check if we can actually finish the trajectory.
-  if (map_builder_bridge_.GetFrozenTrajectoryIds().count(trajectory_id)) {
+  if (!(trajectory_states.count(trajectory_id))) {
+    const std::string error =
+        "Trajectory " + std::to_string(trajectory_id) + " doesn't exist.";
+    LOG(ERROR) << error;
+    status_response.code = cartographer_ros_msgs::StatusCode::NOT_FOUND;
+    status_response.message = error;
+    return status_response;
+  }
+  if (trajectory_states.at(trajectory_id) == TrajectoryState::FROZEN) {
     const std::string error =
         "Trajectory " + std::to_string(trajectory_id) + " is frozen.";
     LOG(ERROR) << error;
@@ -455,15 +466,7 @@ cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
     status_response.message = error;
     return status_response;
   }
-  if (is_active_trajectory_.count(trajectory_id) == 0) {
-    const std::string error =
-        "Trajectory " + std::to_string(trajectory_id) + " is not created yet.";
-    LOG(ERROR) << error;
-    status_response.code = cartographer_ros_msgs::StatusCode::NOT_FOUND;
-    status_response.message = error;
-    return status_response;
-  }
-  if (!is_active_trajectory_[trajectory_id]) {
+  if (trajectory_states.at(trajectory_id) == TrajectoryState::FINISHED) {
     const std::string error = "Trajectory " + std::to_string(trajectory_id) +
                               " has already been finished.";
     LOG(ERROR) << error;
@@ -480,9 +483,7 @@ cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
     LOG(INFO) << "Shutdown the subscriber of [" << entry.topic << "]";
   }
   CHECK_EQ(subscribers_.erase(trajectory_id), 1);
-  CHECK(is_active_trajectory_.at(trajectory_id));
   map_builder_bridge_.FinishTrajectory(trajectory_id);
-  is_active_trajectory_[trajectory_id] = false;
   const std::string message =
       "Finished trajectory " + std::to_string(trajectory_id) + ".";
   status_response.code = cartographer_ros_msgs::StatusCode::OK;
@@ -550,7 +551,6 @@ int Node::AddOfflineTrajectory(
       map_builder_bridge_.AddTrajectory(expected_sensor_ids, options);
   AddExtrapolator(trajectory_id, options);
   AddSensorSamplers(trajectory_id, options);
-  is_active_trajectory_[trajectory_id] = true;
   return trajectory_id;
 }
 
@@ -578,9 +578,9 @@ bool Node::HandleWriteState(
 
 void Node::FinishAllTrajectories() {
   carto::common::MutexLocker lock(&mutex_);
-  for (auto& entry : is_active_trajectory_) {
-    const int trajectory_id = entry.first;
-    if (entry.second) {
+  for (const auto& entry : map_builder_bridge_.GetTrajectoryStates()) {
+    if (entry.second == TrajectoryState::ACTIVE) {
+      const int trajectory_id = entry.first;
       CHECK_EQ(FinishTrajectoryUnderLock(trajectory_id).code,
                cartographer_ros_msgs::StatusCode::OK);
     }
@@ -596,8 +596,8 @@ bool Node::FinishTrajectory(const int trajectory_id) {
 void Node::RunFinalOptimization() {
   {
     carto::common::MutexLocker lock(&mutex_);
-    for (const auto& entry : is_active_trajectory_) {
-      CHECK(!entry.second);
+    for (const auto& entry : map_builder_bridge_.GetTrajectoryStates()) {
+      CHECK(entry.second != TrajectoryState::ACTIVE);
     }
   }
   // Assuming we are not adding new data anymore, the final optimization

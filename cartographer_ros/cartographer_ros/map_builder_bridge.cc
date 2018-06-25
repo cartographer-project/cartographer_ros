@@ -194,15 +194,9 @@ void MapBuilderBridge::HandleSubmapQuery(
   response.status.code = cartographer_ros_msgs::StatusCode::OK;
 }
 
-std::set<int> MapBuilderBridge::GetFrozenTrajectoryIds() {
-  std::set<int> frozen_trajectory_ids;
-  const auto node_poses = map_builder_->pose_graph()->GetTrajectoryNodePoses();
-  for (const int trajectory_id : node_poses.trajectory_ids()) {
-    if (map_builder_->pose_graph()->IsTrajectoryFrozen(trajectory_id)) {
-      frozen_trajectory_ids.insert(trajectory_id);
-    }
-  }
-  return frozen_trajectory_ids;
+std::map<int, ::cartographer::mapping::PoseGraphInterface::TrajectoryState>
+MapBuilderBridge::GetTrajectoryStates() {
+  return map_builder_->pose_graph()->GetTrajectoryStates();
 }
 
 cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
