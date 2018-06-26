@@ -82,7 +82,8 @@ template <typename MessageType>
 namespace carto = ::cartographer;
 
 using carto::transform::Rigid3d;
-using TrajectoryState = ::cartographer::mapping::PoseGraphInterface::TrajectoryState;
+using TrajectoryState =
+    ::cartographer::mapping::PoseGraphInterface::TrajectoryState;
 
 Node::Node(
     const NodeOptions& node_options,
@@ -111,6 +112,8 @@ Node::Node(
       kFinishTrajectoryServiceName, &Node::HandleFinishTrajectory, this));
   service_servers_.push_back(node_handle_.advertiseService(
       kWriteStateServiceName, &Node::HandleWriteState, this));
+  service_servers_.push_back(node_handle_.advertiseService(
+      kGetTrajectoryStatesServiceName, &Node::HandleGetTrajectoryStates, this));
 
   scan_matched_point_cloud_publisher_ =
       node_handle_.advertise<sensor_msgs::PointCloud2>(
@@ -457,21 +460,26 @@ cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
     status_response.code = cartographer_ros_msgs::StatusCode::NOT_FOUND;
     status_response.message = error;
     return status_response;
-  }
-  if (trajectory_states.at(trajectory_id) == TrajectoryState::FROZEN) {
+  } else if (trajectory_states.at(trajectory_id) == TrajectoryState::FROZEN) {
     const std::string error =
         "Trajectory " + std::to_string(trajectory_id) + " is frozen.";
     LOG(ERROR) << error;
     status_response.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
     status_response.message = error;
     return status_response;
-  }
-  if (trajectory_states.at(trajectory_id) == TrajectoryState::FINISHED) {
+  } else if (trajectory_states.at(trajectory_id) == TrajectoryState::FINISHED) {
     const std::string error = "Trajectory " + std::to_string(trajectory_id) +
                               " has already been finished.";
     LOG(ERROR) << error;
     status_response.code =
         cartographer_ros_msgs::StatusCode::RESOURCE_EXHAUSTED;
+    status_response.message = error;
+    return status_response;
+  } else if (trajectory_states.at(trajectory_id) == TrajectoryState::DELETED) {
+    const std::string error =
+        "Trajectory " + std::to_string(trajectory_id) + " has been deleted.";
+    LOG(ERROR) << error;
+    status_response.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
     status_response.message = error;
     return status_response;
   }
@@ -554,6 +562,31 @@ int Node::AddOfflineTrajectory(
   return trajectory_id;
 }
 
+bool Node::HandleGetTrajectoryStates(
+    ::cartographer_ros_msgs::GetTrajectoryStates::Request& request,
+    ::cartographer_ros_msgs::GetTrajectoryStates::Response& response) {
+  using TrajectoryState =
+      ::cartographer::mapping::PoseGraphInterface::TrajectoryState;
+  carto::common::MutexLocker lock(&mutex_);
+  response.status.code = ::cartographer_ros_msgs::StatusCode::OK;
+  response.trajectory_states.header.stamp = ros::Time::now();
+  for (const auto& entry : map_builder_bridge_.GetTrajectoryStates()) {
+    response.trajectory_states.trajectory_id.push_back(entry.first);
+    response.trajectory_states.trajectory_state.push_back([&]() {
+      if (entry.second == TrajectoryState::ACTIVE) {
+        return ::cartographer_ros_msgs::TrajectoryStates::ACTIVE;
+      } else if (entry.second == TrajectoryState::FINISHED) {
+        return ::cartographer_ros_msgs::TrajectoryStates::FINISHED;
+      } else if (entry.second == TrajectoryState::FROZEN) {
+        return ::cartographer_ros_msgs::TrajectoryStates::FROZEN;
+      } else {
+        return ::cartographer_ros_msgs::TrajectoryStates::DELETED;
+      }
+    }());
+  }
+  return true;
+}
+
 bool Node::HandleFinishTrajectory(
     ::cartographer_ros_msgs::FinishTrajectory::Request& request,
     ::cartographer_ros_msgs::FinishTrajectory::Response& response) {
@@ -597,7 +630,9 @@ void Node::RunFinalOptimization() {
   {
     carto::common::MutexLocker lock(&mutex_);
     for (const auto& entry : map_builder_bridge_.GetTrajectoryStates()) {
-      CHECK(entry.second != TrajectoryState::ACTIVE);
+      CHECK(entry.second != TrajectoryState::ACTIVE)
+          << "Can't run final optimization if there is one or more active "
+             "trajectories.";
     }
   }
   // Assuming we are not adding new data anymore, the final optimization
