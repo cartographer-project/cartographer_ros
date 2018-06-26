@@ -147,9 +147,12 @@ void MapBuilderBridge::FinishTrajectory(const int trajectory_id) {
   LOG(INFO) << "Finishing trajectory with ID '" << trajectory_id << "'...";
 
   // Make sure there is a trajectory with 'trajectory_id'.
-  CHECK_EQ(sensor_bridges_.count(trajectory_id), 1);
+  CHECK(GetTrajectoryStates().count(trajectory_id));
   map_builder_->FinishTrajectory(trajectory_id);
-  sensor_bridges_.erase(trajectory_id);
+  // Support cases with no subscribers, e.g. state visualization.
+  if (sensor_bridges_.count(trajectory_id)) {
+    sensor_bridges_.erase(trajectory_id);
+  }
 }
 
 void MapBuilderBridge::RunFinalOptimization() {

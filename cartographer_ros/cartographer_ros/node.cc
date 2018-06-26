@@ -485,12 +485,15 @@ cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
   }
 
   // Shutdown the subscribers of this trajectory.
-  for (auto& entry : subscribers_[trajectory_id]) {
-    entry.subscriber.shutdown();
-    subscribed_topics_.erase(entry.topic);
-    LOG(INFO) << "Shutdown the subscriber of [" << entry.topic << "]";
+  // A valid case with no subscribers is e.g. if we just visualize states.
+  if (subscribers_.count(trajectory_id)) {
+    for (auto& entry : subscribers_[trajectory_id]) {
+      entry.subscriber.shutdown();
+      subscribed_topics_.erase(entry.topic);
+      LOG(INFO) << "Shutdown the subscriber of [" << entry.topic << "]";
+    }
+    CHECK_EQ(subscribers_.erase(trajectory_id), 1);
   }
-  CHECK_EQ(subscribers_.erase(trajectory_id), 1);
   map_builder_bridge_.FinishTrajectory(trajectory_id);
   const std::string message =
       "Finished trajectory " + std::to_string(trajectory_id) + ".";
@@ -572,17 +575,19 @@ bool Node::HandleGetTrajectoryStates(
   response.trajectory_states.header.stamp = ros::Time::now();
   for (const auto& entry : map_builder_bridge_.GetTrajectoryStates()) {
     response.trajectory_states.trajectory_id.push_back(entry.first);
-    response.trajectory_states.trajectory_state.push_back([&]() {
-      if (entry.second == TrajectoryState::ACTIVE) {
-        return ::cartographer_ros_msgs::TrajectoryStates::ACTIVE;
-      } else if (entry.second == TrajectoryState::FINISHED) {
-        return ::cartographer_ros_msgs::TrajectoryStates::FINISHED;
-      } else if (entry.second == TrajectoryState::FROZEN) {
-        return ::cartographer_ros_msgs::TrajectoryStates::FROZEN;
-      } else {
-        return ::cartographer_ros_msgs::TrajectoryStates::DELETED;
-      }
-    }());
+    if (entry.second == TrajectoryState::ACTIVE) {
+      response.trajectory_states.trajectory_state.push_back(
+          ::cartographer_ros_msgs::TrajectoryStates::ACTIVE);
+    } else if (entry.second == TrajectoryState::FINISHED) {
+      response.trajectory_states.trajectory_state.push_back(
+          ::cartographer_ros_msgs::TrajectoryStates::FINISHED);
+    } else if (entry.second == TrajectoryState::FROZEN) {
+      response.trajectory_states.trajectory_state.push_back(
+          ::cartographer_ros_msgs::TrajectoryStates::FROZEN);
+    } else {
+      response.trajectory_states.trajectory_state.push_back(
+          ::cartographer_ros_msgs::TrajectoryStates::DELETED);
+    }
   }
   return true;
 }
@@ -628,11 +633,17 @@ bool Node::FinishTrajectory(const int trajectory_id) {
 
 void Node::RunFinalOptimization() {
   {
-    carto::common::MutexLocker lock(&mutex_);
     for (const auto& entry : map_builder_bridge_.GetTrajectoryStates()) {
-      CHECK(entry.second != TrajectoryState::ACTIVE)
-          << "Can't run final optimization if there is one or more active "
-             "trajectories.";
+      const int trajectory_id = entry.first;
+      if (entry.second == TrajectoryState::ACTIVE) {
+        LOG(WARNING)
+            << "Can't run final optimization if there is one or more active "
+               "trajectories. Trying to finish trajectory with ID "
+            << std::to_string(trajectory_id) << " now.";
+        CHECK(FinishTrajectory(trajectory_id))
+            << "Failed to finish trajectory with ID "
+            << std::to_string(trajectory_id) << ".";
+      }
     }
   }
   // Assuming we are not adding new data anymore, the final optimization
