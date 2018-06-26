@@ -479,7 +479,8 @@ cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
     const std::string error =
         "Trajectory " + std::to_string(trajectory_id) + " has been deleted.";
     LOG(ERROR) << error;
-    status_response.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
+    status_response.code =
+      cartographer_ros_msgs::StatusCode::RESOURCE_EXHAUSTED;
     status_response.message = error;
     return status_response;
   }
@@ -637,7 +638,7 @@ void Node::RunFinalOptimization() {
       const int trajectory_id = entry.first;
       if (entry.second == TrajectoryState::ACTIVE) {
         LOG(WARNING)
-            << "Can't run final optimization if there is one or more active "
+            << "Can't run final optimization if there are one or more active "
                "trajectories. Trying to finish trajectory with ID "
             << std::to_string(trajectory_id) << " now.";
         CHECK(FinishTrajectory(trajectory_id))
