@@ -480,7 +480,7 @@ cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
         "Trajectory " + std::to_string(trajectory_id) + " has been deleted.";
     LOG(ERROR) << error;
     status_response.code =
-      cartographer_ros_msgs::StatusCode::RESOURCE_EXHAUSTED;
+        cartographer_ros_msgs::StatusCode::RESOURCE_EXHAUSTED;
     status_response.message = error;
     return status_response;
   }
