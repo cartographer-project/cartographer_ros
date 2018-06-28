@@ -26,7 +26,6 @@
 #include "cartographer_ros/metrics/internal/gauge.h"
 #include "cartographer_ros/metrics/internal/histogram.h"
 #include "cartographer_ros_msgs/CollectMetrics.h"
-#include "cartographer_ros_msgs/Metrics.h"
 
 namespace cartographer_ros {
 namespace metrics {
