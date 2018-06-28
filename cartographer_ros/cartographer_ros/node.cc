@@ -85,9 +85,11 @@ using carto::transform::Rigid3d;
 Node::Node(
     const NodeOptions& node_options,
     std::unique_ptr<cartographer::mapping::MapBuilderInterface> map_builder,
-    tf2_ros::Buffer* const tf_buffer)
+    tf2_ros::Buffer* const tf_buffer,
+    std::unique_ptr<cartographer_ros::metrics::FamilyFactory> metrics_registry)
     : node_options_(node_options),
-      map_builder_bridge_(node_options_, std::move(map_builder), tf_buffer) {
+      map_builder_bridge_(node_options_, std::move(map_builder), tf_buffer),
+      metrics_registry_(std::move(metrics_registry)) {
   carto::common::MutexLocker lock(&mutex_);
   submap_list_publisher_ =
       node_handle_.advertise<::cartographer_ros_msgs::SubmapList>(
@@ -109,6 +111,8 @@ Node::Node(
       kFinishTrajectoryServiceName, &Node::HandleFinishTrajectory, this));
   service_servers_.push_back(node_handle_.advertiseService(
       kWriteStateServiceName, &Node::HandleWriteState, this));
+  service_servers_.push_back(node_handle_.advertiseService(
+      kCollectMetricsServiceName, &Node::HandleCollectMetrics, this));
 
   scan_matched_point_cloud_publisher_ =
       node_handle_.advertise<sensor_msgs::PointCloud2>(
@@ -573,6 +577,17 @@ bool Node::HandleWriteState(
     response.status.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
     response.status.message = "Failed to write '" + request.filename + "'.";
   }
+  return true;
+}
+
+bool Node::HandleCollectMetrics(
+    ::cartographer_ros_msgs::CollectMetrics::Request& request,
+    ::cartographer_ros_msgs::CollectMetrics::Response& response) {
+  carto::common::MutexLocker lock(&mutex_);
+  metrics_registry_->CollectMetrics(&response);
+  response.timestamp = ros::Time::now();
+  response.status.code = cartographer_ros_msgs::StatusCode::OK;
+  response.status.message = "Successfully collected metrics.";
   return true;
 }
 

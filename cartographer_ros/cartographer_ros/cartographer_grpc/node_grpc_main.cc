@@ -15,6 +15,9 @@
  */
 
 #include "cartographer/cloud/client/map_builder_stub.h"
+#include "cartographer/common/make_unique.h"
+#include "cartographer/metrics/register.h"
+#include "cartographer_ros/metrics/family_factory.h"
 #include "cartographer_ros/node.h"
 #include "cartographer_ros/node_options.h"
 #include "cartographer_ros/ros_log_sink.h"
@@ -45,6 +48,10 @@ namespace cartographer_ros {
 namespace {
 
 void Run() {
+  auto metrics_registry =
+      ::cartographer::common::make_unique<metrics::FamilyFactory>();
+  ::cartographer::metrics::RegisterAllMetrics(metrics_registry.get());
+
   constexpr double kTfBufferCacheTimeInSeconds = 10.;
   tf2_ros::Buffer tf_buffer{::ros::Duration(kTfBufferCacheTimeInSeconds)};
   tf2_ros::TransformListener tf(tf_buffer);
@@ -56,7 +63,8 @@ void Run() {
   auto map_builder =
       cartographer::common::make_unique<::cartographer::cloud::MapBuilderStub>(
           FLAGS_server_address);
-  Node node(node_options, std::move(map_builder), &tf_buffer);
+  Node node(node_options, std::move(map_builder), &tf_buffer,
+            std::move(metrics_registry));
 
   if (!FLAGS_load_state_filename.empty()) {
     node.LoadState(FLAGS_load_state_filename, true /* load_frozen_state */);
