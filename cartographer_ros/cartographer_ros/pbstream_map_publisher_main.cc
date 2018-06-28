@@ -76,9 +76,8 @@ std::unique_ptr<nav_msgs::OccupancyGrid> LoadOccupancyGridMsg(
   LOG(INFO) << "Generating combined map image from submap slices.";
   const auto painted_slices =
       ::cartographer::io::PaintSubmapSlices(submap_slices, resolution);
-  std::unique_ptr<nav_msgs::OccupancyGrid> msg_ptr = CreateOccupancyGridMsg(
-      painted_slices, resolution, FLAGS_map_frame_id, ros::Time::now());
-  return msg_ptr;
+  return CreateOccupancyGridMsg(painted_slices, resolution, FLAGS_map_frame_id,
+                                ros::Time::now());
 }
 
 void Run(const std::string& pbstream_filename, const std::string& map_topic,
