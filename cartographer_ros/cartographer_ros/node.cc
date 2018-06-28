@@ -576,18 +576,23 @@ bool Node::HandleGetTrajectoryStates(
   response.trajectory_states.header.stamp = ros::Time::now();
   for (const auto& entry : map_builder_bridge_.GetTrajectoryStates()) {
     response.trajectory_states.trajectory_id.push_back(entry.first);
-    if (entry.second == TrajectoryState::ACTIVE) {
-      response.trajectory_states.trajectory_state.push_back(
-          ::cartographer_ros_msgs::TrajectoryStates::ACTIVE);
-    } else if (entry.second == TrajectoryState::FINISHED) {
-      response.trajectory_states.trajectory_state.push_back(
-          ::cartographer_ros_msgs::TrajectoryStates::FINISHED);
-    } else if (entry.second == TrajectoryState::FROZEN) {
-      response.trajectory_states.trajectory_state.push_back(
-          ::cartographer_ros_msgs::TrajectoryStates::FROZEN);
-    } else {
-      response.trajectory_states.trajectory_state.push_back(
-          ::cartographer_ros_msgs::TrajectoryStates::DELETED);
+    switch (entry.second) {
+      case TrajectoryState::ACTIVE:
+        response.trajectory_states.trajectory_state.push_back(
+            ::cartographer_ros_msgs::TrajectoryStates::ACTIVE);
+        break;
+      case TrajectoryState::FINISHED:
+        response.trajectory_states.trajectory_state.push_back(
+            ::cartographer_ros_msgs::TrajectoryStates::FINISHED);
+        break;
+      case TrajectoryState::FROZEN:
+        response.trajectory_states.trajectory_state.push_back(
+            ::cartographer_ros_msgs::TrajectoryStates::FROZEN);
+        break;
+      case TrajectoryState::DELETED:
+        response.trajectory_states.trajectory_state.push_back(
+            ::cartographer_ros_msgs::TrajectoryStates::DELETED);
+        break;
     }
   }
   return true;
