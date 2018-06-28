@@ -53,8 +53,8 @@ class Gauge : public ::cartographer::metrics::Gauge {
     msg.type = cartographer_ros_msgs::Metric::TYPE_GAUGE;
     for (const auto& label : labels_) {
       cartographer_ros_msgs::Label label_msg;
-      label_msg.first = label.first;
-      label_msg.second = label.second;
+      label_msg.key = label.first;
+      label_msg.value = label.second;
       msg.labels.push_back(label_msg);
     }
     msg.value = Value();
