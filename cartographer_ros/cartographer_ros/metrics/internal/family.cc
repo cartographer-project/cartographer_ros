@@ -20,7 +20,7 @@
 #include "cartographer_ros/metrics/internal/counter.h"
 #include "cartographer_ros/metrics/internal/gauge.h"
 #include "cartographer_ros/metrics/internal/histogram.h"
-#include "cartographer_ros_msgs/Metrics.h"
+#include "cartographer_ros_msgs/MetricFamily.h"
 
 namespace cartographer_ros {
 namespace metrics {
@@ -34,12 +34,12 @@ Counter* CounterFamily::Add(const std::map<std::string, std::string>& labels) {
   return ptr;
 }
 
-cartographer_ros_msgs::CounterFamily CounterFamily::ToRosMessage() {
-  cartographer_ros_msgs::CounterFamily family_msg;
+cartographer_ros_msgs::MetricFamily CounterFamily::ToRosMessage() {
+  cartographer_ros_msgs::MetricFamily family_msg;
   family_msg.name = name_;
   family_msg.description = description_;
   for (const auto& wrapper : wrappers_) {
-    family_msg.counters.push_back(wrapper->ToRosMessage());
+    family_msg.metrics.push_back(wrapper->ToRosMessage());
   }
   return family_msg;
 }
@@ -51,12 +51,12 @@ Gauge* GaugeFamily::Add(const std::map<std::string, std::string>& labels) {
   return ptr;
 }
 
-cartographer_ros_msgs::GaugeFamily GaugeFamily::ToRosMessage() {
-  cartographer_ros_msgs::GaugeFamily family_msg;
+cartographer_ros_msgs::MetricFamily GaugeFamily::ToRosMessage() {
+  cartographer_ros_msgs::MetricFamily family_msg;
   family_msg.name = name_;
   family_msg.description = description_;
   for (const auto& wrapper : wrappers_) {
-    family_msg.gauges.push_back(wrapper->ToRosMessage());
+    family_msg.metrics.push_back(wrapper->ToRosMessage());
   }
   return family_msg;
 }
@@ -70,12 +70,12 @@ Histogram* HistogramFamily::Add(
   return ptr;
 }
 
-cartographer_ros_msgs::HistogramFamily HistogramFamily::ToRosMessage() {
-  cartographer_ros_msgs::HistogramFamily family_msg;
+cartographer_ros_msgs::MetricFamily HistogramFamily::ToRosMessage() {
+  cartographer_ros_msgs::MetricFamily family_msg;
   family_msg.name = name_;
   family_msg.description = description_;
   for (const auto& wrapper : wrappers_) {
-    family_msg.histograms.push_back(wrapper->ToRosMessage());
+    family_msg.metrics.push_back(wrapper->ToRosMessage());
   }
   return family_msg;
 }

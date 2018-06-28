@@ -25,7 +25,7 @@
 #include "cartographer/common/mutex.h"
 #include "cartographer/metrics/histogram.h"
 #include "cartographer_ros/metrics/internal/counter.h"
-#include "cartographer_ros_msgs/Histogram.h"
+#include "cartographer_ros_msgs/Metric.h"
 #include "glog/logging.h"
 
 namespace cartographer_ros {
@@ -82,8 +82,9 @@ class Histogram : public ::cartographer::metrics::Histogram {
     return std::accumulate(bucket_counts_.begin(), bucket_counts_.end(), 0.);
   }
 
-  cartographer_ros_msgs::Histogram ToRosMessage() {
-    cartographer_ros_msgs::Histogram msg;
+  cartographer_ros_msgs::Metric ToRosMessage() {
+    cartographer_ros_msgs::Metric msg;
+    msg.type = cartographer_ros_msgs::Metric::TYPE_HISTOGRAM;
     for (const auto& label : labels_) {
       cartographer_ros_msgs::Label label_msg;
       label_msg.first = label.first;

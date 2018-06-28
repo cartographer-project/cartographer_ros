@@ -142,10 +142,10 @@ class Node {
       cartographer_ros_msgs::FinishTrajectory::Response& response);
   bool HandleWriteState(cartographer_ros_msgs::WriteState::Request& request,
                         cartographer_ros_msgs::WriteState::Response& response);
-
   bool HandleCollectMetrics(
       cartographer_ros_msgs::CollectMetrics::Request& request,
       cartographer_ros_msgs::CollectMetrics::Response& response);
+
   // Returns the set of SensorIds expected for a trajectory.
   // 'SensorId::id' is the expected ROS topic name.
   std::set<::cartographer::mapping::TrajectoryBuilderInterface::SensorId>

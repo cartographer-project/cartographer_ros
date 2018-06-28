@@ -12,6 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-string name
-string description
-cartographer_ros_msgs/Gauge[] gauges
+uint8 TYPE_COUNTER=0
+uint8 TYPE_GAUGE=1
+uint8 TYPE_HISTOGRAM=2
+
+uint8 type
+cartographer_ros_msgs/Label[] labels
+
+# TYPE_COUNTER && TYPE_GAUGE
+float64 value
+
+# TYPE_HISTOGRAM
+cartographer_ros_msgs/HistogramBucket[] counts_by_bucket

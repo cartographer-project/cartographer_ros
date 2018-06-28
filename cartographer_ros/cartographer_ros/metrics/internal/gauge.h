@@ -22,7 +22,7 @@
 #include <string>
 
 #include "cartographer/metrics/gauge.h"
-#include "cartographer_ros_msgs/Gauge.h"
+#include "cartographer_ros_msgs/Metric.h"
 
 namespace cartographer_ros {
 namespace metrics {
@@ -48,8 +48,9 @@ class Gauge : public ::cartographer::metrics::Gauge {
   }
   double Value() const { return value_.load(); }
 
-  cartographer_ros_msgs::Gauge ToRosMessage() {
-    cartographer_ros_msgs::Gauge msg;
+  cartographer_ros_msgs::Metric ToRosMessage() {
+    cartographer_ros_msgs::Metric msg;
+    msg.type = cartographer_ros_msgs::Metric::TYPE_GAUGE;
     for (const auto& label : labels_) {
       cartographer_ros_msgs::Label label_msg;
       label_msg.first = label.first;

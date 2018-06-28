@@ -99,5 +99,6 @@ TEST(Metrics, HistogramScaledPowersOfTest) {
   // ...  |  1  |  2  |  1  |
   EXPECT_EQ(histogram.CountsByBucket()[kInfiniteBoundary], 1);
 }
+
 }  // namespace metrics
 }  // namespace cartographer_ros

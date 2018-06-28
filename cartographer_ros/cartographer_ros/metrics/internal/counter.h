@@ -19,7 +19,7 @@
 
 #include "cartographer/metrics/counter.h"
 #include "cartographer_ros/metrics/internal/gauge.h"
-#include "cartographer_ros_msgs/Counter.h"
+#include "cartographer_ros_msgs/Metric.h"
 
 namespace cartographer_ros {
 namespace metrics {
@@ -36,11 +36,9 @@ class Counter : public ::cartographer::metrics::Counter {
 
   double Value() const { return gauge_.Value(); }
 
-  cartographer_ros_msgs::Counter ToRosMessage() {
-    cartographer_ros_msgs::Counter msg;
-    auto gauge_msg = gauge_.ToRosMessage();
-    msg.value = gauge_msg.value;
-    msg.labels = gauge_msg.labels;
+  cartographer_ros_msgs::Metric ToRosMessage() {
+    cartographer_ros_msgs::Metric msg = gauge_.ToRosMessage();
+    msg.type = cartographer_ros_msgs::Metric::TYPE_COUNTER;
     return msg;
   }
 

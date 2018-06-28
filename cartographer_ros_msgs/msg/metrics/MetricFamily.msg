@@ -12,5 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cartographer_ros_msgs/Label[] labels
-cartographer_ros_msgs/HistogramBucket[] counts_by_bucket
+string name
+string description
+cartographer_ros_msgs/Metric[] metrics

@@ -17,10 +17,6 @@
 #include "cartographer_ros/metrics/family_factory.h"
 
 #include "cartographer/common/make_unique.h"
-#include "cartographer_ros/metrics/internal/counter.h"
-#include "cartographer_ros/metrics/internal/gauge.h"
-#include "cartographer_ros/metrics/internal/histogram.h"
-#include "cartographer_ros_msgs/Metrics.h"
 
 namespace cartographer_ros {
 namespace metrics {
@@ -58,18 +54,18 @@ FamilyFactory::NewHistogramFamily(const std::string& name,
   return ptr;
 }
 
-cartographer_ros_msgs::Metrics FamilyFactory::CollectMetrics() const {
+void FamilyFactory::CollectMetrics(
+    ::cartographer_ros_msgs::CollectMetrics::Response* response) const {
   cartographer_ros_msgs::Metrics metrics_msg;
   for (const auto& counter_family : counter_families_) {
-    metrics_msg.counter_families.push_back(counter_family->ToRosMessage());
+    response->metric_families.push_back(counter_family->ToRosMessage());
   }
   for (const auto& gauge_family : gauge_families_) {
-    metrics_msg.gauge_families.push_back(gauge_family->ToRosMessage());
+    response->metric_families.push_back(gauge_family->ToRosMessage());
   }
   for (const auto& histogram_family : histogram_families_) {
-    metrics_msg.histogram_families.push_back(histogram_family->ToRosMessage());
+    response->metric_families.push_back(histogram_family->ToRosMessage());
   }
-  return metrics_msg;
 }
 
 }  // namespace metrics
