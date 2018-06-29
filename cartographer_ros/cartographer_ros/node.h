@@ -29,9 +29,11 @@
 #include "cartographer/mapping/map_builder_interface.h"
 #include "cartographer/mapping/pose_extrapolator.h"
 #include "cartographer_ros/map_builder_bridge.h"
+#include "cartographer_ros/metrics/family_factory.h"
 #include "cartographer_ros/node_constants.h"
 #include "cartographer_ros/node_options.h"
 #include "cartographer_ros/trajectory_options.h"
+#include "cartographer_ros_msgs/ReadMetrics.h"
 #include "cartographer_ros_msgs/FinishTrajectory.h"
 #include "cartographer_ros_msgs/GetTrajectoryStates.h"
 #include "cartographer_ros_msgs/SensorTopics.h"
@@ -58,7 +60,9 @@ class Node {
  public:
   Node(const NodeOptions& node_options,
        std::unique_ptr<cartographer::mapping::MapBuilderInterface> map_builder,
-       tf2_ros::Buffer* tf_buffer);
+       tf2_ros::Buffer* tf_buffer,
+       std::unique_ptr<cartographer_ros::metrics::FamilyFactory>
+           metrics_registry);
   ~Node();
 
   Node(const Node&) = delete;
@@ -142,6 +146,9 @@ class Node {
   bool HandleGetTrajectoryStates(
       ::cartographer_ros_msgs::GetTrajectoryStates::Request& request,
       ::cartographer_ros_msgs::GetTrajectoryStates::Response& response);
+  bool HandleReadMetrics(
+      cartographer_ros_msgs::ReadMetrics::Request& request,
+      cartographer_ros_msgs::ReadMetrics::Response& response);
 
   // Returns the set of SensorIds expected for a trajectory.
   // 'SensorId::id' is the expected ROS topic name.
@@ -212,11 +219,13 @@ class Node {
   // We have to keep the timer handles of ::ros::WallTimers around, otherwise
   // they do not fire.
   std::vector<::ros::WallTimer> wall_timers_;
+
   // The timer for publishing local trajectory data (i.e. pose transforms and
   // range data point clouds) is a regular timer which is not triggered when
   // simulation time is standing still. This prevents overflowing the transform
   // listener buffer by publishing the same transforms over and over again.
   ::ros::Timer publish_local_trajectory_data_timer_;
+  std::unique_ptr<cartographer_ros::metrics::FamilyFactory> metrics_registry_;
 };
 
 }  // namespace cartographer_ros

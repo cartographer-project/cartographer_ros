@@ -22,6 +22,9 @@
 #include <time.h>
 #include <chrono>
 
+#include "cartographer/common/make_unique.h"
+#include "cartographer/metrics/register.h"
+#include "cartographer_ros/metrics/family_factory.h"
 #include "cartographer_ros/node.h"
 #include "cartographer_ros/playable_bag.h"
 #include "cartographer_ros/split_string.h"
@@ -130,7 +133,12 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
 
   tf_buffer.setUsingDedicatedThread(true);
 
-  Node node(node_options, std::move(map_builder), &tf_buffer);
+  auto metrics_registry =
+      ::cartographer::common::make_unique<metrics::FamilyFactory>();
+  ::cartographer::metrics::RegisterAllMetrics(metrics_registry.get());
+
+  Node node(node_options, std::move(map_builder), &tf_buffer,
+            std::move(metrics_registry));
   if (!FLAGS_load_state_filename.empty()) {
     node.LoadState(FLAGS_load_state_filename, FLAGS_load_frozen_state);
   }
