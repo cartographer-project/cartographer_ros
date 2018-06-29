@@ -28,7 +28,7 @@ namespace cartographer_ros {
 namespace metrics {
 
 TEST(Metrics, GaugeTest) {
-  Gauge gauge;
+  Gauge gauge({});
   EXPECT_EQ(gauge.Value(), 0.);
   gauge.Increment(1.2);
   EXPECT_EQ(gauge.Value(), 1.2);
@@ -41,7 +41,7 @@ TEST(Metrics, GaugeTest) {
 }
 
 TEST(Metrics, CounterTest) {
-  Gauge counter;
+  Gauge counter({});
   EXPECT_EQ(counter.Value(), 0.);
   counter.Increment(1.2);
   EXPECT_EQ(counter.Value(), 1.2);
