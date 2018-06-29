@@ -206,6 +206,8 @@ cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
   for (const auto& submap_id_pose :
        map_builder_->pose_graph()->GetAllSubmapPoses()) {
     cartographer_ros_msgs::SubmapEntry submap_entry;
+    submap_entry.is_frozen = map_builder_->pose_graph()->IsTrajectoryFrozen(
+        submap_id_pose.id.trajectory_id);
     submap_entry.trajectory_id = submap_id_pose.id.trajectory_id;
     submap_entry.submap_index = submap_id_pose.id.submap_index;
     submap_entry.submap_version = submap_id_pose.data.version;
