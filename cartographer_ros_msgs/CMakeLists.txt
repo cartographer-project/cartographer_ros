@@ -34,14 +34,16 @@ add_message_files(
     SubmapTexture.msg
     SensorTopics.msg
     TrajectoryOptions.msg
+    TrajectoryStates.msg
 )
 
 add_service_files(
   FILES
-    SubmapQuery.srv
     FinishTrajectory.srv
+    GetTrajectoryStates.srv
     StartTrajectory.srv
-    WriteState.srv
+    SubmapQuery.srv
+    WriteState.srv  
 )
 
 generate_messages(
