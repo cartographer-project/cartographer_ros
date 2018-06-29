@@ -34,9 +34,8 @@ namespace metrics {
 // and provides a wrapper to collect ROS messages from the metrics it owns.
 class FamilyFactory : public ::cartographer::metrics::FamilyFactory {
  public:
-  FamilyFactory();
-
   ::cartographer::metrics::Family<::cartographer::metrics::Counter>*
+
   NewCounterFamily(const std::string& name,
                    const std::string& description) override;
   ::cartographer::metrics::Family<::cartographer::metrics::Gauge>*
@@ -55,6 +54,7 @@ class FamilyFactory : public ::cartographer::metrics::FamilyFactory {
   std::vector<std::unique_ptr<GaugeFamily>> gauge_families_;
   std::vector<std::unique_ptr<HistogramFamily>> histogram_families_;
 };
+
 }  // namespace metrics
 }  // namespace cartographer_ros
 

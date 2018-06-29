@@ -20,9 +20,9 @@
 
 namespace cartographer_ros {
 namespace metrics {
+
 using BucketBoundaries = ::cartographer::metrics::Histogram::BucketBoundaries;
 
-FamilyFactory::FamilyFactory() {}
 ::cartographer::metrics::Family<::cartographer::metrics::Counter>*
 FamilyFactory::NewCounterFamily(const std::string& name,
                                 const std::string& description) {
