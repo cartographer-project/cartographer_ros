@@ -41,7 +41,7 @@ TEST(Metrics, GaugeTest) {
 }
 
 TEST(Metrics, CounterTest) {
-  Gauge counter({});
+  Counter counter({});
   EXPECT_EQ(counter.Value(), 0.);
   counter.Increment(1.2);
   EXPECT_EQ(counter.Value(), 1.2);
