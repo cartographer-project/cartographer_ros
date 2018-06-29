@@ -48,8 +48,8 @@ DEFINE_double(resolution, 0.05, "Resolution of a grid cell in the drawn map.");
 namespace cartographer_ros {
 namespace {
 
-void Run(const std::string& pbstream_filename, const std::string& map_topic,
-         const std::string& map_frame_id, const double resolution) {
+std::unique_ptr<nav_msgs::OccupancyGrid> LoadOccupancyGridMsg(
+    const std::string& pbstream_filename, const double resolution) {
   ::cartographer::io::ProtoStreamReader reader(pbstream_filename);
   ::cartographer::io::ProtoStreamDeserializer deserializer(&reader);
 
@@ -73,15 +73,21 @@ void Run(const std::string& pbstream_filename, const std::string& map_topic,
   }
   CHECK(reader.eof());
 
-  ::ros::NodeHandle node_handle("");
-  ::ros::Publisher pub = node_handle.advertise<nav_msgs::OccupancyGrid>(
-      map_topic, kLatestOnlyPublisherQueueSize, true /*latched */);
-
   LOG(INFO) << "Generating combined map image from submap slices.";
   const auto painted_slices =
       ::cartographer::io::PaintSubmapSlices(submap_slices, resolution);
-  std::unique_ptr<nav_msgs::OccupancyGrid> msg_ptr = CreateOccupancyGridMsg(
-      painted_slices, resolution, FLAGS_map_frame_id, ros::Time::now());
+  return CreateOccupancyGridMsg(painted_slices, resolution, FLAGS_map_frame_id,
+                                ros::Time::now());
+}
+
+void Run(const std::string& pbstream_filename, const std::string& map_topic,
+         const std::string& map_frame_id, const double resolution) {
+  std::unique_ptr<nav_msgs::OccupancyGrid> msg_ptr =
+      LoadOccupancyGridMsg(pbstream_filename, resolution);
+
+  ::ros::NodeHandle node_handle("");
+  ::ros::Publisher pub = node_handle.advertise<nav_msgs::OccupancyGrid>(
+      map_topic, kLatestOnlyPublisherQueueSize, true /*latched */);
 
   LOG(INFO) << "Publishing occupancy grid topic " << map_topic
             << " (frame_id: " << map_frame_id
