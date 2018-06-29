@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# A histogram bucket between two boundaries i,j counts values x for which:
-#   bucket_boundary_i < x <= bucket_boundary_j
+# A histogram bucket counts values x for which:
+#   previous_boundary < x <= bucket_boundary
 # holds.
 float64 bucket_boundary
 float64 count

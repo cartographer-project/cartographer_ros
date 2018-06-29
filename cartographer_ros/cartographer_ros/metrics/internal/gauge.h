@@ -29,8 +29,8 @@ namespace metrics {
 
 class Gauge : public ::cartographer::metrics::Gauge {
  public:
-  Gauge() {}
-  Gauge(const std::map<std::string, std::string>& labels) : labels_(labels) {}
+  explicit Gauge(const std::map<std::string, std::string>& labels)
+      : labels_(labels) {}
 
   void Decrement(const double by_value) override { Add(-1. * by_value); }
 

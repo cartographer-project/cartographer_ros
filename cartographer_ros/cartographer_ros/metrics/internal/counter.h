@@ -26,9 +26,8 @@ namespace metrics {
 
 class Counter : public ::cartographer::metrics::Counter {
  public:
-  Counter() {}
-
-  Counter(const std::map<std::string, std::string>& labels) : gauge_(labels) {}
+  explicit Counter(const std::map<std::string, std::string>& labels)
+      : gauge_(labels) {}
 
   void Increment(const double by_value) override { gauge_.Increment(by_value); }
 

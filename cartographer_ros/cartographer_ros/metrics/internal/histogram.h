@@ -33,10 +33,10 @@ using BucketBoundaries = ::cartographer::metrics::Histogram::BucketBoundaries;
 
 class Histogram : public ::cartographer::metrics::Histogram {
  public:
-  Histogram(const std::map<std::string, std::string>& labels,
-            const BucketBoundaries& bucket_boundaries);
+  explicit Histogram(const std::map<std::string, std::string>& labels,
+                     const BucketBoundaries& bucket_boundaries);
 
-  Histogram(const BucketBoundaries& bucket_boundaries);
+  explicit Histogram(const BucketBoundaries& bucket_boundaries);
 
   void Observe(double value) override;
 
