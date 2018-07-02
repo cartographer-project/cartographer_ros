@@ -36,6 +36,7 @@
 #include "sensor_msgs/MultiEchoLaserScan.h"
 #include "sensor_msgs/NavSatFix.h"
 #include "sensor_msgs/PointCloud2.h"
+#include "visualization_msgs/MarkerArray.h"
 
 namespace cartographer_ros {
 
@@ -59,6 +60,9 @@ class SensorBridge {
   void HandleLandmarkMessage(
       const std::string& sensor_id,
       const cartographer_ros_msgs::LandmarkList::ConstPtr& msg);
+  void HandleLandmarkMessage(
+      const std::string& sensor_id,
+      const visualization_msgs::MarkerArray::ConstPtr& msg);
 
   std::unique_ptr<::cartographer::sensor::ImuData> ToImuData(
       const sensor_msgs::Imu::ConstPtr& msg);

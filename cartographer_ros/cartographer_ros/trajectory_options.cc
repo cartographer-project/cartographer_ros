@@ -55,6 +55,8 @@ TrajectoryOptions CreateTrajectoryOptions(
   options.use_odometry = lua_parameter_dictionary->GetBool("use_odometry");
   options.use_nav_sat = lua_parameter_dictionary->GetBool("use_nav_sat");
   options.use_landmarks = lua_parameter_dictionary->GetBool("use_landmarks");
+  options.use_landmark_markers =
+      lua_parameter_dictionary->GetBool("use_landmark_markers");
   options.publish_frame_projected_to_2d =
       lua_parameter_dictionary->GetBool("publish_frame_projected_to_2d");
   options.num_laser_scans =
@@ -76,6 +78,8 @@ TrajectoryOptions CreateTrajectoryOptions(
       lua_parameter_dictionary->GetDouble("imu_sampling_ratio");
   options.landmarks_sampling_ratio =
       lua_parameter_dictionary->GetDouble("landmarks_sampling_ratio");
+  options.landmark_markers_sampling_ratio =
+      lua_parameter_dictionary->GetDouble("landmark_markers_sampling_ratio");
   CheckTrajectoryOptions(options);
   return options;
 }
@@ -114,6 +118,7 @@ bool FromRosMessage(const cartographer_ros_msgs::TrajectoryOptions& msg,
   options->use_odometry = msg.use_odometry;
   options->use_nav_sat = msg.use_nav_sat;
   options->use_landmarks = msg.use_landmarks;
+  options->use_landmark_markers = msg.use_landmark_markers;
   options->publish_frame_projected_to_2d = msg.publish_frame_projected_to_2d;
   options->num_laser_scans = msg.num_laser_scans;
   options->num_multi_echo_laser_scans = msg.num_multi_echo_laser_scans;
@@ -126,6 +131,8 @@ bool FromRosMessage(const cartographer_ros_msgs::TrajectoryOptions& msg,
       msg.fixed_frame_pose_sampling_ratio;
   options->imu_sampling_ratio = msg.imu_sampling_ratio;
   options->landmarks_sampling_ratio = msg.landmarks_sampling_ratio;
+  options->landmark_markers_sampling_ratio =
+      msg.landmark_markers_sampling_ratio;
   if (!options->trajectory_builder_options.ParseFromString(
           msg.trajectory_builder_options_proto)) {
     LOG(ERROR) << "Failed to parse protobuf";
@@ -145,6 +152,7 @@ cartographer_ros_msgs::TrajectoryOptions ToRosMessage(
   msg.use_odometry = options.use_odometry;
   msg.use_nav_sat = options.use_nav_sat;
   msg.use_landmarks = options.use_landmarks;
+  msg.use_landmark_markers = options.use_landmark_markers;
   msg.publish_frame_projected_to_2d = options.publish_frame_projected_to_2d;
   msg.num_laser_scans = options.num_laser_scans;
   msg.num_multi_echo_laser_scans = options.num_multi_echo_laser_scans;
@@ -155,6 +163,7 @@ cartographer_ros_msgs::TrajectoryOptions ToRosMessage(
   msg.fixed_frame_pose_sampling_ratio = options.fixed_frame_pose_sampling_ratio;
   msg.imu_sampling_ratio = options.imu_sampling_ratio;
   msg.landmarks_sampling_ratio = options.landmarks_sampling_ratio;
+  msg.landmark_markers_sampling_ratio = options.landmark_markers_sampling_ratio;
   options.trajectory_builder_options.SerializeToString(
       &msg.trajectory_builder_options_proto);
   return msg;

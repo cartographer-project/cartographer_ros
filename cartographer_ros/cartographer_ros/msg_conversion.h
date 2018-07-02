@@ -31,6 +31,7 @@
 #include "sensor_msgs/LaserScan.h"
 #include "sensor_msgs/MultiEchoLaserScan.h"
 #include "sensor_msgs/PointCloud2.h"
+#include "visualization_msgs/MarkerArray.h"
 
 namespace cartographer_ros {
 
@@ -63,6 +64,9 @@ ToPointCloudWithIntensities(const sensor_msgs::PointCloud2& msg);
 
 ::cartographer::sensor::LandmarkData ToLandmarkData(
     const cartographer_ros_msgs::LandmarkList& landmark_list);
+
+::cartographer::sensor::LandmarkData ToLandmarkData(
+    const visualization_msgs::MarkerArray& landmark_markers);
 
 ::cartographer::transform::Rigid3d ToRigid3d(
     const geometry_msgs::TransformStamped& transform);

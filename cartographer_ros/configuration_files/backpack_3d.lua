@@ -27,6 +27,7 @@ options = {
   use_odometry = false,
   use_nav_sat = false,
   use_landmarks = false,
+  use_landmark_markers = false,
   num_laser_scans = 0,
   num_multi_echo_laser_scans = 0,
   num_subdivisions_per_laser_scan = 1,
@@ -40,6 +41,7 @@ options = {
   fixed_frame_pose_sampling_ratio = 1.,
   imu_sampling_ratio = 1.,
   landmarks_sampling_ratio = 1.,
+  landmark_markers_sampling_ratio = 1.,
 }
 
 TRAJECTORY_BUILDER_3D.num_accumulated_range_data = 160
