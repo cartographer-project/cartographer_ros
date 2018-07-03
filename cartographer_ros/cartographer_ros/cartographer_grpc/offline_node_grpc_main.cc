@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include "cartographer_ros/offline_node.h"
 #include "cartographer/cloud/client/map_builder_stub.h"
+#include "cartographer_ros/offline_node.h"
 #include "cartographer_ros/ros_log_sink.h"
 #include "gflags/gflags.h"
 #include "ros/ros.h"
