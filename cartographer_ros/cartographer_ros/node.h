@@ -60,9 +60,7 @@ class Node {
  public:
   Node(const NodeOptions& node_options,
        std::unique_ptr<cartographer::mapping::MapBuilderInterface> map_builder,
-       tf2_ros::Buffer* tf_buffer,
-       std::unique_ptr<cartographer_ros::metrics::FamilyFactory>
-           metrics_registry);
+       tf2_ros::Buffer* tf_buffer, bool collect_metrics);
   ~Node();
 
   Node(const Node&) = delete;
@@ -225,7 +223,9 @@ class Node {
   // simulation time is standing still. This prevents overflowing the transform
   // listener buffer by publishing the same transforms over and over again.
   ::ros::Timer publish_local_trajectory_data_timer_;
-  std::unique_ptr<cartographer_ros::metrics::FamilyFactory> metrics_registry_;
+
+  std::unique_ptr<cartographer_ros::metrics::FamilyFactory> metrics_registry_ =
+      nullptr;
 };
 
 }  // namespace cartographer_ros

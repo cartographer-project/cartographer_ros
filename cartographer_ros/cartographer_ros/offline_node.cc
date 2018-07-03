@@ -22,9 +22,6 @@
 #include <time.h>
 #include <chrono>
 
-#include "cartographer/common/make_unique.h"
-#include "cartographer/metrics/register.h"
-#include "cartographer_ros/metrics/family_factory.h"
 #include "cartographer_ros/node.h"
 #include "cartographer_ros/playable_bag.h"
 #include "cartographer_ros/split_string.h"
@@ -35,6 +32,9 @@
 #include "tf2_ros/static_transform_broadcaster.h"
 #include "urdf/model.h"
 
+DEFINE_bool(collect_metrics, false,
+            "Activates the collection of runtime metrics. If activated, the "
+            "metrics can be accessed via a ROS service.");
 DEFINE_string(configuration_directory, "",
               "First directory in which configuration files are searched, "
               "second is always the Cartographer installation to allow "
@@ -133,12 +133,8 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
 
   tf_buffer.setUsingDedicatedThread(true);
 
-  auto metrics_registry =
-      ::cartographer::common::make_unique<metrics::FamilyFactory>();
-  ::cartographer::metrics::RegisterAllMetrics(metrics_registry.get());
-
   Node node(node_options, std::move(map_builder), &tf_buffer,
-            std::move(metrics_registry));
+            FLAGS_collect_metrics);
   if (!FLAGS_load_state_filename.empty()) {
     node.LoadState(FLAGS_load_state_filename, FLAGS_load_frozen_state);
   }

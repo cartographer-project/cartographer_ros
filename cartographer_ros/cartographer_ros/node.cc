@@ -28,9 +28,11 @@
 #include "cartographer/common/time.h"
 #include "cartographer/mapping/pose_graph_interface.h"
 #include "cartographer/mapping/proto/submap_visualization.pb.h"
+#include "cartographer/metrics/register.h"
 #include "cartographer/sensor/point_cloud.h"
 #include "cartographer/transform/rigid_transform.h"
 #include "cartographer/transform/transform.h"
+#include "cartographer_ros/metrics/family_factory.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/sensor_bridge.h"
 #include "cartographer_ros/tf_bridge.h"
@@ -88,12 +90,15 @@ using TrajectoryState =
 Node::Node(
     const NodeOptions& node_options,
     std::unique_ptr<cartographer::mapping::MapBuilderInterface> map_builder,
-    tf2_ros::Buffer* const tf_buffer,
-    std::unique_ptr<cartographer_ros::metrics::FamilyFactory> metrics_registry)
+    tf2_ros::Buffer* const tf_buffer, const bool collect_metrics)
     : node_options_(node_options),
-      map_builder_bridge_(node_options_, std::move(map_builder), tf_buffer),
-      metrics_registry_(std::move(metrics_registry)) {
+      map_builder_bridge_(node_options_, std::move(map_builder), tf_buffer) {
   carto::common::MutexLocker lock(&mutex_);
+  if (collect_metrics) {
+    metrics_registry_ = carto::common::make_unique<metrics::FamilyFactory>();
+    carto::metrics::RegisterAllMetrics(metrics_registry_.get());
+  }
+
   submap_list_publisher_ =
       node_handle_.advertise<::cartographer_ros_msgs::SubmapList>(
           kSubmapListTopic, kLatestOnlyPublisherQueueSize);
@@ -628,8 +633,13 @@ bool Node::HandleReadMetrics(
     ::cartographer_ros_msgs::ReadMetrics::Request& request,
     ::cartographer_ros_msgs::ReadMetrics::Response& response) {
   carto::common::MutexLocker lock(&mutex_);
-  metrics_registry_->ReadMetrics(&response);
   response.timestamp = ros::Time::now();
+  if (!metrics_registry_) {
+    response.status.code = cartographer_ros_msgs::StatusCode::UNAVAILABLE;
+    response.status.message = "Collection of runtime metrics is not activated.";
+    return true;
+  }
+  metrics_registry_->ReadMetrics(&response);
   response.status.code = cartographer_ros_msgs::StatusCode::OK;
   response.status.message = "Successfully read metrics.";
   return true;
