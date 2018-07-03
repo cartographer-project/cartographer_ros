@@ -50,6 +50,7 @@
 #include "sensor_msgs/NavSatFix.h"
 #include "sensor_msgs/PointCloud2.h"
 #include "tf2_ros/transform_broadcaster.h"
+#include "visualization_msgs/MarkerArray.h"
 
 namespace cartographer_ros {
 
@@ -99,6 +100,9 @@ class Node {
   void HandleLandmarkMessage(
       int trajectory_id, const std::string& sensor_id,
       const cartographer_ros_msgs::LandmarkList::ConstPtr& msg);
+  void HandleLandmarkMessage(
+      int trajectory_id, const std::string& sensor_id,
+      const visualization_msgs::MarkerArray::ConstPtr& msg);
   void HandleImuMessage(int trajectory_id, const std::string& sensor_id,
                         const sensor_msgs::Imu::ConstPtr& msg);
   void HandleLaserScanMessage(int trajectory_id, const std::string& sensor_id,
@@ -189,18 +193,21 @@ class Node {
                              const double odometry_sampling_ratio,
                              const double fixed_frame_pose_sampling_ratio,
                              const double imu_sampling_ratio,
-                             const double landmark_sampling_ratio)
+                             const double landmark_sampling_ratio,
+                             const double landmark_markers_sampling_ratio)
         : rangefinder_sampler(rangefinder_sampling_ratio),
           odometry_sampler(odometry_sampling_ratio),
           fixed_frame_pose_sampler(fixed_frame_pose_sampling_ratio),
           imu_sampler(imu_sampling_ratio),
-          landmark_sampler(landmark_sampling_ratio) {}
+          landmark_sampler(landmark_sampling_ratio),
+          landmark_markers_sampler(landmark_markers_sampling_ratio) {}
 
     ::cartographer::common::FixedRatioSampler rangefinder_sampler;
     ::cartographer::common::FixedRatioSampler odometry_sampler;
     ::cartographer::common::FixedRatioSampler fixed_frame_pose_sampler;
     ::cartographer::common::FixedRatioSampler imu_sampler;
     ::cartographer::common::FixedRatioSampler landmark_sampler;
+    ::cartographer::common::FixedRatioSampler landmark_markers_sampler;
   };
 
   // These are keyed with 'trajectory_id'.

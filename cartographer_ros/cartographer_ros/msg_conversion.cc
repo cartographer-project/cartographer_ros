@@ -284,6 +284,17 @@ LandmarkData ToLandmarkData(const LandmarkList& landmark_list) {
   return landmark_data;
 }
 
+LandmarkData ToLandmarkData(
+    const visualization_msgs::MarkerArray& landmark_markers) {
+  LandmarkData landmark_data;
+  landmark_data.time = FromRos(landmark_markers.markers.front().header.stamp);
+  for (const auto& marker : landmark_markers.markers) {
+    landmark_data.landmark_observations.push_back(
+        {marker.ns, ToRigid3d(marker.pose), marker.scale.x, marker.scale.y});
+  }
+  return landmark_data;
+}
+
 Rigid3d ToRigid3d(const geometry_msgs::TransformStamped& transform) {
   return Rigid3d(ToEigen(transform.transform.translation),
                  ToEigen(transform.transform.rotation));

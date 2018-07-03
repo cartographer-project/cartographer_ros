@@ -137,6 +137,37 @@ TEST(MsgConversion, LandmarkListToLandmarkData) {
                           })))));
 }
 
+TEST(MsgConversion, LandmarkMarkersToLandmarkData) {
+  visualization_msgs::MarkerArray message;
+  visualization_msgs::Marker landmark_0;
+  const ros::Time kTimestamp(10);
+  landmark_0.header.stamp = kTimestamp;
+  landmark_0.ns = "landmark_0";
+  landmark_0.pose.position.x = 1.0;
+  landmark_0.pose.position.y = 2.0;
+  landmark_0.pose.position.z = 3.0;
+  landmark_0.pose.orientation.w = 1.0;
+  landmark_0.pose.orientation.x = 0.0;
+  landmark_0.pose.orientation.y = 0.0;
+  landmark_0.pose.orientation.z = 0.0;
+  landmark_0.scale.x = 1.0;
+  landmark_0.scale.y = 2.0;
+  message.markers.push_back(landmark_0);
+
+  LandmarkData actual_landmark_data = ToLandmarkData(message);
+  EXPECT_THAT(actual_landmark_data,
+              AllOf(Field(&LandmarkData::time, FromRos(kTimestamp)),
+                    Field(&LandmarkData::landmark_observations,
+                          ElementsAre(EqualsLandmark(LandmarkObservation{
+                              "landmark_0",
+                              ::cartographer::transform::Rigid3d(
+                                  Eigen::Vector3d(1., 2., 3.),
+                                  Eigen::Quaterniond(1., 0., 0., 0.)),
+                              1.f,
+                              2.f,
+                          })))));
+}
+
 TEST(MsgConversion, LatLongAltToEcef) {
   Eigen::Vector3d equator_prime_meridian = LatLongAltToEcef(0, 0, 0);
   EXPECT_TRUE(equator_prime_meridian.isApprox(Eigen::Vector3d(6378137, 0, 0)))
