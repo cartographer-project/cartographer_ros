@@ -26,6 +26,7 @@
 #include "cartographer/common/make_unique.h"
 #include "cartographer/common/port.h"
 #include "cartographer/common/time.h"
+#include "cartographer/mapping/pose_graph_interface.h"
 #include "cartographer/mapping/proto/submap_visualization.pb.h"
 #include "cartographer/sensor/point_cloud.h"
 #include "cartographer/transform/rigid_transform.h"
@@ -81,6 +82,8 @@ template <typename MessageType>
 namespace carto = ::cartographer;
 
 using carto::transform::Rigid3d;
+using TrajectoryState =
+    ::cartographer::mapping::PoseGraphInterface::TrajectoryState;
 
 Node::Node(
     const NodeOptions& node_options,
@@ -109,6 +112,8 @@ Node::Node(
       kFinishTrajectoryServiceName, &Node::HandleFinishTrajectory, this));
   service_servers_.push_back(node_handle_.advertiseService(
       kWriteStateServiceName, &Node::HandleWriteState, this));
+  service_servers_.push_back(node_handle_.advertiseService(
+      kGetTrajectoryStatesServiceName, &Node::HandleGetTrajectoryStates, this));
 
   scan_matched_point_cloud_publisher_ =
       node_handle_.advertise<sensor_msgs::PointCloud2>(
@@ -117,9 +122,9 @@ Node::Node(
   wall_timers_.push_back(node_handle_.createWallTimer(
       ::ros::WallDuration(node_options_.submap_publish_period_sec),
       &Node::PublishSubmapList, this));
-  publish_trajectory_states_timer_ = node_handle_.createTimer(
+  publish_local_trajectory_data_timer_ = node_handle_.createTimer(
       ::ros::Duration(node_options_.pose_publish_period_sec),
-      &Node::PublishTrajectoryStates, this);
+      &Node::PublishLocalTrajectoryData, this);
   wall_timers_.push_back(node_handle_.createWallTimer(
       ::ros::WallDuration(node_options_.trajectory_publish_period_sec),
       &Node::PublishTrajectoryNodeList, this));
@@ -176,36 +181,36 @@ void Node::AddSensorSamplers(const int trajectory_id,
           options.landmarks_sampling_ratio));
 }
 
-void Node::PublishTrajectoryStates(const ::ros::TimerEvent& timer_event) {
+void Node::PublishLocalTrajectoryData(const ::ros::TimerEvent& timer_event) {
   carto::common::MutexLocker lock(&mutex_);
-  for (const auto& entry : map_builder_bridge_.GetTrajectoryStates()) {
-    const auto& trajectory_state = entry.second;
+  for (const auto& entry : map_builder_bridge_.GetLocalTrajectoryData()) {
+    const auto& trajectory_data = entry.second;
 
     auto& extrapolator = extrapolators_.at(entry.first);
     // We only publish a point cloud if it has changed. It is not needed at high
     // frequency, and republishing it would be computationally wasteful.
-    if (trajectory_state.local_slam_data->time !=
+    if (trajectory_data.local_slam_data->time !=
         extrapolator.GetLastPoseTime()) {
       if (scan_matched_point_cloud_publisher_.getNumSubscribers() > 0) {
         // TODO(gaschler): Consider using other message without time
         // information.
         carto::sensor::TimedPointCloud point_cloud;
-        point_cloud.reserve(trajectory_state.local_slam_data
-                                ->range_data_in_local.returns.size());
+        point_cloud.reserve(trajectory_data.local_slam_data->range_data_in_local
+                                .returns.size());
         for (const Eigen::Vector3f point :
-             trajectory_state.local_slam_data->range_data_in_local.returns) {
+             trajectory_data.local_slam_data->range_data_in_local.returns) {
           Eigen::Vector4f point_time;
           point_time << point, 0.f;
           point_cloud.push_back(point_time);
         }
         scan_matched_point_cloud_publisher_.publish(ToPointCloud2Message(
-            carto::common::ToUniversal(trajectory_state.local_slam_data->time),
+            carto::common::ToUniversal(trajectory_data.local_slam_data->time),
             node_options_.map_frame,
             carto::sensor::TransformTimedPointCloud(
-                point_cloud, trajectory_state.local_to_map.cast<float>())));
+                point_cloud, trajectory_data.local_to_map.cast<float>())));
       }
-      extrapolator.AddPose(trajectory_state.local_slam_data->time,
-                           trajectory_state.local_slam_data->local_pose);
+      extrapolator.AddPose(trajectory_data.local_slam_data->time,
+                           trajectory_data.local_slam_data->local_pose);
     }
 
     geometry_msgs::TransformStamped stamped_transform;
@@ -218,7 +223,7 @@ void Node::PublishTrajectoryStates(const ::ros::TimerEvent& timer_event) {
     stamped_transform.header.stamp = ToRos(now);
 
     const Rigid3d tracking_to_local = [&] {
-      if (trajectory_state.trajectory_options.publish_frame_projected_to_2d) {
+      if (trajectory_data.trajectory_options.publish_frame_projected_to_2d) {
         return carto::transform::Embed3D(
             carto::transform::Project2D(extrapolator.ExtrapolatePose(now)));
       }
@@ -226,34 +231,34 @@ void Node::PublishTrajectoryStates(const ::ros::TimerEvent& timer_event) {
     }();
 
     const Rigid3d tracking_to_map =
-        trajectory_state.local_to_map * tracking_to_local;
+        trajectory_data.local_to_map * tracking_to_local;
 
-    if (trajectory_state.published_to_tracking != nullptr) {
-      if (trajectory_state.trajectory_options.provide_odom_frame) {
+    if (trajectory_data.published_to_tracking != nullptr) {
+      if (trajectory_data.trajectory_options.provide_odom_frame) {
         std::vector<geometry_msgs::TransformStamped> stamped_transforms;
 
         stamped_transform.header.frame_id = node_options_.map_frame;
         stamped_transform.child_frame_id =
-            trajectory_state.trajectory_options.odom_frame;
+            trajectory_data.trajectory_options.odom_frame;
         stamped_transform.transform =
-            ToGeometryMsgTransform(trajectory_state.local_to_map);
+            ToGeometryMsgTransform(trajectory_data.local_to_map);
         stamped_transforms.push_back(stamped_transform);
 
         stamped_transform.header.frame_id =
-            trajectory_state.trajectory_options.odom_frame;
+            trajectory_data.trajectory_options.odom_frame;
         stamped_transform.child_frame_id =
-            trajectory_state.trajectory_options.published_frame;
+            trajectory_data.trajectory_options.published_frame;
         stamped_transform.transform = ToGeometryMsgTransform(
-            tracking_to_local * (*trajectory_state.published_to_tracking));
+            tracking_to_local * (*trajectory_data.published_to_tracking));
         stamped_transforms.push_back(stamped_transform);
 
         tf_broadcaster_.sendTransform(stamped_transforms);
       } else {
         stamped_transform.header.frame_id = node_options_.map_frame;
         stamped_transform.child_frame_id =
-            trajectory_state.trajectory_options.published_frame;
+            trajectory_data.trajectory_options.published_frame;
         stamped_transform.transform = ToGeometryMsgTransform(
-            tracking_to_map * (*trajectory_state.published_to_tracking));
+            tracking_to_map * (*trajectory_data.published_to_tracking));
         tf_broadcaster_.sendTransform(stamped_transform);
       }
     }
@@ -341,7 +346,6 @@ int Node::AddTrajectory(const TrajectoryOptions& options,
   AddExtrapolator(trajectory_id, options);
   AddSensorSamplers(trajectory_id, options);
   LaunchSubscribers(options, topics, trajectory_id);
-  is_active_trajectory_[trajectory_id] = true;
   for (const auto& sensor_id : expected_sensor_ids) {
     subscribed_topics_.insert(sensor_id.id);
   }
@@ -444,28 +448,36 @@ bool Node::ValidateTopicNames(
 
 cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
     const int trajectory_id) {
+  auto trajectory_states = map_builder_bridge_.GetTrajectoryStates();
+
   cartographer_ros_msgs::StatusResponse status_response;
 
   // First, check if we can actually finish the trajectory.
-  if (map_builder_bridge_.GetFrozenTrajectoryIds().count(trajectory_id)) {
+  if (!(trajectory_states.count(trajectory_id))) {
+    const std::string error =
+        "Trajectory " + std::to_string(trajectory_id) + " doesn't exist.";
+    LOG(ERROR) << error;
+    status_response.code = cartographer_ros_msgs::StatusCode::NOT_FOUND;
+    status_response.message = error;
+    return status_response;
+  } else if (trajectory_states.at(trajectory_id) == TrajectoryState::FROZEN) {
     const std::string error =
         "Trajectory " + std::to_string(trajectory_id) + " is frozen.";
     LOG(ERROR) << error;
     status_response.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
     status_response.message = error;
     return status_response;
-  }
-  if (is_active_trajectory_.count(trajectory_id) == 0) {
-    const std::string error =
-        "Trajectory " + std::to_string(trajectory_id) + " is not created yet.";
-    LOG(ERROR) << error;
-    status_response.code = cartographer_ros_msgs::StatusCode::NOT_FOUND;
-    status_response.message = error;
-    return status_response;
-  }
-  if (!is_active_trajectory_[trajectory_id]) {
+  } else if (trajectory_states.at(trajectory_id) == TrajectoryState::FINISHED) {
     const std::string error = "Trajectory " + std::to_string(trajectory_id) +
                               " has already been finished.";
+    LOG(ERROR) << error;
+    status_response.code =
+        cartographer_ros_msgs::StatusCode::RESOURCE_EXHAUSTED;
+    status_response.message = error;
+    return status_response;
+  } else if (trajectory_states.at(trajectory_id) == TrajectoryState::DELETED) {
+    const std::string error =
+        "Trajectory " + std::to_string(trajectory_id) + " has been deleted.";
     LOG(ERROR) << error;
     status_response.code =
         cartographer_ros_msgs::StatusCode::RESOURCE_EXHAUSTED;
@@ -474,15 +486,16 @@ cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
   }
 
   // Shutdown the subscribers of this trajectory.
-  for (auto& entry : subscribers_[trajectory_id]) {
-    entry.subscriber.shutdown();
-    subscribed_topics_.erase(entry.topic);
-    LOG(INFO) << "Shutdown the subscriber of [" << entry.topic << "]";
+  // A valid case with no subscribers is e.g. if we just visualize states.
+  if (subscribers_.count(trajectory_id)) {
+    for (auto& entry : subscribers_[trajectory_id]) {
+      entry.subscriber.shutdown();
+      subscribed_topics_.erase(entry.topic);
+      LOG(INFO) << "Shutdown the subscriber of [" << entry.topic << "]";
+    }
+    CHECK_EQ(subscribers_.erase(trajectory_id), 1);
   }
-  CHECK_EQ(subscribers_.erase(trajectory_id), 1);
-  CHECK(is_active_trajectory_.at(trajectory_id));
   map_builder_bridge_.FinishTrajectory(trajectory_id);
-  is_active_trajectory_[trajectory_id] = false;
   const std::string message =
       "Finished trajectory " + std::to_string(trajectory_id) + ".";
   status_response.code = cartographer_ros_msgs::StatusCode::OK;
@@ -550,8 +563,39 @@ int Node::AddOfflineTrajectory(
       map_builder_bridge_.AddTrajectory(expected_sensor_ids, options);
   AddExtrapolator(trajectory_id, options);
   AddSensorSamplers(trajectory_id, options);
-  is_active_trajectory_[trajectory_id] = true;
   return trajectory_id;
+}
+
+bool Node::HandleGetTrajectoryStates(
+    ::cartographer_ros_msgs::GetTrajectoryStates::Request& request,
+    ::cartographer_ros_msgs::GetTrajectoryStates::Response& response) {
+  using TrajectoryState =
+      ::cartographer::mapping::PoseGraphInterface::TrajectoryState;
+  carto::common::MutexLocker lock(&mutex_);
+  response.status.code = ::cartographer_ros_msgs::StatusCode::OK;
+  response.trajectory_states.header.stamp = ros::Time::now();
+  for (const auto& entry : map_builder_bridge_.GetTrajectoryStates()) {
+    response.trajectory_states.trajectory_id.push_back(entry.first);
+    switch (entry.second) {
+      case TrajectoryState::ACTIVE:
+        response.trajectory_states.trajectory_state.push_back(
+            ::cartographer_ros_msgs::TrajectoryStates::ACTIVE);
+        break;
+      case TrajectoryState::FINISHED:
+        response.trajectory_states.trajectory_state.push_back(
+            ::cartographer_ros_msgs::TrajectoryStates::FINISHED);
+        break;
+      case TrajectoryState::FROZEN:
+        response.trajectory_states.trajectory_state.push_back(
+            ::cartographer_ros_msgs::TrajectoryStates::FROZEN);
+        break;
+      case TrajectoryState::DELETED:
+        response.trajectory_states.trajectory_state.push_back(
+            ::cartographer_ros_msgs::TrajectoryStates::DELETED);
+        break;
+    }
+  }
+  return true;
 }
 
 bool Node::HandleFinishTrajectory(
@@ -578,9 +622,9 @@ bool Node::HandleWriteState(
 
 void Node::FinishAllTrajectories() {
   carto::common::MutexLocker lock(&mutex_);
-  for (auto& entry : is_active_trajectory_) {
-    const int trajectory_id = entry.first;
-    if (entry.second) {
+  for (const auto& entry : map_builder_bridge_.GetTrajectoryStates()) {
+    if (entry.second == TrajectoryState::ACTIVE) {
+      const int trajectory_id = entry.first;
       CHECK_EQ(FinishTrajectoryUnderLock(trajectory_id).code,
                cartographer_ros_msgs::StatusCode::OK);
     }
@@ -595,9 +639,17 @@ bool Node::FinishTrajectory(const int trajectory_id) {
 
 void Node::RunFinalOptimization() {
   {
-    carto::common::MutexLocker lock(&mutex_);
-    for (const auto& entry : is_active_trajectory_) {
-      CHECK(!entry.second);
+    for (const auto& entry : map_builder_bridge_.GetTrajectoryStates()) {
+      const int trajectory_id = entry.first;
+      if (entry.second == TrajectoryState::ACTIVE) {
+        LOG(WARNING)
+            << "Can't run final optimization if there are one or more active "
+               "trajectories. Trying to finish trajectory with ID "
+            << std::to_string(trajectory_id) << " now.";
+        CHECK(FinishTrajectory(trajectory_id))
+            << "Failed to finish trajectory with ID "
+            << std::to_string(trajectory_id) << ".";
+      }
     }
   }
   // Assuming we are not adding new data anymore, the final optimization

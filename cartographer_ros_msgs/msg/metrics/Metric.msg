@@ -1,4 +1,4 @@
-# Copyright 2016 The Cartographer Authors
+# 2018 The Cartographer Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,39 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 2.8.3)
+uint8 TYPE_COUNTER=0
+uint8 TYPE_GAUGE=1
+uint8 TYPE_HISTOGRAM=2
 
-project(cartographer_ros_msgs)
+uint8 type
+cartographer_ros_msgs/MetricLabel[] labels
 
-set(PACKAGE_DEPENDENCIES
-  geometry_msgs
-  std_msgs
-)
+# TYPE_COUNTER or TYPE_GAUGE
+float64 value
 
-find_package(catkin REQUIRED COMPONENTS message_generation ${PACKAGE_DEPENDENCIES})
-
-add_message_files(
-  DIRECTORY
-    msg
-)
-
-add_message_files(
-  DIRECTORY
-    msg/metrics
-)
-
-add_service_files(
-  DIRECTORY
-    srv
-)
-
-generate_messages(
-  DEPENDENCIES
-    ${PACKAGE_DEPENDENCIES}
-)
-
-catkin_package(
-  CATKIN_DEPENDS
-    ${PACKAGE_DEPENDENCIES}
-    message_runtime
-)
+# TYPE_HISTOGRAM
+cartographer_ros_msgs/HistogramBucket[] counts_by_bucket

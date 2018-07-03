@@ -33,6 +33,7 @@
 #include "cartographer_ros/node_options.h"
 #include "cartographer_ros/trajectory_options.h"
 #include "cartographer_ros_msgs/FinishTrajectory.h"
+#include "cartographer_ros_msgs/GetTrajectoryStates.h"
 #include "cartographer_ros_msgs/SensorTopics.h"
 #include "cartographer_ros_msgs/StartTrajectory.h"
 #include "cartographer_ros_msgs/StatusResponse.h"
@@ -138,6 +139,10 @@ class Node {
       cartographer_ros_msgs::FinishTrajectory::Response& response);
   bool HandleWriteState(cartographer_ros_msgs::WriteState::Request& request,
                         cartographer_ros_msgs::WriteState::Response& response);
+  bool HandleGetTrajectoryStates(
+      ::cartographer_ros_msgs::GetTrajectoryStates::Request& request,
+      ::cartographer_ros_msgs::GetTrajectoryStates::Response& response);
+
   // Returns the set of SensorIds expected for a trajectory.
   // 'SensorId::id' is the expected ROS topic name.
   std::set<::cartographer::mapping::TrajectoryBuilderInterface::SensorId>
@@ -152,7 +157,7 @@ class Node {
   void PublishSubmapList(const ::ros::WallTimerEvent& timer_event);
   void AddExtrapolator(int trajectory_id, const TrajectoryOptions& options);
   void AddSensorSamplers(int trajectory_id, const TrajectoryOptions& options);
-  void PublishTrajectoryStates(const ::ros::TimerEvent& timer_event);
+  void PublishLocalTrajectoryData(const ::ros::TimerEvent& timer_event);
   void PublishTrajectoryNodeList(const ::ros::WallTimerEvent& timer_event);
   void PublishLandmarkPosesList(const ::ros::WallTimerEvent& timer_event);
   void PublishConstraintList(const ::ros::WallTimerEvent& timer_event);
@@ -203,16 +208,15 @@ class Node {
   std::unordered_map<int, TrajectorySensorSamplers> sensor_samplers_;
   std::unordered_map<int, std::vector<Subscriber>> subscribers_;
   std::unordered_set<std::string> subscribed_topics_;
-  std::unordered_map<int, bool> is_active_trajectory_ GUARDED_BY(mutex_);
 
   // We have to keep the timer handles of ::ros::WallTimers around, otherwise
   // they do not fire.
   std::vector<::ros::WallTimer> wall_timers_;
-  // The timer for publishing trajectory states (i.e. pose transforms) is a
-  // regular timer which is not triggered when simulation time is standing
-  // still. This prevents overflowing the transform listener buffer by
-  // publishing the same transforms over and over again.
-  ::ros::Timer publish_trajectory_states_timer_;
+  // The timer for publishing local trajectory data (i.e. pose transforms and
+  // range data point clouds) is a regular timer which is not triggered when
+  // simulation time is standing still. This prevents overflowing the transform
+  // listener buffer by publishing the same transforms over and over again.
+  ::ros::Timer publish_local_trajectory_data_timer_;
 };
 
 }  // namespace cartographer_ros
