@@ -224,8 +224,7 @@ class Node {
   // listener buffer by publishing the same transforms over and over again.
   ::ros::Timer publish_local_trajectory_data_timer_;
 
-  std::unique_ptr<cartographer_ros::metrics::FamilyFactory> metrics_registry_ =
-      nullptr;
+  std::unique_ptr<cartographer_ros::metrics::FamilyFactory> metrics_registry_;
 };
 
 }  // namespace cartographer_ros
