@@ -28,7 +28,7 @@ Two systems
 
 Cartographer can be seen as two separate, but related systems.
 The first one is local SLAM (sometimes also called frontend).
-Its job is build a locally consistent set of submaps and tie them together, but it will drift over time.
+Its job is to build a locally consistent set of submaps and tie them together, but it will drift over time.
 Most of its options can be found in `trajectory_builder_2d.lua`_ for 2D and `trajectory_builder_3d.lua`_ for 3D.
 
 .. _trajectory_builder_2d.lua: https://github.com/googlecartographer/cartographer/blob/aba4575d937df4c9697f61529200c084f2562584/configuration_files/trajectory_builder_2d.lua
