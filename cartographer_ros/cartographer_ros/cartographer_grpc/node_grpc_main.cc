@@ -45,7 +45,7 @@ DEFINE_string(load_state_filename, "",
               "If non-empty, filename of a .pbstream file "
               "to load, containing a saved SLAM state.");
 DEFINE_string(client_id, "",
-	      "Cartographer client ID to use when connecting to the server.");
+              "Cartographer client ID to use when connecting to the server.");
 
 namespace cartographer_ros {
 namespace {
@@ -94,8 +94,7 @@ int main(int argc, char** argv) {
       << "-configuration_directory is missing.";
   CHECK(!FLAGS_configuration_basename.empty())
       << "-configuration_basename is missing.";
-  CHECK(!FLAGS_client_id.empty())
-      << "-client_id is missing.";
+  CHECK(!FLAGS_client_id.empty()) << "-client_id is missing.";
 
   ::ros::init(argc, argv, "cartographer_grpc_node");
   ::ros::start();
