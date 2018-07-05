@@ -29,7 +29,7 @@ class Counter : public ::cartographer::metrics::Counter {
   explicit Counter(const std::map<std::string, std::string>& labels)
       : gauge_(labels) {}
 
-  void Increment(const double by_value) override { gauge_.Increment(by_value); }
+  void Increment(const double value) override { gauge_.Increment(value); }
 
   void Increment() override { gauge_.Increment(); }
 

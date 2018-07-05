@@ -32,20 +32,15 @@ class Gauge : public ::cartographer::metrics::Gauge {
   explicit Gauge(const std::map<std::string, std::string>& labels)
       : labels_(labels) {}
 
-  void Decrement(const double by_value) override { Add(-1. * by_value); }
+  void Decrement(const double value) override { Add(-1. * value); }
 
   void Decrement() override { Decrement(1.); }
 
-  void Increment(const double by_value) override { Add(by_value); }
+  void Increment(const double value) override { Add(value); }
 
   void Increment() override { Increment(1.); }
 
-  void Set(double value) override {
-    double expected = value_.load();
-    while (!value_.compare_exchange_weak(expected, value)) {
-      ;
-    }
-  }
+  void Set(double value) override { value_.store(value); }
   double Value() const { return value_.load(); }
 
   cartographer_ros_msgs::Metric ToRosMessage() {
@@ -63,8 +58,11 @@ class Gauge : public ::cartographer::metrics::Gauge {
 
  private:
   void Add(const double value) {
-    double current = Value();
-    Set(current + value);
+    double expected = value_.load();
+    double new_value = expected + value;
+    while (!value_.compare_exchange_weak(expected, new_value)) {
+      new_value = expected + value;
+    }
   }
 
   const std::map<std::string, std::string> labels_;
