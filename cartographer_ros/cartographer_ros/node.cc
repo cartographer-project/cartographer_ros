@@ -460,6 +460,13 @@ cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
   auto trajectory_states = map_builder_bridge_.GetTrajectoryStates();
 
   cartographer_ros_msgs::StatusResponse status_response;
+  if (trajectories_scheduled_for_finish_.count(trajectory_id)) {
+    const std::string message = "Trajectory " + std::to_string(trajectory_id) +
+                                " already pending to finish.";
+    status_response.code = cartographer_ros_msgs::StatusCode::OK;
+    status_response.message = message;
+    LOG(INFO) << message;
+  }
 
   // First, check if we can actually finish the trajectory.
   if (!(trajectory_states.count(trajectory_id))) {
@@ -649,8 +656,7 @@ bool Node::HandleReadMetrics(
 void Node::FinishAllTrajectories() {
   carto::common::MutexLocker lock(&mutex_);
   for (const auto& entry : map_builder_bridge_.GetTrajectoryStates()) {
-    if (entry.second == TrajectoryState::ACTIVE &&
-        trajectories_scheduled_for_finish_.count(entry.first) == 0) {
+    if (entry.second == TrajectoryState::ACTIVE) {
       const int trajectory_id = entry.first;
       CHECK_EQ(FinishTrajectoryUnderLock(trajectory_id).code,
                cartographer_ros_msgs::StatusCode::OK);
@@ -668,8 +674,7 @@ void Node::RunFinalOptimization() {
   {
     for (const auto& entry : map_builder_bridge_.GetTrajectoryStates()) {
       const int trajectory_id = entry.first;
-      if (entry.second == TrajectoryState::ACTIVE &&
-          trajectories_scheduled_for_finish_.count(entry.first) == 0) {
+      if (entry.second == TrajectoryState::ACTIVE) {
         LOG(WARNING)
             << "Can't run final optimization if there are one or more active "
                "trajectories. Trying to finish trajectory with ID "
