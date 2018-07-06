@@ -26,16 +26,16 @@ find_package(catkin REQUIRED COMPONENTS message_generation ${PACKAGE_DEPENDENCIE
 add_message_files(
   DIRECTORY msg
   FILES
-  LandmarkEntry.msg
-  LandmarkList.msg
-  SensorTopics.msg
-  StatusCode.msg
-  StatusResponse.msg
-  SubmapEntry.msg
-  SubmapList.msg
-  SubmapTexture.msg
-  TrajectoryOptions.msg
-  TrajectoryStates.msg
+    LandmarkEntry.msg
+    LandmarkList.msg
+    SensorTopics.msg
+    StatusCode.msg
+    StatusResponse.msg
+    SubmapEntry.msg
+    SubmapList.msg
+    SubmapTexture.msg
+    TrajectoryOptions.msg
+    TrajectoryStates.msg
 )
 
 add_message_files(
