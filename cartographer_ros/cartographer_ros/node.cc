@@ -466,6 +466,7 @@ cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
     status_response.code = cartographer_ros_msgs::StatusCode::OK;
     status_response.message = message;
     LOG(INFO) << message;
+    return status_response;
   }
 
   // First, check if we can actually finish the trajectory.
