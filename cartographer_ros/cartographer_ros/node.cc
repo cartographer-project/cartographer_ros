@@ -505,6 +505,7 @@ cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
     CHECK_EQ(subscribers_.erase(trajectory_id), 1);
   }
   map_builder_bridge_.FinishTrajectory(trajectory_id);
+  trajectories_scheduled_for_finish_.emplace(trajectory_id);
   const std::string message =
       "Finished trajectory " + std::to_string(trajectory_id) + ".";
   status_response.code = cartographer_ros_msgs::StatusCode::OK;
@@ -648,7 +649,8 @@ bool Node::HandleReadMetrics(
 void Node::FinishAllTrajectories() {
   carto::common::MutexLocker lock(&mutex_);
   for (const auto& entry : map_builder_bridge_.GetTrajectoryStates()) {
-    if (entry.second == TrajectoryState::ACTIVE) {
+    if (entry.second == TrajectoryState::ACTIVE &&
+        trajectories_scheduled_for_finish_.count(entry.first) == 0) {
       const int trajectory_id = entry.first;
       CHECK_EQ(FinishTrajectoryUnderLock(trajectory_id).code,
                cartographer_ros_msgs::StatusCode::OK);
@@ -666,7 +668,8 @@ void Node::RunFinalOptimization() {
   {
     for (const auto& entry : map_builder_bridge_.GetTrajectoryStates()) {
       const int trajectory_id = entry.first;
-      if (entry.second == TrajectoryState::ACTIVE) {
+      if (entry.second == TrajectoryState::ACTIVE &&
+          trajectories_scheduled_for_finish_.count(entry.first) == 0) {
         LOG(WARNING)
             << "Can't run final optimization if there are one or more active "
                "trajectories. Trying to finish trajectory with ID "
