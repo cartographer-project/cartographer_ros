@@ -121,7 +121,7 @@ TEST(MsgConversion, LandmarkListToLandmarkData) {
   landmark_0.tracking_from_landmark_transform.orientation.z = 0.0;
   landmark_0.translation_weight = 1.0;
   landmark_0.rotation_weight = 2.0;
-  message.landmark.push_back(landmark_0);
+  message.landmarks.push_back(landmark_0);
 
   LandmarkData actual_landmark_data = ToLandmarkData(message);
   EXPECT_THAT(actual_landmark_data,
