@@ -13,4 +13,4 @@
 # limitations under the License.
 
 std_msgs/Header header
-cartographer_ros_msgs/LandmarkEntry[] landmark
+cartographer_ros_msgs/LandmarkEntry[] landmarks
