@@ -131,9 +131,11 @@ Node::Node(
   wall_timers_.push_back(node_handle_.createWallTimer(
       ::ros::WallDuration(node_options_.submap_publish_period_sec),
       &Node::PublishSubmapList, this));
-  publish_local_trajectory_data_timer_ = node_handle_.createTimer(
-      ::ros::Duration(node_options_.pose_publish_period_sec),
-      &Node::PublishLocalTrajectoryData, this);
+  if (node_options_.pose_publish_period_sec > 0) {
+    publish_local_trajectory_data_timer_ = node_handle_.createTimer(
+        ::ros::Duration(node_options_.pose_publish_period_sec),
+        &Node::PublishLocalTrajectoryData, this);
+  }
   wall_timers_.push_back(node_handle_.createWallTimer(
       ::ros::WallDuration(node_options_.trajectory_publish_period_sec),
       &Node::PublishTrajectoryNodeList, this));
