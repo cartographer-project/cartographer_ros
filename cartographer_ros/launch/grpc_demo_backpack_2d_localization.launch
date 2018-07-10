@@ -25,6 +25,7 @@
 
   <node name="cartographer_grpc_node" pkg="cartographer_ros"
       type="cartographer_grpc_node" args="
+	  -client_id CLIENT_ID
           -configuration_directory $(find cartographer_ros)/configuration_files
           -configuration_basename backpack_2d.lua
           -map_filename $(arg map_filename)"
