@@ -276,7 +276,7 @@ ToPointCloudWithIntensities(const sensor_msgs::PointCloud2& msg) {
 LandmarkData ToLandmarkData(const LandmarkList& landmark_list) {
   LandmarkData landmark_data;
   landmark_data.time = FromRos(landmark_list.header.stamp);
-  for (const LandmarkEntry& entry : landmark_list.landmark) {
+  for (const LandmarkEntry& entry : landmark_list.landmarks) {
     landmark_data.landmark_observations.push_back(
         {entry.id, ToRigid3d(entry.tracking_from_landmark_transform),
          entry.translation_weight, entry.rotation_weight});
@@ -375,7 +375,6 @@ std::unique_ptr<nav_msgs::OccupancyGrid> CreateOccupancyGridMsg(
   const int width = cairo_image_surface_get_width(painted_slices.surface.get());
   const int height =
       cairo_image_surface_get_height(painted_slices.surface.get());
-  const ros::Time now = ros::Time::now();
 
   occupancy_grid->header.stamp = time;
   occupancy_grid->header.frame_id = frame_id;
