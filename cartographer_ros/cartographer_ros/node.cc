@@ -131,9 +131,11 @@ Node::Node(
   wall_timers_.push_back(node_handle_.createWallTimer(
       ::ros::WallDuration(node_options_.submap_publish_period_sec),
       &Node::PublishSubmapList, this));
-  publish_local_trajectory_data_timer_ = node_handle_.createTimer(
-      ::ros::Duration(node_options_.pose_publish_period_sec),
-      &Node::PublishLocalTrajectoryData, this);
+  if (node_options_.pose_publish_period_sec > 0) {
+    publish_local_trajectory_data_timer_ = node_handle_.createTimer(
+        ::ros::Duration(node_options_.pose_publish_period_sec),
+        &Node::PublishLocalTrajectoryData, this);
+  }
   wall_timers_.push_back(node_handle_.createWallTimer(
       ::ros::WallDuration(node_options_.trajectory_publish_period_sec),
       &Node::PublishTrajectoryNodeList, this));
@@ -460,6 +462,14 @@ cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
   auto trajectory_states = map_builder_bridge_.GetTrajectoryStates();
 
   cartographer_ros_msgs::StatusResponse status_response;
+  if (trajectories_scheduled_for_finish_.count(trajectory_id)) {
+    const std::string message = "Trajectory " + std::to_string(trajectory_id) +
+                                " already pending to finish.";
+    status_response.code = cartographer_ros_msgs::StatusCode::OK;
+    status_response.message = message;
+    LOG(INFO) << message;
+    return status_response;
+  }
 
   // First, check if we can actually finish the trajectory.
   if (!(trajectory_states.count(trajectory_id))) {
@@ -505,6 +515,7 @@ cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
     CHECK_EQ(subscribers_.erase(trajectory_id), 1);
   }
   map_builder_bridge_.FinishTrajectory(trajectory_id);
+  trajectories_scheduled_for_finish_.emplace(trajectory_id);
   const std::string message =
       "Finished trajectory " + std::to_string(trajectory_id) + ".";
   status_response.code = cartographer_ros_msgs::StatusCode::OK;
