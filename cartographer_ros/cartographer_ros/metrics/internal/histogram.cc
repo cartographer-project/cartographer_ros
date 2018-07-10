@@ -44,7 +44,6 @@ void Histogram::Observe(double value) {
       std::distance(bucket_boundaries_.begin(),
                     std::upper_bound(bucket_boundaries_.begin(),
                                      bucket_boundaries_.end(), value));
-  // TODO: check lock contention and potential for atomic operations.
   ::cartographer::common::MutexLocker lock(&mutex_);
   sum_ += value;
   bucket_counts_[bucket_index] += 1;

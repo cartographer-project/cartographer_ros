@@ -33,7 +33,7 @@ class Counter : public ::cartographer::metrics::Counter {
 
   void Increment() override { gauge_.Increment(); }
 
-  double Value() const { return gauge_.Value(); }
+  double Value() { return gauge_.Value(); }
 
   cartographer_ros_msgs::Metric ToRosMessage() {
     cartographer_ros_msgs::Metric msg = gauge_.ToRosMessage();
