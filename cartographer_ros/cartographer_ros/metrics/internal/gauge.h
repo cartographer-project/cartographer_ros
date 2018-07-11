@@ -44,6 +44,7 @@ class Gauge : public ::cartographer::metrics::Gauge {
     ::cartographer::common::MutexLocker lock(&mutex_);
     value_ = value;
   }
+
   double Value() {
     ::cartographer::common::MutexLocker lock(&mutex_);
     return value_;
