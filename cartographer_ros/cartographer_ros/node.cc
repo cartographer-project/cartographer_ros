@@ -357,7 +357,9 @@ int Node::AddTrajectory(const TrajectoryOptions& options,
   AddExtrapolator(trajectory_id, options);
   AddSensorSamplers(trajectory_id, options);
   LaunchSubscribers(options, topics, trajectory_id);
-  MaybeWarnAboutTopicMismatch();
+  wall_timers_.push_back(node_handle_.createWallTimer(
+      ::ros::WallDuration(kTopicMismatchCheckDelaySec),
+      &Node::MaybeWarnAboutTopicMismatch, this, /*oneshot=*/true));
   for (const auto& sensor_id : expected_sensor_ids) {
     subscribed_topics_.insert(sensor_id.id);
   }
@@ -791,7 +793,8 @@ void Node::LoadState(const std::string& state_filename,
   map_builder_bridge_.LoadState(state_filename, load_frozen_state);
 }
 
-void Node::MaybeWarnAboutTopicMismatch() {
+void Node::MaybeWarnAboutTopicMismatch(
+    const ::ros::WallTimerEvent& unused_timer_event) {
   ::ros::master::V_TopicInfo ros_topics;
   ::ros::master::getTopics(ros_topics);
   std::set<std::string> published_topics;
@@ -807,17 +810,17 @@ void Node::MaybeWarnAboutTopicMismatch() {
     for (const auto& subscriber : entry.second) {
       std::string resolved_topic = node_handle_.resolveName(subscriber.topic);
       if (published_topics.count(resolved_topic) == 0) {
-        LOG(INFO) << "Expected topic \"" << subscriber.topic
-                  << "\" (trajectory " << trajectory_id << ")"
-                  << " (resolved topic \"" << resolved_topic << "\")"
-                  << " but no publisher is currently active.";
+        LOG(WARNING) << "Expected topic \"" << subscriber.topic
+                     << "\" (trajectory " << trajectory_id << ")"
+                     << " (resolved topic \"" << resolved_topic << "\")"
+                     << " but no publisher is currently active.";
         print_topics = true;
       }
     }
   }
   if (print_topics) {
-    LOG(INFO) << "Currently available topics are: "
-              << published_topics_string.str();
+    LOG(WARNING) << "Currently available topics are: "
+                 << published_topics_string.str();
   }
 }
 
