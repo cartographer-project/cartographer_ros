@@ -357,6 +357,7 @@ int Node::AddTrajectory(const TrajectoryOptions& options,
   AddExtrapolator(trajectory_id, options);
   AddSensorSamplers(trajectory_id, options);
   LaunchSubscribers(options, topics, trajectory_id);
+  MaybeWarnAboutTopicMismatch();
   for (const auto& sensor_id : expected_sensor_ids) {
     subscribed_topics_.insert(sensor_id.id);
   }
@@ -788,6 +789,36 @@ void Node::LoadState(const std::string& state_filename,
                      const bool load_frozen_state) {
   carto::common::MutexLocker lock(&mutex_);
   map_builder_bridge_.LoadState(state_filename, load_frozen_state);
+}
+
+void Node::MaybeWarnAboutTopicMismatch() {
+  ::ros::master::V_TopicInfo ros_topics;
+  ::ros::master::getTopics(ros_topics);
+  std::set<std::string> published_topics;
+  std::stringstream published_topics_string;
+  for (const auto& it : ros_topics) {
+    std::string resolved_topic = node_handle_.resolveName(it.name, false);
+    published_topics.insert(resolved_topic);
+    published_topics_string << resolved_topic << ",";
+  }
+  bool print_topics = false;
+  for (const auto& entry : subscribers_) {
+    int trajectory_id = entry.first;
+    for (const auto& subscriber : entry.second) {
+      std::string resolved_topic = node_handle_.resolveName(subscriber.topic);
+      if (published_topics.count(resolved_topic) == 0) {
+        LOG(INFO) << "Expected topic \"" << subscriber.topic
+                  << "\" (trajectory " << trajectory_id << ")"
+                  << " (resolved topic \"" << resolved_topic << "\")"
+                  << " but no publisher is currently active.";
+        print_topics = true;
+      }
+    }
+  }
+  if (print_topics) {
+    LOG(INFO) << "Currently available topics are: "
+              << published_topics_string.str();
+  }
 }
 
 }  // namespace cartographer_ros
