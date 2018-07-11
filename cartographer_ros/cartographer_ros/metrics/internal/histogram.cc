@@ -36,9 +36,6 @@ Histogram::Histogram(const std::map<std::string, std::string>& labels,
                        std::end(bucket_boundaries_)));
 }
 
-Histogram::Histogram(const BucketBoundaries& bucket_boundaries)
-    : Histogram({}, bucket_boundaries) {}
-
 void Histogram::Observe(double value) {
   auto bucket_index =
       std::distance(bucket_boundaries_.begin(),
