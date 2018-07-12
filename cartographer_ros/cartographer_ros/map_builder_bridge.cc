@@ -123,10 +123,14 @@ int MapBuilderBridge::AddTrajectory(
     const TrajectoryOptions& trajectory_options) {
   const int trajectory_id = map_builder_->AddTrajectoryBuilder(
       expected_sensor_ids, trajectory_options.trajectory_builder_options,
-      ::std::bind(&MapBuilderBridge::OnLocalSlamResult, this,
-                  ::std::placeholders::_1, ::std::placeholders::_2,
-                  ::std::placeholders::_3, ::std::placeholders::_4,
-                  ::std::placeholders::_5));
+      [this](const int trajectory_id, const ::cartographer::common::Time time,
+             const Rigid3d local_pose,
+             ::cartographer::sensor::RangeData range_data_in_local,
+             const std::unique_ptr<
+                 const ::cartographer::mapping::TrajectoryBuilderInterface::
+                     InsertionResult>) {
+        OnLocalSlamResult(trajectory_id, time, local_pose, range_data_in_local);
+      });
   LOG(INFO) << "Added trajectory with ID '" << trajectory_id << "'.";
 
   // Make sure there is no trajectory with 'trajectory_id' yet.
@@ -490,9 +494,7 @@ SensorBridge* MapBuilderBridge::sensor_bridge(const int trajectory_id) {
 void MapBuilderBridge::OnLocalSlamResult(
     const int trajectory_id, const ::cartographer::common::Time time,
     const Rigid3d local_pose,
-    ::cartographer::sensor::RangeData range_data_in_local,
-    const std::unique_ptr<const ::cartographer::mapping::
-                              TrajectoryBuilderInterface::InsertionResult>) {
+    ::cartographer::sensor::RangeData range_data_in_local) {
   std::shared_ptr<const LocalTrajectoryData::LocalSlamData> local_slam_data =
       std::make_shared<LocalTrajectoryData::LocalSlamData>(
           LocalTrajectoryData::LocalSlamData{time, local_pose,
