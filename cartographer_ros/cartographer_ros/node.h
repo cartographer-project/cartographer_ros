@@ -171,6 +171,7 @@ class Node {
                           const TrajectoryOptions& options);
   cartographer_ros_msgs::StatusResponse FinishTrajectoryUnderLock(
       int trajectory_id) REQUIRES(mutex_);
+  void MaybeWarnAboutTopicMismatch(const ::ros::WallTimerEvent&);
 
   const NodeOptions node_options_;
 

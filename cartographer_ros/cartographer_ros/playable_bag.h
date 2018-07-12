@@ -43,6 +43,7 @@ class PlayableBag {
   std::tuple<ros::Time, ros::Time> GetBeginEndTime() const;
 
   int bag_id() const;
+  std::set<std::string> topics() const { return topics_; }
 
  private:
   void AdvanceOneMessage();
@@ -59,6 +60,7 @@ class PlayableBag {
   std::deque<rosbag::MessageInstance> buffered_messages_;
   const ::ros::Duration buffer_delay_;
   FilteringEarlyMessageHandler filtering_early_message_handler_;
+  std::set<std::string> topics_;
 };
 
 class PlayableBagMultiplexer {
@@ -75,6 +77,8 @@ class PlayableBagMultiplexer {
   bool IsMessageAvailable() const;
   ros::Time PeekMessageTime() const;
 
+  std::set<std::string> topics() const { return topics_; }
+
  private:
   struct BagMessageItem {
     ros::Time message_timestamp;
@@ -90,6 +94,7 @@ class PlayableBagMultiplexer {
   std::priority_queue<BagMessageItem, std::vector<BagMessageItem>,
                       BagMessageItem::TimestampIsGreater>
       next_message_queue_;
+  std::set<std::string> topics_;
 };
 
 }  // namespace cartographer_ros

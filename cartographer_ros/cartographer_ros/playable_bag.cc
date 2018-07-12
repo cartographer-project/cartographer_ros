@@ -43,6 +43,9 @@ PlayableBag::PlayableBag(
       filtering_early_message_handler_(
           std::move(filtering_early_message_handler)) {
   AdvanceUntilMessageAvailable();
+  for (const auto* connection_info : view_->getConnections()) {
+    topics_.insert(connection_info->topic);
+  }
 }
 
 ros::Time PlayableBag::PeekMessageTime() const {
@@ -99,6 +102,9 @@ void PlayableBag::AdvanceUntilMessageAvailable() {
 }
 
 void PlayableBagMultiplexer::AddPlayableBag(PlayableBag playable_bag) {
+  for (const auto& topic : playable_bag.topics()) {
+    topics_.insert(topic);
+  }
   playable_bags_.push_back(std::move(playable_bag));
   CHECK(playable_bags_.back().IsMessageAvailable());
   next_message_queue_.emplace(
