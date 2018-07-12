@@ -238,7 +238,27 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
         }));
   }
 
-  // TODO(gaschler): Warn if resolved topics are not in bags.
+  std::set<std::string> bag_topics;
+  std::stringstream bag_topics_string;
+  for (const auto& topic : playable_bag_multiplexer.topics()) {
+    std::string resolved_topic = node.node_handle()->resolveName(topic, false);
+    bag_topics.insert(resolved_topic);
+    bag_topics_string << resolved_topic << ",";
+  }
+  bool print_topics = false;
+  for (const auto& entry : bag_topic_to_sensor_id) {
+    const std::string& resolved_topic = entry.first.second;
+    if (bag_topics.count(resolved_topic) == 0) {
+      LOG(WARNING) << "Expected resolved topic \"" << resolved_topic
+                   << "\" not found in bag file(s).";
+      print_topics = true;
+    }
+  }
+  if (print_topics) {
+    LOG(WARNING) << "Available topics in bag file(s) are "
+                 << bag_topics_string.str();
+  }
+
   std::unordered_map<int, int> bag_index_to_trajectory_id;
   const ros::Time begin_time =
       // If no bags were loaded, we cannot peek the time of first message.
