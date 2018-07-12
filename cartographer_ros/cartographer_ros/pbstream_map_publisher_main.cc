@@ -29,6 +29,7 @@
 #include "cartographer/mapping/proto/serialization.pb.h"
 #include "cartographer/mapping/proto/submap.pb.h"
 #include "cartographer/mapping/proto/trajectory_builder_options.pb.h"
+#include "cartographer/mapping/value_conversion_tables.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/node_constants.h"
 #include "cartographer_ros/ros_log_sink.h"
@@ -49,7 +50,8 @@ namespace cartographer_ros {
 namespace {
 
 std::unique_ptr<nav_msgs::OccupancyGrid> LoadOccupancyGridMsg(
-    const std::string& pbstream_filename, const double resolution) {
+    const std::string& pbstream_filename, const double resolution,
+    ::cartographer::mapping::ValueConversionTables* conversion_lookup_tables) {
   ::cartographer::io::ProtoStreamReader reader(pbstream_filename);
   ::cartographer::io::ProtoStreamDeserializer deserializer(&reader);
 
@@ -68,7 +70,8 @@ std::unique_ptr<nav_msgs::OccupancyGrid> LoadOccupancyGridMsg(
                                                   .trajectory(id.trajectory_id)
                                                   .submap(id.submap_index)
                                                   .pose());
-      FillSubmapSlice(global_submap_pose, submap, &submap_slices[id]);
+      FillSubmapSlice(global_submap_pose, submap, &submap_slices[id],
+                      conversion_lookup_tables);
     }
   }
   CHECK(reader.eof());
@@ -82,8 +85,9 @@ std::unique_ptr<nav_msgs::OccupancyGrid> LoadOccupancyGridMsg(
 
 void Run(const std::string& pbstream_filename, const std::string& map_topic,
          const std::string& map_frame_id, const double resolution) {
-  std::unique_ptr<nav_msgs::OccupancyGrid> msg_ptr =
-      LoadOccupancyGridMsg(pbstream_filename, resolution);
+  ::cartographer::mapping::ValueConversionTables conversion_lookup_tables;
+  std::unique_ptr<nav_msgs::OccupancyGrid> msg_ptr = LoadOccupancyGridMsg(
+      pbstream_filename, resolution, &conversion_lookup_tables);
 
   ::ros::NodeHandle node_handle("");
   ::ros::Publisher pub = node_handle.advertise<nav_msgs::OccupancyGrid>(

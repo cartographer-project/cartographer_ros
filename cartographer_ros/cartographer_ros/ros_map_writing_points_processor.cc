@@ -34,8 +34,8 @@ RosMapWritingPointsProcessor::RosMapWritingPointsProcessor(
       next_(next),
       file_writer_factory_(file_writer_factory),
       range_data_inserter_(range_data_inserter_options),
-      probability_grid_(::cartographer::io::CreateProbabilityGrid(resolution)) {
-}
+      probability_grid_(::cartographer::io::CreateProbabilityGrid(
+          resolution, &conversion_tables_)) {}
 
 std::unique_ptr<RosMapWritingPointsProcessor>
 RosMapWritingPointsProcessor::FromDictionary(
