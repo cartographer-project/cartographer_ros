@@ -53,7 +53,7 @@ TEST(Metrics, CounterTest) {
 
 TEST(Metrics, HistogramFixedWidthTest) {
   auto boundaries = ::cartographer::metrics::Histogram::FixedWidth(1, 3);
-  Histogram histogram(boundaries);
+  Histogram histogram({}, boundaries);
 
   // Observe some values that fit in finite buckets.
   std::array<double, 3> values = {{0., 2, 2.5}};
@@ -78,7 +78,7 @@ TEST(Metrics, HistogramFixedWidthTest) {
 TEST(Metrics, HistogramScaledPowersOfTest) {
   auto boundaries =
       ::cartographer::metrics::Histogram::ScaledPowersOf(2, 1, 2048);
-  Histogram histogram(boundaries);
+  Histogram histogram({}, boundaries);
 
   // Observe some values that fit in finite buckets.
   std::array<double, 3> values = {{256, 512, 666}};
