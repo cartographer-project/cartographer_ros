@@ -166,7 +166,6 @@ class Node {
   void PublishTrajectoryNodeList(const ::ros::WallTimerEvent& timer_event);
   void PublishLandmarkPosesList(const ::ros::WallTimerEvent& timer_event);
   void PublishConstraintList(const ::ros::WallTimerEvent& timer_event);
-  void SpinOccupancyGridThreadForever();
   bool ValidateTrajectoryOptions(const TrajectoryOptions& options);
   bool ValidateTopicNames(const ::cartographer_ros_msgs::SensorTopics& topics,
                           const TrajectoryOptions& options);

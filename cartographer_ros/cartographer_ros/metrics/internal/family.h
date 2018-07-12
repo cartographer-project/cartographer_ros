@@ -62,7 +62,7 @@ class HistogramFamily : public ::cartographer::metrics::Family<
  public:
   HistogramFamily(const std::string& name, const std::string& description,
                   const BucketBoundaries& boundaries)
-      : boundaries_(boundaries) {}
+      : name_(name), description_(description), boundaries_(boundaries) {}
 
   Histogram* Add(const std::map<std::string, std::string>& labels) override;
 

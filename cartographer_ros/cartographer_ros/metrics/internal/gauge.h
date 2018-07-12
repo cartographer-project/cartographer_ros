@@ -17,10 +17,10 @@
 #ifndef CARTOGRAPHER_ROS_METRICS_INTERNAL_GAUGE_H
 #define CARTOGRAPHER_ROS_METRICS_INTERNAL_GAUGE_H
 
-#include <atomic>
 #include <map>
 #include <string>
 
+#include "cartographer/common/mutex.h"
 #include "cartographer/metrics/gauge.h"
 #include "cartographer_ros_msgs/Metric.h"
 
@@ -30,23 +30,25 @@ namespace metrics {
 class Gauge : public ::cartographer::metrics::Gauge {
  public:
   explicit Gauge(const std::map<std::string, std::string>& labels)
-      : labels_(labels) {}
+      : labels_(labels), value_(0.) {}
 
-  void Decrement(const double by_value) override { Add(-1. * by_value); }
+  void Decrement(const double value) override { Add(-1. * value); }
 
   void Decrement() override { Decrement(1.); }
 
-  void Increment(const double by_value) override { Add(by_value); }
+  void Increment(const double value) override { Add(value); }
 
   void Increment() override { Increment(1.); }
 
   void Set(double value) override {
-    double expected = value_.load();
-    while (!value_.compare_exchange_weak(expected, value)) {
-      ;
-    }
+    ::cartographer::common::MutexLocker lock(&mutex_);
+    value_ = value;
   }
-  double Value() const { return value_.load(); }
+
+  double Value() {
+    ::cartographer::common::MutexLocker lock(&mutex_);
+    return value_;
+  }
 
   cartographer_ros_msgs::Metric ToRosMessage() {
     cartographer_ros_msgs::Metric msg;
@@ -63,12 +65,13 @@ class Gauge : public ::cartographer::metrics::Gauge {
 
  private:
   void Add(const double value) {
-    double current = Value();
-    Set(current + value);
+    ::cartographer::common::MutexLocker lock(&mutex_);
+    value_ += value;
   }
 
+  cartographer::common::Mutex mutex_;
   const std::map<std::string, std::string> labels_;
-  std::atomic<double> value_{0.};
+  double value_ GUARDED_BY(mutex_);
 };
 
 }  // namespace metrics
