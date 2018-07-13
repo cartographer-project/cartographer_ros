@@ -50,8 +50,7 @@ namespace cartographer_ros {
 namespace {
 
 std::unique_ptr<nav_msgs::OccupancyGrid> LoadOccupancyGridMsg(
-    const std::string& pbstream_filename, const double resolution,
-    ::cartographer::mapping::ValueConversionTables* conversion_lookup_tables) {
+    const std::string& pbstream_filename, const double resolution) {
   ::cartographer::io::ProtoStreamReader reader(pbstream_filename);
   ::cartographer::io::ProtoStreamDeserializer deserializer(&reader);
 
@@ -59,6 +58,7 @@ std::unique_ptr<nav_msgs::OccupancyGrid> LoadOccupancyGridMsg(
   std::map<::cartographer::mapping::SubmapId, ::cartographer::io::SubmapSlice>
       submap_slices;
   ::cartographer::mapping::proto::SerializedData proto;
+  ::cartographer::mapping::ValueConversionTables conversion_lookup_tables;
   while (deserializer.ReadNextSerializedData(&proto)) {
     if (proto.has_submap()) {
       const auto& submap = proto.submap();
@@ -71,7 +71,7 @@ std::unique_ptr<nav_msgs::OccupancyGrid> LoadOccupancyGridMsg(
                                                   .submap(id.submap_index)
                                                   .pose());
       FillSubmapSlice(global_submap_pose, submap, &submap_slices[id],
-                      conversion_lookup_tables);
+                      &conversion_lookup_tables);
     }
   }
   CHECK(reader.eof());
@@ -85,9 +85,8 @@ std::unique_ptr<nav_msgs::OccupancyGrid> LoadOccupancyGridMsg(
 
 void Run(const std::string& pbstream_filename, const std::string& map_topic,
          const std::string& map_frame_id, const double resolution) {
-  ::cartographer::mapping::ValueConversionTables conversion_lookup_tables;
-  std::unique_ptr<nav_msgs::OccupancyGrid> msg_ptr = LoadOccupancyGridMsg(
-      pbstream_filename, resolution, &conversion_lookup_tables);
+  std::unique_ptr<nav_msgs::OccupancyGrid> msg_ptr =
+      LoadOccupancyGridMsg(pbstream_filename, resolution);
 
   ::ros::NodeHandle node_handle("");
   ::ros::Publisher pub = node_handle.advertise<nav_msgs::OccupancyGrid>(
