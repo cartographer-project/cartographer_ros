@@ -68,8 +68,8 @@ rosbag::MessageInstance PlayableBag::GetNextMessage(
     LOG(INFO) << "Processed " << processed_seconds << " of "
               << duration_in_seconds_ << " seconds of bag " << bag_filename_;
   }
-  progress.bagfile_name = bag_filename_;
-  progress.bagfile_id = bag_id_;
+  progress.current_bagfile_name = bag_filename_;
+  progress.current_bagfile_id = bag_id_;
   progress.total_messages = view_->size();
   progress.processed_messages = std::distance(view_->begin(), view_iterator_);
   progress.total_seconds = duration_in_seconds_;
