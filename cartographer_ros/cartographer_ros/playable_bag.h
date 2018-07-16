@@ -100,7 +100,7 @@ class PlayableBagMultiplexer {
   // Last time when the progress was published
   ros::Time last_progress_pub_time_;
   // The time interval of publishing bag-file(s) processing in seconds
-  double progress_pub_rate_;
+  double progress_pub_interval_;
 
   std::vector<PlayableBag> playable_bags_;
   std::priority_queue<BagMessageItem, std::vector<BagMessageItem>,

@@ -112,7 +112,7 @@ void PlayableBag::AdvanceUntilMessageAvailable() {
 PlayableBagMultiplexer::PlayableBagMultiplexer() : pnh_("~") {
   bag_progress_pub_ = pnh_.advertise<cartographer_ros_msgs::BagfileProgress>(
       "bagfile_progress", 10);
-  progress_pub_rate_ = pnh_.param("bagfile_progress_pub_rate", 10.0);
+  progress_pub_interval_ = pnh_.param("bagfile_progress_pub_interval", 10.0);
 }
 
 void PlayableBagMultiplexer::AddPlayableBag(PlayableBag playable_bag) {
@@ -138,7 +138,7 @@ PlayableBagMultiplexer::GetNextMessage() {
   cartographer_ros_msgs::BagfileProgress progress;
   rosbag::MessageInstance msg = current_bag.GetNextMessage(progress);
   if (ros::Time::now() - last_progress_pub_time_ >=
-      ros::Duration(progress_pub_rate_)) {
+      ros::Duration(progress_pub_interval_)) {
     progress.total_bagfiles = playable_bags_.size();
     bag_progress_pub_.publish(progress);
     last_progress_pub_time_ = ros::Time::now();
