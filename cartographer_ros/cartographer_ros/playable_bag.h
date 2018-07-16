@@ -19,11 +19,11 @@
 #include <functional>
 #include <queue>
 
+#include <cartographer_ros_msgs/BagfileProgress.h>
+#include <ros/node_handle.h>
 #include "rosbag/bag.h"
 #include "rosbag/view.h"
 #include "tf2_ros/buffer.h"
-#include <ros/node_handle.h>
-#include <cartographer_ros_msgs/BagfileProgress.h>
 
 namespace cartographer_ros {
 
@@ -40,8 +40,8 @@ class PlayableBag {
               FilteringEarlyMessageHandler filtering_early_message_handler);
 
   ros::Time PeekMessageTime() const;
-  rosbag::MessageInstance GetNextMessage
-      (cartographer_ros_msgs::BagfileProgress &progress);
+  rosbag::MessageInstance GetNextMessage(
+      cartographer_ros_msgs::BagfileProgress& progress);
   bool IsMessageAvailable() const;
   std::tuple<ros::Time, ros::Time> GetBeginEndTime() const;
 
