@@ -12,9 +12,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-=============
-Configuration
-=============
+=========================================
+Lua configuration reference documentation
+=========================================
 
 Note that Cartographer's ROS integration uses `tf2`_, thus all frame IDs are
 expected to contain only a frame name (lower-case with underscores) and no
