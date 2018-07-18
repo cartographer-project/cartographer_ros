@@ -12,9 +12,34 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-=====
-Demos
-=====
+======================================
+Running Cartographer ROS on a demo bag
+======================================
+
+Now that Cartographer and Cartographer's ROS integration are installed, you can
+download example bags (e.g. 2D and 3D backpack collections of the
+`Deutsches Museum <https://en.wikipedia.org/wiki/Deutsches_Museum>`_) to a
+known location, in this case ``~/Downloads``, and use ``roslaunch`` to bring up
+the demo.
+
+The launch files will bring up ``roscore`` and ``rviz`` automatically.
+
+Deutsches Museum
+================
+
+  .. code-block:: bash
+
+    # Download the 2D backpack example bag.
+    wget -P ~/Downloads https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/cartographer_paper_deutsches_museum.bag
+
+    # Launch the 2D backpack demo.
+    roslaunch cartographer_ros demo_backpack_2d.launch bag_filename:=${HOME}/Downloads/cartographer_paper_deutsches_museum.bag
+
+    # Download the 3D backpack example bag.
+    wget -P ~/Downloads https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/with_intensities/b3-2016-04-05-14-14-00.bag
+
+    # Launch the 3D backpack demo.
+    roslaunch cartographer_ros demo_backpack_3d.launch bag_filename:=${HOME}/Downloads/b3-2016-04-05-14-14-00.bag
 
 Pure localization
 =================
