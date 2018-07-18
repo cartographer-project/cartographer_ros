@@ -26,9 +26,9 @@ configurations. This project provides Cartographer's ROS integration.
    compilation
    demos
    tuning
-   ros_api
    assets_writer
    configuration
+   ros_api
    data
    faq
 
