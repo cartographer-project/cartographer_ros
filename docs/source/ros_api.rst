@@ -167,7 +167,7 @@ Once it is done processing all data, it writes out the final Cartographer state 
 
 
 Occupancy grid Node
-=================
+===================
 
 The `occupancy_grid_node`_ listens to the submaps published by SLAM and builds a ROS occupancy_grid and publishes it.
 This tool is to keep old nodes that require a single monolithic map to work happy until new nav stacks can deal with Cartographer's submaps directly.
