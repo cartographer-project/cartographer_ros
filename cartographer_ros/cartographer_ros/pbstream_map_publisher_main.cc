@@ -60,7 +60,8 @@ std::unique_ptr<nav_msgs::OccupancyGrid> LoadOccupancyGridMsg(
   ::cartographer::mapping::proto::SerializedData proto;
   ::cartographer::mapping::ValueConversionTables conversion_lookup_tables;
   while (deserializer.ReadNextSerializedData(&proto)) {
-    if (proto.has_submap()) {
+    if (proto.has_submap() &&
+        (Has2DGrid(proto.submap()) || Has3DGrids(proto.submap()))) {
       const auto& submap = proto.submap();
       const ::cartographer::mapping::SubmapId id{
           submap.submap_id().trajectory_id(),
