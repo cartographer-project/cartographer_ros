@@ -40,14 +40,6 @@ DEFINE_double(resolution, 0.05, "Resolution of a grid cell in the drawn map.");
 namespace cartographer_ros {
 namespace {
 
-bool Has2dGrid(const ::cartographer::mapping::proto::Submap& submap) {
-  return submap.has_submap_2d() && submap.submap_2d().has_grid();
-}
-
-bool Has3dGrids(const ::cartographer::mapping::proto::Submap& submap) {
-  return submap.has_submap_3d() && submap.submap_3d().has_low_resolution_hybrid_grid() && submap.submap_3d().has_high_resolution_hybrid_grid();
-}
-
 void Run(const std::string& pbstream_filename, const std::string& map_filestem,
          const double resolution) {
   ::cartographer::io::ProtoStreamReader reader(pbstream_filename);
@@ -61,7 +53,7 @@ void Run(const std::string& pbstream_filename, const std::string& map_filestem,
   ::cartographer::mapping::proto::SerializedData proto;
   ::cartographer::mapping::ValueConversionTables conversion_lookup_tables;
   while (deserializer.ReadNextSerializedData(&proto)) {
-    if (proto.has_submap() && (Has2dGrid(proto.submap()) || Has3dGrids(proto.submap()))) {
+    if (proto.has_submap() && (Has2DGrid(proto.submap()) || Has3DGrids(proto.submap()))) {
       const auto& submap = proto.submap();
       const ::cartographer::mapping::SubmapId id{
           submap.submap_id().trajectory_id(),
