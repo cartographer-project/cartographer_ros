@@ -231,14 +231,20 @@ void Node::PublishLocalTrajectoryData(const ::ros::TimerEvent& timer_event) {
     // information is better.
     const ::cartographer::common::Time now = std::max(
         FromRos(ros::Time::now()), extrapolator.GetLastExtrapolatedTime());
-    stamped_transform.header.stamp = ToRos(now);
-
+    stamped_transform.header.stamp =
+        node_options_.use_pose_extrapolator
+            ? ToRos(now)
+            : ToRos(trajectory_data.local_slam_data->time);
+    const Rigid3d tracking_to_local_3d =
+        node_options_.use_pose_extrapolator
+            ? extrapolator.ExtrapolatePose(now)
+            : trajectory_data.local_slam_data->local_pose;
     const Rigid3d tracking_to_local = [&] {
       if (trajectory_data.trajectory_options.publish_frame_projected_to_2d) {
         return carto::transform::Embed3D(
-            carto::transform::Project2D(extrapolator.ExtrapolatePose(now)));
+            carto::transform::Project2D(tracking_to_local_3d));
       }
-      return extrapolator.ExtrapolatePose(now);
+      return tracking_to_local_3d;
     }();
 
     const Rigid3d tracking_to_map =
