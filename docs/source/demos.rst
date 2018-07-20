@@ -31,14 +31,14 @@ Deutsches Museum
 
 Download and launch the 2D backpack demo:
 
-  .. code-block:: bash
+.. code-block:: bash
 
     wget -P ~/Downloads https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/cartographer_paper_deutsches_museum.bag
     roslaunch cartographer_ros demo_backpack_2d.launch bag_filename:=${HOME}/Downloads/cartographer_paper_deutsches_museum.bag
 
 Download and launch the 3D backpack demo:
 
-  .. code-block:: bash
+.. code-block:: bash
 
     wget -P ~/Downloads https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/with_intensities/b3-2016-04-05-14-14-00.bag
     roslaunch cartographer_ros demo_backpack_3d.launch bag_filename:=${HOME}/Downloads/b3-2016-04-05-14-14-00.bag
@@ -50,14 +50,14 @@ Pure localization uses 2 different bags. The first one is used to generate the m
 
 Download the 2D bags from the Deutsche Museum:
 
-  .. code-block:: bash
+.. code-block:: bash
 
     wget -P ~/Downloads https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b2-2016-04-05-14-44-52.bag
     wget -P ~/Downloads https://storage.googleapis.com/cartographer-public-data/bags/backpack_2d/b2-2016-04-27-12-31-41.bag
 
 Generate the map (wait until cartographer_offline_node finishes) and then run pure localization:
 
-  .. code-block:: bash
+.. code-block:: bash
 
     roslaunch cartographer_ros offline_backpack_2d.launch bag_filenames:=${HOME}/Downloads/b2-2016-04-05-14-44-52.bag
     roslaunch cartographer_ros demo_backpack_2d_localization.launch \
@@ -66,14 +66,14 @@ Generate the map (wait until cartographer_offline_node finishes) and then run pu
 
 Download the 3D bags from the Deutsche Museum:
 
-  .. code-block:: bash
+.. code-block:: bash
 
     wget -P ~/Downloads https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-04-05-13-54-42.bag
     wget -P ~/Downloads https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-04-05-15-52-20.bag
 
 Generate the map (wait until cartographer_offline_node finishes) and then run pure localization:
 
-  .. code-block:: bash
+.. code-block:: bash
 
     roslaunch cartographer_ros offline_backpack_3d.launch bag_filenames:=${HOME}/Downloads/b3-2016-04-05-13-54-42.bag
     roslaunch cartographer_ros demo_backpack_3d_localization.launch \
@@ -85,7 +85,7 @@ Revo LDS
 
 Download and launch an example bag captured from a low-cost Revo Laser Distance Sensor from Neato Robotics vacuum cleaners:
 
-  .. code-block:: bash
+.. code-block:: bash
 
     wget -P ~/Downloads https://storage.googleapis.com/cartographer-public-data/bags/revo_lds/cartographer_paper_revo_lds.bag
     roslaunch cartographer_ros demo_revo_lds.launch bag_filename:=${HOME}/Downloads/cartographer_paper_revo_lds.bag
@@ -95,7 +95,7 @@ PR2
 
 Download and launch an example bag captured from a PR2 R&D humanoid robot from Willow Garage:
 
-  .. code-block:: bash
+.. code-block:: bash
 
     wget -P ~/Downloads https://storage.googleapis.com/cartographer-public-data/bags/pr2/2011-09-15-08-32-46.bag
     roslaunch cartographer_ros demo_pr2.launch bag_filename:=${HOME}/Downloads/2011-09-15-08-32-46.bag
@@ -105,7 +105,7 @@ Taurob Tracker
 
 Download and launch an example bag captured from a Taurob Tracker teleoperation robot:
 
-  .. code-block:: bash
+.. code-block:: bash
 
     wget -P ~/Downloads https://storage.googleapis.com/cartographer-public-data/bags/taurob_tracker/taurob_tracker_simulation.bag
     roslaunch cartographer_ros demo_taurob_tracker.launch bag_filename:=${HOME}/Downloads/taurob_tracker_simulation.bag

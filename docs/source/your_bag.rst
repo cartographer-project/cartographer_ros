@@ -36,7 +36,7 @@ With that granularity, Cartographer is then able to unwarp the point clouds defo
 
 If you have sourced your Cartographer ROS environment, you can simply run the tool like this:
 
-  ..  code-block:: bash
+..  code-block:: bash
 
     cartographer_rosbag_validate -bag_filename your_bag.bag
 
@@ -51,13 +51,13 @@ The example configurations are defined in ``src/cartographer_ros/cartographer_ro
 
 You can start by copying one of the example and then adapt it to your own need. If you want to use 3D SLAM:
 
-  ..  code-block:: bash
+..  code-block:: bash
 
     cp install_isolated/share/cartographer_ros/configuration_files/backpack_3d.lua install_isolated/share/cartographer_ros/configuration_files/my_robot.lua
  
 If you want to use 2D SLAM:
 
-  ..  code-block:: bash
+..  code-block:: bash
 
     cp install_isolated/share/cartographer_ros/configuration_files/backpack_3d.lua install_isolated/share/cartographer_ros/configuration_files/my_robot.lua
 
@@ -99,7 +99,7 @@ The example ``.launch`` files are defined in ``src/cartographer_ros/cartographer
 
 Start by copying one of the provided example:
 
-  ..  code-block:: bash
+..  code-block:: bash
 
     cp install_isolated/share/cartographer_ros/launch/backpack_3d.launch install_isolated/share/cartographer_ros/launch/my_robot.launch
     cp install_isolated/share/cartographer_ros/launch/demo_backpack_3d.launch install_isolated/share/cartographer_ros/launch/demo_my_robot.launch
@@ -132,7 +132,7 @@ Try your configuration
 
 Everything is setup! You can now start Cartographer with:
 
-  ..  code-block:: bash
+..  code-block:: bash
 
     roslaunch cartographer_ros my_robot.launch bag_filename:=/path/to/your_bag.bag
 

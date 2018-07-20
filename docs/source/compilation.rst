@@ -38,14 +38,14 @@ In order to build Cartographer ROS, we recommend using `wstool <http://wiki.ros.
 <http://wiki.ros.org/rosdep>`_. For faster builds, we also recommend using
 `Ninja <https://ninja-build.org>`_.
 
-  .. code-block:: bash
+.. code-block:: bash
 
     sudo apt-get update
     sudo apt-get install -y python-wstool python-rosdep ninja-build
 
 Create a new cartographer_ros workspace in 'catkin_ws'.
 
-  .. code-block:: bash
+.. code-block:: bash
 
     mkdir catkin_ws
     cd catkin_ws
@@ -56,7 +56,7 @@ Create a new cartographer_ros workspace in 'catkin_ws'.
 Install cartographer_ros' dependencies (proto3 and deb packages).
 The command 'sudo rosdep init' will print an error if you have already executed it since installing ROS. This error can be ignored.
 
-  .. code-block:: bash
+.. code-block:: bash
 
     src/cartographer/scripts/install_proto3.sh 
     sudo rosdep init
@@ -65,5 +65,6 @@ The command 'sudo rosdep init' will print an error if you have already executed 
 
 Build and install.
 
-  .. code-block:: bash
+.. code-block:: bash
+
     catkin_make_isolated --install --use-ninja

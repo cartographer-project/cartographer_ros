@@ -181,7 +181,7 @@ If a separate odometry source is used as an input for local SLAM (``use_odometry
 
 There are in total four parameters that allow us to tune the individual weights of local SLAM and odometry in the optimization:
 
-  .. code-block:: lua
+.. code-block:: lua
 
     POSE_GRAPH.optimization_problem.local_slam_pose_translation_weight
     POSE_GRAPH.optimization_problem.local_slam_pose_rotation_weight
