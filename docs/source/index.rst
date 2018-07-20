@@ -26,6 +26,7 @@ configurations. This project provides Cartographer's ROS integration.
    compilation
    demos
    your_bag
+   algo_walkthrough
    tuning
    assets_writer
    configuration

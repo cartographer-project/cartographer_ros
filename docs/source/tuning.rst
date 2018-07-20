@@ -23,28 +23,6 @@ Tuning Cartographer is unfortunately really difficult.
 The system has many parameters many of which affect each other.
 This tuning guide tries to explain a principled approach on concrete examples.
 
-Two systems
------------
-
-Cartographer can be seen as two separate, but related systems.
-The first one is local SLAM (sometimes also called frontend).
-Its job is to build a locally consistent set of submaps and tie them together, but it will drift over time.
-Most of its options can be found in `trajectory_builder_2d.lua`_ for 2D and `trajectory_builder_3d.lua`_ for 3D.
-
-.. _trajectory_builder_2d.lua: https://github.com/googlecartographer/cartographer/blob/aba4575d937df4c9697f61529200c084f2562584/configuration_files/trajectory_builder_2d.lua
-.. _trajectory_builder_3d.lua: https://github.com/googlecartographer/cartographer/blob/aba4575d937df4c9697f61529200c084f2562584/configuration_files/trajectory_builder_3d.lua
-
-The other system is global SLAM (sometimes called the backend).
-It runs in background threads and its main job is to find loop closure constraints.
-It does that by scan-matching scans against submaps.
-It also incorporates other sensor data to get a higher level view and identify the most consistent global solution.
-In 3D, it also tries to find the direction of gravity.
-Most of its options can be found in `pose_graph.lua`_
-
-.. _pose_graph.lua: https://github.com/googlecartographer/cartographer/blob/aba4575d937df4c9697f61529200c084f2562584/configuration_files/pose_graph.lua
-
-On a higher abstraction, the job of local SLAM is to generate good submaps and the job of global SLAM is to tie them most consistently together.
-
 Built-in tools
 --------------
 
@@ -87,30 +65,8 @@ So let's turn off global SLAM to not mess with our tuning.
 Correct size of submaps
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Local SLAM drifts over time, only loop closure can fix this drift.
-Submaps must be small enough so that the drift inside them is below the resolution, so that they are locally correct.
-On the other hand, they should be large enough to be being distinct for loop closure to work properly.
 The size of submaps is configured through ``TRAJECTORY_BUILDER_2D.submaps.num_range_data``.
 Looking at the individual submaps for this example they already fit the two constraints rather well, so we assume this parameter is well tuned.
-
-The choice of scan matchers
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The idea behind local SLAM is to use sensor data of other sensors besides the range finder to predict where the next scan should be inserted into the submap.
-Then, the ``CeresScanMatcher`` takes this as prior and finds the best spot where the scan match fits the submap.
-It does this by interpolating the submap and sub-pixel aligning the scan.
-This is fast, but cannot fix errors that are significantly larger than the resolution of the submaps.
-If your sensor setup and timing is reasonable, using only the ``CeresScanMatcher`` is usually the best choice to make.
-
-If you do not have other sensors or you do not trust them, Cartographer also provides a ``RealTimeCorrelativeScanMatcher``.
-It uses an approach similar to how scans are matched against submaps in loop closure, but instead it matches against the current submap.
-The best match is then used as prior for the ``CeresScanMatcher``.
-This scan matcher is very expensive and will essentially override any signal from other sensors but the range finder, but it is robust in feature rich environments.
-
-Tuning the correlative scan matcher
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-TODO
 
 Tuning the ``CeresScanMatcher``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
