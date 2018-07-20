@@ -16,6 +16,8 @@
 ROS API reference documentation
 ===============================
 
+.. image:: nodes_graph_demo_2d.jpg
+
 Cartographer Node
 =================
 
@@ -123,6 +125,8 @@ write_state (`cartographer_ros_msgs/WriteState`_)
 
 Required tf Transforms
 ----------------------
+
+.. image:: frames_demo_2d.jpg
 
 Transforms from all incoming sensor data frames to the :doc:`configured
 <configuration>` *tracking_frame* and *published_frame* must be available.
