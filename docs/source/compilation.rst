@@ -19,47 +19,52 @@ Compiling Cartographer ROS
 System Requirements
 ===================
 
-See Cartographer's :ref:`system requirements <cartographer:system-requirements>`.
+The Cartographer ROS requirements are the same as `the ones from Cartographer`_.
 
 The following `ROS distributions`_ are currently supported:
 
 * Indigo
 * Kinetic
+* Lunar
+* Melodic
 
+.. _the ones from Cartographer: https://google-cartographer.readthedocs.io/en/latest/#system-requirements
 .. _ROS distributions: http://wiki.ros.org/Distributions
 
 Building & Installation
 =======================
 
-We recommend using `wstool <http://wiki.ros.org/wstool>`_ and `rosdep
+In order to build Cartographer ROS, we recommend using `wstool <http://wiki.ros.org/wstool>`_ and `rosdep
 <http://wiki.ros.org/rosdep>`_. For faster builds, we also recommend using
 `Ninja <https://ninja-build.org>`_.
 
   .. code-block:: bash
 
-    # Install wstool and rosdep.
     sudo apt-get update
     sudo apt-get install -y python-wstool python-rosdep ninja-build
 
-    # Create a new workspace in 'catkin_ws'.
+Create a new cartographer_ros workspace in 'catkin_ws'.
+
+  .. code-block:: bash
+
     mkdir catkin_ws
     cd catkin_ws
     wstool init src
-
-    # Merge the cartographer_ros.rosinstall file and fetch code for dependencies.
     wstool merge -t src https://raw.githubusercontent.com/googlecartographer/cartographer_ros/master/cartographer_ros.rosinstall
     wstool update -t src
 
-    # Install proto3.
-    src/cartographer/scripts/install_proto3.sh 
+Install cartographer_ros' dependencies (proto3 and deb packages).
+The command 'sudo rosdep init' will print an error if you have already executed it since installing ROS. This error can be ignored.
 
-    # Install deb dependencies.
-    # The command 'sudo rosdep init' will print an error if you have already
-    # executed it since installing ROS. This error can be ignored.
+  .. code-block:: bash
+
+    src/cartographer/scripts/install_proto3.sh 
     sudo rosdep init
     rosdep update
     rosdep install --from-paths src --ignore-src --rosdistro=${ROS_DISTRO} -y
 
-    # Build and install.
+Build and install.
+
+  .. code-block:: bash
     catkin_make_isolated --install --use-ninja
     source install_isolated/setup.bash
