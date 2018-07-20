@@ -19,6 +19,8 @@ Running Cartographer ROS on your own bag
 Now that you've run Cartographer ROS on a couple of provided bags, you can go ahead and make Cartographer work with your own data.
 Find a ``.bag`` recording you would like to use for SLAM and go through this tutorial.
 
+.. warning:: When you want to run cartographer_ros, you might need to source your ROS environment by running ``source install_isolated/setup.bash`` first (replace bash with zsh if your shell is zsh)
+
 Validate your bag
 =================
 

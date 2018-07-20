@@ -24,6 +24,8 @@ the demo.
 
 The launch files will bring up ``roscore`` and ``rviz`` automatically.
 
+.. warning:: When you want to run cartographer_ros, you might need to source your ROS environment by running ``source install_isolated/setup.bash`` first (replace bash with zsh if your shell is zsh)
+
 Deutsches Museum
 ================
 
