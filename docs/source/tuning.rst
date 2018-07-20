@@ -16,8 +16,8 @@
 .. cartographer_ros SHA: 99c23b6ac7874f7974e9ed808ace841da6f2c8b0
 .. TODO(hrapp): mention insert_free_space somewhere
 
-Tuning
-======
+Tuning methodology
+==================
 
 Tuning Cartographer is unfortunately really difficult.
 The system has many parameters many of which affect each other.
