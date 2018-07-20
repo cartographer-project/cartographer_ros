@@ -20,6 +20,8 @@ Cartographer ROS Integration
 and mapping (`SLAM`_) in 2D and 3D across multiple platforms and sensor
 configurations. This project provides Cartographer's ROS integration.
 
+.. image:: demo_2d.gif
+
 .. toctree::
    :maxdepth: 2
 
