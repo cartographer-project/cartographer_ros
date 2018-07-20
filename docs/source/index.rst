@@ -30,6 +30,7 @@ configurations. This project provides Cartographer's ROS integration.
    tuning
    assets_writer
    going_further
+   getting_involved
    configuration
    ros_api
    data
