@@ -192,3 +192,18 @@ We can set these weights depending on how much we trust either local SLAM or the
 By default, odometry is weighted into global optimization similar to local slam (scan matching) poses.
 However, odometry from wheel encoders often has a high uncertainty in rotation.
 In this case, the rotation weight can be reduced, even down to zero.
+
+Still have a problem ?
+----------------------
+
+If you can't get Cartographer to work reliably on your data, you can open a `GitHub issue`_ asking for help.
+Developers are keen to help, but they can only be helpful if you follow `an issue template`_ containing the result of ``rosbag_validate``, a link to a fork of ``cartographer_ros`` with your config and a link to a ``.bag`` file reproducing your problem.
+
+.. note::
+
+   There are already lots of GitHub issues with all sorts of problems solved by the developers. Going through `the closed issues of cartographer_ros`_ and `of cartographer`_ is a great way to learn more about Cartographer and maybe find a solution to your problem !
+
+.. _GitHub issue: https://github.com/googlecartographer/cartographer_ros/issues
+.. _an issue template: https://github.com/googlecartographer/cartographer_ros/issues/new?labels=question
+.. _the closed issues of cartographer_ros: https://github.com/googlecartographer/cartographer_ros/issues?q=is%3Aissue+is%3Aclosed
+.. _of cartographer: https://github.com/googlecartographer/cartographer_ros/issues?q=is%3Aissue+is%3Aclosed
