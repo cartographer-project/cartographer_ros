@@ -126,3 +126,5 @@ An example of such a pipeline is in `assets_writer_backpack_2d.lua`_.
 Once you have the ``.ply``, follow the README of `point_cloud_viewer`_ to generate an on-disk octree data structure which can be viewed by one of the viewers (SDL or web based) in the same repo.
 
 .. _point_cloud_viewer: https://github.com/googlecartographer/point_cloud_viewer
+
+.. image:: point_cloud_viewer_demo_3d.jpg
