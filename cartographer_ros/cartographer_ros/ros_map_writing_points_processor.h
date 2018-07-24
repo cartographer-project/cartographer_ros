@@ -23,6 +23,7 @@
 #include "cartographer/mapping/2d/probability_grid.h"
 #include "cartographer/mapping/2d/probability_grid_range_data_inserter_2d.h"
 #include "cartographer/mapping/proto/2d/probability_grid_range_data_inserter_options_2d.pb.h"
+#include "cartographer/mapping/value_conversion_tables.h"
 
 namespace cartographer_ros {
 
@@ -59,6 +60,7 @@ class RosMapWritingPointsProcessor
   ::cartographer::io::FileWriterFactory file_writer_factory_;
   ::cartographer::mapping::ProbabilityGridRangeDataInserter2D
       range_data_inserter_;
+  ::cartographer::mapping::ValueConversionTables conversion_tables_;
   ::cartographer::mapping::ProbabilityGrid probability_grid_;
 };
 

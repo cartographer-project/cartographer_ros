@@ -53,4 +53,14 @@ std::unique_ptr<::cartographer::io::SubmapTextures> FetchSubmapTextures(
   return response;
 }
 
+bool Has2DGrid(const ::cartographer::mapping::proto::Submap& submap) {
+  return submap.has_submap_2d() && submap.submap_2d().has_grid();
+}
+
+bool Has3DGrids(const ::cartographer::mapping::proto::Submap& submap) {
+  return submap.has_submap_3d() &&
+         submap.submap_3d().has_low_resolution_hybrid_grid() &&
+         submap.submap_3d().has_high_resolution_hybrid_grid();
+}
+
 }  // namespace cartographer_ros

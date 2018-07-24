@@ -166,12 +166,12 @@ class Node {
   void PublishTrajectoryNodeList(const ::ros::WallTimerEvent& timer_event);
   void PublishLandmarkPosesList(const ::ros::WallTimerEvent& timer_event);
   void PublishConstraintList(const ::ros::WallTimerEvent& timer_event);
-  void SpinOccupancyGridThreadForever();
   bool ValidateTrajectoryOptions(const TrajectoryOptions& options);
   bool ValidateTopicNames(const ::cartographer_ros_msgs::SensorTopics& topics,
                           const TrajectoryOptions& options);
   cartographer_ros_msgs::StatusResponse FinishTrajectoryUnderLock(
       int trajectory_id) REQUIRES(mutex_);
+  void MaybeWarnAboutTopicMismatch(const ::ros::WallTimerEvent&);
 
   const NodeOptions node_options_;
 
@@ -213,6 +213,7 @@ class Node {
   std::unordered_map<int, TrajectorySensorSamplers> sensor_samplers_;
   std::unordered_map<int, std::vector<Subscriber>> subscribers_;
   std::unordered_set<std::string> subscribed_topics_;
+  std::unordered_set<int> trajectories_scheduled_for_finish_;
 
   // We have to keep the timer handles of ::ros::WallTimers around, otherwise
   // they do not fire.

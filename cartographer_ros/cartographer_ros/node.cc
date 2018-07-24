@@ -131,9 +131,11 @@ Node::Node(
   wall_timers_.push_back(node_handle_.createWallTimer(
       ::ros::WallDuration(node_options_.submap_publish_period_sec),
       &Node::PublishSubmapList, this));
-  publish_local_trajectory_data_timer_ = node_handle_.createTimer(
-      ::ros::Duration(node_options_.pose_publish_period_sec),
-      &Node::PublishLocalTrajectoryData, this);
+  if (node_options_.pose_publish_period_sec > 0) {
+    publish_local_trajectory_data_timer_ = node_handle_.createTimer(
+        ::ros::Duration(node_options_.pose_publish_period_sec),
+        &Node::PublishLocalTrajectoryData, this);
+  }
   wall_timers_.push_back(node_handle_.createWallTimer(
       ::ros::WallDuration(node_options_.trajectory_publish_period_sec),
       &Node::PublishTrajectoryNodeList, this));
@@ -229,14 +231,20 @@ void Node::PublishLocalTrajectoryData(const ::ros::TimerEvent& timer_event) {
     // information is better.
     const ::cartographer::common::Time now = std::max(
         FromRos(ros::Time::now()), extrapolator.GetLastExtrapolatedTime());
-    stamped_transform.header.stamp = ToRos(now);
-
+    stamped_transform.header.stamp =
+        node_options_.use_pose_extrapolator
+            ? ToRos(now)
+            : ToRos(trajectory_data.local_slam_data->time);
+    const Rigid3d tracking_to_local_3d =
+        node_options_.use_pose_extrapolator
+            ? extrapolator.ExtrapolatePose(now)
+            : trajectory_data.local_slam_data->local_pose;
     const Rigid3d tracking_to_local = [&] {
       if (trajectory_data.trajectory_options.publish_frame_projected_to_2d) {
         return carto::transform::Embed3D(
-            carto::transform::Project2D(extrapolator.ExtrapolatePose(now)));
+            carto::transform::Project2D(tracking_to_local_3d));
       }
-      return extrapolator.ExtrapolatePose(now);
+      return tracking_to_local_3d;
     }();
 
     const Rigid3d tracking_to_map =
@@ -355,6 +363,9 @@ int Node::AddTrajectory(const TrajectoryOptions& options,
   AddExtrapolator(trajectory_id, options);
   AddSensorSamplers(trajectory_id, options);
   LaunchSubscribers(options, topics, trajectory_id);
+  wall_timers_.push_back(node_handle_.createWallTimer(
+      ::ros::WallDuration(kTopicMismatchCheckDelaySec),
+      &Node::MaybeWarnAboutTopicMismatch, this, /*oneshot=*/true));
   for (const auto& sensor_id : expected_sensor_ids) {
     subscribed_topics_.insert(sensor_id.id);
   }
@@ -460,6 +471,14 @@ cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
   auto trajectory_states = map_builder_bridge_.GetTrajectoryStates();
 
   cartographer_ros_msgs::StatusResponse status_response;
+  if (trajectories_scheduled_for_finish_.count(trajectory_id)) {
+    const std::string message = "Trajectory " + std::to_string(trajectory_id) +
+                                " already pending to finish.";
+    status_response.code = cartographer_ros_msgs::StatusCode::OK;
+    status_response.message = message;
+    LOG(INFO) << message;
+    return status_response;
+  }
 
   // First, check if we can actually finish the trajectory.
   if (!(trajectory_states.count(trajectory_id))) {
@@ -505,6 +524,7 @@ cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
     CHECK_EQ(subscribers_.erase(trajectory_id), 1);
   }
   map_builder_bridge_.FinishTrajectory(trajectory_id);
+  trajectories_scheduled_for_finish_.emplace(trajectory_id);
   const std::string message =
       "Finished trajectory " + std::to_string(trajectory_id) + ".";
   status_response.code = cartographer_ros_msgs::StatusCode::OK;
@@ -777,6 +797,37 @@ void Node::LoadState(const std::string& state_filename,
                      const bool load_frozen_state) {
   carto::common::MutexLocker lock(&mutex_);
   map_builder_bridge_.LoadState(state_filename, load_frozen_state);
+}
+
+void Node::MaybeWarnAboutTopicMismatch(
+    const ::ros::WallTimerEvent& unused_timer_event) {
+  ::ros::master::V_TopicInfo ros_topics;
+  ::ros::master::getTopics(ros_topics);
+  std::set<std::string> published_topics;
+  std::stringstream published_topics_string;
+  for (const auto& it : ros_topics) {
+    std::string resolved_topic = node_handle_.resolveName(it.name, false);
+    published_topics.insert(resolved_topic);
+    published_topics_string << resolved_topic << ",";
+  }
+  bool print_topics = false;
+  for (const auto& entry : subscribers_) {
+    int trajectory_id = entry.first;
+    for (const auto& subscriber : entry.second) {
+      std::string resolved_topic = node_handle_.resolveName(subscriber.topic);
+      if (published_topics.count(resolved_topic) == 0) {
+        LOG(WARNING) << "Expected topic \"" << subscriber.topic
+                     << "\" (trajectory " << trajectory_id << ")"
+                     << " (resolved topic \"" << resolved_topic << "\")"
+                     << " but no publisher is currently active.";
+        print_topics = true;
+      }
+    }
+  }
+  if (print_topics) {
+    LOG(WARNING) << "Currently available topics are: "
+                 << published_topics_string.str();
+  }
 }
 
 }  // namespace cartographer_ros

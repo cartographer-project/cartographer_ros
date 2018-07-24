@@ -51,8 +51,10 @@ void Run(const std::string& pbstream_filename, const std::string& map_filestem,
   std::map<::cartographer::mapping::SubmapId, ::cartographer::io::SubmapSlice>
       submap_slices;
   ::cartographer::mapping::proto::SerializedData proto;
+  ::cartographer::mapping::ValueConversionTables conversion_lookup_tables;
   while (deserializer.ReadNextSerializedData(&proto)) {
-    if (proto.has_submap()) {
+    if (proto.has_submap() &&
+        (Has2DGrid(proto.submap()) || Has3DGrids(proto.submap()))) {
       const auto& submap = proto.submap();
       const ::cartographer::mapping::SubmapId id{
           submap.submap_id().trajectory_id(),
@@ -62,7 +64,8 @@ void Run(const std::string& pbstream_filename, const std::string& map_filestem,
               pose_graph.trajectory(id.trajectory_id)
                   .submap(id.submap_index)
                   .pose());
-      FillSubmapSlice(global_submap_pose, submap, &submap_slices[id]);
+      FillSubmapSlice(global_submap_pose, submap, &submap_slices[id],
+                      &conversion_lookup_tables);
     }
   }
   CHECK(reader.eof());

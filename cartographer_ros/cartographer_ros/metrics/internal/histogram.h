@@ -36,8 +36,6 @@ class Histogram : public ::cartographer::metrics::Histogram {
   explicit Histogram(const std::map<std::string, std::string>& labels,
                      const BucketBoundaries& bucket_boundaries);
 
-  explicit Histogram(const BucketBoundaries& bucket_boundaries);
-
   void Observe(double value) override;
 
   std::map<double, double> CountsByBucket();

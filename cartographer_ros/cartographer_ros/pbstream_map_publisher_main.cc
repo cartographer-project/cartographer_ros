@@ -29,6 +29,7 @@
 #include "cartographer/mapping/proto/serialization.pb.h"
 #include "cartographer/mapping/proto/submap.pb.h"
 #include "cartographer/mapping/proto/trajectory_builder_options.pb.h"
+#include "cartographer/mapping/value_conversion_tables.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/node_constants.h"
 #include "cartographer_ros/ros_log_sink.h"
@@ -57,8 +58,10 @@ std::unique_ptr<nav_msgs::OccupancyGrid> LoadOccupancyGridMsg(
   std::map<::cartographer::mapping::SubmapId, ::cartographer::io::SubmapSlice>
       submap_slices;
   ::cartographer::mapping::proto::SerializedData proto;
+  ::cartographer::mapping::ValueConversionTables conversion_lookup_tables;
   while (deserializer.ReadNextSerializedData(&proto)) {
-    if (proto.has_submap()) {
+    if (proto.has_submap() &&
+        (Has2DGrid(proto.submap()) || Has3DGrids(proto.submap()))) {
       const auto& submap = proto.submap();
       const ::cartographer::mapping::SubmapId id{
           submap.submap_id().trajectory_id(),
@@ -68,7 +71,8 @@ std::unique_ptr<nav_msgs::OccupancyGrid> LoadOccupancyGridMsg(
                                                   .trajectory(id.trajectory_id)
                                                   .submap(id.submap_index)
                                                   .pose());
-      FillSubmapSlice(global_submap_pose, submap, &submap_slices[id]);
+      FillSubmapSlice(global_submap_pose, submap, &submap_slices[id],
+                      &conversion_lookup_tables);
     }
   }
   CHECK(reader.eof());
