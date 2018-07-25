@@ -26,26 +26,7 @@ The `cartographer_node`_ is the SLAM node used for online, real-time SLAM.
 Command-line Flags
 ------------------
 
-TODO(hrapp): Should these not be removed? It seems duplicated efforts documenting them here and there.
-
-.. TODO(damonkohler): Use an options list if it can be made to render nicely.
-
-\-\-configuration_directory
-  First directory in which configuration files are searched, second is always
-  the Cartographer installation to allow including files from there.
-
-\-\-configuration_basename
-  Basename (i.e. not containing any directory prefix) of the configuration file
-  (e.g. backpack_3d.lua).
-
-\-\-load_state_filename
-  A Cartographer .pbstream state file that will be loaded from disk. This allows
-  to add new trajectories SLAMing from an earlier state.
-
-\-\-load_frozen_state
-  This boolean parameter controls if the saved state, specified using the option
-  \-\-load_state_filename, is going to be loaded as a set of frozen (not
-  optimized) trajectories.
+Call the node with the ``--help`` flag to see all available options.
 
 Subscribed Topics
 -----------------
@@ -74,7 +55,7 @@ points2 (`sensor_msgs/PointCloud2`_)
   numbered points2 topics (i.e. points2_1, points2_2, points2_3, ...  up to and
   including *num_point_clouds*) will be used as inputs for SLAM.
 
-The following additional sensor data topics may also be provided.
+The following additional sensor data topics may also be provided:
 
 imu (`sensor_msgs/Imu`_)
   Supported in 2D (optional) and 3D (required). This topic will be used as
@@ -84,6 +65,8 @@ odom (`nav_msgs/Odometry`_)
   Supported in 2D (optional) and 3D (optional). If *use_odometry* is
   enabled in the :doc:`configuration`, this topic will be used as input for
   SLAM.
+
+.. TODO: add NavSatFix? Landmarks?
 
 Published Topics
 ----------------
@@ -111,6 +94,7 @@ submap_query (`cartographer_ros_msgs/SubmapQuery`_)
 start_trajectory (`cartographer_ros_msgs/StartTrajectory`_)
   Starts another trajectory by specifying its sensor topics and trajectory
   options as an binary-encoded proto. Returns an assigned trajectory ID.
+  The ``start_trajectory`` executable provides a convenient wrapper to use this service.
 
 finish_trajectory (`cartographer_ros_msgs/FinishTrajectory`_)
   Finishes the given `trajectory_id`'s trajectory by running a final optimization.
@@ -120,6 +104,14 @@ write_state (`cartographer_ros_msgs/WriteState`_)
   usually end up in `~/.ros` or `ROS_HOME` if it is set. This file can be used
   as input to the `assets_writer_main` to generate assets like probability
   grids, X-Rays or PLY files.
+
+get_trajectory_states (`cartographer_ros_msgs/GetTrajectoryStates`_)
+  Returns the IDs and the states of the trajectories.
+  For example, this can be useful to observe the state of Cartographer from a separate node.
+
+read_metrics (`cartographer_ros_msgs/ReadMetrics`_)
+  Returns the latest values of all internal metrics of Cartographer.
+  The collection of runtime metrics is optional and has to be activated with the ``--collect_metrics`` command line flag in the node.
 
 Required tf Transforms
 ----------------------
@@ -146,6 +138,8 @@ If *provide_odom_frame* is enabled in the :doc:`configuration`, a continuous
 .. _cartographer_ros_msgs/SubmapQuery: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/srv/SubmapQuery.srv
 .. _cartographer_ros_msgs/StartTrajectory: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/srv/StartTrajectory.srv
 .. _cartographer_ros_msgs/WriteState: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/srv/WriteState.srv
+.. _cartographer_ros_msgs/GetTrajectoryStates: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/srv/GetTrajectoryStates.srv
+.. _cartographer_ros_msgs/ReadMetrics: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/srv/ReadMetrics.srv
 .. _nav_msgs/OccupancyGrid: http://docs.ros.org/api/nav_msgs/html/msg/OccupancyGrid.html
 .. _nav_msgs/Odometry: http://docs.ros.org/api/nav_msgs/html/msg/Odometry.html
 .. _sensor_msgs/Imu: http://docs.ros.org/api/sensor_msgs/html/msg/Imu.html
@@ -167,11 +161,13 @@ Once it is done processing all data, it writes out the final Cartographer state 
 
 
 Occupancy grid Node
-=================
+===================
 
-The `occupancy_grid_node`_ listens to the submaps published by SLAM and builds a ROS occupancy_grid and publishes it.
-This tool is to keep old nodes that require a single monolithic map to work happy until new nav stacks can deal with Cartographer's submaps directly.
+The `occupancy_grid_node`_ listens to the submaps published by SLAM, builds an ROS occupancy_grid out of them and publishes it.
+This tool is useful to keep old nodes that require a single monolithic map to work happy until new nav stacks can deal with Cartographer's submaps directly.
 Generating the map is expensive and slow, so map updates are in the order of seconds.
+You can can selectively include/exclude submaps from frozen (static) or active trajectories with a command line option.
+Call the node with the ``--help`` flag to see these options.
 
 .. _occupancy_grid_node: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros/cartographer_ros/occupancy_grid_node_main.cc
 
@@ -187,3 +183,23 @@ map (`nav_msgs/OccupancyGrid`_)
   If subscribed to, the node will continuously compute and publish the map. The
   time between updates will increase with the size of the map. For faster
   updates, use the submaps APIs.
+
+
+Pbstream Map Publisher Node
+===========================
+
+The `pbstream_map_publisher`_ is a simple node that creates a static occupancy grid out of a serialized Cartographer state (pbstream format).
+It is an efficient alternative to the occupancy grid node if live updates are not important.
+
+.. _pbstream_map_publisher: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros/cartographer_ros/pbstream_map_publisher_main.cc
+
+Subscribed Topics
+-----------------
+
+None.
+
+Published Topics
+----------------
+
+map (`nav_msgs/OccupancyGrid`_)
+  The published occupancy grid topic is latched.
