@@ -48,7 +48,7 @@ include(FindPkgConfig)
 
 find_package(LuaGoogle REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common)
-find_package(Eigen REQUIRED)
+find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system iostreams)
 
 find_package(urdfdom_headers REQUIRED)
