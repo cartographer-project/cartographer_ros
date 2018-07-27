@@ -17,7 +17,7 @@
 #include "cartographer_rviz/submaps_display.h"
 
 #include "OgreResourceGroupManager.h"
-#include "cartographer/common/make_unique.h"
+#include "absl/memory/memory.h"
 #include "cartographer/common/mutex.h"
 #include "cartographer/mapping/id.h"
 #include "cartographer_ros_msgs/SubmapList.h"
@@ -112,8 +112,7 @@ void SubmapsDisplay::reset() {
 void SubmapsDisplay::processMessage(
     const ::cartographer_ros_msgs::SubmapList::ConstPtr& msg) {
   ::cartographer::common::MutexLocker locker(&mutex_);
-  map_frame_ =
-      ::cartographer::common::make_unique<std::string>(msg->header.frame_id);
+  map_frame_ = absl::make_unique<std::string>(msg->header.frame_id);
   // In case Cartographer node is relaunched, destroy trajectories from the
   // previous instance.
   for (const ::cartographer_ros_msgs::SubmapEntry& submap_entry : msg->submap) {
@@ -136,8 +135,8 @@ void SubmapsDisplay::processMessage(
     const SubmapId id{submap_entry.trajectory_id, submap_entry.submap_index};
     listed_submaps.insert(id);
     while (id.trajectory_id >= static_cast<int>(trajectories_.size())) {
-      trajectories_.push_back(::cartographer::common::make_unique<Trajectory>(
-          ::cartographer::common::make_unique<::rviz::BoolProperty>(
+      trajectories_.push_back(
+          absl::make_unique<Trajectory>(absl::make_unique<::rviz::BoolProperty>(
               QString("Trajectory %1").arg(id.trajectory_id),
               visibility_all_enabled_->getBool(),
               QString("List of all submaps in Trajectory %1. The checkbox "
@@ -154,7 +153,7 @@ void SubmapsDisplay::processMessage(
       constexpr float kSubmapPoseAxesRadius = 0.06f;
       trajectory_submaps.emplace(
           id.submap_index,
-          ::cartographer::common::make_unique<DrawableSubmap>(
+          absl::make_unique<DrawableSubmap>(
               id, context_, map_node_, trajectory_visibility.get(),
               trajectory_visibility->getBool(), kSubmapPoseAxesLength,
               kSubmapPoseAxesRadius));

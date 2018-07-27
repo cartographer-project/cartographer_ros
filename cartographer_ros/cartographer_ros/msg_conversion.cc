@@ -369,8 +369,7 @@ std::unique_ptr<nav_msgs::OccupancyGrid> CreateOccupancyGridMsg(
     const cartographer::io::PaintSubmapSlicesResult& painted_slices,
     const double resolution, const std::string& frame_id,
     const ros::Time& time) {
-  auto occupancy_grid =
-      ::cartographer::common::make_unique<nav_msgs::OccupancyGrid>();
+  auto occupancy_grid = absl::make_unique<nav_msgs::OccupancyGrid>();
 
   const int width = cairo_image_surface_get_width(painted_slices.surface.get());
   const int height =
