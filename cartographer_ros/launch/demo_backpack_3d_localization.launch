@@ -27,7 +27,7 @@
       type="cartographer_node" args="
           -configuration_directory $(find cartographer_ros)/configuration_files
           -configuration_basename backpack_3d_localization.lua
-          -map_filename $(arg map_filename)"
+          -load_state_filename $(arg load_state_filename)"
       output="screen">
     <remap from="points2_1" to="horizontal_laser_3d" />
     <remap from="points2_2" to="vertical_laser_3d" />

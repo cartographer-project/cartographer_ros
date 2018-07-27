@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_ROS_NODE_OPTIONS_H_
-#define CARTOGRAPHER_ROS_NODE_OPTIONS_H_
+#ifndef CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_NODE_OPTIONS_H
+#define CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_NODE_OPTIONS_H
 
 #include <string>
 #include <tuple>
@@ -35,6 +35,7 @@ struct NodeOptions {
   double submap_publish_period_sec;
   double pose_publish_period_sec;
   double trajectory_publish_period_sec;
+  bool use_pose_extrapolator = true;
 };
 
 NodeOptions CreateNodeOptions(
@@ -46,4 +47,4 @@ std::tuple<NodeOptions, TrajectoryOptions> LoadOptions(
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAPHER_ROS_NODE_OPTIONS_H_
+#endif  // CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_NODE_OPTIONS_H

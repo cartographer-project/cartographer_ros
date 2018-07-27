@@ -18,37 +18,53 @@ project(cartographer_ros_msgs)
 
 set(PACKAGE_DEPENDENCIES
   geometry_msgs
+  std_msgs
 )
 
 find_package(catkin REQUIRED COMPONENTS message_generation ${PACKAGE_DEPENDENCIES})
 
 add_message_files(
+  DIRECTORY msg
   FILES
     LandmarkEntry.msg
     LandmarkList.msg
+    SensorTopics.msg
     StatusCode.msg
     StatusResponse.msg
-    SubmapList.msg
     SubmapEntry.msg
+    SubmapList.msg
     SubmapTexture.msg
-    SensorTopics.msg
     TrajectoryOptions.msg
+    TrajectoryStates.msg
+)
+
+add_message_files(
+  DIRECTORY msg/metrics
+  FILES
+    HistogramBucket.msg
+    MetricFamily.msg
+    MetricLabel.msg
+    Metric.msg
 )
 
 add_service_files(
+  DIRECTORY srv
   FILES
-    SubmapQuery.srv
     FinishTrajectory.srv
+    GetTrajectoryStates.srv
+    ReadMetrics.srv
     StartTrajectory.srv
+    SubmapQuery.srv
     WriteState.srv
 )
 
 generate_messages(
   DEPENDENCIES
-    geometry_msgs
+    ${PACKAGE_DEPENDENCIES}
 )
 
 catkin_package(
   CATKIN_DEPENDS
     ${PACKAGE_DEPENDENCIES}
+    message_runtime
 )

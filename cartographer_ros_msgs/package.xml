@@ -17,20 +17,27 @@
 
 <package format="2">
   <name>cartographer_ros_msgs</name>
-  <version>0.3.0</version>
+  <version>1.0.0</version>
   <description>
     ROS messages for the cartographer_ros package.
   </description>
-  <maintainer email="google-cartographer@googlegroups.com">
+  <maintainer email="cartographer-owners@googlegroups.com">
     The Cartographer Authors
   </maintainer>
   <license>Apache 2.0</license>
 
   <url>https://github.com/googlecartographer/cartographer_ros</url>
 
+  <author email="google-cartographer@googlegroups.com">
+    The Cartographer Authors
+  </author>
+
   <buildtool_depend>catkin</buildtool_depend>
 
   <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
 
   <build_depend>message_generation</build_depend>
+  
+  <exec_depend>message_runtime</exec_depend>
 </package>

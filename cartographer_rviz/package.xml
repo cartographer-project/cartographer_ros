@@ -17,26 +17,30 @@
 
 <package format="2">
   <name>cartographer_rviz</name>
-  <version>0.3.0</version>
+  <version>1.0.0</version>
   <description>
     Cartographer is a system that provides real-time simultaneous localization
     and mapping (SLAM) in 2D and 3D across multiple platforms and sensor
     configurations. This package provides Cartographer's RViz integration.
   </description>
-  <maintainer email="google-cartographer@googlegroups.com">
+  <maintainer email="cartographer-owners@googlegroups.com">
     The Cartographer Authors
   </maintainer>
   <license>Apache 2.0</license>
 
   <url>https://github.com/googlecartographer/cartographer_ros</url>
 
+  <author email="google-cartographer@googlegroups.com">
+    The Cartographer Authors
+  </author>
+
   <buildtool_depend>catkin</buildtool_depend>
 
   <build_depend>g++-static</build_depend>
 
-  <depend>cartographer</depend>
-  <depend>cartographer_ros</depend>
-  <depend>cartographer_ros_msgs</depend>
+  <depend version_gte="1.0.0">cartographer</depend>
+  <depend version_gte="1.0.0">cartographer_ros</depend>
+  <depend version_gte="1.0.0">cartographer_ros_msgs</depend>
   <depend>eigen_conversions</depend>
   <depend>libqt5-core</depend>
   <depend>libqt5-gui</depend>

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_ROS_SENSOR_BRIDGE_H_
-#define CARTOGRAPHER_ROS_SENSOR_BRIDGE_H_
+#ifndef CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_SENSOR_BRIDGE_H
+#define CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_SENSOR_BRIDGE_H
 
 #include <memory>
 
@@ -97,4 +97,4 @@ class SensorBridge {
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAPHER_ROS_SENSOR_BRIDGE_H_
+#endif  // CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_SENSOR_BRIDGE_H

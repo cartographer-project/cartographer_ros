@@ -28,7 +28,7 @@ Two systems
 
 Cartographer can be seen as two separate, but related systems.
 The first one is local SLAM (sometimes also called frontend).
-Its job is build a locally consistent set of submaps and tie them together, but it will drift over time.
+Its job is to build a locally consistent set of submaps and tie them together, but it will drift over time.
 Most of its options can be found in `trajectory_builder_2d.lua`_ for 2D and `trajectory_builder_3d.lua`_ for 3D.
 
 .. _trajectory_builder_2d.lua: https://github.com/googlecartographer/cartographer/blob/aba4575d937df4c9697f61529200c084f2562584/configuration_files/trajectory_builder_2d.lua
@@ -166,7 +166,7 @@ Global SLAM builds up a queue of background tasks.
 When global SLAM cannot keep up the queue, drift can accumulate indefinitely,
 so global SLAM should be tuned to work in real time.
 
-There are many options to tune the different components for speed, and we list them ordered from 
+There are many options to tune the different components for speed, and we list them ordered from
 the recommended, straightforward ones to the those that are more intrusive.
 It is recommended to only explore one option at a time, starting with the first.
 Configuration parameters are documented in the `Cartographer documentation`_.
@@ -215,3 +215,24 @@ As a next step, we strongly decrease ``global_sampling_ratio`` and ``constraint_
 to compensate for the large number of constraints.
 We then tune for lower latency as explained above until the system reliably works in real time.
 
+If you run in ``pure_localization``, ``submaps.resolution`` **should be matching** with the resolution of the submaps in the ``.pbstream`` you are running on.
+Using different resolutions is currently untested and may not work as expected.
+
+Odometry in Global Optimization
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If a separate odometry source is used as an input for local SLAM (``use_odometry = true``), we can also tune the global SLAM to benefit from this additional information.
+
+There are in total four parameters that allow us to tune the individual weights of local SLAM and odometry in the optimization:
+
+  .. code-block:: lua
+
+    POSE_GRAPH.optimization_problem.local_slam_pose_translation_weight
+    POSE_GRAPH.optimization_problem.local_slam_pose_rotation_weight
+    POSE_GRAPH.optimization_problem.odometry_translation_weight
+    POSE_GRAPH.optimization_problem.odometry_rotation_weight
+
+We can set these weights depending on how much we trust either local SLAM or the odometry.
+By default, odometry is weighted into global optimization similar to local slam (scan matching) poses.
+However, odometry from wheel encoders often has a high uncertainty in rotation.
+In this case, the rotation weight can be reduced, even down to zero.

@@ -20,6 +20,7 @@
 #include <string>
 
 #include "cartographer/io/proto_stream.h"
+#include "cartographer/io/proto_stream_deserializer.h"
 #include "cartographer/io/submap_painter.h"
 #include "cartographer/mapping/2d/probability_grid.h"
 #include "cartographer/mapping/2d/submap_2d.h"
@@ -28,6 +29,7 @@
 #include "cartographer/mapping/proto/serialization.pb.h"
 #include "cartographer/mapping/proto/submap.pb.h"
 #include "cartographer/mapping/proto/trajectory_builder_options.pb.h"
+#include "cartographer/mapping/value_conversion_tables.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/node_constants.h"
 #include "cartographer_ros/ros_log_sink.h"
@@ -47,48 +49,49 @@ DEFINE_double(resolution, 0.05, "Resolution of a grid cell in the drawn map.");
 namespace cartographer_ros {
 namespace {
 
-void Run(const std::string& pbstream_filename, const std::string& map_topic,
-         const std::string& map_frame_id, const double resolution) {
+std::unique_ptr<nav_msgs::OccupancyGrid> LoadOccupancyGridMsg(
+    const std::string& pbstream_filename, const double resolution) {
   ::cartographer::io::ProtoStreamReader reader(pbstream_filename);
-
-  ::cartographer::mapping::proto::PoseGraph pose_graph;
-  CHECK(reader.ReadProto(&pose_graph));
-  ::cartographer::mapping::proto::AllTrajectoryBuilderOptions
-      all_trajectory_builder_options;
-  CHECK(reader.ReadProto(&all_trajectory_builder_options));
+  ::cartographer::io::ProtoStreamDeserializer deserializer(&reader);
 
   LOG(INFO) << "Loading submap slices from serialized data.";
   std::map<::cartographer::mapping::SubmapId, ::cartographer::io::SubmapSlice>
       submap_slices;
-  for (;;) {
-    ::cartographer::mapping::proto::SerializedData proto;
-    if (!reader.ReadProto(&proto)) {
-      break;
-    }
-    if (proto.has_submap()) {
+  ::cartographer::mapping::proto::SerializedData proto;
+  ::cartographer::mapping::ValueConversionTables conversion_lookup_tables;
+  while (deserializer.ReadNextSerializedData(&proto)) {
+    if (proto.has_submap() &&
+        (Has2DGrid(proto.submap()) || Has3DGrids(proto.submap()))) {
       const auto& submap = proto.submap();
       const ::cartographer::mapping::SubmapId id{
           submap.submap_id().trajectory_id(),
           submap.submap_id().submap_index()};
       const ::cartographer::transform::Rigid3d global_submap_pose =
-          ::cartographer::transform::ToRigid3(
-              pose_graph.trajectory(id.trajectory_id)
-                  .submap(id.submap_index)
-                  .pose());
-      FillSubmapSlice(global_submap_pose, submap, &submap_slices[id]);
+          ::cartographer::transform::ToRigid3(deserializer.pose_graph()
+                                                  .trajectory(id.trajectory_id)
+                                                  .submap(id.submap_index)
+                                                  .pose());
+      FillSubmapSlice(global_submap_pose, submap, &submap_slices[id],
+                      &conversion_lookup_tables);
     }
   }
   CHECK(reader.eof());
 
-  ::ros::NodeHandle node_handle("");
-  ::ros::Publisher pub = node_handle.advertise<nav_msgs::OccupancyGrid>(
-      map_topic, kLatestOnlyPublisherQueueSize, true /*latched */);
-
   LOG(INFO) << "Generating combined map image from submap slices.";
   const auto painted_slices =
       ::cartographer::io::PaintSubmapSlices(submap_slices, resolution);
-  std::unique_ptr<nav_msgs::OccupancyGrid> msg_ptr = CreateOccupancyGridMsg(
-      painted_slices, resolution, FLAGS_map_frame_id, ros::Time::now());
+  return CreateOccupancyGridMsg(painted_slices, resolution, FLAGS_map_frame_id,
+                                ros::Time::now());
+}
+
+void Run(const std::string& pbstream_filename, const std::string& map_topic,
+         const std::string& map_frame_id, const double resolution) {
+  std::unique_ptr<nav_msgs::OccupancyGrid> msg_ptr =
+      LoadOccupancyGridMsg(pbstream_filename, resolution);
+
+  ::ros::NodeHandle node_handle("");
+  ::ros::Publisher pub = node_handle.advertise<nav_msgs::OccupancyGrid>(
+      map_topic, kLatestOnlyPublisherQueueSize, true /*latched */);
 
   LOG(INFO) << "Publishing occupancy grid topic " << map_topic
             << " (frame_id: " << map_frame_id

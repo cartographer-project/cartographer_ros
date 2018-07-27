@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_ROS_NODE_CONSTANTS_H_
-#define CARTOGRAPHER_ROS_NODE_CONSTANTS_H_
+#ifndef CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_NODE_CONSTANTS_H
+#define CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_NODE_CONSTANTS_H
 
 #include <string>
 #include <vector>
@@ -37,10 +37,13 @@ constexpr char kSubmapListTopic[] = "submap_list";
 constexpr char kSubmapQueryServiceName[] = "submap_query";
 constexpr char kStartTrajectoryServiceName[] = "start_trajectory";
 constexpr char kWriteStateServiceName[] = "write_state";
+constexpr char kGetTrajectoryStatesServiceName[] = "get_trajectory_states";
+constexpr char kReadMetricsServiceName[] = "read_metrics";
 constexpr char kTrajectoryNodeListTopic[] = "trajectory_node_list";
 constexpr char kLandmarkPosesListTopic[] = "landmark_poses_list";
 constexpr char kConstraintListTopic[] = "constraint_list";
 constexpr double kConstraintPublishPeriodSec = 0.5;
+constexpr double kTopicMismatchCheckDelaySec = 3.0;
 
 constexpr int kInfiniteSubscriberQueueSize = 0;
 constexpr int kLatestOnlyPublisherQueueSize = 1;
@@ -51,4 +54,4 @@ std::vector<std::string> ComputeRepeatedTopicNames(const std::string& topic,
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAPHER_ROS_NODE_CONSTANTS_H_
+#endif  // CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_NODE_CONSTANTS_H

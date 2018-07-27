@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Copyright 2016 The Cartographer Authors
 #
@@ -16,6 +16,21 @@
 
 set -o errexit
 set -o verbose
+
+# Install CMake 3.2 for Ubuntu Trusty and Debian Jessie.
+sudo apt-get update
+sudo apt-get install lsb-release -y
+if [[ "$(lsb_release -sc)" = "trusty" ]]
+then
+  sudo apt-get install cmake3 -y
+elif [[ "$(lsb_release -sc)" = "jessie" ]]
+then
+  sudo sh -c "echo 'deb http://ftp.debian.org/debian jessie-backports main' >> /etc/apt/sources.list"
+  sudo apt-get update
+  sudo apt-get -t jessie-backports install cmake -y
+else
+  sudo apt-get install cmake -y
+fi
 
 . /opt/ros/${ROS_DISTRO}/setup.sh
 

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_ROS_MAP_BUILDER_BRIDGE_H_
-#define CARTOGRAPHER_ROS_MAP_BUILDER_BRIDGE_H_
+#ifndef CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_MAP_BUILDER_BRIDGE_H
+#define CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_MAP_BUILDER_BRIDGE_H
 
 #include <memory>
 #include <set>
@@ -24,6 +24,7 @@
 
 #include "cartographer/common/mutex.h"
 #include "cartographer/mapping/map_builder_interface.h"
+#include "cartographer/mapping/pose_graph_interface.h"
 #include "cartographer/mapping/proto/trajectory_builder_options.pb.h"
 #include "cartographer/mapping/trajectory_builder_interface.h"
 #include "cartographer_ros/node_options.h"
@@ -40,8 +41,8 @@ namespace cartographer_ros {
 
 class MapBuilderBridge {
  public:
-  struct TrajectoryState {
-    // Contains the trajectory state data received from local SLAM, after
+  struct LocalTrajectoryData {
+    // Contains the trajectory data received from local SLAM, after
     // it had processed accumulated 'range_data_in_local' and estimated
     // current 'local_pose' at 'time'.
     struct LocalSlamData {
@@ -77,8 +78,11 @@ class MapBuilderBridge {
       cartographer_ros_msgs::SubmapQuery::Request& request,
       cartographer_ros_msgs::SubmapQuery::Response& response);
 
+  std::map<int /* trajectory_id */,
+           ::cartographer::mapping::PoseGraphInterface::TrajectoryState>
+  GetTrajectoryStates();
   cartographer_ros_msgs::SubmapList GetSubmapList();
-  std::unordered_map<int, TrajectoryState> GetTrajectoryStates()
+  std::unordered_map<int, LocalTrajectoryData> GetLocalTrajectoryData()
       EXCLUDES(mutex_);
   visualization_msgs::MarkerArray GetTrajectoryNodeList();
   visualization_msgs::MarkerArray GetLandmarkPosesList();
@@ -87,18 +91,17 @@ class MapBuilderBridge {
   SensorBridge* sensor_bridge(int trajectory_id);
 
  private:
-  void OnLocalSlamResult(
-      const int trajectory_id, const ::cartographer::common::Time time,
-      const ::cartographer::transform::Rigid3d local_pose,
-      ::cartographer::sensor::RangeData range_data_in_local,
-      const std::unique_ptr<const ::cartographer::mapping::
-                                TrajectoryBuilderInterface::InsertionResult>
-          insertion_result) EXCLUDES(mutex_);
+  void OnLocalSlamResult(const int trajectory_id,
+                         const ::cartographer::common::Time time,
+                         const ::cartographer::transform::Rigid3d local_pose,
+                         ::cartographer::sensor::RangeData range_data_in_local)
+      EXCLUDES(mutex_);
 
   cartographer::common::Mutex mutex_;
   const NodeOptions node_options_;
-  std::unordered_map<int, std::shared_ptr<const TrajectoryState::LocalSlamData>>
-      trajectory_state_data_ GUARDED_BY(mutex_);
+  std::unordered_map<int,
+                     std::shared_ptr<const LocalTrajectoryData::LocalSlamData>>
+      local_slam_data_ GUARDED_BY(mutex_);
   std::unique_ptr<cartographer::mapping::MapBuilderInterface> map_builder_;
   tf2_ros::Buffer* const tf_buffer_;
 
@@ -112,4 +115,4 @@ class MapBuilderBridge {
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAPHER_ROS_MAP_BUILDER_BRIDGE_H_
+#endif  // CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_MAP_BUILDER_BRIDGE_H

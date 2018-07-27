@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef CARTOGRAPHER_ROS_ROS_LOG_SINK_H_
-#define CARTOGRAPHER_ROS_ROS_LOG_SINK_H_
+#ifndef CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_ROS_LOG_SINK_H
+#define CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_ROS_LOG_SINK_H
 
 #include <ctime>
 
@@ -42,4 +42,4 @@ class ScopedRosLogSink : public ::google::LogSink {
 
 }  // namespace cartographer_ros
 
-#endif  // CARTOGRAPHER_ROS_ROS_LOG_SINK_H_
+#endif  // CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_ROS_LOG_SINK_H

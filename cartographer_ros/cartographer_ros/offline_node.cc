@@ -32,6 +32,9 @@
 #include "tf2_ros/static_transform_broadcaster.h"
 #include "urdf/model.h"
 
+DEFINE_bool(collect_metrics, false,
+            "Activates the collection of runtime metrics. If activated, the "
+            "metrics can be accessed via a ROS service.");
 DEFINE_string(configuration_directory, "",
               "First directory in which configuration files are searched, "
               "second is always the Cartographer installation to allow "
@@ -130,7 +133,8 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
 
   tf_buffer.setUsingDedicatedThread(true);
 
-  Node node(node_options, std::move(map_builder), &tf_buffer);
+  Node node(node_options, std::move(map_builder), &tf_buffer,
+            FLAGS_collect_metrics);
   if (!FLAGS_load_state_filename.empty()) {
     node.LoadState(FLAGS_load_state_filename, FLAGS_load_frozen_state);
   }
@@ -234,7 +238,27 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
         }));
   }
 
-  // TODO(gaschler): Warn if resolved topics are not in bags.
+  std::set<std::string> bag_topics;
+  std::stringstream bag_topics_string;
+  for (const auto& topic : playable_bag_multiplexer.topics()) {
+    std::string resolved_topic = node.node_handle()->resolveName(topic, false);
+    bag_topics.insert(resolved_topic);
+    bag_topics_string << resolved_topic << ",";
+  }
+  bool print_topics = false;
+  for (const auto& entry : bag_topic_to_sensor_id) {
+    const std::string& resolved_topic = entry.first.second;
+    if (bag_topics.count(resolved_topic) == 0) {
+      LOG(WARNING) << "Expected resolved topic \"" << resolved_topic
+                   << "\" not found in bag file(s).";
+      print_topics = true;
+    }
+  }
+  if (print_topics) {
+    LOG(WARNING) << "Available topics in bag file(s) are "
+                 << bag_topics_string.str();
+  }
+
   std::unordered_map<int, int> bag_index_to_trajectory_id;
   const ros::Time begin_time =
       // If no bags were loaded, we cannot peek the time of first message.
