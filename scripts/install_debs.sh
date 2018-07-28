@@ -22,15 +22,7 @@ sudo apt-get update
 sudo apt-get install lsb-release -y
 if [[ "$(lsb_release -sc)" = "trusty" ]]
 then
-  mkdir cmake_source/
-  cd cmake_source
-  sudo apt-get install curl cmake3 g++ -y
-  curl -O https://cmake.org/files/v3.12/cmake-3.12.0.tar.gz
-  tar -xvf cmake-3.12.0.tar.gz
-  cd cmake-3.12.0
-  cmake .
-  make -j4 && sudo make install
-  hash -r
+  sudo apt-get install cmake3 -y
 elif [[ "$(lsb_release -sc)" = "jessie" ]]
 then
   sudo sh -c "echo 'deb http://ftp.debian.org/debian jessie-backports main' >> /etc/apt/sources.list"
@@ -42,7 +34,7 @@ fi
 
 . /opt/ros/${ROS_DISTRO}/setup.sh
 
-cd /catkin_ws
+cd catkin_ws
 
 # Install Ninja.
 apt-get update
