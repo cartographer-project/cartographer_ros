@@ -23,7 +23,7 @@
 
 #include "Eigen/Core"
 #include "Eigen/Geometry"
-#include "cartographer/common/make_unique.h"
+#include "absl/memory/memory.h"
 #include "cartographer/common/port.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
@@ -63,14 +63,14 @@ DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
       last_query_timestamp_(0) {
   for (int slice_index = 0; slice_index < kNumberOfSlicesPerSubmap;
        ++slice_index) {
-    ogre_slices_.emplace_back(::cartographer::common::make_unique<OgreSlice>(
+    ogre_slices_.emplace_back(absl::make_unique<OgreSlice>(
         id, slice_index, display_context->getSceneManager(), submap_node_));
   }
   // DrawableSubmap creates and manages its visibility property object
   // (a unique_ptr is needed because the Qt parent of the visibility
   // property is the submap_category object - the BoolProperty needs
   // to be destroyed along with the DrawableSubmap)
-  visibility_ = ::cartographer::common::make_unique<::rviz::BoolProperty>(
+  visibility_ = absl::make_unique<::rviz::BoolProperty>(
       "" /* title */, visible, "" /* description */, submap_category,
       SLOT(ToggleVisibility()), this);
   submap_id_text_.setCharacterHeight(kSubmapIdCharHeight);

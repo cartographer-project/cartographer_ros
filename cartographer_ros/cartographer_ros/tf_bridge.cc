@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cartographer/common/make_unique.h"
+#include "absl/memory/memory.h"
 
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/tf_bridge.h"
@@ -45,9 +45,9 @@ std::unique_ptr<::cartographer::transform::Rigid3d> TfBridge::LookupToTracking(
       // for the full 'timeout' even if we ask for data that is too old.
       timeout = ::ros::Duration(0.);
     }
-    return ::cartographer::common::make_unique<
-        ::cartographer::transform::Rigid3d>(ToRigid3d(buffer_->lookupTransform(
-        tracking_frame_, frame_id, requested_time, timeout)));
+    return absl::make_unique<::cartographer::transform::Rigid3d>(
+        ToRigid3d(buffer_->lookupTransform(tracking_frame_, frame_id,
+                                           requested_time, timeout)));
   } catch (const tf2::TransformException& ex) {
     LOG(WARNING) << ex.what();
   }

@@ -21,9 +21,9 @@
 #include <vector>
 
 #include "Eigen/Core"
+#include "absl/memory/memory.h"
 #include "cartographer/common/configuration_file_resolver.h"
 #include "cartographer/common/lua_parameter_dictionary.h"
-#include "cartographer/common/make_unique.h"
 #include "cartographer/common/port.h"
 #include "cartographer/common/time.h"
 #include "cartographer/mapping/pose_graph_interface.h"
@@ -95,7 +95,7 @@ Node::Node(
       map_builder_bridge_(node_options_, std::move(map_builder), tf_buffer) {
   carto::common::MutexLocker lock(&mutex_);
   if (collect_metrics) {
-    metrics_registry_ = carto::common::make_unique<metrics::FamilyFactory>();
+    metrics_registry_ = absl::make_unique<metrics::FamilyFactory>();
     carto::metrics::RegisterAllMetrics(metrics_registry_.get());
   }
 

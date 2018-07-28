@@ -16,7 +16,7 @@
 
 #include "cartographer_ros/sensor_bridge.h"
 
-#include "cartographer/common/make_unique.h"
+#include "absl/memory/memory.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/time_conversion.h"
 
@@ -56,7 +56,7 @@ std::unique_ptr<carto::sensor::OdometryData> SensorBridge::ToOdometryData(
   if (sensor_to_tracking == nullptr) {
     return nullptr;
   }
-  return carto::common::make_unique<carto::sensor::OdometryData>(
+  return absl::make_unique<carto::sensor::OdometryData>(
       carto::sensor::OdometryData{
           time, ToRigid3d(msg->pose.pose) * sensor_to_tracking->inverse()});
 }
@@ -77,8 +77,8 @@ void SensorBridge::HandleNavSatFixMessage(
   const carto::common::Time time = FromRos(msg->header.stamp);
   if (msg->status.status == sensor_msgs::NavSatStatus::STATUS_NO_FIX) {
     trajectory_builder_->AddSensorData(
-        sensor_id, carto::sensor::FixedFramePoseData{
-                       time, carto::common::optional<Rigid3d>()});
+        sensor_id,
+        carto::sensor::FixedFramePoseData{time, absl::optional<Rigid3d>()});
     return;
   }
 
@@ -90,12 +90,11 @@ void SensorBridge::HandleNavSatFixMessage(
   }
 
   trajectory_builder_->AddSensorData(
-      sensor_id,
-      carto::sensor::FixedFramePoseData{
-          time, carto::common::optional<Rigid3d>(Rigid3d::Translation(
-                    ecef_to_local_frame_.value() *
-                    LatLongAltToEcef(msg->latitude, msg->longitude,
-                                     msg->altitude)))});
+      sensor_id, carto::sensor::FixedFramePoseData{
+                     time, absl::optional<Rigid3d>(Rigid3d::Translation(
+                               ecef_to_local_frame_.value() *
+                               LatLongAltToEcef(msg->latitude, msg->longitude,
+                                                msg->altitude)))});
 }
 
 void SensorBridge::HandleLandmarkMessage(
@@ -127,11 +126,9 @@ std::unique_ptr<carto::sensor::ImuData> SensorBridge::ToImuData(
       << "The IMU frame must be colocated with the tracking frame. "
          "Transforming linear acceleration into the tracking frame will "
          "otherwise be imprecise.";
-  return carto::common::make_unique<carto::sensor::ImuData>(
-      carto::sensor::ImuData{
-          time,
-          sensor_to_tracking->rotation() * ToEigen(msg->linear_acceleration),
-          sensor_to_tracking->rotation() * ToEigen(msg->angular_velocity)});
+  return absl::make_unique<carto::sensor::ImuData>(carto::sensor::ImuData{
+      time, sensor_to_tracking->rotation() * ToEigen(msg->linear_acceleration),
+      sensor_to_tracking->rotation() * ToEigen(msg->angular_velocity)});
 }
 
 void SensorBridge::HandleImuMessage(const std::string& sensor_id,

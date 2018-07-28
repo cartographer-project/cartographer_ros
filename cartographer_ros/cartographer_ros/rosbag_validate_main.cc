@@ -20,8 +20,8 @@
 #include <set>
 #include <string>
 
+#include "absl/memory/memory.h"
 #include "cartographer/common/histogram.h"
-#include "cartographer/common/make_unique.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
@@ -72,7 +72,7 @@ const std::set<std::string> kPointDataTypes = {
         ros::message_traits::DataType<sensor_msgs::LaserScan>::value())};
 
 std::unique_ptr<std::ofstream> CreateTimingFile(const std::string& frame_id) {
-  auto timing_file = ::cartographer::common::make_unique<std::ofstream>(
+  auto timing_file = absl::make_unique<std::ofstream>(
       std::string("timing_") + frame_id + ".csv", std::ios_base::out);
 
   (*timing_file)
