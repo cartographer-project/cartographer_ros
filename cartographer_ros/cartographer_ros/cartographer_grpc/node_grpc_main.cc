@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+#include "absl/memory/memory.h"
 #include "cartographer/cloud/client/map_builder_stub.h"
-#include "cartographer/common/make_unique.h"
 #include "cartographer_ros/node.h"
 #include "cartographer_ros/node_options.h"
 #include "cartographer_ros/ros_log_sink.h"
@@ -59,9 +59,8 @@ void Run() {
   std::tie(node_options, trajectory_options) =
       LoadOptions(FLAGS_configuration_directory, FLAGS_configuration_basename);
 
-  auto map_builder =
-      cartographer::common::make_unique<::cartographer::cloud::MapBuilderStub>(
-          FLAGS_server_address, FLAGS_client_id);
+  auto map_builder = absl::make_unique<::cartographer::cloud::MapBuilderStub>(
+      FLAGS_server_address, FLAGS_client_id);
   Node node(node_options, std::move(map_builder), &tf_buffer,
             FLAGS_collect_metrics);
 
