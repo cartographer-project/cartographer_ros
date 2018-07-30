@@ -44,6 +44,8 @@ DEFINE_string(
 DEFINE_string(load_state_filename, "",
               "If non-empty, filename of a .pbstream file "
               "to load, containing a saved SLAM state.");
+DEFINE_bool(load_frozen_state, true,
+            "Load the saved state as frozen (non-optimized) trajectories.");
 DEFINE_string(client_id, "",
               "Cartographer client ID to use when connecting to the server.");
 
@@ -65,7 +67,7 @@ void Run() {
             FLAGS_collect_metrics);
 
   if (!FLAGS_load_state_filename.empty()) {
-    node.LoadState(FLAGS_load_state_filename, true /* load_frozen_state */);
+    node.LoadState(FLAGS_load_state_filename, FLAGS_load_frozen_state);
   }
 
   if (FLAGS_start_trajectory_with_default_topics) {
