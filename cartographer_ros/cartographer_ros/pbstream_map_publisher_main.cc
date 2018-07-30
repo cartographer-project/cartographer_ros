@@ -25,16 +25,10 @@
 #include "cartographer/mapping/2d/probability_grid.h"
 #include "cartographer/mapping/2d/submap_2d.h"
 #include "cartographer/mapping/3d/submap_3d.h"
-#include "cartographer/mapping/proto/pose_graph.pb.h"
-#include "cartographer/mapping/proto/serialization.pb.h"
-#include "cartographer/mapping/proto/submap.pb.h"
-#include "cartographer/mapping/proto/trajectory_builder_options.pb.h"
-#include "cartographer/mapping/value_conversion_tables.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/node_constants.h"
 #include "cartographer_ros/ros_log_sink.h"
 #include "cartographer_ros/ros_map.h"
-#include "cartographer_ros/submap.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 #include "nav_msgs/OccupancyGrid.h"
@@ -57,24 +51,9 @@ std::unique_ptr<nav_msgs::OccupancyGrid> LoadOccupancyGridMsg(
   LOG(INFO) << "Loading submap slices from serialized data.";
   std::map<::cartographer::mapping::SubmapId, ::cartographer::io::SubmapSlice>
       submap_slices;
-  ::cartographer::mapping::proto::SerializedData proto;
-  ::cartographer::mapping::ValueConversionTables conversion_lookup_tables;
-  while (deserializer.ReadNextSerializedData(&proto)) {
-    if (proto.has_submap() &&
-        (Has2DGrid(proto.submap()) || Has3DGrids(proto.submap()))) {
-      const auto& submap = proto.submap();
-      const ::cartographer::mapping::SubmapId id{
-          submap.submap_id().trajectory_id(),
-          submap.submap_id().submap_index()};
-      const ::cartographer::transform::Rigid3d global_submap_pose =
-          ::cartographer::transform::ToRigid3(deserializer.pose_graph()
-                                                  .trajectory(id.trajectory_id)
-                                                  .submap(id.submap_index)
-                                                  .pose());
-      FillSubmapSlice(global_submap_pose, submap, &submap_slices[id],
-                      &conversion_lookup_tables);
-    }
-  }
+  ::cartographer::mapping::ValueConversionTables conversion_tables;
+  ::cartographer::io::DeserializeAndFillSubmapSlices(
+      &deserializer, &submap_slices, &conversion_tables);
   CHECK(reader.eof());
 
   LOG(INFO) << "Generating combined map image from submap slices.";
