@@ -162,7 +162,7 @@ void MapBuilderBridge::RunFinalOptimization() {
 
 bool MapBuilderBridge::SerializeState(const std::string& filename) {
   cartographer::io::ProtoStreamWriter writer(filename);
-  map_builder_->SerializeState(&writer);
+  map_builder_->SerializeState(/*include_unfinished_submaps=*/true, &writer);
   return writer.Close();
 }
 
