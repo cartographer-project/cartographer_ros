@@ -67,7 +67,7 @@ TEST(MsgConversion, LaserScanToPointCloud) {
   EXPECT_TRUE(point_cloud[7].position().isApprox(
       Eigen::Vector4f(1.f / std::sqrt(2.f), -1.f / std::sqrt(2.f), 0.f), kEps));
   for (int i = 0; i < 8; ++i) {
-    EXPECT_NEAR(point_cloud[i].time(), kEps);
+    EXPECT_NEAR(point_cloud[i].time(), 0.f, kEps);
   }
 }
 
@@ -91,8 +91,8 @@ TEST(MsgConversion, LaserScanToPointCloudWithInfinityAndNaN) {
       point_cloud[0].position().isApprox(Eigen::Vector4f(0.f, 2.f, 0.f), kEps));
   EXPECT_TRUE(point_cloud[1].position().isApprox(
       Eigen::Vector4f(-3.f, 0.f, 0.f), kEps));
-  EXPECT_NEAR(point_cloud[0].time(), kEps);
-  EXPECT_NEAR(point_cloud[1].time(), kEps);
+  EXPECT_NEAR(point_cloud[0].time(), 0.f, kEps);
+  EXPECT_NEAR(point_cloud[1].time(), 0.f, kEps);
 }
 
 ::testing::Matcher<const LandmarkObservation&> EqualsLandmark(
