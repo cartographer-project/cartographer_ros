@@ -639,7 +639,8 @@ bool Node::HandleWriteState(
     ::cartographer_ros_msgs::WriteState::Request& request,
     ::cartographer_ros_msgs::WriteState::Response& response) {
   carto::common::MutexLocker lock(&mutex_);
-  if (map_builder_bridge_.SerializeState(request.filename)) {
+  if (map_builder_bridge_.SerializeState(request.filename,
+                                         request.include_unfinished_submaps)) {
     response.status.code = cartographer_ros_msgs::StatusCode::OK;
     response.status.message = "State written to '" + request.filename + "'.";
   } else {
@@ -787,9 +788,11 @@ void Node::HandlePointCloud2Message(
       ->HandlePointCloud2Message(sensor_id, msg);
 }
 
-void Node::SerializeState(const std::string& filename) {
+void Node::SerializeState(const std::string& filename,
+                          const bool include_unfinished_submaps) {
   carto::common::MutexLocker lock(&mutex_);
-  CHECK(map_builder_bridge_.SerializeState(filename))
+  CHECK(
+      map_builder_bridge_.SerializeState(filename, include_unfinished_submaps))
       << "Could not write state.";
 }
 

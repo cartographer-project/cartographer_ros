@@ -372,7 +372,8 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
     const std::string suffix = ".pbstream";
     const std::string state_output_filename = output_filename + suffix;
     LOG(INFO) << "Writing state to '" << state_output_filename << "'...";
-    node.SerializeState(state_output_filename);
+    node.SerializeState(state_output_filename,
+                        true /* include_unfinished_submaps */);
   }
   if (FLAGS_keep_running) {
     ::ros::waitForShutdown();

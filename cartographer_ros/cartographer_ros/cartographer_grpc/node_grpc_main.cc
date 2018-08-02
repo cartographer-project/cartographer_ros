@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
+#include "cartographer_ros/node.h"
 #include "absl/memory/memory.h"
 #include "cartographer/cloud/client/map_builder_stub.h"
-#include "cartographer_ros/node.h"
 #include "cartographer_ros/node_options.h"
 #include "cartographer_ros/ros_log_sink.h"
 #include "gflags/gflags.h"
@@ -78,7 +78,8 @@ void Run() {
   node.RunFinalOptimization();
 
   if (!FLAGS_save_map_filename.empty()) {
-    node.SerializeState(FLAGS_save_map_filename);
+    node.SerializeState(FLAGS_save_map_filename,
+                        false /* include_unfinished_submaps */);
   }
 }
 
