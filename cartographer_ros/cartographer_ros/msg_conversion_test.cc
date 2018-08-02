@@ -52,7 +52,7 @@ TEST(MsgConversion, LaserScanToPointCloud) {
   EXPECT_TRUE(
       point_cloud[0].position().isApprox(Eigen::Vector3f(1.f, 0.f, 0.f), kEps));
   EXPECT_TRUE(point_cloud[1].position().isApprox(
-      Eigen::Vector4f(1.f / std::sqrt(2.f), 1.f / std::sqrt(2.f), 0.f), kEps));
+      Eigen::Vector3f(1.f / std::sqrt(2.f), 1.f / std::sqrt(2.f), 0.f), kEps));
   EXPECT_TRUE(
       point_cloud[2].position().isApprox(Eigen::Vector3f(0.f, 1.f, 0.f), kEps));
   EXPECT_TRUE(point_cloud[3].position().isApprox(
