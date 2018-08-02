@@ -112,7 +112,8 @@ class Node {
                                 const sensor_msgs::PointCloud2::ConstPtr& msg);
 
   // Serializes the complete Node state.
-  void SerializeState(const std::string& filename);
+  void SerializeState(const std::string& filename,
+                      const bool include_unfinished_submaps);
 
   // Loads a serialized SLAM state from a .pbstream file.
   void LoadState(const std::string& state_filename, bool load_frozen_state);

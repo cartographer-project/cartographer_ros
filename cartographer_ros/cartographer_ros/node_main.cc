@@ -74,7 +74,8 @@ void Run() {
   node.RunFinalOptimization();
 
   if (!FLAGS_save_state_filename.empty()) {
-    node.SerializeState(FLAGS_save_state_filename);
+    node.SerializeState(FLAGS_save_state_filename,
+                        true /* include_unfinished_submaps */);
   }
 }
 
