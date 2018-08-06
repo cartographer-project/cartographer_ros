@@ -138,7 +138,7 @@ PlayableBagMultiplexer::GetNextMessage() {
   cartographer_ros_msgs::BagfileProgress progress;
   rosbag::MessageInstance msg = current_bag.GetNextMessage(progress);
   if (ros::Time::now() - last_progress_pub_time_ >=
-      ros::Duration(progress_pub_interval_) &&
+          ros::Duration(progress_pub_interval_) &&
       bag_progress_pub_.getNumSubscribers() > 0) {
     progress.total_bagfiles = playable_bags_.size();
     bag_progress_pub_.publish(progress);
