@@ -124,6 +124,7 @@ void PlayableBagMultiplexer::AddPlayableBag(PlayableBag playable_bag) {
   next_message_queue_.emplace(
       BagMessageItem{playable_bags_.back().PeekMessageTime(),
                      static_cast<int>(playable_bags_.size() - 1)});
+  bag_progress_time_map_[playable_bag.bag_id()] = ros::Time::now();
 }
 
 bool PlayableBagMultiplexer::IsMessageAvailable() const {
@@ -137,12 +138,12 @@ PlayableBagMultiplexer::GetNextMessage() {
   PlayableBag& current_bag = playable_bags_.at(current_bag_index);
   cartographer_ros_msgs::BagfileProgress progress;
   rosbag::MessageInstance msg = current_bag.GetNextMessage(progress);
-  if (ros::Time::now() - last_progress_pub_time_ >=
+  if (ros::Time::now() - bag_progress_time_map_[current_bag.bag_id()] >=
           ros::Duration(progress_pub_interval_) &&
       bag_progress_pub_.getNumSubscribers() > 0) {
     progress.total_bagfiles = playable_bags_.size();
     bag_progress_pub_.publish(progress);
-    last_progress_pub_time_ = ros::Time::now();
+    bag_progress_time_map_[current_bag.bag_id()] = ros::Time::now();
   }
   CHECK_EQ(msg.getTime(), next_message_queue_.top().message_timestamp);
   next_message_queue_.pop();

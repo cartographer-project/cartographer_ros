@@ -97,8 +97,8 @@ class PlayableBagMultiplexer {
   ros::NodeHandle pnh_;
   // Publishes information about the bag-file(s) processing and its progress
   ros::Publisher bag_progress_pub_;
-  // Last time when the progress was published
-  ros::Time last_progress_pub_time_;
+  // Map between bagfile id and the last time when its progress was published
+  std::map<int, ros::Time> bag_progress_time_map_;
   // The time interval of publishing bag-file(s) processing in seconds
   double progress_pub_interval_;
 
