@@ -20,7 +20,7 @@
 #include <map>
 #include <string>
 
-#include "cartographer/common/mutex.h"
+#include "absl/synchronization/mutex.h"
 #include "cartographer/metrics/gauge.h"
 #include "cartographer_ros_msgs/Metric.h"
 
@@ -41,12 +41,12 @@ class Gauge : public ::cartographer::metrics::Gauge {
   void Increment() override { Increment(1.); }
 
   void Set(double value) override {
-    ::cartographer::common::MutexLocker lock(&mutex_);
+    absl::MutexLock lock(&mutex_);
     value_ = value;
   }
 
   double Value() {
-    ::cartographer::common::MutexLocker lock(&mutex_);
+    absl::MutexLock lock(&mutex_);
     return value_;
   }
 
@@ -65,11 +65,11 @@ class Gauge : public ::cartographer::metrics::Gauge {
 
  private:
   void Add(const double value) {
-    ::cartographer::common::MutexLocker lock(&mutex_);
+    absl::MutexLock lock(&mutex_);
     value_ += value;
   }
 
-  cartographer::common::Mutex mutex_;
+  absl::Mutex mutex_;
   const std::map<std::string, std::string> labels_;
   double value_ GUARDED_BY(mutex_);
 };

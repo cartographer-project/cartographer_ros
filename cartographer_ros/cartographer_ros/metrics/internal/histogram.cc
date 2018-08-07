@@ -31,7 +31,7 @@ Histogram::Histogram(const std::map<std::string, std::string>& labels,
     : labels_(labels),
       bucket_boundaries_(bucket_boundaries),
       bucket_counts_(bucket_boundaries.size() + 1) {
-  ::cartographer::common::MutexLocker lock(&mutex_);
+  absl::MutexLock lock(&mutex_);
   CHECK(std::is_sorted(std::begin(bucket_boundaries_),
                        std::end(bucket_boundaries_)));
 }
@@ -41,13 +41,13 @@ void Histogram::Observe(double value) {
       std::distance(bucket_boundaries_.begin(),
                     std::upper_bound(bucket_boundaries_.begin(),
                                      bucket_boundaries_.end(), value));
-  ::cartographer::common::MutexLocker lock(&mutex_);
+  absl::MutexLock lock(&mutex_);
   sum_ += value;
   bucket_counts_[bucket_index] += 1;
 }
 
 std::map<double, double> Histogram::CountsByBucket() {
-  ::cartographer::common::MutexLocker lock(&mutex_);
+  absl::MutexLock lock(&mutex_);
   std::map<double, double> counts_by_bucket;
   // Add the finite buckets.
   for (size_t i = 0; i < bucket_boundaries_.size(); ++i) {
@@ -59,12 +59,12 @@ std::map<double, double> Histogram::CountsByBucket() {
 }
 
 double Histogram::Sum() {
-  ::cartographer::common::MutexLocker lock(&mutex_);
+  absl::MutexLock lock(&mutex_);
   return sum_;
 }
 
 double Histogram::CumulativeCount() {
-  ::cartographer::common::MutexLocker lock(&mutex_);
+  absl::MutexLock lock(&mutex_);
   return std::accumulate(bucket_counts_.begin(), bucket_counts_.end(), 0.);
 }
 

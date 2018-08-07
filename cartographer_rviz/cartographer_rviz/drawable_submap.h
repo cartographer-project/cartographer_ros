@@ -24,7 +24,7 @@
 #include "Eigen/Geometry"
 #include "OgreSceneManager.h"
 #include "OgreSceneNode.h"
-#include "cartographer/common/mutex.h"
+#include "absl/synchronization/mutex.h"
 #include "cartographer/io/submap_painter.h"
 #include "cartographer/mapping/id.h"
 #include "cartographer/transform/rigid_transform.h"
@@ -96,7 +96,7 @@ class DrawableSubmap : public QObject {
  private:
   const ::cartographer::mapping::SubmapId id_;
 
-  ::cartographer::common::Mutex mutex_;
+  absl::Mutex mutex_;
   ::rviz::DisplayContext* const display_context_;
   Ogre::SceneNode* const submap_node_;
   Ogre::SceneNode* const submap_id_text_node_;
