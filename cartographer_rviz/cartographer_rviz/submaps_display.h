@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-#include "cartographer/common/mutex.h"
+#include "absl/synchronization/mutex.h"
 #include "cartographer/common/port.h"
 #include "cartographer_ros_msgs/SubmapList.h"
 #include "cartographer_rviz/drawable_submap.h"
@@ -90,7 +90,7 @@ class SubmapsDisplay
   ::rviz::StringProperty* tracking_frame_property_;
   Ogre::SceneNode* map_node_ = nullptr;  // Represents the map frame.
   std::vector<std::unique_ptr<Trajectory>> trajectories_ GUARDED_BY(mutex_);
-  ::cartographer::common::Mutex mutex_;
+  absl::Mutex mutex_;
   ::rviz::BoolProperty* slice_high_resolution_enabled_;
   ::rviz::BoolProperty* slice_low_resolution_enabled_;
   ::rviz::Property* trajectories_category_;

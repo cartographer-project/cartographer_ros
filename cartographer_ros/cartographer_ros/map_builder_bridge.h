@@ -22,7 +22,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "cartographer/common/mutex.h"
+#include "absl/synchronization/mutex.h"
 #include "cartographer/mapping/map_builder_interface.h"
 #include "cartographer/mapping/pose_graph_interface.h"
 #include "cartographer/mapping/proto/trajectory_builder_options.pb.h"
@@ -84,7 +84,7 @@ class MapBuilderBridge {
   GetTrajectoryStates();
   cartographer_ros_msgs::SubmapList GetSubmapList();
   std::unordered_map<int, LocalTrajectoryData> GetLocalTrajectoryData()
-      EXCLUDES(mutex_);
+      LOCKS_EXCLUDED(mutex_);
   visualization_msgs::MarkerArray GetTrajectoryNodeList();
   visualization_msgs::MarkerArray GetLandmarkPosesList();
   visualization_msgs::MarkerArray GetConstraintList();
@@ -96,9 +96,9 @@ class MapBuilderBridge {
                          const ::cartographer::common::Time time,
                          const ::cartographer::transform::Rigid3d local_pose,
                          ::cartographer::sensor::RangeData range_data_in_local)
-      EXCLUDES(mutex_);
+      LOCKS_EXCLUDED(mutex_);
 
-  cartographer::common::Mutex mutex_;
+  absl::Mutex mutex_;
   const NodeOptions node_options_;
   std::unordered_map<int,
                      std::shared_ptr<const LocalTrajectoryData::LocalSlamData>>

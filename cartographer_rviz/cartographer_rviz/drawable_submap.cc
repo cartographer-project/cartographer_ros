@@ -96,7 +96,7 @@ DrawableSubmap::~DrawableSubmap() {
 void DrawableSubmap::Update(
     const ::std_msgs::Header& header,
     const ::cartographer_ros_msgs::SubmapEntry& metadata) {
-  ::cartographer::common::MutexLocker locker(&mutex_);
+  absl::MutexLock locker(&mutex_);
   metadata_version_ = metadata.submap_version;
   pose_ = ::cartographer_ros::ToRigid3d(metadata.pose);
   submap_node_->setPosition(ToOgre(pose_.translation()));
@@ -113,7 +113,7 @@ void DrawableSubmap::Update(
 }
 
 bool DrawableSubmap::MaybeFetchTexture(ros::ServiceClient* const client) {
-  ::cartographer::common::MutexLocker locker(&mutex_);
+  absl::MutexLock locker(&mutex_);
   // Received metadata version can also be lower if we restarted Cartographer.
   const bool newer_version_available =
       submap_textures_ == nullptr ||
@@ -131,7 +131,7 @@ bool DrawableSubmap::MaybeFetchTexture(ros::ServiceClient* const client) {
   rpc_request_future_ = std::async(std::launch::async, [this, client]() {
     std::unique_ptr<::cartographer::io::SubmapTextures> submap_textures =
         ::cartographer_ros::FetchSubmapTextures(id_, client);
-    ::cartographer::common::MutexLocker locker(&mutex_);
+    absl::MutexLock locker(&mutex_);
     query_in_progress_ = false;
     if (submap_textures != nullptr) {
       // We emit a signal to update in the right thread, and pass via the
@@ -145,7 +145,7 @@ bool DrawableSubmap::MaybeFetchTexture(ros::ServiceClient* const client) {
 }
 
 bool DrawableSubmap::QueryInProgress() {
-  ::cartographer::common::MutexLocker locker(&mutex_);
+  absl::MutexLock locker(&mutex_);
   return query_in_progress_;
 }
 
@@ -176,7 +176,7 @@ void DrawableSubmap::SetSliceVisibility(size_t slice_index, bool visible) {
 }
 
 void DrawableSubmap::UpdateSceneNode() {
-  ::cartographer::common::MutexLocker locker(&mutex_);
+  absl::MutexLock locker(&mutex_);
   for (size_t slice_index = 0; slice_index < ogre_slices_.size() &&
                                slice_index < submap_textures_->textures.size();
        ++slice_index) {

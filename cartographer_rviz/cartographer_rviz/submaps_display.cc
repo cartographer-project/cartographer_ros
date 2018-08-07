@@ -18,7 +18,7 @@
 
 #include "OgreResourceGroupManager.h"
 #include "absl/memory/memory.h"
-#include "cartographer/common/mutex.h"
+#include "absl/synchronization/mutex.h"
 #include "cartographer/mapping/id.h"
 #include "cartographer_ros_msgs/SubmapList.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
@@ -103,7 +103,7 @@ void SubmapsDisplay::onInitialize() {
 
 void SubmapsDisplay::reset() {
   MFDClass::reset();
-  ::cartographer::common::MutexLocker locker(&mutex_);
+  absl::MutexLock locker(&mutex_);
   client_.shutdown();
   trajectories_.clear();
   CreateClient();
@@ -111,7 +111,7 @@ void SubmapsDisplay::reset() {
 
 void SubmapsDisplay::processMessage(
     const ::cartographer_ros_msgs::SubmapList::ConstPtr& msg) {
-  ::cartographer::common::MutexLocker locker(&mutex_);
+  absl::MutexLock locker(&mutex_);
   map_frame_ = absl::make_unique<std::string>(msg->header.frame_id);
   // In case Cartographer node is relaunched, destroy trajectories from the
   // previous instance.
@@ -181,7 +181,7 @@ void SubmapsDisplay::processMessage(
 }
 
 void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
-  ::cartographer::common::MutexLocker locker(&mutex_);
+  absl::MutexLock locker(&mutex_);
   // Schedule fetching of new submap textures.
   for (const auto& trajectory : trajectories_) {
     int num_ongoing_requests = 0;
@@ -230,7 +230,7 @@ void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
 }
 
 void SubmapsDisplay::AllEnabledToggled() {
-  ::cartographer::common::MutexLocker locker(&mutex_);
+  absl::MutexLock locker(&mutex_);
   const bool visible = visibility_all_enabled_->getBool();
   for (auto& trajectory : trajectories_) {
     trajectory->visibility->setBool(visible);
@@ -238,7 +238,7 @@ void SubmapsDisplay::AllEnabledToggled() {
 }
 
 void SubmapsDisplay::ResolutionToggled() {
-  ::cartographer::common::MutexLocker locker(&mutex_);
+  absl::MutexLock locker(&mutex_);
   for (auto& trajectory : trajectories_) {
     for (auto& submap_entry : trajectory->submaps) {
       submap_entry.second->SetSliceVisibility(

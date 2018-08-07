@@ -24,8 +24,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include "absl/synchronization/mutex.h"
 #include "cartographer/common/fixed_ratio_sampler.h"
-#include "cartographer/common/mutex.h"
 #include "cartographer/mapping/map_builder_interface.h"
 #include "cartographer/mapping/pose_extrapolator.h"
 #include "cartographer_ros/map_builder_bridge.h"
@@ -171,14 +171,14 @@ class Node {
   bool ValidateTopicNames(const ::cartographer_ros_msgs::SensorTopics& topics,
                           const TrajectoryOptions& options);
   cartographer_ros_msgs::StatusResponse FinishTrajectoryUnderLock(
-      int trajectory_id) REQUIRES(mutex_);
+      int trajectory_id) EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   void MaybeWarnAboutTopicMismatch(const ::ros::WallTimerEvent&);
 
   const NodeOptions node_options_;
 
   tf2_ros::TransformBroadcaster tf_broadcaster_;
 
-  cartographer::common::Mutex mutex_;
+  absl::Mutex mutex_;
   MapBuilderBridge map_builder_bridge_ GUARDED_BY(mutex_);
 
   ::ros::NodeHandle node_handle_;
