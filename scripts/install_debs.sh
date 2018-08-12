@@ -43,3 +43,6 @@ apt-get install -y ninja-build
 # Install rosdep dependencies.
 rosdep update
 rosdep install --from-paths src --ignore-src --rosdistro=${ROS_DISTRO} -y
+
+# Update rosconsole-bridge to fix build issue with Docker image for Kinetic
+sudo apt-get install ros-${ROS_DISTRO}-rosconsole-bridge -y
