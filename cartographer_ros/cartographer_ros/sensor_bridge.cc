@@ -177,7 +177,7 @@ void SensorBridge::HandleLaserScan(
   if (points.points.empty()) {
     return;
   }
-  CHECK_LE(points.points.back().time, 0);
+  CHECK_LE(points.points.back().time, 0.f);
   // TODO(gaschler): Use per-point time instead of subdivisions.
   for (int i = 0; i != num_subdivisions_per_laser_scan_; ++i) {
     const size_t start_index =
@@ -207,7 +207,7 @@ void SensorBridge::HandleLaserScan(
     for (auto& point : subdivision) {
       point.time -= time_to_subdivision_end;
     }
-    CHECK_EQ(subdivision.back().time, 0);
+    CHECK_EQ(subdivision.back().time, 0.f);
     HandleRangefinder(sensor_id, subdivision_time, frame_id, subdivision);
   }
 }
@@ -216,7 +216,7 @@ void SensorBridge::HandleRangefinder(
     const std::string& sensor_id, const carto::common::Time time,
     const std::string& frame_id, const carto::sensor::TimedPointCloud& ranges) {
   if (!ranges.empty()) {
-    CHECK_LE(ranges.back().time, 0);
+    CHECK_LE(ranges.back().time, 0.f);
   }
   const auto sensor_to_tracking =
       tf_bridge_.LookupToTracking(time, CheckNoLeadingSlash(frame_id));
