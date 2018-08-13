@@ -147,9 +147,9 @@ LaserScanToPointCloudWithIntensities(const LaserMessageType& msg) {
       const float first_echo = GetFirstEcho(echoes);
       if (msg.range_min <= first_echo && first_echo <= msg.range_max) {
         const Eigen::AngleAxisf rotation(angle, Eigen::Vector3f::UnitZ());
-        Eigen::Vector4f point;
-        point << rotation * (first_echo * Eigen::Vector3f::UnitX()),
-            i * msg.time_increment;
+        const cartographer::sensor::TimedRangefinderPoint point{
+            rotation * (first_echo * Eigen::Vector3f::UnitX()),
+            i * msg.time_increment};
         point_cloud.points.push_back(point);
         if (msg.intensities.size() > 0) {
           CHECK_EQ(msg.intensities.size(), msg.ranges.size());
@@ -165,10 +165,10 @@ LaserScanToPointCloudWithIntensities(const LaserMessageType& msg) {
   }
   ::cartographer::common::Time timestamp = FromRos(msg.header.stamp);
   if (!point_cloud.points.empty()) {
-    const double duration = point_cloud.points.back()[3];
+    const double duration = point_cloud.points.back().time;
     timestamp += cartographer::common::FromSeconds(duration);
-    for (Eigen::Vector4f& point : point_cloud.points) {
-      point[3] -= duration;
+    for (auto& point : point_cloud.points) {
+      point.time -= duration;
     }
   }
   return std::make_tuple(point_cloud, timestamp);
@@ -191,10 +191,10 @@ sensor_msgs::PointCloud2 ToPointCloud2Message(
     const ::cartographer::sensor::TimedPointCloud& point_cloud) {
   auto msg = PreparePointCloud2Message(timestamp, frame_id, point_cloud.size());
   ::ros::serialization::OStream stream(msg.data.data(), msg.data.size());
-  for (const Eigen::Vector4f& point : point_cloud) {
-    stream.next(point.x());
-    stream.next(point.y());
-    stream.next(point.z());
+  for (const cartographer::sensor::TimedRangefinderPoint& point : point_cloud) {
+    stream.next(point.position.x());
+    stream.next(point.position.y());
+    stream.next(point.position.z());
     stream.next(kPointCloudComponentFourMagic);
   }
   return msg;
@@ -225,7 +225,8 @@ ToPointCloudWithIntensities(const sensor_msgs::PointCloud2& msg) {
       point_cloud.points.reserve(pcl_point_cloud.size());
       point_cloud.intensities.reserve(pcl_point_cloud.size());
       for (const auto& point : pcl_point_cloud) {
-        point_cloud.points.emplace_back(point.x, point.y, point.z, point.time);
+        point_cloud.points.push_back(
+            {Eigen::Vector3f{point.x, point.y, point.z}, point.time});
         point_cloud.intensities.push_back(point.intensity);
       }
     } else {
@@ -234,7 +235,8 @@ ToPointCloudWithIntensities(const sensor_msgs::PointCloud2& msg) {
       point_cloud.points.reserve(pcl_point_cloud.size());
       point_cloud.intensities.reserve(pcl_point_cloud.size());
       for (const auto& point : pcl_point_cloud) {
-        point_cloud.points.emplace_back(point.x, point.y, point.z, 0.f);
+        point_cloud.points.push_back(
+            {Eigen::Vector3f{point.x, point.y, point.z}, 0.f});
         point_cloud.intensities.push_back(point.intensity);
       }
     }
@@ -246,7 +248,8 @@ ToPointCloudWithIntensities(const sensor_msgs::PointCloud2& msg) {
       point_cloud.points.reserve(pcl_point_cloud.size());
       point_cloud.intensities.reserve(pcl_point_cloud.size());
       for (const auto& point : pcl_point_cloud) {
-        point_cloud.points.emplace_back(point.x, point.y, point.z, point.time);
+        point_cloud.points.push_back(
+            {Eigen::Vector3f{point.x, point.y, point.z}, point.time});
         point_cloud.intensities.push_back(1.0f);
       }
     } else {
@@ -255,19 +258,21 @@ ToPointCloudWithIntensities(const sensor_msgs::PointCloud2& msg) {
       point_cloud.points.reserve(pcl_point_cloud.size());
       point_cloud.intensities.reserve(pcl_point_cloud.size());
       for (const auto& point : pcl_point_cloud) {
-        point_cloud.points.emplace_back(point.x, point.y, point.z, 0.f);
+        point_cloud.points.push_back(
+            {Eigen::Vector3f{point.x, point.y, point.z}, 0.f});
         point_cloud.intensities.push_back(1.0f);
       }
     }
   }
   ::cartographer::common::Time timestamp = FromRos(msg.header.stamp);
   if (!point_cloud.points.empty()) {
-    const double duration = point_cloud.points.back()[3];
+    const double duration = point_cloud.points.back().time;
     timestamp += cartographer::common::FromSeconds(duration);
-    for (Eigen::Vector4f& point : point_cloud.points) {
-      point[3] -= duration;
-      CHECK_LE(point[3], 0) << "Encountered a point with a larger stamp than "
-                               "the last point in the cloud.";
+    for (auto& point : point_cloud.points) {
+      point.time -= duration;
+      CHECK_LE(point.time, 0.f)
+          << "Encountered a point with a larger stamp than "
+             "the last point in the cloud.";
     }
   }
   return std::make_tuple(point_cloud, timestamp);
