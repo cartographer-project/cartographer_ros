@@ -23,7 +23,7 @@
 
 #include "Eigen/Core"
 #include "Eigen/Geometry"
-#include "cartographer/common/make_unique.h"
+#include "absl/memory/memory.h"
 #include "cartographer/common/port.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
@@ -63,14 +63,14 @@ DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
       last_query_timestamp_(0) {
   for (int slice_index = 0; slice_index < kNumberOfSlicesPerSubmap;
        ++slice_index) {
-    ogre_slices_.emplace_back(::cartographer::common::make_unique<OgreSlice>(
+    ogre_slices_.emplace_back(absl::make_unique<OgreSlice>(
         id, slice_index, display_context->getSceneManager(), submap_node_));
   }
   // DrawableSubmap creates and manages its visibility property object
   // (a unique_ptr is needed because the Qt parent of the visibility
   // property is the submap_category object - the BoolProperty needs
   // to be destroyed along with the DrawableSubmap)
-  visibility_ = ::cartographer::common::make_unique<::rviz::BoolProperty>(
+  visibility_ = absl::make_unique<::rviz::BoolProperty>(
       "" /* title */, visible, "" /* description */, submap_category,
       SLOT(ToggleVisibility()), this);
   submap_id_text_.setCharacterHeight(kSubmapIdCharHeight);
@@ -96,7 +96,7 @@ DrawableSubmap::~DrawableSubmap() {
 void DrawableSubmap::Update(
     const ::std_msgs::Header& header,
     const ::cartographer_ros_msgs::SubmapEntry& metadata) {
-  ::cartographer::common::MutexLocker locker(&mutex_);
+  absl::MutexLock locker(&mutex_);
   metadata_version_ = metadata.submap_version;
   pose_ = ::cartographer_ros::ToRigid3d(metadata.pose);
   submap_node_->setPosition(ToOgre(pose_.translation()));
@@ -113,7 +113,7 @@ void DrawableSubmap::Update(
 }
 
 bool DrawableSubmap::MaybeFetchTexture(ros::ServiceClient* const client) {
-  ::cartographer::common::MutexLocker locker(&mutex_);
+  absl::MutexLock locker(&mutex_);
   // Received metadata version can also be lower if we restarted Cartographer.
   const bool newer_version_available =
       submap_textures_ == nullptr ||
@@ -131,7 +131,7 @@ bool DrawableSubmap::MaybeFetchTexture(ros::ServiceClient* const client) {
   rpc_request_future_ = std::async(std::launch::async, [this, client]() {
     std::unique_ptr<::cartographer::io::SubmapTextures> submap_textures =
         ::cartographer_ros::FetchSubmapTextures(id_, client);
-    ::cartographer::common::MutexLocker locker(&mutex_);
+    absl::MutexLock locker(&mutex_);
     query_in_progress_ = false;
     if (submap_textures != nullptr) {
       // We emit a signal to update in the right thread, and pass via the
@@ -145,7 +145,7 @@ bool DrawableSubmap::MaybeFetchTexture(ros::ServiceClient* const client) {
 }
 
 bool DrawableSubmap::QueryInProgress() {
-  ::cartographer::common::MutexLocker locker(&mutex_);
+  absl::MutexLock locker(&mutex_);
   return query_in_progress_;
 }
 
@@ -176,7 +176,7 @@ void DrawableSubmap::SetSliceVisibility(size_t slice_index, bool visible) {
 }
 
 void DrawableSubmap::UpdateSceneNode() {
-  ::cartographer::common::MutexLocker locker(&mutex_);
+  absl::MutexLock locker(&mutex_);
   for (size_t slice_index = 0; slice_index < ogre_slices_.size() &&
                                slice_index < submap_textures_->textures.size();
        ++slice_index) {

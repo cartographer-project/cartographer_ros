@@ -50,9 +50,9 @@ NodeOptions CreateNodeOptions(
 std::tuple<NodeOptions, TrajectoryOptions> LoadOptions(
     const std::string& configuration_directory,
     const std::string& configuration_basename) {
-  auto file_resolver = cartographer::common::make_unique<
-      cartographer::common::ConfigurationFileResolver>(
-      std::vector<std::string>{configuration_directory});
+  auto file_resolver =
+      absl::make_unique<cartographer::common::ConfigurationFileResolver>(
+          std::vector<std::string>{configuration_directory});
   const std::string code =
       file_resolver->GetFileContentOrDie(configuration_basename);
   cartographer::common::LuaParameterDictionary lua_parameter_dictionary(

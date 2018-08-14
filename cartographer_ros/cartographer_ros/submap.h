@@ -35,9 +35,6 @@ std::unique_ptr<::cartographer::io::SubmapTextures> FetchSubmapTextures(
     const ::cartographer::mapping::SubmapId& submap_id,
     ros::ServiceClient* client);
 
-bool Has2DGrid(const ::cartographer::mapping::proto::Submap& submap);
-bool Has3DGrids(const ::cartographer::mapping::proto::Submap& submap);
-
 }  // namespace cartographer_ros
 
 #endif  // CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_SUBMAP_H

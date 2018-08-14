@@ -15,10 +15,16 @@
 -->
 
 <launch>
+  <arg name="no_rviz" default="false"/>
+
   <param name="/use_sim_time" value="true" />
 
-  <node name="rviz" pkg="rviz" type="rviz" required="true"
-      args="-d $(find cartographer_ros)/configuration_files/demo_3d.rviz" />
+  <group unless="$(arg no_rviz)">
+    <node name="rviz" pkg="rviz" type="rviz" required="true"
+        args="-d $(find cartographer_ros)/configuration_files/demo_3d.rviz" />
+    <node name="cartographer_occupancy_grid_node" pkg="cartographer_ros"
+        type="cartographer_occupancy_grid_node" args="-resolution 0.05" />
+  </group>
 
   <node name="cartographer_offline_node" pkg="cartographer_ros"
       type="cartographer_offline_node" args="
@@ -26,11 +32,9 @@
           -configuration_basenames backpack_3d.lua
           -urdf_filenames $(find cartographer_ros)/urdf/backpack_3d.urdf
           -bag_filenames $(arg bag_filenames)"
-      output="screen">
+      output="screen"
+      required="$(arg no_rviz)">
     <remap from="points2_1" to="horizontal_laser_3d" />
     <remap from="points2_2" to="vertical_laser_3d" />
   </node>
-
-  <node name="cartographer_occupancy_grid_node" pkg="cartographer_ros"
-      type="cartographer_occupancy_grid_node" args="-resolution 0.05" />
 </launch>

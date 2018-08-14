@@ -20,8 +20,8 @@
 
 #include "Eigen/Core"
 #include "Eigen/Geometry"
+#include "absl/synchronization/mutex.h"
 #include "cairo/cairo.h"
-#include "cartographer/common/mutex.h"
 #include "cartographer/common/port.h"
 #include "cartographer/io/image.h"
 #include "cartographer/io/submap_painter.h"
@@ -72,7 +72,7 @@ class Node {
   ::ros::NodeHandle node_handle_;
   const double resolution_;
 
-  ::cartographer::common::Mutex mutex_;
+  absl::Mutex mutex_;
   ::ros::ServiceClient client_ GUARDED_BY(mutex_);
   ::ros::Subscriber submap_list_subscriber_ GUARDED_BY(mutex_);
   ::ros::Publisher occupancy_grid_publisher_ GUARDED_BY(mutex_);
@@ -103,7 +103,7 @@ Node::Node(const double resolution, const double publish_period_sec)
 
 void Node::HandleSubmapList(
     const cartographer_ros_msgs::SubmapList::ConstPtr& msg) {
-  ::cartographer::common::MutexLocker locker(&mutex_);
+  absl::MutexLock locker(&mutex_);
 
   // We do not do any work if nobody listens.
   if (occupancy_grid_publisher_.getNumSubscribers() == 0) {
@@ -168,7 +168,7 @@ void Node::DrawAndPublish(const ::ros::WallTimerEvent& unused_timer_event) {
     return;
   }
 
-  ::cartographer::common::MutexLocker locker(&mutex_);
+  absl::MutexLock locker(&mutex_);
   auto painted_slices = PaintSubmapSlices(submap_slices_, resolution_);
   std::unique_ptr<nav_msgs::OccupancyGrid> msg_ptr = CreateOccupancyGridMsg(
       painted_slices, resolution_, last_frame_id_, last_timestamp_);

@@ -16,7 +16,7 @@
 
 #include "cartographer_ros/map_builder_bridge.h"
 
-#include "cartographer/common/make_unique.h"
+#include "absl/memory/memory.h"
 #include "cartographer/io/color.h"
 #include "cartographer/io/proto_stream.h"
 #include "cartographer/mapping/pose_graph.h"
@@ -135,12 +135,11 @@ int MapBuilderBridge::AddTrajectory(
 
   // Make sure there is no trajectory with 'trajectory_id' yet.
   CHECK_EQ(sensor_bridges_.count(trajectory_id), 0);
-  sensor_bridges_[trajectory_id] =
-      cartographer::common::make_unique<SensorBridge>(
-          trajectory_options.num_subdivisions_per_laser_scan,
-          trajectory_options.tracking_frame,
-          node_options_.lookup_transform_timeout_sec, tf_buffer_,
-          map_builder_->GetTrajectoryBuilder(trajectory_id));
+  sensor_bridges_[trajectory_id] = absl::make_unique<SensorBridge>(
+      trajectory_options.num_subdivisions_per_laser_scan,
+      trajectory_options.tracking_frame,
+      node_options_.lookup_transform_timeout_sec, tf_buffer_,
+      map_builder_->GetTrajectoryBuilder(trajectory_id));
   auto emplace_result =
       trajectory_options_.emplace(trajectory_id, trajectory_options);
   CHECK(emplace_result.second == true);
@@ -161,9 +160,10 @@ void MapBuilderBridge::RunFinalOptimization() {
   map_builder_->pose_graph()->RunFinalOptimization();
 }
 
-bool MapBuilderBridge::SerializeState(const std::string& filename) {
+bool MapBuilderBridge::SerializeState(const std::string& filename,
+                                      const bool include_unfinished_submaps) {
   cartographer::io::ProtoStreamWriter writer(filename);
-  map_builder_->SerializeState(&writer);
+  map_builder_->SerializeState(include_unfinished_submaps, &writer);
   return writer.Close();
 }
 
@@ -230,7 +230,7 @@ MapBuilderBridge::GetLocalTrajectoryData() {
 
     std::shared_ptr<const LocalTrajectoryData::LocalSlamData> local_slam_data;
     {
-      cartographer::common::MutexLocker lock(&mutex_);
+      absl::MutexLock lock(&mutex_);
       if (local_slam_data_.count(trajectory_id) == 0) {
         continue;
       }
@@ -499,7 +499,7 @@ void MapBuilderBridge::OnLocalSlamResult(
       std::make_shared<LocalTrajectoryData::LocalSlamData>(
           LocalTrajectoryData::LocalSlamData{time, local_pose,
                                              std::move(range_data_in_local)});
-  cartographer::common::MutexLocker lock(&mutex_);
+  absl::MutexLock lock(&mutex_);
   local_slam_data_[trajectory_id] = std::move(local_slam_data);
 }
 

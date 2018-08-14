@@ -17,9 +17,9 @@
 #include <string>
 #include <vector>
 
+#include "absl/memory/memory.h"
 #include "cartographer/common/configuration_file_resolver.h"
 #include "cartographer/common/lua_parameter_dictionary.h"
-#include "cartographer/common/make_unique.h"
 #include "cartographer/common/port.h"
 #include "cartographer_ros/node_constants.h"
 #include "cartographer_ros/ros_log_sink.h"
@@ -44,9 +44,9 @@ namespace cartographer_ros {
 namespace {
 
 TrajectoryOptions LoadOptions() {
-  auto file_resolver = cartographer::common::make_unique<
-      cartographer::common::ConfigurationFileResolver>(
-      std::vector<std::string>{FLAGS_configuration_directory});
+  auto file_resolver =
+      absl::make_unique<cartographer::common::ConfigurationFileResolver>(
+          std::vector<std::string>{FLAGS_configuration_directory});
   const std::string code =
       file_resolver->GetFileContentOrDie(FLAGS_configuration_basename);
   auto lua_parameter_dictionary =
@@ -54,8 +54,7 @@ TrajectoryOptions LoadOptions() {
           code, std::move(file_resolver));
   if (!FLAGS_initial_pose.empty()) {
     auto initial_trajectory_pose_file_resolver =
-        cartographer::common::make_unique<
-            cartographer::common::ConfigurationFileResolver>(
+        absl::make_unique<cartographer::common::ConfigurationFileResolver>(
             std::vector<std::string>{FLAGS_configuration_directory});
     auto initial_trajectory_pose =
         cartographer::common::LuaParameterDictionary::NonReferenceCounted(
