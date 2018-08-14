@@ -58,7 +58,7 @@ std::tuple<ros::Time, ros::Time> PlayableBag::GetBeginEndTime() const {
 }
 
 rosbag::MessageInstance PlayableBag::GetNextMessage(
-    cartographer_ros_msgs::BagfileProgress& progress) {
+    cartographer_ros_msgs::BagfileProgress* progress) {
   CHECK(IsMessageAvailable());
   const rosbag::MessageInstance msg = buffered_messages_.front();
   buffered_messages_.pop_front();
@@ -68,12 +68,16 @@ rosbag::MessageInstance PlayableBag::GetNextMessage(
     LOG(INFO) << "Processed " << processed_seconds << " of "
               << duration_in_seconds_ << " seconds of bag " << bag_filename_;
   }
-  progress.current_bagfile_name = bag_filename_;
-  progress.current_bagfile_id = bag_id_;
-  progress.total_messages = view_->size();
-  progress.processed_messages = std::distance(view_->begin(), view_iterator_);
-  progress.total_seconds = duration_in_seconds_;
-  progress.processed_seconds = processed_seconds;
+
+  if (progress) {
+    progress->current_bagfile_name = bag_filename_;
+    progress->current_bagfile_id = bag_id_;
+    progress->total_messages = view_->size();
+    progress->processed_messages =
+        std::distance(view_->begin(), view_iterator_);
+    progress->total_seconds = duration_in_seconds_;
+    progress->processed_seconds = processed_seconds;
+  }
 
   return msg;
 }
@@ -137,7 +141,7 @@ PlayableBagMultiplexer::GetNextMessage() {
   const int current_bag_index = next_message_queue_.top().bag_index;
   PlayableBag& current_bag = playable_bags_.at(current_bag_index);
   cartographer_ros_msgs::BagfileProgress progress;
-  rosbag::MessageInstance msg = current_bag.GetNextMessage(progress);
+  rosbag::MessageInstance msg = current_bag.GetNextMessage(&progress);
   if (ros::Time::now() - bag_progress_time_map_[current_bag.bag_id()] >=
           ros::Duration(progress_pub_interval_) &&
       bag_progress_pub_.getNumSubscribers() > 0) {

@@ -41,7 +41,7 @@ class PlayableBag {
 
   ros::Time PeekMessageTime() const;
   rosbag::MessageInstance GetNextMessage(
-      cartographer_ros_msgs::BagfileProgress& progress);
+      cartographer_ros_msgs::BagfileProgress* progress);
   bool IsMessageAvailable() const;
   std::tuple<ros::Time, ros::Time> GetBeginEndTime() const;
 
