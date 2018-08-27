@@ -177,7 +177,7 @@ void SensorBridge::HandleLaserScan(
   if (points.points.empty()) {
     return;
   }
-  CHECK_LE(points.points.back()[3], 0);
+  CHECK_LE(points.points.back().time, 0.f);
   // TODO(gaschler): Use per-point time instead of subdivisions.
   for (int i = 0; i != num_subdivisions_per_laser_scan_; ++i) {
     const size_t start_index =
@@ -189,7 +189,7 @@ void SensorBridge::HandleLaserScan(
     if (start_index == end_index) {
       continue;
     }
-    const double time_to_subdivision_end = subdivision.back()[3];
+    const double time_to_subdivision_end = subdivision.back().time;
     // `subdivision_time` is the end of the measurement so sensor::Collator will
     // send all other sensor data first.
     const carto::common::Time subdivision_time =
@@ -204,10 +204,10 @@ void SensorBridge::HandleLaserScan(
       continue;
     }
     sensor_to_previous_subdivision_time_[sensor_id] = subdivision_time;
-    for (Eigen::Vector4f& point : subdivision) {
-      point[3] -= time_to_subdivision_end;
+    for (auto& point : subdivision) {
+      point.time -= time_to_subdivision_end;
     }
-    CHECK_EQ(subdivision.back()[3], 0);
+    CHECK_EQ(subdivision.back().time, 0.f);
     HandleRangefinder(sensor_id, subdivision_time, frame_id, subdivision);
   }
 }
@@ -216,7 +216,7 @@ void SensorBridge::HandleRangefinder(
     const std::string& sensor_id, const carto::common::Time time,
     const std::string& frame_id, const carto::sensor::TimedPointCloud& ranges) {
   if (!ranges.empty()) {
-    CHECK_LE(ranges.back()[3], 0);
+    CHECK_LE(ranges.back().time, 0.f);
   }
   const auto sensor_to_tracking =
       tf_bridge_.LookupToTracking(time, CheckNoLeadingSlash(frame_id));

@@ -208,11 +208,10 @@ void Node::PublishLocalTrajectoryData(const ::ros::TimerEvent& timer_event) {
         carto::sensor::TimedPointCloud point_cloud;
         point_cloud.reserve(trajectory_data.local_slam_data->range_data_in_local
                                 .returns.size());
-        for (const Eigen::Vector3f point :
+        for (const cartographer::sensor::RangefinderPoint point :
              trajectory_data.local_slam_data->range_data_in_local.returns) {
-          Eigen::Vector4f point_time;
-          point_time << point, 0.f;
-          point_cloud.push_back(point_time);
+          point_cloud.push_back(cartographer::sensor::ToTimedRangefinderPoint(
+              point, 0.f /* time */));
         }
         scan_matched_point_cloud_publisher_.publish(ToPointCloud2Message(
             carto::common::ToUniversal(trajectory_data.local_slam_data->time),

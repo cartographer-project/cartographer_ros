@@ -110,7 +110,8 @@ std::unique_ptr<carto::io::PointsBatch> HandleMessage(
 
   for (size_t i = 0; i < point_cloud.points.size(); ++i) {
     const carto::common::Time time =
-        point_cloud_time + carto::common::FromSeconds(point_cloud.points[i][3]);
+        point_cloud_time +
+        carto::common::FromSeconds(point_cloud.points[i].time);
     if (!transform_interpolation_buffer.Has(time)) {
       continue;
     }
@@ -121,8 +122,9 @@ std::unique_ptr<carto::io::PointsBatch> HandleMessage(
             tracking_frame, message.header.frame_id, ToRos(time)));
     const carto::transform::Rigid3f sensor_to_map =
         (tracking_to_map * sensor_to_tracking).cast<float>();
-    points_batch->points.push_back(sensor_to_map *
-                                   point_cloud.points[i].head<3>());
+    points_batch->points.push_back(
+        sensor_to_map *
+        carto::sensor::ToRangefinderPoint(point_cloud.points[i]));
     points_batch->intensities.push_back(point_cloud.intensities[i]);
     // We use the last transform for the origin, which is approximately correct.
     points_batch->origin = sensor_to_map * Eigen::Vector3f::Zero();
