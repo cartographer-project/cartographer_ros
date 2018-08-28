@@ -17,7 +17,7 @@
 <launch>
   <arg name="bag_filenames"/>
   <arg name="no_rviz"/>
-  <arg unless="$(arg no_rviz)" name="rviz_config"/>
+  <arg name="rviz_config"/>
   <arg name="configuration_directory"/>
   <arg name="configuration_basenames"/>
   <arg name="urdf_filenames"/>
