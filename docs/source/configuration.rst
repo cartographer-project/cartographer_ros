@@ -87,9 +87,10 @@ pose_publish_period_sec
   Interval in seconds at which to publish poses, e.g. 5e-3 for a frequency of
   200 Hz.
 
-trajectory_publish_period_sec
-  Interval in seconds at which to publish the trajectory markers, e.g. 30e-3
+{constraint, landmark, trajectory}_marker_publish_period_sec
+  Interval in seconds at which to publish the visualization markers, e.g. 30e-3
   for 30 milliseconds.
+  High frequencies can significantly increase ROS message transport traffic.
 
 .. _REP 105: http://www.ros.org/reps/rep-0105.html
 .. _ROS Names: http://wiki.ros.org/Names

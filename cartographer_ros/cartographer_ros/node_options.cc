@@ -38,8 +38,14 @@ NodeOptions CreateNodeOptions(
       lua_parameter_dictionary->GetDouble("submap_publish_period_sec");
   options.pose_publish_period_sec =
       lua_parameter_dictionary->GetDouble("pose_publish_period_sec");
-  options.trajectory_publish_period_sec =
-      lua_parameter_dictionary->GetDouble("trajectory_publish_period_sec");
+  options.constraint_marker_publish_period_sec =
+      lua_parameter_dictionary->GetDouble(
+          "constraint_marker_publish_period_sec");
+  options.landmark_marker_publish_period_sec =
+      lua_parameter_dictionary->GetDouble("landmark_marker_publish_period_sec");
+  options.trajectory_marker_publish_period_sec =
+      lua_parameter_dictionary->GetDouble(
+          "trajectory_marker_publish_period_sec");
   if (lua_parameter_dictionary->HasKey("use_pose_extrapolator")) {
     options.use_pose_extrapolator =
         lua_parameter_dictionary->GetBool("use_pose_extrapolator");

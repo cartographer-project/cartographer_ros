@@ -34,7 +34,9 @@ struct NodeOptions {
   double lookup_transform_timeout_sec;
   double submap_publish_period_sec;
   double pose_publish_period_sec;
-  double trajectory_publish_period_sec;
+  double constraint_marker_publish_period_sec;
+  double landmark_marker_publish_period_sec;
+  double trajectory_marker_publish_period_sec;
   bool use_pose_extrapolator = true;
 };
 

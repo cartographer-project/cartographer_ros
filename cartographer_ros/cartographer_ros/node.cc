@@ -137,13 +137,13 @@ Node::Node(
         &Node::PublishLocalTrajectoryData, this);
   }
   wall_timers_.push_back(node_handle_.createWallTimer(
-      ::ros::WallDuration(node_options_.trajectory_publish_period_sec),
+      ::ros::WallDuration(node_options_.trajectory_marker_publish_period_sec),
       &Node::PublishTrajectoryNodeList, this));
   wall_timers_.push_back(node_handle_.createWallTimer(
-      ::ros::WallDuration(node_options_.trajectory_publish_period_sec),
+      ::ros::WallDuration(node_options_.landmark_marker_publish_period_sec),
       &Node::PublishLandmarkPosesList, this));
   wall_timers_.push_back(node_handle_.createWallTimer(
-      ::ros::WallDuration(kConstraintPublishPeriodSec),
+      ::ros::WallDuration(node_options_.constraint_marker_publish_period_sec),
       &Node::PublishConstraintList, this));
 }
 
