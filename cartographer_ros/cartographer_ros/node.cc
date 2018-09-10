@@ -129,11 +129,11 @@ Node::Node(
           kScanMatchedPointCloudTopic, kLatestOnlyPublisherQueueSize);
 
   wall_timers_.push_back(node_handle_.createWallTimer(
-      ::ros::WallDuration(node_options_.submap_publish_period_sec),
+      ::ros::WallDuration(node_options_.submap_list_publish_period_sec),
       &Node::PublishSubmapList, this));
-  if (node_options_.pose_publish_period_sec > 0) {
+  if (node_options_.transform_publish_period_sec > 0) {
     publish_local_trajectory_data_timer_ = node_handle_.createTimer(
-        ::ros::Duration(node_options_.pose_publish_period_sec),
+        ::ros::Duration(node_options_.transform_publish_period_sec),
         &Node::PublishLocalTrajectoryData, this);
   }
   wall_timers_.push_back(node_handle_.createWallTimer(

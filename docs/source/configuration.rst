@@ -80,12 +80,13 @@ num_point_clouds
 lookup_transform_timeout_sec
   Timeout in seconds to use for looking up transforms using `tf2`_.
 
-submap_publish_period_sec
-  Interval in seconds at which to publish the submap poses, e.g. 0.3 seconds.
+submap_list_publish_period_sec
+  Interval in seconds at which to publish the submap list that contains metadata
+  of the submaps, e.g. the submap pose or the corresponding trajectory ID.
 
-pose_publish_period_sec
-  Interval in seconds at which to publish poses, e.g. 5e-3 for a frequency of
-  200 Hz.
+transform_publish_period_sec
+  Interval in seconds at which to publish transforms, e.g. 5e-3 for a frequency
+  of 200 Hz.
 
 {constraint, landmark, trajectory}_marker_publish_period_sec
   Interval in seconds at which to publish the visualization markers, e.g. 30e-3

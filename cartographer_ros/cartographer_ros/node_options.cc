@@ -34,10 +34,10 @@ NodeOptions CreateNodeOptions(
   options.map_frame = lua_parameter_dictionary->GetString("map_frame");
   options.lookup_transform_timeout_sec =
       lua_parameter_dictionary->GetDouble("lookup_transform_timeout_sec");
-  options.submap_publish_period_sec =
-      lua_parameter_dictionary->GetDouble("submap_publish_period_sec");
-  options.pose_publish_period_sec =
-      lua_parameter_dictionary->GetDouble("pose_publish_period_sec");
+  options.submap_list_publish_period_sec =
+      lua_parameter_dictionary->GetDouble("submap_list_publish_period_sec");
+  options.transform_publish_period_sec =
+      lua_parameter_dictionary->GetDouble("transform_publish_period_sec");
   options.constraint_marker_publish_period_sec =
       lua_parameter_dictionary->GetDouble(
           "constraint_marker_publish_period_sec");

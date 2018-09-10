@@ -32,8 +32,8 @@ struct NodeOptions {
   ::cartographer::mapping::proto::MapBuilderOptions map_builder_options;
   std::string map_frame;
   double lookup_transform_timeout_sec;
-  double submap_publish_period_sec;
-  double pose_publish_period_sec;
+  double submap_list_publish_period_sec;
+  double transform_publish_period_sec;
   double constraint_marker_publish_period_sec;
   double landmark_marker_publish_period_sec;
   double trajectory_marker_publish_period_sec;
