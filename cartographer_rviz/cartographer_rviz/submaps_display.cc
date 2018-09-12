@@ -284,6 +284,8 @@ Trajectory::Trajectory(std::unique_ptr<::rviz::BoolProperty> property,
     : visibility(std::move(property)) {
   ::QObject::connect(visibility.get(), SIGNAL(changed()), this,
                      SLOT(AllEnabledToggled()));
+  // Add toggle for submap pose markers as the first entry of the visibility
+  // property list of this trajectory.
   pose_markers_visibility = absl::make_unique<::rviz::BoolProperty>(
       QString("Submap Pose Markers"), pose_markers_enabled,
       QString("Toggles the submap pose markers of this trajectory."),
