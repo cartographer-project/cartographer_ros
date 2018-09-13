@@ -50,7 +50,8 @@ class DrawableSubmap : public QObject {
   DrawableSubmap(const ::cartographer::mapping::SubmapId& submap_id,
                  ::rviz::DisplayContext* display_context,
                  Ogre::SceneNode* map_node, ::rviz::Property* submap_category,
-                 bool visible, float pose_axes_length, float pose_axes_radius);
+                 bool visible, const bool pose_axes_visible,
+                 float pose_axes_length, float pose_axes_radius);
   ~DrawableSubmap() override;
   DrawableSubmap(const DrawableSubmap&) = delete;
   DrawableSubmap& operator=(const DrawableSubmap&) = delete;
@@ -83,6 +84,10 @@ class DrawableSubmap : public QObject {
   void set_visibility(const bool visibility) {
     visibility_->setBool(visibility);
   }
+  void set_pose_markers_visibility(const bool visibility) {
+    pose_axes_visible_ = visibility;
+    TogglePoseMarkerVisibility();
+  }
 
  Q_SIGNALS:
   // RPC request succeeded.
@@ -92,6 +97,7 @@ class DrawableSubmap : public QObject {
   // Callback when an rpc request succeeded.
   void UpdateSceneNode();
   void ToggleVisibility();
+  void TogglePoseMarkerVisibility();
 
  private:
   const ::cartographer::mapping::SubmapId id_;
@@ -103,6 +109,7 @@ class DrawableSubmap : public QObject {
   std::vector<std::unique_ptr<OgreSlice>> ogre_slices_;
   ::cartographer::transform::Rigid3d pose_ GUARDED_BY(mutex_);
   ::rviz::Axes pose_axes_;
+  bool pose_axes_visible_;
   ::rviz::MovableText submap_id_text_;
   std::chrono::milliseconds last_query_timestamp_ GUARDED_BY(mutex_);
   bool query_in_progress_ GUARDED_BY(mutex_) = false;
