@@ -162,7 +162,7 @@ void MapBuilderBridge::RunFinalOptimization() {
 
 bool MapBuilderBridge::SerializeState(const std::string& filename,
                                       const bool include_unfinished_submaps) {
-  map_builder_->SerializeStateToFile(include_unfinished_submaps, filename);
+  return map_builder_->SerializeStateToFile(include_unfinished_submaps, filename);
 }
 
 void MapBuilderBridge::HandleSubmapQuery(
