@@ -52,10 +52,15 @@ add_service_files(
   FILES
     FinishTrajectory.srv
     GetTrajectoryStates.srv
-    ReadMetrics.srv
     StartTrajectory.srv
     SubmapQuery.srv
     WriteState.srv
+)
+
+add_service_files(
+  DIRECTORY srv/metrics
+  FILES
+    ReadMetrics.srv
 )
 
 generate_messages(
