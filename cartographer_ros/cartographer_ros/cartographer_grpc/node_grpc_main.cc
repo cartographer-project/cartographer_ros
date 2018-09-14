@@ -33,8 +33,7 @@ DEFINE_string(configuration_basename, "",
               "Basename, i.e. not containing any directory prefix, of the "
               "configuration file.");
 DEFINE_string(server_address, "localhost:50051",
-              "gRPC server address to "
-              "stream the sensor data to.");
+              "gRPC server address to stream the sensor data to.");
 DEFINE_bool(
     start_trajectory_with_default_topics, true,
     "Enable to immediately start the first trajectory with default topics.");
@@ -43,9 +42,14 @@ DEFINE_string(
     "If non-empty, serialize state and write it to disk before shutting down.");
 DEFINE_string(load_state_filename, "",
               "If non-empty, filename of a .pbstream file "
-              "to load, containing a saved SLAM state.");
+              "to load, containing a saved SLAM state. "
+              "Unless --upload_load_state_file is set, the filepath refers "
+              "to the gRPC server's file system.");
 DEFINE_bool(load_frozen_state, true,
             "Load the saved state as frozen (non-optimized) trajectories.");
+DEFINE_bool(upload_load_state_file, false,
+            "Upload the .pbstream file from a local path to the (remote) gRPC "
+            "server instead of loading it from the server file system.");
 DEFINE_string(client_id, "",
               "Cartographer client ID to use when connecting to the server.");
 
@@ -63,10 +67,16 @@ void Run() {
 
   auto map_builder = absl::make_unique<::cartographer::cloud::MapBuilderStub>(
       FLAGS_server_address, FLAGS_client_id);
+
+  if (!FLAGS_load_state_filename.empty() && !FLAGS_upload_load_state_file) {
+    map_builder->LoadStateFromFile(FLAGS_load_state_filename,
+                                   FLAGS_load_frozen_state);
+  }
+
   Node node(node_options, std::move(map_builder), &tf_buffer,
             FLAGS_collect_metrics);
 
-  if (!FLAGS_load_state_filename.empty()) {
+  if (!FLAGS_load_state_filename.empty() && FLAGS_upload_load_state_file) {
     node.LoadState(FLAGS_load_state_filename, FLAGS_load_frozen_state);
   }
 

@@ -65,6 +65,10 @@ SubmapsDisplay::SubmapsDisplay() : tf_listener_(tf_buffer_) {
       "All", true,
       "Whether submaps from all trajectories should be displayed or not.",
       trajectories_category_, SLOT(AllEnabledToggled()), this);
+  pose_markers_all_enabled_ = new ::rviz::BoolProperty(
+      "All Submap Pose Markers", true,
+      "Whether submap pose markers should be displayed or not.",
+      trajectories_category_, SLOT(PoseMarkersEnabledToggled()), this);
   fade_out_start_distance_in_meters_ =
       new ::rviz::FloatProperty("Fade-out distance", 1.f,
                                 "Distance in meters in z-direction beyond "
@@ -135,18 +139,21 @@ void SubmapsDisplay::processMessage(
     const SubmapId id{submap_entry.trajectory_id, submap_entry.submap_index};
     listed_submaps.insert(id);
     while (id.trajectory_id >= static_cast<int>(trajectories_.size())) {
-      trajectories_.push_back(
-          absl::make_unique<Trajectory>(absl::make_unique<::rviz::BoolProperty>(
+      trajectories_.push_back(absl::make_unique<Trajectory>(
+          absl::make_unique<::rviz::BoolProperty>(
               QString("Trajectory %1").arg(id.trajectory_id),
               visibility_all_enabled_->getBool(),
               QString("List of all submaps in Trajectory %1. The checkbox "
                       "controls whether all submaps in this trajectory should "
                       "be displayed or not.")
                   .arg(id.trajectory_id),
-              trajectories_category_)));
+              trajectories_category_),
+          pose_markers_all_enabled_->getBool()));
     }
     auto& trajectory_visibility = trajectories_[id.trajectory_id]->visibility;
     auto& trajectory_submaps = trajectories_[id.trajectory_id]->submaps;
+    auto& pose_markers_visibility =
+        trajectories_[id.trajectory_id]->pose_markers_visibility;
     if (trajectory_submaps.count(id.submap_index) == 0) {
       // TODO(ojura): Add RViz properties for adjusting submap pose axes
       constexpr float kSubmapPoseAxesLength = 0.3f;
@@ -155,7 +162,8 @@ void SubmapsDisplay::processMessage(
           id.submap_index,
           absl::make_unique<DrawableSubmap>(
               id, context_, map_node_, trajectory_visibility.get(),
-              trajectory_visibility->getBool(), kSubmapPoseAxesLength,
+              trajectory_visibility->getBool(),
+              pose_markers_visibility->getBool(), kSubmapPoseAxesLength,
               kSubmapPoseAxesRadius));
       trajectory_submaps.at(id.submap_index)
           ->SetSliceVisibility(0, slice_high_resolution_enabled_->getBool());
@@ -237,6 +245,14 @@ void SubmapsDisplay::AllEnabledToggled() {
   }
 }
 
+void SubmapsDisplay::PoseMarkersEnabledToggled() {
+  absl::MutexLock locker(&mutex_);
+  const bool visible = pose_markers_all_enabled_->getBool();
+  for (auto& trajectory : trajectories_) {
+    trajectory->pose_markers_visibility->setBool(visible);
+  }
+}
+
 void SubmapsDisplay::ResolutionToggled() {
   absl::MutexLock locker(&mutex_);
   for (auto& trajectory : trajectories_) {
@@ -256,10 +272,26 @@ void Trajectory::AllEnabledToggled() {
   }
 }
 
-Trajectory::Trajectory(std::unique_ptr<::rviz::BoolProperty> property)
+void Trajectory::PoseMarkersEnabledToggled() {
+  const bool visible = pose_markers_visibility->getBool();
+  for (auto& submap_entry : submaps) {
+    submap_entry.second->set_pose_markers_visibility(visible);
+  }
+}
+
+Trajectory::Trajectory(std::unique_ptr<::rviz::BoolProperty> property,
+                       const bool pose_markers_enabled)
     : visibility(std::move(property)) {
   ::QObject::connect(visibility.get(), SIGNAL(changed()), this,
                      SLOT(AllEnabledToggled()));
+  // Add toggle for submap pose markers as the first entry of the visibility
+  // property list of this trajectory.
+  pose_markers_visibility = absl::make_unique<::rviz::BoolProperty>(
+      QString("Submap Pose Markers"), pose_markers_enabled,
+      QString("Toggles the submap pose markers of this trajectory."),
+      visibility.get());
+  ::QObject::connect(pose_markers_visibility.get(), SIGNAL(changed()), this,
+                     SLOT(PoseMarkersEnabledToggled()));
 }
 
 }  // namespace cartographer_rviz
