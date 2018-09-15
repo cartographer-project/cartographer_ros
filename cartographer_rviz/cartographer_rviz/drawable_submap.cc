@@ -48,7 +48,8 @@ DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
                                ::rviz::DisplayContext* const display_context,
                                Ogre::SceneNode* const map_node,
                                ::rviz::Property* const submap_category,
-                               const bool visible, const float pose_axes_length,
+                               const bool visible, const bool pose_axes_visible,
+                               const float pose_axes_length,
                                const float pose_axes_radius)
     : id_(id),
       display_context_(display_context),
@@ -56,6 +57,7 @@ DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
       submap_id_text_node_(submap_node_->createChildSceneNode()),
       pose_axes_(display_context->getSceneManager(), submap_node_,
                  pose_axes_length, pose_axes_radius),
+      pose_axes_visible_(pose_axes_visible),
       submap_id_text_(QString("(%1,%2)")
                           .arg(id.trajectory_id)
                           .arg(id.submap_index)
@@ -77,7 +79,6 @@ DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
   submap_id_text_.setColor(kSubmapIdColor);
   submap_id_text_.setTextAlignment(::rviz::MovableText::H_CENTER,
                                    ::rviz::MovableText::V_ABOVE);
-  // TODO(jihoonl): Make it toggleable.
   submap_id_text_node_->setPosition(ToOgre(kSubmapIdPosition));
   submap_id_text_node_->attachObject(&submap_id_text_);
   connect(this, SIGNAL(RequestSucceeded()), this, SLOT(UpdateSceneNode()));
@@ -190,6 +191,11 @@ void DrawableSubmap::ToggleVisibility() {
     ogre_slice->UpdateOgreNodeVisibility(visibility_->getBool());
   }
   display_context_->queueRender();
+}
+
+void DrawableSubmap::TogglePoseMarkerVisibility() {
+  submap_id_text_node_->setVisible(pose_axes_visible_);
+  pose_axes_.getSceneNode()->setVisible(pose_axes_visible_);
 }
 
 }  // namespace cartographer_rviz
