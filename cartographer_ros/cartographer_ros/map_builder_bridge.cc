@@ -162,9 +162,8 @@ void MapBuilderBridge::RunFinalOptimization() {
 
 bool MapBuilderBridge::SerializeState(const std::string& filename,
                                       const bool include_unfinished_submaps) {
-  cartographer::io::ProtoStreamWriter writer(filename);
-  map_builder_->SerializeState(include_unfinished_submaps, &writer);
-  return writer.Close();
+  return map_builder_->SerializeStateToFile(include_unfinished_submaps,
+                                            filename);
 }
 
 void MapBuilderBridge::HandleSubmapQuery(
