@@ -29,6 +29,7 @@ float64 odometry_sampling_ratio
 float64 fixed_frame_pose_sampling_ratio
 float64 imu_sampling_ratio
 float64 landmarks_sampling_ratio
+geometry_msgs/Quaternion imu_correction
 
 # This is a binary-encoded
 # 'cartographer.mapping.proto.TrajectoryBuilderOptions' proto.

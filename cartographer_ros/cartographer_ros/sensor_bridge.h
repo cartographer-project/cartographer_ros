@@ -45,7 +45,8 @@ class SensorBridge {
   explicit SensorBridge(
       int num_subdivisions_per_laser_scan, const std::string& tracking_frame,
       double lookup_transform_timeout_sec, tf2_ros::Buffer* tf_buffer,
-      ::cartographer::mapping::TrajectoryBuilderInterface* trajectory_builder);
+      ::cartographer::mapping::TrajectoryBuilderInterface* trajectory_builder,
+      const Eigen::Quaterniond& imu_correction);
 
   SensorBridge(const SensorBridge&) = delete;
   SensorBridge& operator=(const SensorBridge&) = delete;
@@ -92,6 +93,7 @@ class SensorBridge {
       trajectory_builder_;
 
   absl::optional<::cartographer::transform::Rigid3d> ecef_to_local_frame_;
+  Eigen::Quaterniond imu_correction_;
 };
 
 }  // namespace cartographer_ros

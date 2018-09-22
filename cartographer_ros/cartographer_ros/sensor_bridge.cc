@@ -43,10 +43,12 @@ SensorBridge::SensorBridge(
     const int num_subdivisions_per_laser_scan,
     const std::string& tracking_frame,
     const double lookup_transform_timeout_sec, tf2_ros::Buffer* const tf_buffer,
-    carto::mapping::TrajectoryBuilderInterface* const trajectory_builder)
+    carto::mapping::TrajectoryBuilderInterface* const trajectory_builder,
+    const Eigen::Quaterniond& imu_correction)
     : num_subdivisions_per_laser_scan_(num_subdivisions_per_laser_scan),
       tf_bridge_(tracking_frame, lookup_transform_timeout_sec, tf_buffer),
-      trajectory_builder_(trajectory_builder) {}
+      trajectory_builder_(trajectory_builder),
+      imu_correction_(imu_correction) {}
 
 std::unique_ptr<carto::sensor::OdometryData> SensorBridge::ToOdometryData(
     const nav_msgs::Odometry::ConstPtr& msg) {
@@ -126,9 +128,12 @@ std::unique_ptr<carto::sensor::ImuData> SensorBridge::ToImuData(
       << "The IMU frame must be colocated with the tracking frame. "
          "Transforming linear acceleration into the tracking frame will "
          "otherwise be imprecise.";
-  return absl::make_unique<carto::sensor::ImuData>(carto::sensor::ImuData{
-      time, sensor_to_tracking->rotation() * ToEigen(msg->linear_acceleration),
-      sensor_to_tracking->rotation() * ToEigen(msg->angular_velocity)});
+  return absl::make_unique<carto::sensor::ImuData>(
+      carto::sensor::ImuData{time,
+                             imu_correction_ * sensor_to_tracking->rotation() *
+                                 ToEigen(msg->linear_acceleration),
+                             imu_correction_ * sensor_to_tracking->rotation() *
+                                 ToEigen(msg->angular_velocity)});
 }
 
 void SensorBridge::HandleImuMessage(const std::string& sensor_id,

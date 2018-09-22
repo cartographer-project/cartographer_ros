@@ -41,6 +41,7 @@ options = {
   fixed_frame_pose_sampling_ratio = 1.,
   imu_sampling_ratio = 1.,
   landmarks_sampling_ratio = 1.,
+  imu_correction = { w = 1., x = 0., y = 0., z = 0. },
 }
 
 MAP_BUILDER.use_trajectory_builder_2d = true

@@ -19,6 +19,7 @@
 
 #include <string>
 
+#include "Eigen/Geometry"
 #include "cartographer/common/lua_parameter_dictionary.h"
 #include "cartographer/common/port.h"
 #include "cartographer/mapping/proto/trajectory_builder_options.pb.h"
@@ -46,6 +47,7 @@ struct TrajectoryOptions {
   double fixed_frame_pose_sampling_ratio;
   double imu_sampling_ratio;
   double landmarks_sampling_ratio;
+  Eigen::Quaterniond imu_correction;
 };
 
 ::cartographer::mapping::proto::InitialTrajectoryPose

@@ -34,6 +34,7 @@ void CheckTrajectoryOptions(const TrajectoryOptions& options) {
       << "Configuration error: 'num_laser_scans', "
          "'num_multi_echo_laser_scans' and 'num_point_clouds' are "
          "all zero, but at least one is required.";
+  CHECK_NEAR(options.imu_correction.norm(), 1., 1e-9);
 }
 
 }  // namespace
@@ -76,6 +77,21 @@ TrajectoryOptions CreateTrajectoryOptions(
       lua_parameter_dictionary->GetDouble("imu_sampling_ratio");
   options.landmarks_sampling_ratio =
       lua_parameter_dictionary->GetDouble("landmarks_sampling_ratio");
+  auto imu_correction_dictionary =
+      lua_parameter_dictionary->GetDictionary("imu_correction");
+  if (imu_correction_dictionary->HasKey("w")) {
+    options.imu_correction =
+        Eigen::Quaterniond{imu_correction_dictionary->GetDouble("w"),
+                           imu_correction_dictionary->GetDouble("x"),
+                           imu_correction_dictionary->GetDouble("y"),
+                           imu_correction_dictionary->GetDouble("z")};
+  } else {
+    const std::vector<double> rotation =
+        imu_correction_dictionary->GetArrayValuesAsDoubles();
+    CHECK_EQ(3, rotation.size()) << "Need (roll, pitch, yaw) for rotation.";
+    options.imu_correction = cartographer::transform::RollPitchYaw(
+        rotation[0], rotation[1], rotation[2]);
+  }
   CheckTrajectoryOptions(options);
   return options;
 }
@@ -126,6 +142,10 @@ bool FromRosMessage(const cartographer_ros_msgs::TrajectoryOptions& msg,
       msg.fixed_frame_pose_sampling_ratio;
   options->imu_sampling_ratio = msg.imu_sampling_ratio;
   options->landmarks_sampling_ratio = msg.landmarks_sampling_ratio;
+  options->imu_correction.w() = msg.imu_correction.w;
+  options->imu_correction.x() = msg.imu_correction.x;
+  options->imu_correction.y() = msg.imu_correction.y;
+  options->imu_correction.z() = msg.imu_correction.z;
   if (!options->trajectory_builder_options.ParseFromString(
           msg.trajectory_builder_options_proto)) {
     LOG(ERROR) << "Failed to parse protobuf";
@@ -155,6 +175,10 @@ cartographer_ros_msgs::TrajectoryOptions ToRosMessage(
   msg.fixed_frame_pose_sampling_ratio = options.fixed_frame_pose_sampling_ratio;
   msg.imu_sampling_ratio = options.imu_sampling_ratio;
   msg.landmarks_sampling_ratio = options.landmarks_sampling_ratio;
+  msg.imu_correction.w = options.imu_correction.w();
+  msg.imu_correction.x = options.imu_correction.x();
+  msg.imu_correction.y = options.imu_correction.y();
+  msg.imu_correction.z = options.imu_correction.z();
   options.trajectory_builder_options.SerializeToString(
       &msg.trajectory_builder_options_proto);
   return msg;
