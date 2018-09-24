@@ -21,7 +21,6 @@
 #include <iostream>
 
 #include "absl/memory/memory.h"
-#include "absl/strings/str_split.h"
 #include "cartographer/common/configuration_file_resolver.h"
 #include "cartographer/common/math.h"
 #include "cartographer/io/file_writer.h"
