@@ -21,6 +21,7 @@
 #include <iostream>
 
 #include "absl/memory/memory.h"
+#include "absl/strings/str_split.h"
 #include "cartographer/common/configuration_file_resolver.h"
 #include "cartographer/common/math.h"
 #include "cartographer/io/file_writer.h"
@@ -35,7 +36,6 @@
 #include "cartographer/transform/transform_interpolation_buffer.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/ros_map_writing_points_processor.h"
-#include "cartographer_ros/split_string.h"
 #include "cartographer_ros/time_conversion.h"
 #include "cartographer_ros/urdf_reader.h"
 #include "gflags/gflags.h"
