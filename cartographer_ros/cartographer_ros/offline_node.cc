@@ -122,7 +122,7 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
   tf2_ros::Buffer tf_buffer;
 
   std::vector<geometry_msgs::TransformStamped> urdf_transforms;
-  const std::vector<std::string> urdf_filenames = 
+  const std::vector<std::string> urdf_filenames =
       absl::StrSplit(FLAGS_urdf_filenames, ',');
   for (const auto& urdf_filename : urdf_filenames) {
     const auto current_urdf_transforms =

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include "cartographer_ros/assets_writer.h"
 #include "absl/strings/str_split.h"
+#include "cartographer_ros/assets_writer.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 
