@@ -1,5 +1,5 @@
 <!--
-  Copyright 2016 The Cartographer Authors
+  Copyright 2018 The Cartographer Authors
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,25 +15,20 @@
 -->
 
 <launch>
+  <arg name="bag_filenames"/>
   <arg name="no_rviz" default="false"/>
-  <param name="/use_sim_time" value="true" />
+  <arg name="rviz_config" default="$(find cartographer_ros)/configuration_files/demo_2d.rviz"/>
+  <arg name="configuration_directory" default="$(find cartographer_ros)/configuration_files"/>
+  <arg name="configuration_basenames" default="backpack_2d.lua"/>
+  <arg name="urdf_filenames" default="$(find cartographer_ros)/urdf/backpack_2d.urdf"/>
 
-  <group unless="$(arg no_rviz)">
-    <node name="rviz" pkg="rviz" type="rviz" required="true"
-        args="-d $(find cartographer_ros)/configuration_files/demo_2d.rviz" />
-
-    <node name="cartographer_occupancy_grid_node" pkg="cartographer_ros"
-        type="cartographer_occupancy_grid_node" args="-resolution 0.05" />
-  </group>
-
-  <node name="cartographer_offline_node" pkg="cartographer_ros"
-      required="$(arg no_rviz)"
-      type="cartographer_offline_node" args="
-          -configuration_directory $(find cartographer_ros)/configuration_files
-          -configuration_basenames backpack_2d.lua
-          -urdf_filenames $(find cartographer_ros)/urdf/backpack_2d.urdf
-          -bag_filenames $(arg bag_filenames)"
-      output="screen">
-    <remap from="echoes" to="horizontal_laser_2d" />
-  </node>
+  <remap from="echoes" to="horizontal_laser_2d"/>
+  <include file="$(find cartographer_ros)/launch/offline_node.launch">
+    <arg name="bag_filenames" value="$(arg bag_filenames)"/>
+    <arg name="no_rviz" value="$(arg no_rviz)"/>
+    <arg name="rviz_config" value="$(arg rviz_config)"/>
+    <arg name="configuration_directory" value="$(arg configuration_directory)"/>
+    <arg name="configuration_basenames" value="$(arg configuration_basenames)"/>
+    <arg name="urdf_filenames" value="$(arg urdf_filenames)"/>
+  </include>
 </launch>
