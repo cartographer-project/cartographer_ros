@@ -81,6 +81,7 @@ DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
                                    ::rviz::MovableText::V_ABOVE);
   submap_id_text_node_->setPosition(ToOgre(kSubmapIdPosition));
   submap_id_text_node_->attachObject(&submap_id_text_);
+  TogglePoseMarkerVisibility();
   connect(this, SIGNAL(RequestSucceeded()), this, SLOT(UpdateSceneNode()));
 }
 
