@@ -19,6 +19,8 @@
 #include <functional>
 #include <queue>
 
+#include <cartographer_ros_msgs/BagfileProgress.h>
+#include <ros/node_handle.h>
 #include "rosbag/bag.h"
 #include "rosbag/view.h"
 #include "tf2_ros/buffer.h"
@@ -38,7 +40,8 @@ class PlayableBag {
               FilteringEarlyMessageHandler filtering_early_message_handler);
 
   ros::Time PeekMessageTime() const;
-  rosbag::MessageInstance GetNextMessage();
+  rosbag::MessageInstance GetNextMessage(
+      cartographer_ros_msgs::BagfileProgress* progress);
   bool IsMessageAvailable() const;
   std::tuple<ros::Time, ros::Time> GetBeginEndTime() const;
 
@@ -65,6 +68,7 @@ class PlayableBag {
 
 class PlayableBagMultiplexer {
  public:
+  PlayableBagMultiplexer();
   void AddPlayableBag(PlayableBag playable_bag);
 
   // Returns the next message from the multiplexed (merge-sorted) message
@@ -89,6 +93,14 @@ class PlayableBagMultiplexer {
       }
     };
   };
+
+  ros::NodeHandle pnh_;
+  // Publishes information about the bag-file(s) processing and its progress
+  ros::Publisher bag_progress_pub_;
+  // Map between bagfile id and the last time when its progress was published
+  std::map<int, ros::Time> bag_progress_time_map_;
+  // The time interval of publishing bag-file(s) processing in seconds
+  double progress_pub_interval_;
 
   std::vector<PlayableBag> playable_bags_;
   std::priority_queue<BagMessageItem, std::vector<BagMessageItem>,

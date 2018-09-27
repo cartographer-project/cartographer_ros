@@ -26,6 +26,7 @@ find_package(catkin REQUIRED COMPONENTS message_generation ${PACKAGE_DEPENDENCIE
 add_message_files(
   DIRECTORY msg
   FILES
+    BagfileProgress.msg
     LandmarkEntry.msg
     LandmarkList.msg
     SensorTopics.msg
