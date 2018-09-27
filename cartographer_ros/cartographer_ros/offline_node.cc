@@ -22,9 +22,9 @@
 #include <time.h>
 #include <chrono>
 
+#include "absl/strings/str_split.h"
 #include "cartographer_ros/node.h"
 #include "cartographer_ros/playable_bag.h"
-#include "cartographer_ros/split_string.h"
 #include "cartographer_ros/urdf_reader.h"
 #include "gflags/gflags.h"
 #include "ros/callback_queue.h"
@@ -86,11 +86,11 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
       << "-configuration_basenames is missing.";
   CHECK(!(FLAGS_bag_filenames.empty() && FLAGS_load_state_filename.empty()))
       << "-bag_filenames and -load_state_filename cannot both be unspecified.";
-  const auto bag_filenames =
-      cartographer_ros::SplitString(FLAGS_bag_filenames, ',');
+  const std::vector<std::string> bag_filenames =
+      absl::StrSplit(FLAGS_bag_filenames, ',');
   cartographer_ros::NodeOptions node_options;
-  const auto configuration_basenames =
-      cartographer_ros::SplitString(FLAGS_configuration_basenames, ',');
+  const std::vector<std::string> configuration_basenames =
+      absl::StrSplit(FLAGS_configuration_basenames, ',');
   std::vector<TrajectoryOptions> bag_trajectory_options(1);
   std::tie(node_options, bag_trajectory_options.at(0)) =
       LoadOptions(FLAGS_configuration_directory, configuration_basenames.at(0));
@@ -122,8 +122,9 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
   tf2_ros::Buffer tf_buffer;
 
   std::vector<geometry_msgs::TransformStamped> urdf_transforms;
-  for (const std::string& urdf_filename :
-       cartographer_ros::SplitString(FLAGS_urdf_filenames, ',')) {
+  const std::vector<std::string> urdf_filenames =
+      absl::StrSplit(FLAGS_urdf_filenames, ',');
+  for (const auto& urdf_filename : urdf_filenames) {
     const auto current_urdf_transforms =
         ReadStaticTransformsFromUrdf(urdf_filename, &tf_buffer);
     urdf_transforms.insert(urdf_transforms.end(),
