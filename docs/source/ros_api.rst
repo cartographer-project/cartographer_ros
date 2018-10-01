@@ -160,6 +160,22 @@ Once it is done processing all data, it writes out the final Cartographer state 
 .. _offline_node: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros/cartographer_ros/offline_node_main.cc
 
 
+Published Topics
+----------------
+
+~bagfile_progress (`cartographer_ros_msgs/BagfileProgress`_)
+  Bag files processing progress including detailed information about the bag currently being processed which will be published with a predefined
+  interval that can be specified using ``~bagfile_progress_pub_interval`` ROS parameter.
+
+.. _cartographer_ros_msgs/BagfileProgress: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/msg/BagfileProgress.msg
+
+Parameters
+----------
+
+~bagfile_progress_pub_interval (double, default=10.0):
+  The interval of publishing bag files processing progress in seconds.
+
+
 Occupancy grid Node
 ===================
 
