@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
 
   ::cartographer_ros::AssetsWriter asset_writer(
       FLAGS_pose_graph_filename,
-      absl::StrSplit(FLAGS_bag_filenames, ',', absl::SkipWhitespace()),
+      absl::StrSplit(FLAGS_bag_filenames, ',', absl::SkipEmpty()),
       FLAGS_output_file_prefix);
 
   asset_writer.Run(FLAGS_configuration_directory, FLAGS_configuration_basename,
