@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+#include "absl/strings/str_split.h"
 #include "cartographer_ros/assets_writer.h"
-#include "cartographer_ros/split_string.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
 
@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
 
   ::cartographer_ros::AssetsWriter asset_writer(
       FLAGS_pose_graph_filename,
-      cartographer_ros::SplitString(FLAGS_bag_filenames, ','),
+      absl::StrSplit(FLAGS_bag_filenames, ',', absl::SkipEmpty()),
       FLAGS_output_file_prefix);
 
   asset_writer.Run(FLAGS_configuration_directory, FLAGS_configuration_basename,
