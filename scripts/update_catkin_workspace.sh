@@ -20,4 +20,7 @@ set -o verbose
 . /opt/ros/${ROS_DISTRO}/setup.sh
 
 cd catkin_ws/src
+
+# Call 'status' as a workaround for https://github.com/vcstools/wstool/issues/77
+wstool status
 wstool update
