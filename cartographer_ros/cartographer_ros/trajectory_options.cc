@@ -34,7 +34,7 @@ void CheckTrajectoryOptions(const TrajectoryOptions& options) {
       << "Configuration error: 'num_laser_scans', "
          "'num_multi_echo_laser_scans' and 'num_point_clouds' are "
          "all zero, but at least one is required.";
-  CHECK_NEAR(options.imu_correction.norm(), 1., 1e-9);
+  CHECK_NEAR(options.imu_correction.norm(), 1., 1e-4);
 }
 
 }  // namespace
