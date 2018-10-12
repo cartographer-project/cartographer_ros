@@ -77,8 +77,6 @@ TrajectoryOptions CreateTrajectoryOptions(
       lua_parameter_dictionary->GetDouble("imu_sampling_ratio");
   options.landmarks_sampling_ratio =
       lua_parameter_dictionary->GetDouble("landmarks_sampling_ratio");
-  auto imu_correction_dictionary =
-      lua_parameter_dictionary->GetDictionary("imu_correction");
   if (lua_parameter_dictionary->HasKey("imu_correction")) {
     auto imu_correction_dictionary =
         lua_parameter_dictionary->GetDictionary("imu_correction");
