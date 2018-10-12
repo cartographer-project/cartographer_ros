@@ -79,19 +79,23 @@ TrajectoryOptions CreateTrajectoryOptions(
       lua_parameter_dictionary->GetDouble("landmarks_sampling_ratio");
   auto imu_correction_dictionary =
       lua_parameter_dictionary->GetDictionary("imu_correction");
-  if (imu_correction_dictionary->HasKey("w")) {
-    options.imu_correction =
-        Eigen::Quaterniond{imu_correction_dictionary->GetDouble("w"),
-                           imu_correction_dictionary->GetDouble("x"),
-                           imu_correction_dictionary->GetDouble("y"),
-                           imu_correction_dictionary->GetDouble("z")};
-  } else {
-    const std::vector<double> rotation =
-        imu_correction_dictionary->GetArrayValuesAsDoubles();
-    CHECK_EQ(3, rotation.size()) << "Need (roll, pitch, yaw) for rotation.";
-    options.imu_correction = cartographer::transform::RollPitchYaw(
-        rotation[0], rotation[1], rotation[2]);
-  }
+  if (lua_parameter_dictionary->HasKey("imu_correction")) {
+    auto imu_correction_dictionary =
+        lua_parameter_dictionary->GetDictionary("imu_correction");
+    if (imu_correction_dictionary->HasKey("w")) {
+      options.imu_correction =
+          Eigen::Quaterniond{imu_correction_dictionary->GetDouble("w"),
+                             imu_correction_dictionary->GetDouble("x"),
+                             imu_correction_dictionary->GetDouble("y"),
+                             imu_correction_dictionary->GetDouble("z")};
+    } else {
+      const std::vector<double> rotation =
+          imu_correction_dictionary->GetArrayValuesAsDoubles();
+      CHECK_EQ(3, rotation.size()) << "Need (roll, pitch, yaw) for rotation.";
+      options.imu_correction = cartographer::transform::RollPitchYaw(
+          rotation[0], rotation[1], rotation[2]);
+    }
+  } else options.imu_correction = Eigen::Quaterniond::Identity();
   CheckTrajectoryOptions(options);
   return options;
 }
