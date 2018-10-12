@@ -93,8 +93,9 @@ TrajectoryOptions CreateTrajectoryOptions(
       options.imu_correction = cartographer::transform::RollPitchYaw(
           rotation[0], rotation[1], rotation[2]);
     }
-  } else
+  } else {
     options.imu_correction = Eigen::Quaterniond::Identity();
+  }
   CheckTrajectoryOptions(options);
   return options;
 }
