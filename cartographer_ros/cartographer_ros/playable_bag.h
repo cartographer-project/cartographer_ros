@@ -59,7 +59,7 @@ class PlayableBag {
   const int bag_id_;
   const std::string bag_filename_;
   const double duration_in_seconds_;
-  int log_counter_;
+  int message_counter_;
   std::deque<rosbag::MessageInstance> buffered_messages_;
   const ::ros::Duration buffer_delay_;
   FilteringEarlyMessageHandler filtering_early_message_handler_;

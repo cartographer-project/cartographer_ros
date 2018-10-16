@@ -36,7 +36,7 @@ PlayableBag::PlayableBag(
       bag_filename_(bag_filename),
       duration_in_seconds_(
           (view_->getEndTime() - view_->getBeginTime()).toSec()),
-      log_counter_(0),
+      message_counter_(0),
       buffer_delay_(buffer_delay),
       filtering_early_message_handler_(
           std::move(filtering_early_message_handler)) {
@@ -62,7 +62,7 @@ rosbag::MessageInstance PlayableBag::GetNextMessage(
   buffered_messages_.pop_front();
   AdvanceUntilMessageAvailable();
   double processed_seconds = (msg.getTime() - view_->getBeginTime()).toSec();
-  if ((log_counter_++ % 10000) == 0) {
+  if ((message_counter_ % 10000) == 0) {
     LOG(INFO) << "Processed " << processed_seconds << " of "
               << duration_in_seconds_ << " seconds of bag " << bag_filename_;
   }
@@ -71,8 +71,7 @@ rosbag::MessageInstance PlayableBag::GetNextMessage(
     progress->current_bagfile_name = bag_filename_;
     progress->current_bagfile_id = bag_id_;
     progress->total_messages = view_->size();
-    progress->processed_messages =
-        std::distance(view_->begin(), view_iterator_);
+    progress->processed_messages = message_counter_;
     progress->total_seconds = duration_in_seconds_;
     progress->processed_seconds = processed_seconds;
   }
@@ -100,6 +99,7 @@ void PlayableBag::AdvanceOneMessage() {
     buffered_messages_.push_back(msg);
   }
   ++view_iterator_;
+  ++message_counter_;
 }
 
 void PlayableBag::AdvanceUntilMessageAvailable() {

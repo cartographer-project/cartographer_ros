@@ -87,10 +87,10 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
   CHECK(!(FLAGS_bag_filenames.empty() && FLAGS_load_state_filename.empty()))
       << "-bag_filenames and -load_state_filename cannot both be unspecified.";
   const std::vector<std::string> bag_filenames =
-      absl::StrSplit(FLAGS_bag_filenames, ',');
+      absl::StrSplit(FLAGS_bag_filenames, ',', absl::SkipEmpty());
   cartographer_ros::NodeOptions node_options;
   const std::vector<std::string> configuration_basenames =
-      absl::StrSplit(FLAGS_configuration_basenames, ',');
+      absl::StrSplit(FLAGS_configuration_basenames, ',', absl::SkipEmpty());
   std::vector<TrajectoryOptions> bag_trajectory_options(1);
   std::tie(node_options, bag_trajectory_options.at(0)) =
       LoadOptions(FLAGS_configuration_directory, configuration_basenames.at(0));
@@ -123,7 +123,7 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
 
   std::vector<geometry_msgs::TransformStamped> urdf_transforms;
   const std::vector<std::string> urdf_filenames =
-      absl::StrSplit(FLAGS_urdf_filenames, ',');
+      absl::StrSplit(FLAGS_urdf_filenames, ',', absl::SkipEmpty());
   for (const auto& urdf_filename : urdf_filenames) {
     const auto current_urdf_transforms =
         ReadStaticTransformsFromUrdf(urdf_filename, &tf_buffer);
