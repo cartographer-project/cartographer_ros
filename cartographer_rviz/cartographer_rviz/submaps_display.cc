@@ -120,9 +120,8 @@ void SubmapsDisplay::processMessage(
   // In case Cartographer node is relaunched, destroy trajectories from the
   // previous instance.
   for (const ::cartographer_ros_msgs::SubmapEntry& submap_entry : msg->submap) {
-    // TODO
     const size_t trajectory_id = submap_entry.trajectory_id;
-    if (trajectory_id >= trajectories_.size()) {
+    if (trajectories_.count(trajectory_id) == 0) {
       continue;
     }
     const auto& trajectory_submaps = trajectories_[trajectory_id]->submaps;
