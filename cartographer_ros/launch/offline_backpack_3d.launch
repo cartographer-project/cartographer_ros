@@ -21,6 +21,7 @@
   <arg name="configuration_directory" default="$(find cartographer_ros)/configuration_files"/>
   <arg name="configuration_basenames" default="backpack_3d.lua"/>
   <arg name="urdf_filenames" default="$(find cartographer_ros)/urdf/backpack_3d.urdf"/>
+  <arg name="launch_prefix" default=""/>
 
   <remap from="points2_1" to="horizontal_laser_3d" />
   <remap from="points2_2" to="vertical_laser_3d" />
@@ -31,5 +32,6 @@
     <arg name="configuration_directory" value="$(arg configuration_directory)"/>
     <arg name="configuration_basenames" value="$(arg configuration_basenames)"/>
     <arg name="urdf_filenames" value="$(arg urdf_filenames)"/>
+    <arg name="launch_prefix" value="$(arg launch_prefix)"/>
   </include>
 </launch>
