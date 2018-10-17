@@ -163,6 +163,8 @@ Once it is done processing all data, it writes out the final Cartographer state 
 Published Topics
 ----------------
 
+In addition to the topics that are published by the online node, this node also publishes:
+
 ~bagfile_progress (`cartographer_ros_msgs/BagfileProgress`_)
   Bag files processing progress including detailed information about the bag currently being processed which will be published with a predefined
   interval that can be specified using ``~bagfile_progress_pub_interval`` ROS parameter.
