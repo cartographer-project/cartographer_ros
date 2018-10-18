@@ -180,7 +180,7 @@ void SubmapsDisplay::processMessage(
   // Remove all deleted trajectories not mentioned in the SubmapList.
   for (auto it = trajectories_.begin(); it != trajectories_.end();) {
     if (listed_trajectories.count(it->first) == 0) {
-      trajectories_.erase(it++);
+      it = trajectories_.erase(it);
     } else {
       ++it;
     }
