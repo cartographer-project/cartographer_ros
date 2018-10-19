@@ -251,7 +251,7 @@ void AssetsWriter::Run(const std::string& configuration_directory,
           delayed_messages.pop_front();
         }
         delayed_messages.push_back(message);
-        LOG_EVERY_N(INFO, 100000)
+        LOG_EVERY_N(INFO, 10000)
             << "Processed " << (message.getTime() - begin_time).toSec()
             << " of " << duration_in_seconds << " bag time seconds...";
       }
