@@ -65,9 +65,6 @@ class Node {
  private:
   void HandleSubmapList(const cartographer_ros_msgs::SubmapList::ConstPtr& msg);
   void DrawAndPublish(const ::ros::WallTimerEvent& timer_event);
-  void PublishOccupancyGrid(const std::string& frame_id, const ros::Time& time,
-                            const Eigen::Array2f& origin,
-                            cairo_surface_t* surface);
 
   ::ros::NodeHandle node_handle_;
   const double resolution_;
