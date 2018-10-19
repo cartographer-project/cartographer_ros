@@ -27,8 +27,12 @@ add_message_files(
   DIRECTORY msg
   FILES
     BagfileProgress.msg
+    HistogramBucket.msg
     LandmarkEntry.msg
     LandmarkList.msg
+    MetricFamily.msg
+    MetricLabel.msg
+    Metric.msg
     SensorTopics.msg
     StatusCode.msg
     StatusResponse.msg
@@ -37,15 +41,6 @@ add_message_files(
     SubmapTexture.msg
     TrajectoryOptions.msg
     TrajectoryStates.msg
-)
-
-add_message_files(
-  DIRECTORY msg/metrics
-  FILES
-    HistogramBucket.msg
-    MetricFamily.msg
-    MetricLabel.msg
-    Metric.msg
 )
 
 add_service_files(
