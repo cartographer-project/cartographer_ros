@@ -93,7 +93,7 @@ class SubmapsDisplay
   std::unique_ptr<std::string> map_frame_;
   ::rviz::StringProperty* tracking_frame_property_;
   Ogre::SceneNode* map_node_ = nullptr;  // Represents the map frame.
-  std::vector<std::unique_ptr<Trajectory>> trajectories_ GUARDED_BY(mutex_);
+  std::map<int, std::unique_ptr<Trajectory>> trajectories_ GUARDED_BY(mutex_);
   absl::Mutex mutex_;
   ::rviz::BoolProperty* slice_high_resolution_enabled_;
   ::rviz::BoolProperty* slice_low_resolution_enabled_;
