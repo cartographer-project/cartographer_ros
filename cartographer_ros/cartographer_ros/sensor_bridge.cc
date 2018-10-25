@@ -102,12 +102,13 @@ void SensorBridge::HandleLandmarkMessage(
     const cartographer_ros_msgs::LandmarkList::ConstPtr& msg) {
   auto landmark_data = ToLandmarkData(*msg);
 
-  auto tracking_from_camera = tf_bridge_.LookupToTracking(
+  auto tracking_from_landmark_sensor = tf_bridge_.LookupToTracking(
       landmark_data.time, CheckNoLeadingSlash(msg->header.frame_id));
-  if (tracking_from_camera != nullptr) {
+  if (tracking_from_landmark_sensor != nullptr) {
     for (auto& observation : landmark_data.landmark_observations) {
       observation.landmark_to_tracking_transform =
-          *tracking_from_camera * observation.landmark_to_tracking_transform;
+          *tracking_from_landmark_sensor *
+          observation.landmark_to_tracking_transform;
     }
   }
   trajectory_builder_->AddSensorData(sensor_id, landmark_data);
