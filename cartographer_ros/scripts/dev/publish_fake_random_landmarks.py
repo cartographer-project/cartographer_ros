@@ -23,7 +23,24 @@ import rospy
 from tf import transformations
 from cartographer_ros_msgs.msg import LandmarkEntry, LandmarkList
 
-DESC = "Samples a number of random landmarks at a specified rate."
+DESC = '''
+Samples a number of random landmarks at a specified rate.
+Can be used to test the timing of landmark input or the effect of erroneous
+landmarks with duplicate IDs (if --allow_duplicate_ids is set).
+
+For example:
+
+./publish_fake_random_landmarks.py  \\
+  --publish_period 0.1  \\
+  --id_vocabulary A B C  \\
+  --id_length 5  \\
+  --sample_period 1.0
+
+will publish empty landmark lists at 10Hz and random landmarks every second.
+IDs are also sampled, using the cartesian product of the provided "vocabulary".
+In the above example, a sampled ID could be e.g. "AACBC" (length=5).
+'''
+
 TOPIC = "landmark"
 
 
@@ -125,7 +142,8 @@ class SampledLandmarkPublisher(object):
 
 if __name__ == '__main__':
   import argparse
-  parser = argparse.ArgumentParser(description=DESC)
+  parser = argparse.ArgumentParser(
+      description=DESC, formatter_class=argparse.RawTextHelpFormatter)
   parser.add_argument("--translation_weight", type=float, default=1e5)
   parser.add_argument("--rotation_weight", type=float, default=1e5)
   parser.add_argument(
