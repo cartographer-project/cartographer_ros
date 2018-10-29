@@ -42,7 +42,7 @@ catkin_package(
   INCLUDE_DIRS "."
 )
 
-file(GLOB_RECURSE ALL_SRCS "*.cc" "*.h")
+file(GLOB_RECURSE ALL_SRCS "cartographer_rviz/*.cc" "cartographer_rviz/*.h")
 set(CMAKE_AUTOMOC ON)
 add_library(${PROJECT_NAME} ${ALL_SRCS})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${QT_LIBRARIES})
