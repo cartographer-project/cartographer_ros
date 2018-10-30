@@ -45,6 +45,21 @@ Pure localization
        load_state_filename:=${HOME}/Downloads/b3-2016-04-05-13-54-42.bag.pbstream \
        bag_filename:=${HOME}/Downloads/b3-2016-04-05-15-52-20.bag
 
+Static landmarks
+========
+
+  .. raw:: html
+
+      <iframe width="560" height="315" src="https://www.youtube.com/embed/E2-OD-ycivc" frameborder="0" allowfullscreen></iframe>
+
+  .. code-block:: bash
+
+    # Download the landmarks example bag.
+    wget -P ~/Downloads https://storage.googleapis.com/cartographer-public-data/bags/mir/landmarks_demo_uncalibrated.bag
+
+    # Launch the landmarks demo.
+    roslaunch cartographer_mir offline_mir_100_rviz.launch bag_filename:=${HOME}/Downloads/landmarks_demo_uncalibrated.bag
+
 Revo LDS
 ========
 

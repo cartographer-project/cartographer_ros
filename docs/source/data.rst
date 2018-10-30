@@ -164,6 +164,39 @@ Data
 `b3-2016-06-07-12-42-49.bag <https://storage.googleapis.com/cartographer-public-data/bags/backpack_3d/b3-2016-06-07-12-42-49.bag>`_                  596 s    3.9 GB 3 gaps in horizontal laser data, no intensities
 ==================================================================================================================================================== ======== ====== ================================================
 
+MiR
+===========================================
+
+This data was collected using `MiR100 <http://www.mobile-industrial-robots.com/de/products/mir100/>`_.
+An additional Logitech Webcam C930e Full HD camera was attached on top to
+collect images for landmark detection.
+
+License
+-------
+
+Copyright 2018 The Cartographer Authors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Data
+----
+
+==================================================================================================================================================== ======== =======
+`ROS Bag <http://wiki.ros.org/Bags>`_                                                                                                                Duration Size
+==================================================================================================================================================== ======== =======
+`landmarks_demo_uncalibrated.bag <https://storage.googleapis.com/cartographer-public-data/bags/mir/landmarks_demo_uncalibrated.bag>`_                   180 s 41.7 MB
+==================================================================================================================================================== ======== =======
+
 PR2 – Willow Garage
 ===================
 
