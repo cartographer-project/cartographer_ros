@@ -60,7 +60,7 @@ You could have gotten the same state data by running the online node and calling
    rosservice call /finish_trajectory 0
 
    # Ask Cartographer to serialize its current state.
-   # (press tab to get a quickly expand the parameter syntax)
+   # (press tab to quickly expand the parameter syntax)
    rosservice call /write_state "{filename: '${HOME}/Downloads/b3-2016-04-05-14-14-00.bag.pbstream', include_unfinished_submaps: 'true'}"
 
 Now we run the assets writer with the `sample configuration file`_ for the 3D backpack:
