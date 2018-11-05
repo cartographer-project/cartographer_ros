@@ -12,9 +12,11 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-=======
-ROS API
-=======
+===============================
+ROS API reference documentation
+===============================
+
+.. image:: nodes_graph_demo_2d.jpg
 
 Cartographer Node
 =================
@@ -115,6 +117,8 @@ read_metrics (`cartographer_ros_msgs/ReadMetrics`_)
 
 Required tf Transforms
 ----------------------
+
+.. image:: frames_demo_2d.jpg
 
 Transforms from all incoming sensor data frames to the :doc:`configured
 <configuration>` *tracking_frame* and *published_frame* must be available.
