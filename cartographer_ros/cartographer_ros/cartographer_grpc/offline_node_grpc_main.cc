@@ -39,9 +39,8 @@ int main(int argc, char** argv) {
 
   const cartographer_ros::MapBuilderFactory map_builder_factory =
       [](const ::cartographer::mapping::proto::MapBuilderOptions&) {
-        return ::cartographer::common::make_unique<
-            ::cartographer::cloud::MapBuilderStub>(FLAGS_server_address,
-                                                   FLAGS_client_id);
+        return absl::make_unique< ::cartographer::cloud::MapBuilderStub>(
+            FLAGS_server_address, FLAGS_client_id);
       };
 
   cartographer_ros::RunOfflineNode(map_builder_factory);

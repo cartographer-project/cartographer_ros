@@ -16,7 +16,7 @@
 
 #include "cartographer_ros/metrics/internal/family.h"
 
-#include "cartographer/common/make_unique.h"
+#include "absl/memory/memory.h"
 #include "cartographer_ros/metrics/internal/counter.h"
 #include "cartographer_ros/metrics/internal/gauge.h"
 #include "cartographer_ros/metrics/internal/histogram.h"
@@ -27,7 +27,7 @@ namespace metrics {
 using BucketBoundaries = ::cartographer::metrics::Histogram::BucketBoundaries;
 
 Counter* CounterFamily::Add(const std::map<std::string, std::string>& labels) {
-  auto wrapper = ::cartographer::common::make_unique<Counter>(labels);
+  auto wrapper = absl::make_unique<Counter>(labels);
   auto* ptr = wrapper.get();
   wrappers_.emplace_back(std::move(wrapper));
   return ptr;
@@ -44,7 +44,7 @@ cartographer_ros_msgs::MetricFamily CounterFamily::ToRosMessage() {
 }
 
 Gauge* GaugeFamily::Add(const std::map<std::string, std::string>& labels) {
-  auto wrapper = ::cartographer::common::make_unique<Gauge>(labels);
+  auto wrapper = absl::make_unique<Gauge>(labels);
   auto* ptr = wrapper.get();
   wrappers_.emplace_back(std::move(wrapper));
   return ptr;
@@ -62,8 +62,7 @@ cartographer_ros_msgs::MetricFamily GaugeFamily::ToRosMessage() {
 
 Histogram* HistogramFamily::Add(
     const std::map<std::string, std::string>& labels) {
-  auto wrapper =
-      ::cartographer::common::make_unique<Histogram>(labels, boundaries_);
+  auto wrapper = absl::make_unique<Histogram>(labels, boundaries_);
   auto* ptr = wrapper.get();
   wrappers_.emplace_back(std::move(wrapper));
   return ptr;

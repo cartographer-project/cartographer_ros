@@ -46,6 +46,7 @@ find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
 
 include(FindPkgConfig)
 
+find_package(Abseil REQUIRED)
 find_package(LuaGoogle REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common)
 find_package(Eigen3 REQUIRED)

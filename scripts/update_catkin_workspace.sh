@@ -1,4 +1,6 @@
-# Copyright 2016 The Cartographer Authors
+#!/bin/sh
+
+# Copyright 2018 The Cartographer Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-string filename
-bool include_unfinished_submaps
----
-cartographer_ros_msgs/StatusResponse status
+set -o errexit
+set -o verbose
+
+. /opt/ros/${ROS_DISTRO}/setup.sh
+
+cd catkin_ws/src
+
+# Call 'status' as a workaround for https://github.com/vcstools/wstool/issues/77
+wstool status
+wstool update

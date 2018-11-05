@@ -16,7 +16,7 @@
 
 #include "cartographer_ros/map_builder_bridge.h"
 
-#include "cartographer/common/make_unique.h"
+#include "absl/memory/memory.h"
 #include "cartographer/io/color.h"
 #include "cartographer/io/proto_stream.h"
 #include "cartographer/mapping/pose_graph.h"
@@ -30,7 +30,7 @@ namespace {
 using ::cartographer::transform::Rigid3d;
 
 constexpr double kTrajectoryLineStripMarkerScale = 0.07;
-constexpr double kLandmarkMarkerScale = 0.3;
+constexpr double kLandmarkMarkerScale = 0.2;
 constexpr double kConstraintMarkerScale = 0.025;
 
 ::std_msgs::ColorRGBA ToMessage(const cartographer::io::FloatColor& color) {
@@ -75,7 +75,7 @@ visualization_msgs::Marker CreateLandmarkMarker(int landmark_index,
   visualization_msgs::Marker marker;
   marker.ns = "Landmarks";
   marker.id = landmark_index;
-  marker.type = visualization_msgs::Marker::CUBE;
+  marker.type = visualization_msgs::Marker::SPHERE;
   marker.header.stamp = ::ros::Time::now();
   marker.header.frame_id = frame_id;
   marker.scale.x = kLandmarkMarkerScale;
@@ -135,12 +135,11 @@ int MapBuilderBridge::AddTrajectory(
 
   // Make sure there is no trajectory with 'trajectory_id' yet.
   CHECK_EQ(sensor_bridges_.count(trajectory_id), 0);
-  sensor_bridges_[trajectory_id] =
-      cartographer::common::make_unique<SensorBridge>(
-          trajectory_options.num_subdivisions_per_laser_scan,
-          trajectory_options.tracking_frame,
-          node_options_.lookup_transform_timeout_sec, tf_buffer_,
-          map_builder_->GetTrajectoryBuilder(trajectory_id));
+  sensor_bridges_[trajectory_id] = absl::make_unique<SensorBridge>(
+      trajectory_options.num_subdivisions_per_laser_scan,
+      trajectory_options.tracking_frame,
+      node_options_.lookup_transform_timeout_sec, tf_buffer_,
+      map_builder_->GetTrajectoryBuilder(trajectory_id));
   auto emplace_result =
       trajectory_options_.emplace(trajectory_id, trajectory_options);
   CHECK(emplace_result.second == true);
@@ -161,10 +160,10 @@ void MapBuilderBridge::RunFinalOptimization() {
   map_builder_->pose_graph()->RunFinalOptimization();
 }
 
-bool MapBuilderBridge::SerializeState(const std::string& filename) {
-  cartographer::io::ProtoStreamWriter writer(filename);
-  map_builder_->SerializeState(&writer);
-  return writer.Close();
+bool MapBuilderBridge::SerializeState(const std::string& filename,
+                                      const bool include_unfinished_submaps) {
+  return map_builder_->SerializeStateToFile(include_unfinished_submaps,
+                                            filename);
 }
 
 void MapBuilderBridge::HandleSubmapQuery(
@@ -230,7 +229,7 @@ MapBuilderBridge::GetLocalTrajectoryData() {
 
     std::shared_ptr<const LocalTrajectoryData::LocalSlamData> local_slam_data;
     {
-      cartographer::common::MutexLocker lock(&mutex_);
+      absl::MutexLock lock(&mutex_);
       if (local_slam_data_.count(trajectory_id) == 0) {
         continue;
       }
@@ -499,7 +498,7 @@ void MapBuilderBridge::OnLocalSlamResult(
       std::make_shared<LocalTrajectoryData::LocalSlamData>(
           LocalTrajectoryData::LocalSlamData{time, local_pose,
                                              std::move(range_data_in_local)});
-  cartographer::common::MutexLocker lock(&mutex_);
+  absl::MutexLock lock(&mutex_);
   local_slam_data_[trajectory_id] = std::move(local_slam_data);
 }
 

@@ -16,7 +16,7 @@
 
 #include "cartographer_ros/submap.h"
 
-#include "cartographer/common/make_unique.h"
+#include "absl/memory/memory.h"
 #include "cartographer/common/port.h"
 #include "cartographer/transform/transform.h"
 #include "cartographer_ros/msg_conversion.h"
@@ -38,8 +38,7 @@ std::unique_ptr<::cartographer::io::SubmapTextures> FetchSubmapTextures(
   if (srv.response.textures.empty()) {
     return nullptr;
   }
-  auto response =
-      ::cartographer::common::make_unique<::cartographer::io::SubmapTextures>();
+  auto response = absl::make_unique<::cartographer::io::SubmapTextures>();
   response->version = srv.response.submap_version;
   for (const auto& texture : srv.response.textures) {
     const std::string compressed_cells(texture.cells.begin(),
@@ -51,16 +50,6 @@ std::unique_ptr<::cartographer::io::SubmapTextures> FetchSubmapTextures(
         ToRigid3d(texture.slice_pose)});
   }
   return response;
-}
-
-bool Has2DGrid(const ::cartographer::mapping::proto::Submap& submap) {
-  return submap.has_submap_2d() && submap.submap_2d().has_grid();
-}
-
-bool Has3DGrids(const ::cartographer::mapping::proto::Submap& submap) {
-  return submap.has_submap_3d() &&
-         submap.submap_3d().has_low_resolution_hybrid_grid() &&
-         submap.submap_3d().has_high_resolution_hybrid_grid();
 }
 
 }  // namespace cartographer_ros

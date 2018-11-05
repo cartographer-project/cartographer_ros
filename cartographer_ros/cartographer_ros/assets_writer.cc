@@ -20,8 +20,8 @@
 #include <fstream>
 #include <iostream>
 
+#include "absl/memory/memory.h"
 #include "cartographer/common/configuration_file_resolver.h"
-#include "cartographer/common/make_unique.h"
 #include "cartographer/common/math.h"
 #include "cartographer/io/file_writer.h"
 #include "cartographer/io/points_processor.h"
@@ -35,7 +35,6 @@
 #include "cartographer/transform/transform_interpolation_buffer.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/ros_map_writing_points_processor.h"
-#include "cartographer_ros/split_string.h"
 #include "cartographer_ros/time_conversion.h"
 #include "cartographer_ros/urdf_reader.h"
 #include "gflags/gflags.h"
@@ -61,8 +60,7 @@ CreatePipelineBuilder(
     const std::string file_prefix) {
   const auto file_writer_factory =
       AssetsWriter::CreateFileWriterFactory(file_prefix);
-  auto builder =
-      carto::common::make_unique<carto::io::PointsProcessorPipelineBuilder>();
+  auto builder = absl::make_unique<carto::io::PointsProcessorPipelineBuilder>();
   carto::io::RegisterBuiltInPointsProcessors(trajectories, file_writer_factory,
                                              builder.get());
   builder->Register(RosMapWritingPointsProcessor::kConfigurationFileActionName,
@@ -80,13 +78,13 @@ std::unique_ptr<carto::common::LuaParameterDictionary> LoadLuaDictionary(
     const std::string& configuration_directory,
     const std::string& configuration_basename) {
   auto file_resolver =
-      carto::common::make_unique<carto::common::ConfigurationFileResolver>(
+      absl::make_unique<carto::common::ConfigurationFileResolver>(
           std::vector<std::string>{configuration_directory});
 
   const std::string code =
       file_resolver->GetFileContentOrDie(configuration_basename);
   auto lua_parameter_dictionary =
-      carto::common::make_unique<carto::common::LuaParameterDictionary>(
+      absl::make_unique<carto::common::LuaParameterDictionary>(
           code, std::move(file_resolver));
   return lua_parameter_dictionary;
 }
@@ -99,7 +97,7 @@ std::unique_ptr<carto::io::PointsBatch> HandleMessage(
         transform_interpolation_buffer) {
   const carto::common::Time start_time = FromRos(message.header.stamp);
 
-  auto points_batch = carto::common::make_unique<carto::io::PointsBatch>();
+  auto points_batch = absl::make_unique<carto::io::PointsBatch>();
   points_batch->start_time = start_time;
   points_batch->frame_id = message.header.frame_id;
 
@@ -111,7 +109,8 @@ std::unique_ptr<carto::io::PointsBatch> HandleMessage(
 
   for (size_t i = 0; i < point_cloud.points.size(); ++i) {
     const carto::common::Time time =
-        point_cloud_time + carto::common::FromSeconds(point_cloud.points[i][3]);
+        point_cloud_time +
+        carto::common::FromSeconds(point_cloud.points[i].time);
     if (!transform_interpolation_buffer.Has(time)) {
       continue;
     }
@@ -122,8 +121,9 @@ std::unique_ptr<carto::io::PointsBatch> HandleMessage(
             tracking_frame, message.header.frame_id, ToRos(time)));
     const carto::transform::Rigid3f sensor_to_map =
         (tracking_to_map * sensor_to_tracking).cast<float>();
-    points_batch->points.push_back(sensor_to_map *
-                                   point_cloud.points[i].head<3>());
+    points_batch->points.push_back(
+        sensor_to_map *
+        carto::sensor::ToRangefinderPoint(point_cloud.points[i]));
     points_batch->intensities.push_back(point_cloud.intensities[i]);
     // We use the last transform for the origin, which is approximately correct.
     points_batch->origin = sensor_to_map * Eigen::Vector3f::Zero();
@@ -251,7 +251,7 @@ void AssetsWriter::Run(const std::string& configuration_directory,
           delayed_messages.pop_front();
         }
         delayed_messages.push_back(message);
-        LOG_EVERY_N(INFO, 100000)
+        LOG_EVERY_N(INFO, 10000)
             << "Processed " << (message.getTime() - begin_time).toSec()
             << " of " << duration_in_seconds << " bag time seconds...";
       }
@@ -264,8 +264,7 @@ void AssetsWriter::Run(const std::string& configuration_directory,
 ::cartographer::io::FileWriterFactory AssetsWriter::CreateFileWriterFactory(
     const std::string& file_path) {
   const auto file_writer_factory = [file_path](const std::string& filename) {
-    return carto::common::make_unique<carto::io::StreamFileWriter>(file_path +
-                                                                   filename);
+    return absl::make_unique<carto::io::StreamFileWriter>(file_path + filename);
   };
   return file_writer_factory;
 }
