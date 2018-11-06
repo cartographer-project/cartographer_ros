@@ -35,7 +35,6 @@
 #include "cartographer/transform/transform_interpolation_buffer.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/ros_map_writing_points_processor.h"
-#include "cartographer_ros/split_string.h"
 #include "cartographer_ros/time_conversion.h"
 #include "cartographer_ros/urdf_reader.h"
 #include "gflags/gflags.h"
@@ -252,7 +251,7 @@ void AssetsWriter::Run(const std::string& configuration_directory,
           delayed_messages.pop_front();
         }
         delayed_messages.push_back(message);
-        LOG_EVERY_N(INFO, 100000)
+        LOG_EVERY_N(INFO, 10000)
             << "Processed " << (message.getTime() - begin_time).toSec()
             << " of " << duration_in_seconds << " bag time seconds...";
       }

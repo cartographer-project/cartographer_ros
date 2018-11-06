@@ -30,7 +30,7 @@ namespace {
 using ::cartographer::transform::Rigid3d;
 
 constexpr double kTrajectoryLineStripMarkerScale = 0.07;
-constexpr double kLandmarkMarkerScale = 0.3;
+constexpr double kLandmarkMarkerScale = 0.2;
 constexpr double kConstraintMarkerScale = 0.025;
 
 ::std_msgs::ColorRGBA ToMessage(const cartographer::io::FloatColor& color) {
@@ -75,7 +75,7 @@ visualization_msgs::Marker CreateLandmarkMarker(int landmark_index,
   visualization_msgs::Marker marker;
   marker.ns = "Landmarks";
   marker.id = landmark_index;
-  marker.type = visualization_msgs::Marker::CUBE;
+  marker.type = visualization_msgs::Marker::SPHERE;
   marker.header.stamp = ::ros::Time::now();
   marker.header.frame_id = frame_id;
   marker.scale.x = kLandmarkMarkerScale;
@@ -162,9 +162,8 @@ void MapBuilderBridge::RunFinalOptimization() {
 
 bool MapBuilderBridge::SerializeState(const std::string& filename,
                                       const bool include_unfinished_submaps) {
-  cartographer::io::ProtoStreamWriter writer(filename);
-  map_builder_->SerializeState(include_unfinished_submaps, &writer);
-  return writer.Close();
+  return map_builder_->SerializeStateToFile(include_unfinished_submaps,
+                                            filename);
 }
 
 void MapBuilderBridge::HandleSubmapQuery(

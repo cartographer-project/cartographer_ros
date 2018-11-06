@@ -21,6 +21,7 @@
   <arg name="configuration_directory" default="$(find cartographer_ros)/configuration_files"/>
   <arg name="configuration_basenames" default="backpack_2d.lua"/>
   <arg name="urdf_filenames" default="$(find cartographer_ros)/urdf/backpack_2d.urdf"/>
+  <arg name="launch_prefix" default=""/>
 
   <remap from="echoes" to="horizontal_laser_2d"/>
   <include file="$(find cartographer_ros)/launch/offline_node.launch">
@@ -30,5 +31,6 @@
     <arg name="configuration_directory" value="$(arg configuration_directory)"/>
     <arg name="configuration_basenames" value="$(arg configuration_basenames)"/>
     <arg name="urdf_filenames" value="$(arg urdf_filenames)"/>
+    <arg name="launch_prefix" value="$(arg launch_prefix)"/>
   </include>
 </launch>

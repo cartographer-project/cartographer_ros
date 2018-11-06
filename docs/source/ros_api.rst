@@ -12,9 +12,11 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-=======
-ROS API
-=======
+===============================
+ROS API reference documentation
+===============================
+
+.. image:: nodes_graph_demo_2d.jpg
 
 Cartographer Node
 =================
@@ -116,6 +118,8 @@ read_metrics (`cartographer_ros_msgs/ReadMetrics`_)
 Required tf Transforms
 ----------------------
 
+.. image:: frames_demo_2d.jpg
+
 Transforms from all incoming sensor data frames to the :doc:`configured
 <configuration>` *tracking_frame* and *published_frame* must be available.
 Typically, these are published periodically by a `robot_state_publisher` or a
@@ -158,6 +162,24 @@ Each bag will become a separate trajectory in the final state.
 Once it is done processing all data, it writes out the final Cartographer state and exits.
 
 .. _offline_node: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros/cartographer_ros/offline_node_main.cc
+
+
+Published Topics
+----------------
+
+In addition to the topics that are published by the online node, this node also publishes:
+
+~bagfile_progress (`cartographer_ros_msgs/BagfileProgress`_)
+  Bag files processing progress including detailed information about the bag currently being processed which will be published with a predefined
+  interval that can be specified using ``~bagfile_progress_pub_interval`` ROS parameter.
+
+.. _cartographer_ros_msgs/BagfileProgress: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/msg/BagfileProgress.msg
+
+Parameters
+----------
+
+~bagfile_progress_pub_interval (double, default=10.0):
+  The interval of publishing bag files processing progress in seconds.
 
 
 Occupancy grid Node
