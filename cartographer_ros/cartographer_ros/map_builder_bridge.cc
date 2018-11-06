@@ -199,7 +199,15 @@ void MapBuilderBridge::HandleSubmapQuery(
 
 std::map<int, ::cartographer::mapping::PoseGraphInterface::TrajectoryState>
 MapBuilderBridge::GetTrajectoryStates() {
-  return map_builder_->pose_graph()->GetTrajectoryStates();
+  auto trajectory_states = map_builder_->pose_graph()->GetTrajectoryStates();
+  // Add active trajectories that are not yet in the pose graph, but are e.g.
+  // waiting for input sensor data and thus already have a sensor bridge.
+  for (const auto& sensor_bridge : sensor_bridges_) {
+    trajectory_states.insert(std::make_pair(
+        sensor_bridge.first,
+        ::cartographer::mapping::PoseGraph::TrajectoryState::ACTIVE));
+  }
+  return trajectory_states;
 }
 
 cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {
