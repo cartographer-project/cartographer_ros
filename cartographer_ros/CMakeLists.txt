@@ -83,9 +83,9 @@ catkin_package(
   LIBRARIES ${PROJECT_NAME}
 )
 
-file(GLOB_RECURSE ALL_SRCS "*.cc" "*.h")
-file(GLOB_RECURSE ALL_TESTS "*_test.cc")
-file(GLOB_RECURSE ALL_EXECUTABLES "*_main.cc")
+file(GLOB_RECURSE ALL_SRCS "cartographer_ros/*.cc" "cartographer_ros/*.h")
+file(GLOB_RECURSE ALL_TESTS "cartographer_ros/*_test.cc")
+file(GLOB_RECURSE ALL_EXECUTABLES "cartographer_ros/*_main.cc")
 file(GLOB_RECURSE ALL_GRPC_FILES "cartographer_ros/cartographer_grpc/*")
 list(REMOVE_ITEM ALL_SRCS ${ALL_TESTS})
 list(REMOVE_ITEM ALL_SRCS ${ALL_EXECUTABLES})
@@ -172,7 +172,7 @@ install(TARGETS ${PROJECT_NAME}
 )
 
 # Install source headers.
-file(GLOB_RECURSE HDRS "*.h")
+file(GLOB_RECURSE HDRS "cartographer_ros/*.h")
 foreach(HDR ${HDRS})
   file(RELATIVE_PATH REL_FIL ${PROJECT_SOURCE_DIR} ${HDR})
   get_filename_component(INSTALL_DIR ${REL_FIL} DIRECTORY)
