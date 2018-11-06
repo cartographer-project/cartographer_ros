@@ -12,9 +12,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 
-=============
-Configuration
-=============
+=========================================
+Lua configuration reference documentation
+=========================================
 
 Note that Cartographer's ROS integration uses `tf2`_, thus all frame IDs are
 expected to contain only a frame name (lower-case with underscores) and no
@@ -51,9 +51,25 @@ provide_odom_frame
   If enabled, the local, non-loop-closed, continuous pose will be published as
   the *odom_frame* in the *map_frame*.
 
+publish_frame_projected_to_2d
+  If enabled, the published pose will be restricted to a pure 2D pose (no roll,
+  pitch, or z-offset). This prevents potentially unwanted out-of-plane poses in
+  2D mode that can occur due to the pose extrapolation step (e.g. if the pose
+  shall be published as a 'base-footprint'-like frame)
+
 use_odometry
   If enabled, subscribes to `nav_msgs/Odometry`_ on the topic "odom". Odometry
   must be provided in this case, and the information will be included in SLAM.
+
+use_nav_sat
+  If enabled, subscribes to `sensor_msgs/NavSatFix`_ on the topic "fix".
+  Navigation data must be provided in this case, and the information will be
+  included in the global SLAM.
+
+use_landmarks
+  If enabled, subscribes to `cartographer_ros_msgs/LandmarkList`_ on the topic
+  "landmarks".  Landmarks must be provided in this case, and the information
+  will be included in SLAM.
 
 num_laser_scans
   Number of laser scan topics to subscribe to. Subscribes to
@@ -91,6 +107,21 @@ trajectory_publish_period_sec
   Interval in seconds at which to publish the trajectory markers, e.g. 30e-3
   for 30 milliseconds.
 
+rangefinder_sampling_ratio
+  Fixed ratio sampling for range finders messages.
+
+odometry_sampling_ratio
+  Fixed ratio sampling for odometry messages.
+
+fixed_frame_sampling_ratio
+  Fixed ratio sampling for fixed frame messages.
+
+imu_sampling_ratio
+  Fixed ratio sampling for IMU messages.
+
+landmarks_sampling_ratio
+  Fixed ratio sampling for landmarks messages.
+
 .. _REP 105: http://www.ros.org/reps/rep-0105.html
 .. _ROS Names: http://wiki.ros.org/Names
 .. _nav_msgs/OccupancyGrid: http://docs.ros.org/api/nav_msgs/html/msg/OccupancyGrid.html
@@ -98,4 +129,6 @@ trajectory_publish_period_sec
 .. _sensor_msgs/LaserScan: http://docs.ros.org/api/sensor_msgs/html/msg/LaserScan.html
 .. _sensor_msgs/MultiEchoLaserScan: http://docs.ros.org/api/sensor_msgs/html/msg/MultiEchoLaserScan.html
 .. _sensor_msgs/PointCloud2: http://docs.ros.org/api/sensor_msgs/html/msg/PointCloud2.html
+.. _sensor_msgs/NavSatFix: http://docs.ros.org/api/sensor_msgs/html/msg/NavSatFix.html
+.. _cartographer_ros_msgs/LandmarkList: https://github.com/googlecartographer/cartographer_ros/blob/4b39ee68c7a4d518bf8d01a509331e2bc1f514a0/cartographer_ros_msgs/msg/LandmarkList.msg
 .. _tf2: http://wiki.ros.org/tf2
