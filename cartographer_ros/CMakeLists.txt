@@ -16,6 +16,8 @@ cmake_minimum_required(VERSION 2.8.12)  # Ships with Ubuntu 14.04 (Trusty)
 
 project(cartographer_ros)
 
+link_directories("C:/opt/rosdeps/x64/lib")
+
 set(PACKAGE_DEPENDENCIES
   cartographer_ros_msgs
   eigen_conversions
