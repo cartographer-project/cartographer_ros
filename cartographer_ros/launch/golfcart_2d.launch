@@ -1,0 +1,23 @@
+<launch>
+  <param name="/use_sim_time" value="true" />
+  <!--<node pkg="vn300" type ="vn_sensor_msgs.py" name="vn_sensor_msgs" output="screen"/>-->
+  <param name="robot_description"
+    textfile="$(find cartographer_ros)/urdf/golfcart.urdf" />
+
+  <node name="robot_state_publisher" pkg="robot_state_publisher"
+    type="robot_state_publisher" />
+
+  <node name="cartographer_node" pkg="cartographer_ros"
+      type="cartographer_node" args="
+          -configuration_directory $(find cartographer_ros)/configuration_files
+          -configuration_basename golfcart_2d.lua"
+      output="screen">
+    <remap from="points2" to="/PointCloud2" />
+    <remap from="imu" to="/Imu" />
+  </node>
+
+  <node name="cartographer_occupancy_grid_node" pkg="cartographer_ros"
+      type="cartographer_occupancy_grid_node" args="-resolution 0.05" />
+  <node name="rviz" pkg="rviz" type="rviz" required="true"
+      args="-d $(find cartographer_ros)/configuration_files/demo_2d.rviz" />
+</launch>
