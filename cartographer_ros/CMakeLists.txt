@@ -157,6 +157,10 @@ if (CATKIN_ENABLE_TESTING)
     target_link_libraries(${TEST_NAME} cartographer)
     target_link_libraries(${TEST_NAME} ${PROJECT_NAME})
     set_target_properties(${TEST_NAME} PROPERTIES COMPILE_FLAGS ${TARGET_COMPILE_FLAGS})
+    # Needed for dynamically linked GTest on Windows.
+    if (WIN32)
+      target_compile_definitions(${TEST_NAME} PUBLIC -DGTEST_LINKED_AS_SHARED_LIBRARY)
+    endif()
   endforeach()
 endif()
 
