@@ -6,6 +6,7 @@ jobs:
   steps:
   - script: |
       choco sources add -n=roswin -s https://roswin.azurewebsites.net/api/v2/ --priority 1
+      mkdir D:\opt && mklink /J C:\opt D:\opt
       choco upgrade %ROS_METAPACKAGE% -y
       choco upgrade ros-melodic-perception -y
       robocopy "." ".\src\cartographer_ros" /E /MOVE /XD "src" > NUL
