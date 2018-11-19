@@ -39,6 +39,7 @@ if(WIN32)
   set(Boost_USE_STATIC_LIBS FALSE)
 endif()
 find_package(Boost REQUIRED COMPONENTS system iostreams)
+find_package(PCL REQUIRED COMPONENTS common)
 
 find_package(cartographer REQUIRED)
 include("${CARTOGRAPHER_CMAKE_DIR}/functions.cmake")
@@ -52,9 +53,7 @@ include(FindPkgConfig)
 
 find_package(Abseil REQUIRED)
 find_package(LuaGoogle REQUIRED)
-find_package(PCL REQUIRED COMPONENTS common)
 find_package(Eigen3 REQUIRED)
-find_package(Boost REQUIRED COMPONENTS system iostreams)
 
 find_package(urdfdom_headers REQUIRED)
 if(DEFINED urdfdom_headers_VERSION)
