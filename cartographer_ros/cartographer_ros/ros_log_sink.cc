@@ -24,15 +24,6 @@
 #include "glog/log_severity.h"
 #include "ros/console.h"
 
-
-namespace ros {
-  namespace console {
-    bool g_initialized = true;
-  }
-  const Time TIME_MAX(std::numeric_limits< uint32_t >::max(), 999999999);
-  const Time TIME_MIN(0, 1);
-}
-
 namespace cartographer_ros {
 
 namespace {
