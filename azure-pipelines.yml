@@ -48,6 +48,7 @@ jobs:
       set PATH=%PATH:C:\Program Files\Git\mingw64\bin;=%
       cd build_isolated\cartographer_ros && ninja tests && ctest --no-compress-output -T Test
     displayName: Build and run cartographer_ros tests
+    condition: always()
    
   - script: |
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
