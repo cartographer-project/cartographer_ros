@@ -38,6 +38,10 @@ set(PACKAGE_DEPENDENCIES
 if(WIN32)
   set(Boost_USE_STATIC_LIBS FALSE)
 endif()
+# For yet unknown reason, if Boost is find_packaged() after find_package(cartographer),
+# some Boost libraries including Thread are set to static, despite Boost_USE_STATIC_LIBS,
+# which causes linking problems on windows due to shared/static Thread clashing.
+# PCL also finds Boost. Work around by moving before find_package(cartographer).
 find_package(Boost REQUIRED COMPONENTS system iostreams)
 find_package(PCL REQUIRED COMPONENTS common)
 
