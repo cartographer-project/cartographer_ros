@@ -345,7 +345,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
     if (trajectory_to_highest_marker_id_.count(trajectory_id) == 0) {
       trajectory_to_highest_marker_id_[trajectory_id] = current_last_marker_id;
     } else {
-      marker.action = visualization_msgs::Marker::MK_DELETE;
+      marker.action = visualization_msgs::Marker::DELETE;
       while (static_cast<size_t>(marker.id) <=
              trajectory_to_highest_marker_id_[trajectory_id]) {
         trajectory_node_list.markers.push_back(marker);
