@@ -35,6 +35,11 @@ set(PACKAGE_DEPENDENCIES
   visualization_msgs
 )
 
+if(WIN32)
+  set(Boost_USE_STATIC_LIBS FALSE)
+endif()
+find_package(Boost REQUIRED COMPONENTS system iostreams)
+
 find_package(cartographer REQUIRED)
 include("${CARTOGRAPHER_CMAKE_DIR}/functions.cmake")
 option(BUILD_GRPC "build features that require Cartographer gRPC support" false)
@@ -139,7 +144,7 @@ set(TARGET_COMPILE_FLAGS "${TARGET_COMPILE_FLAGS} ${GOOG_CXX_FLAGS}")
 set_target_properties(${PROJECT_NAME} PROPERTIES
   COMPILE_FLAGS ${TARGET_COMPILE_FLAGS})
 
-if (CATKIN_ENABLE_TESTING)
+if (CATKIN_ENABLE_TESTING AND FALSE)
   foreach(TEST_SOURCE_FILENAME ${ALL_TESTS})
     get_filename_component(TEST_NAME ${TEST_SOURCE_FILENAME} NAME_WE)
     catkin_add_gtest(${TEST_NAME} ${TEST_SOURCE_FILENAME})
