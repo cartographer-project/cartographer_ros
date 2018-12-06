@@ -36,10 +36,15 @@
 #include "tf2_msgs/TFMessage.h"
 
 DEFINE_string(bag_filename, "",
-              "Bags to process, must be in the same order as the trajectories "
-              "in 'pose_graph_filename'.");
+              "Bag file containing TF messages of the trajectory that will be "
+              "compared against the trajectory in the .pbstream file.");
+DEFINE_string(tf_parent_frame, "map",
+              "The parent frame ID of the TF trajectory from the bag file.");
+DEFINE_string(tf_child_frame, "base_link",
+              "The child frame ID of the TF trajectory from the bag file.");
 DEFINE_string(pbstream_filename, "",
-              "Proto stream file containing the pose graph.");
+              "Proto stream file containing the pose graph. The last "
+              "trajectory will be used for comparison.");
 
 namespace cartographer_ros {
 namespace {
@@ -84,8 +89,8 @@ void Run(const std::string& pbstream_filename,
     }
     auto tf_message = message.instantiate<tf2_msgs::TFMessage>();
     for (const auto& transform : tf_message->transforms) {
-      if (transform.header.frame_id != "map" ||
-          transform.child_frame_id != "base_link") {
+      if (transform.header.frame_id != FLAGS_tf_parent_frame ||
+          transform.child_frame_id != FLAGS_tf_child_frame) {
         continue;
       }
       const cartographer::common::Time transform_time =
