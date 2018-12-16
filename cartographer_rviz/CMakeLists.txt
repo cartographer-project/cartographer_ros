@@ -59,8 +59,6 @@ else()
   set(QT_LIBRARIES Qt5::Core Qt5::Widgets)
   include_directories(${Qt5Widgets_INCLUDE_DIRS})
 endif()
-add_definitions(-DQT_NO_KEYWORDS)
-
 target_link_libraries(${PROJECT_NAME} PUBLIC ${QT_LIBRARIES})
 
 # Add the binary directory first, so that port.h is included after it has
