@@ -47,7 +47,6 @@ catkin_package(
 
 file(GLOB_RECURSE ALL_SRCS "cartographer_rviz/*.cc" "cartographer_rviz/*.h")
 set(CMAKE_AUTOMOC ON)
-add_library(${PROJECT_NAME} ${ALL_SRCS})
 
 if(rviz_QT_VERSION VERSION_LESS "5")
   message(STATUS "Using Qt4 based on the rviz_QT_VERSION: ${rviz_QT_VERSION}")
@@ -59,6 +58,8 @@ else()
   set(QT_LIBRARIES Qt5::Core Qt5::Widgets)
   include_directories(${Qt5Widgets_INCLUDE_DIRS})
 endif()
+add_definitions(-DQT_NO_KEYWORDS)
+add_library(${PROJECT_NAME} ${ALL_SRCS})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${QT_LIBRARIES})
 
 # Add the binary directory first, so that port.h is included after it has
