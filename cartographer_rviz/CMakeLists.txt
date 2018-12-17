@@ -26,13 +26,16 @@ set(PACKAGE_DEPENDENCIES
   rviz
 )
 
+if(WIN32)
+  set(Boost_USE_STATIC_LIBS FALSE)
+endif()
+find_package(Boost REQUIRED COMPONENTS system iostreams)
 find_package(cartographer REQUIRED)
 include("${CARTOGRAPHER_CMAKE_DIR}/functions.cmake")
 google_initialize_cartographer_project()
 
 find_package(Abseil REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(Boost REQUIRED COMPONENTS system iostreams)
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
 
 catkin_package(
@@ -52,7 +55,7 @@ if(rviz_QT_VERSION VERSION_LESS "5")
 else()
   message(STATUS "Using Qt5 based on the rviz_QT_VERSION: ${rviz_QT_VERSION}")
   find_package(Qt5 ${rviz_QT_VERSION} EXACT REQUIRED Core Widgets)
-  set(QT_LIBRARIES Qt5::Widgets)
+  set(QT_LIBRARIES Qt5::Core Qt5::Widgets)
   include_directories(${Qt5Widgets_INCLUDE_DIRS})
 endif()
 add_definitions(-DQT_NO_KEYWORDS)
@@ -85,10 +88,18 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 target_link_libraries(${PROJECT_NAME} PUBLIC cartographer)
 
+# On windows, rviz won't find the DLL in CATKIN_PACKAGE_BIN_DESTINATION,
+# but it will in CATKIN_PACKAGE_LIB_DESTINATION?
+if(WIN32)
+  set(RUNTIME_DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
+else()
+  set(RUNTIME_DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+endif()
+
 install(TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+  RUNTIME DESTINATION ${RUNTIME_DESTINATION}
 )
 
 install(FILES rviz_plugin_description.xml
