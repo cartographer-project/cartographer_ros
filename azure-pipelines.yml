@@ -35,7 +35,7 @@ jobs:
       call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
       call "C:\opt\ros\melodic\x64\setup.bat"
       call src\cartographer\scripts\remove_mingw_cygwin_from_path.bat
-      catkin_make_isolated --use-ninja --install
+      catkin_make_isolated --use-ninja --install --cmake-args -DCMAKE_BUILD_TYPE=Release
     displayName: Build
 
   - script: |
