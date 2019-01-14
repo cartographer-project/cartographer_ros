@@ -22,7 +22,8 @@
           -configuration_directory $(find cartographer_ros)/configuration_files
           -configuration_basename visualize_pbstream.lua
           -load_state_filename $(arg pbstream_filename)
-          -load_frozen_state=false"
+          -load_frozen_state=false
+          -start_trajectory_with_default_topics=false"
       output="screen">
   </node>
 </launch>
