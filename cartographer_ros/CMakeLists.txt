@@ -35,9 +35,18 @@ set(PACKAGE_DEPENDENCIES
   visualization_msgs
 )
 
+if(WIN32)
+  set(Boost_USE_STATIC_LIBS FALSE)
+endif()
+# For yet unknown reason, if Boost is find_packaged() after find_package(cartographer),
+# some Boost libraries including Thread are set to static, despite Boost_USE_STATIC_LIBS,
+# which causes linking problems on windows due to shared/static Thread clashing.
+# PCL also finds Boost. Work around by moving before find_package(cartographer).
+find_package(Boost REQUIRED COMPONENTS system iostreams)
+find_package(PCL REQUIRED COMPONENTS common)
+
 find_package(cartographer REQUIRED)
 include("${CARTOGRAPHER_CMAKE_DIR}/functions.cmake")
-set(BUILD_SHARED_LIBS OFF)
 option(BUILD_GRPC "build features that require Cartographer gRPC support" false)
 google_initialize_cartographer_project()
 google_enable_testing()
@@ -48,9 +57,7 @@ include(FindPkgConfig)
 
 find_package(Abseil REQUIRED)
 find_package(LuaGoogle REQUIRED)
-find_package(PCL REQUIRED COMPONENTS common)
 find_package(Eigen3 REQUIRED)
-find_package(Boost REQUIRED COMPONENTS system iostreams)
 
 find_package(urdfdom_headers REQUIRED)
 if(DEFINED urdfdom_headers_VERSION)
@@ -83,9 +90,9 @@ catkin_package(
   LIBRARIES ${PROJECT_NAME}
 )
 
-file(GLOB_RECURSE ALL_SRCS "*.cc" "*.h")
-file(GLOB_RECURSE ALL_TESTS "*_test.cc")
-file(GLOB_RECURSE ALL_EXECUTABLES "*_main.cc")
+file(GLOB_RECURSE ALL_SRCS "cartographer_ros/*.cc" "cartographer_ros/*.h")
+file(GLOB_RECURSE ALL_TESTS "cartographer_ros/*_test.cc")
+file(GLOB_RECURSE ALL_EXECUTABLES "cartographer_ros/*_main.cc")
 file(GLOB_RECURSE ALL_GRPC_FILES "cartographer_ros/cartographer_grpc/*")
 list(REMOVE_ITEM ALL_SRCS ${ALL_TESTS})
 list(REMOVE_ITEM ALL_SRCS ${ALL_EXECUTABLES})
@@ -94,7 +101,7 @@ if (NOT ${BUILD_GRPC})
   list(REMOVE_ITEM ALL_TESTS ${ALL_GRPC_FILES})
   list(REMOVE_ITEM ALL_EXECUTABLES ${ALL_GRPC_FILES})
 endif()
-add_library(${PROJECT_NAME} ${ALL_SRCS})
+add_library(${PROJECT_NAME} STATIC ${ALL_SRCS})
 add_subdirectory("cartographer_ros")
 
 target_link_libraries(${PROJECT_NAME} PUBLIC cartographer)
@@ -154,6 +161,10 @@ if (CATKIN_ENABLE_TESTING)
     target_link_libraries(${TEST_NAME} cartographer)
     target_link_libraries(${TEST_NAME} ${PROJECT_NAME})
     set_target_properties(${TEST_NAME} PROPERTIES COMPILE_FLAGS ${TARGET_COMPILE_FLAGS})
+    # Needed for dynamically linked GTest on Windows.
+    if (WIN32)
+      target_compile_definitions(${TEST_NAME} PUBLIC -DGTEST_LINKED_AS_SHARED_LIBRARY)
+    endif()
   endforeach()
 endif()
 
@@ -172,7 +183,7 @@ install(TARGETS ${PROJECT_NAME}
 )
 
 # Install source headers.
-file(GLOB_RECURSE HDRS "*.h")
+file(GLOB_RECURSE HDRS "cartographer_ros/*.h")
 foreach(HDR ${HDRS})
   file(RELATIVE_PATH REL_FIL ${PROJECT_SOURCE_DIR} ${HDR})
   get_filename_component(INSTALL_DIR ${REL_FIL} DIRECTORY)

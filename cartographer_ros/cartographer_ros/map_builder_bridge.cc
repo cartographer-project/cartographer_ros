@@ -30,7 +30,7 @@ namespace {
 using ::cartographer::transform::Rigid3d;
 
 constexpr double kTrajectoryLineStripMarkerScale = 0.07;
-constexpr double kLandmarkMarkerScale = 0.3;
+constexpr double kLandmarkMarkerScale = 0.2;
 constexpr double kConstraintMarkerScale = 0.025;
 
 ::std_msgs::ColorRGBA ToMessage(const cartographer::io::FloatColor& color) {
@@ -75,7 +75,7 @@ visualization_msgs::Marker CreateLandmarkMarker(int landmark_index,
   visualization_msgs::Marker marker;
   marker.ns = "Landmarks";
   marker.id = landmark_index;
-  marker.type = visualization_msgs::Marker::CUBE;
+  marker.type = visualization_msgs::Marker::SPHERE;
   marker.header.stamp = ::ros::Time::now();
   marker.header.frame_id = frame_id;
   marker.scale.x = kLandmarkMarkerScale;
@@ -200,7 +200,15 @@ void MapBuilderBridge::HandleSubmapQuery(
 
 std::map<int, ::cartographer::mapping::PoseGraphInterface::TrajectoryState>
 MapBuilderBridge::GetTrajectoryStates() {
-  return map_builder_->pose_graph()->GetTrajectoryStates();
+  auto trajectory_states = map_builder_->pose_graph()->GetTrajectoryStates();
+  // Add active trajectories that are not yet in the pose graph, but are e.g.
+  // waiting for input sensor data and thus already have a sensor bridge.
+  for (const auto& sensor_bridge : sensor_bridges_) {
+    trajectory_states.insert(std::make_pair(
+        sensor_bridge.first,
+        ::cartographer::mapping::PoseGraph::TrajectoryState::ACTIVE));
+  }
+  return trajectory_states;
 }
 
 cartographer_ros_msgs::SubmapList MapBuilderBridge::GetSubmapList() {

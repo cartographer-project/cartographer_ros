@@ -121,7 +121,7 @@ void SubmapsDisplay::processMessage(
   // previous instance.
   for (const ::cartographer_ros_msgs::SubmapEntry& submap_entry : msg->submap) {
     const size_t trajectory_id = submap_entry.trajectory_id;
-    if (trajectory_id >= trajectories_.size()) {
+    if (trajectories_.count(trajectory_id) == 0) {
       continue;
     }
     const auto& trajectory_submaps = trajectories_[trajectory_id]->submaps;
@@ -135,20 +135,25 @@ void SubmapsDisplay::processMessage(
   }
   using ::cartographer::mapping::SubmapId;
   std::set<SubmapId> listed_submaps;
+  std::set<int> listed_trajectories;
   for (const ::cartographer_ros_msgs::SubmapEntry& submap_entry : msg->submap) {
     const SubmapId id{submap_entry.trajectory_id, submap_entry.submap_index};
     listed_submaps.insert(id);
-    while (id.trajectory_id >= static_cast<int>(trajectories_.size())) {
-      trajectories_.push_back(absl::make_unique<Trajectory>(
-          absl::make_unique<::rviz::BoolProperty>(
-              QString("Trajectory %1").arg(id.trajectory_id),
-              visibility_all_enabled_->getBool(),
-              QString("List of all submaps in Trajectory %1. The checkbox "
+    listed_trajectories.insert(submap_entry.trajectory_id);
+    if (trajectories_.count(id.trajectory_id) == 0) {
+      trajectories_.insert(std::make_pair(
+          id.trajectory_id,
+          absl::make_unique<Trajectory>(
+              absl::make_unique<::rviz::BoolProperty>(
+                  QString("Trajectory %1").arg(id.trajectory_id),
+                  visibility_all_enabled_->getBool(),
+                  QString(
+                      "List of all submaps in Trajectory %1. The checkbox "
                       "controls whether all submaps in this trajectory should "
                       "be displayed or not.")
-                  .arg(id.trajectory_id),
-              trajectories_category_),
-          pose_markers_all_enabled_->getBool()));
+                      .arg(id.trajectory_id),
+                  trajectories_category_),
+              pose_markers_all_enabled_->getBool())));
     }
     auto& trajectory_visibility = trajectories_[id.trajectory_id]->visibility;
     auto& trajectory_submaps = trajectories_[id.trajectory_id]->submaps;
@@ -172,10 +177,18 @@ void SubmapsDisplay::processMessage(
     }
     trajectory_submaps.at(id.submap_index)->Update(msg->header, submap_entry);
   }
+  // Remove all deleted trajectories not mentioned in the SubmapList.
+  for (auto it = trajectories_.begin(); it != trajectories_.end();) {
+    if (listed_trajectories.count(it->first) == 0) {
+      it = trajectories_.erase(it);
+    } else {
+      ++it;
+    }
+  }
   // Remove all submaps not mentioned in the SubmapList.
-  for (size_t trajectory_id = 0; trajectory_id < trajectories_.size();
-       ++trajectory_id) {
-    auto& trajectory_submaps = trajectories_[trajectory_id]->submaps;
+  for (const auto& trajectory_by_id : trajectories_) {
+    const int trajectory_id = trajectory_by_id.first;
+    auto& trajectory_submaps = trajectory_by_id.second->submaps;
     for (auto it = trajectory_submaps.begin();
          it != trajectory_submaps.end();) {
       if (listed_submaps.count(
@@ -191,15 +204,15 @@ void SubmapsDisplay::processMessage(
 void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
   absl::MutexLock locker(&mutex_);
   // Schedule fetching of new submap textures.
-  for (const auto& trajectory : trajectories_) {
+  for (const auto& trajectory_by_id : trajectories_) {
     int num_ongoing_requests = 0;
-    for (const auto& submap_entry : trajectory->submaps) {
+    for (const auto& submap_entry : trajectory_by_id.second->submaps) {
       if (submap_entry.second->QueryInProgress()) {
         ++num_ongoing_requests;
       }
     }
-    for (auto it = trajectory->submaps.rbegin();
-         it != trajectory->submaps.rend() &&
+    for (auto it = trajectory_by_id.second->submaps.rbegin();
+         it != trajectory_by_id.second->submaps.rend() &&
          num_ongoing_requests < kMaxOnGoingRequestsPerTrajectory;
          ++it) {
       if (it->second->MaybeFetchTexture(&client_)) {
@@ -216,8 +229,8 @@ void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
     const ::geometry_msgs::TransformStamped transform_stamped =
         tf_buffer_.lookupTransform(
             *map_frame_, tracking_frame_property_->getStdString(), kLatest);
-    for (auto& trajectory : trajectories_) {
-      for (auto& submap_entry : trajectory->submaps) {
+    for (auto& trajectory_by_id : trajectories_) {
+      for (auto& submap_entry : trajectory_by_id.second->submaps) {
         submap_entry.second->SetAlpha(
             transform_stamped.transform.translation.z,
             fade_out_start_distance_in_meters_->getFloat());
@@ -240,23 +253,23 @@ void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
 void SubmapsDisplay::AllEnabledToggled() {
   absl::MutexLock locker(&mutex_);
   const bool visible = visibility_all_enabled_->getBool();
-  for (auto& trajectory : trajectories_) {
-    trajectory->visibility->setBool(visible);
+  for (auto& trajectory_by_id : trajectories_) {
+    trajectory_by_id.second->visibility->setBool(visible);
   }
 }
 
 void SubmapsDisplay::PoseMarkersEnabledToggled() {
   absl::MutexLock locker(&mutex_);
   const bool visible = pose_markers_all_enabled_->getBool();
-  for (auto& trajectory : trajectories_) {
-    trajectory->pose_markers_visibility->setBool(visible);
+  for (auto& trajectory_by_id : trajectories_) {
+    trajectory_by_id.second->pose_markers_visibility->setBool(visible);
   }
 }
 
 void SubmapsDisplay::ResolutionToggled() {
   absl::MutexLock locker(&mutex_);
-  for (auto& trajectory : trajectories_) {
-    for (auto& submap_entry : trajectory->submaps) {
+  for (auto& trajectory_by_id : trajectories_) {
+    for (auto& submap_entry : trajectory_by_id.second->submaps) {
       submap_entry.second->SetSliceVisibility(
           0, slice_high_resolution_enabled_->getBool());
       submap_entry.second->SetSliceVisibility(

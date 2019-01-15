@@ -18,7 +18,9 @@
 
 #include <errno.h>
 #include <string.h>
+#ifndef WIN32
 #include <sys/resource.h>
+#endif
 #include <time.h>
 #include <chrono>
 

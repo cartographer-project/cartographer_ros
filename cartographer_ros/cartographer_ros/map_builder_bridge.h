@@ -35,6 +35,12 @@
 #include "cartographer_ros_msgs/SubmapList.h"
 #include "cartographer_ros_msgs/SubmapQuery.h"
 #include "nav_msgs/OccupancyGrid.h"
+
+// Abseil unfortunately pulls in winnt.h, which #defines DELETE.
+// Clean up to unbreak visualization_msgs::Marker::DELETE.
+#ifdef DELETE
+#undef DELETE
+#endif
 #include "visualization_msgs/MarkerArray.h"
 
 namespace cartographer_ros {
