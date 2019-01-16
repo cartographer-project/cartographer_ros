@@ -47,6 +47,8 @@ class PlayableBag {
 
   int bag_id() const;
   std::set<std::string> topics() const { return topics_; }
+  double duration_in_seconds() const { return duration_in_seconds_; }
+  bool finished() const { return finished_; }
 
  private:
   void AdvanceOneMessage();
