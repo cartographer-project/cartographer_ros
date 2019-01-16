@@ -59,7 +59,7 @@ If you want to use 2D SLAM:
 
 ..  code-block:: bash
 
-    cp install_isolated/share/cartographer_ros/configuration_files/backpack_3d.lua install_isolated/share/cartographer_ros/configuration_files/my_robot.lua
+    cp install_isolated/share/cartographer_ros/configuration_files/backpack_2d.lua install_isolated/share/cartographer_ros/configuration_files/my_robot.lua
 
 You can then edit ``my_robot.lua`` to suit the needs of your robot.
 The values defined in the ``options`` block define how the Cartographer ROS frontend should interface with your bag.
