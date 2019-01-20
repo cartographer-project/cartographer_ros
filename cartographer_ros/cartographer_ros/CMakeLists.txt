@@ -102,6 +102,17 @@ install(TARGETS cartographer_pbstream_map_publisher
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
+google_binary(cartographer_dev_pbstream_trajectories_to_rosbag
+  SRCS
+  dev/pbstream_trajectories_to_rosbag_main.cc
+)
+
+install(TARGETS cartographer_dev_pbstream_trajectories_to_rosbag
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 google_binary(cartographer_dev_rosbag_publisher
   SRCS
   dev/rosbag_publisher_main.cc
