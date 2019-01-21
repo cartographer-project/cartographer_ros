@@ -140,10 +140,15 @@ PlayableBagMultiplexer::GetNextMessage() {
   PlayableBag& current_bag = playable_bags_.at(current_bag_index);
   cartographer_ros_msgs::BagfileProgress progress;
   rosbag::MessageInstance msg = current_bag.GetNextMessage(&progress);
-  if (ros::Time::now() - bag_progress_time_map_[current_bag.bag_id()] >=
-          ros::Duration(progress_pub_interval_) &&
-      bag_progress_pub_.getNumSubscribers() > 0) {
+  const bool publish_progress =
+      current_bag.finished() ||
+      ros::Time::now() - bag_progress_time_map_[current_bag.bag_id()] >=
+          ros::Duration(progress_pub_interval_);
+  if (bag_progress_pub_.getNumSubscribers() > 0 && publish_progress) {
     progress.total_bagfiles = playable_bags_.size();
+    if (current_bag.finished()) {
+      progress.processed_seconds = current_bag.duration_in_seconds();
+    }
     bag_progress_pub_.publish(progress);
     bag_progress_time_map_[current_bag.bag_id()] = ros::Time::now();
   }
