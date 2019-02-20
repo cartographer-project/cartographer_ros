@@ -136,7 +136,10 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
 
   tf_buffer.setUsingDedicatedThread(true);
 
-  Node node(node_options, std::move(map_builder), &tf_buffer,
+  auto map_builder_bridge = absl::make_unique<MapBuilderBridge>(
+      node_options, std::move(map_builder), &tf_buffer,
+      /*sensor_data_interface=*/nullptr);
+  Node node(node_options, std::move(map_builder_bridge), &tf_buffer,
             FLAGS_collect_metrics);
   if (!FLAGS_load_state_filename.empty()) {
     node.LoadState(FLAGS_load_state_filename, FLAGS_load_frozen_state);

@@ -87,12 +87,11 @@ using carto::transform::Rigid3d;
 using TrajectoryState =
     ::cartographer::mapping::PoseGraphInterface::TrajectoryState;
 
-Node::Node(
-    const NodeOptions& node_options,
-    std::unique_ptr<cartographer::mapping::MapBuilderInterface> map_builder,
-    tf2_ros::Buffer* const tf_buffer, const bool collect_metrics)
+Node::Node(const NodeOptions& node_options,
+           std::unique_ptr<MapBuilderBridge> map_builder_bridge,
+           tf2_ros::Buffer* const tf_buffer, const bool collect_metrics)
     : node_options_(node_options),
-      map_builder_bridge_(node_options_, std::move(map_builder), tf_buffer) {
+      map_builder_bridge_(std::move(map_builder_bridge)) {
   absl::MutexLock lock(&mutex_);
   if (collect_metrics) {
     metrics_registry_ = absl::make_unique<metrics::FamilyFactory>();
@@ -155,13 +154,13 @@ bool Node::HandleSubmapQuery(
     ::cartographer_ros_msgs::SubmapQuery::Request& request,
     ::cartographer_ros_msgs::SubmapQuery::Response& response) {
   absl::MutexLock lock(&mutex_);
-  map_builder_bridge_.HandleSubmapQuery(request, response);
+  map_builder_bridge_->HandleSubmapQuery(request, response);
   return true;
 }
 
 void Node::PublishSubmapList(const ::ros::WallTimerEvent& unused_timer_event) {
   absl::MutexLock lock(&mutex_);
-  submap_list_publisher_.publish(map_builder_bridge_.GetSubmapList());
+  submap_list_publisher_.publish(map_builder_bridge_->GetSubmapList());
 }
 
 void Node::AddExtrapolator(const int trajectory_id,
@@ -194,7 +193,7 @@ void Node::AddSensorSamplers(const int trajectory_id,
 
 void Node::PublishLocalTrajectoryData(const ::ros::TimerEvent& timer_event) {
   absl::MutexLock lock(&mutex_);
-  for (const auto& entry : map_builder_bridge_.GetLocalTrajectoryData()) {
+  for (const auto& entry : map_builder_bridge_->GetLocalTrajectoryData()) {
     const auto& trajectory_data = entry.second;
 
     auto& extrapolator = extrapolators_.at(entry.first);
@@ -286,7 +285,7 @@ void Node::PublishTrajectoryNodeList(
   if (trajectory_node_list_publisher_.getNumSubscribers() > 0) {
     absl::MutexLock lock(&mutex_);
     trajectory_node_list_publisher_.publish(
-        map_builder_bridge_.GetTrajectoryNodeList());
+        map_builder_bridge_->GetTrajectoryNodeList());
   }
 }
 
@@ -295,7 +294,7 @@ void Node::PublishLandmarkPosesList(
   if (landmark_poses_list_publisher_.getNumSubscribers() > 0) {
     absl::MutexLock lock(&mutex_);
     landmark_poses_list_publisher_.publish(
-        map_builder_bridge_.GetLandmarkPosesList());
+        map_builder_bridge_->GetLandmarkPosesList());
   }
 }
 
@@ -303,7 +302,8 @@ void Node::PublishConstraintList(
     const ::ros::WallTimerEvent& unused_timer_event) {
   if (constraint_list_publisher_.getNumSubscribers() > 0) {
     absl::MutexLock lock(&mutex_);
-    constraint_list_publisher_.publish(map_builder_bridge_.GetConstraintList());
+    constraint_list_publisher_.publish(
+        map_builder_bridge_->GetConstraintList());
   }
 }
 
@@ -358,7 +358,7 @@ int Node::AddTrajectory(const TrajectoryOptions& options,
   const std::set<cartographer::mapping::TrajectoryBuilderInterface::SensorId>
       expected_sensor_ids = ComputeExpectedSensorIds(options, topics);
   const int trajectory_id =
-      map_builder_bridge_.AddTrajectory(expected_sensor_ids, options);
+      map_builder_bridge_->AddTrajectory(expected_sensor_ids, options);
   AddExtrapolator(trajectory_id, options);
   AddSensorSamplers(trajectory_id, options);
   LaunchSubscribers(options, topics, trajectory_id);
@@ -467,7 +467,7 @@ bool Node::ValidateTopicNames(
 
 cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
     const int trajectory_id) {
-  auto trajectory_states = map_builder_bridge_.GetTrajectoryStates();
+  auto trajectory_states = map_builder_bridge_->GetTrajectoryStates();
 
   cartographer_ros_msgs::StatusResponse status_response;
   if (trajectories_scheduled_for_finish_.count(trajectory_id)) {
@@ -522,7 +522,7 @@ cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
     }
     CHECK_EQ(subscribers_.erase(trajectory_id), 1);
   }
-  map_builder_bridge_.FinishTrajectory(trajectory_id);
+  map_builder_bridge_->FinishTrajectory(trajectory_id);
   trajectories_scheduled_for_finish_.emplace(trajectory_id);
   const std::string message =
       "Finished trajectory " + std::to_string(trajectory_id) + ".";
@@ -588,7 +588,7 @@ int Node::AddOfflineTrajectory(
     const TrajectoryOptions& options) {
   absl::MutexLock lock(&mutex_);
   const int trajectory_id =
-      map_builder_bridge_.AddTrajectory(expected_sensor_ids, options);
+      map_builder_bridge_->AddTrajectory(expected_sensor_ids, options);
   AddExtrapolator(trajectory_id, options);
   AddSensorSamplers(trajectory_id, options);
   return trajectory_id;
@@ -602,7 +602,7 @@ bool Node::HandleGetTrajectoryStates(
   absl::MutexLock lock(&mutex_);
   response.status.code = ::cartographer_ros_msgs::StatusCode::OK;
   response.trajectory_states.header.stamp = ros::Time::now();
-  for (const auto& entry : map_builder_bridge_.GetTrajectoryStates()) {
+  for (const auto& entry : map_builder_bridge_->GetTrajectoryStates()) {
     response.trajectory_states.trajectory_id.push_back(entry.first);
     switch (entry.second) {
       case TrajectoryState::ACTIVE:
@@ -638,8 +638,8 @@ bool Node::HandleWriteState(
     ::cartographer_ros_msgs::WriteState::Request& request,
     ::cartographer_ros_msgs::WriteState::Response& response) {
   absl::MutexLock lock(&mutex_);
-  if (map_builder_bridge_.SerializeState(request.filename,
-                                         request.include_unfinished_submaps)) {
+  if (map_builder_bridge_->SerializeState(request.filename,
+                                          request.include_unfinished_submaps)) {
     response.status.code = cartographer_ros_msgs::StatusCode::OK;
     response.status.message = "State written to '" + request.filename + "'.";
   } else {
@@ -667,7 +667,7 @@ bool Node::HandleReadMetrics(
 
 void Node::FinishAllTrajectories() {
   absl::MutexLock lock(&mutex_);
-  for (const auto& entry : map_builder_bridge_.GetTrajectoryStates()) {
+  for (const auto& entry : map_builder_bridge_->GetTrajectoryStates()) {
     if (entry.second == TrajectoryState::ACTIVE) {
       const int trajectory_id = entry.first;
       CHECK_EQ(FinishTrajectoryUnderLock(trajectory_id).code,
@@ -684,7 +684,7 @@ bool Node::FinishTrajectory(const int trajectory_id) {
 
 void Node::RunFinalOptimization() {
   {
-    for (const auto& entry : map_builder_bridge_.GetTrajectoryStates()) {
+    for (const auto& entry : map_builder_bridge_->GetTrajectoryStates()) {
       const int trajectory_id = entry.first;
       if (entry.second == TrajectoryState::ACTIVE) {
         LOG(WARNING)
@@ -699,7 +699,7 @@ void Node::RunFinalOptimization() {
   }
   // Assuming we are not adding new data anymore, the final optimization
   // can be performed without holding the mutex.
-  map_builder_bridge_.RunFinalOptimization();
+  map_builder_bridge_->RunFinalOptimization();
 }
 
 void Node::HandleOdometryMessage(const int trajectory_id,
@@ -709,7 +709,7 @@ void Node::HandleOdometryMessage(const int trajectory_id,
   if (!sensor_samplers_.at(trajectory_id).odometry_sampler.Pulse()) {
     return;
   }
-  auto sensor_bridge_ptr = map_builder_bridge_.sensor_bridge(trajectory_id);
+  auto sensor_bridge_ptr = map_builder_bridge_->sensor_bridge(trajectory_id);
   auto odometry_data_ptr = sensor_bridge_ptr->ToOdometryData(msg);
   if (odometry_data_ptr != nullptr) {
     extrapolators_.at(trajectory_id).AddOdometryData(*odometry_data_ptr);
@@ -724,7 +724,7 @@ void Node::HandleNavSatFixMessage(const int trajectory_id,
   if (!sensor_samplers_.at(trajectory_id).fixed_frame_pose_sampler.Pulse()) {
     return;
   }
-  map_builder_bridge_.sensor_bridge(trajectory_id)
+  map_builder_bridge_->sensor_bridge(trajectory_id)
       ->HandleNavSatFixMessage(sensor_id, msg);
 }
 
@@ -735,7 +735,7 @@ void Node::HandleLandmarkMessage(
   if (!sensor_samplers_.at(trajectory_id).landmark_sampler.Pulse()) {
     return;
   }
-  map_builder_bridge_.sensor_bridge(trajectory_id)
+  map_builder_bridge_->sensor_bridge(trajectory_id)
       ->HandleLandmarkMessage(sensor_id, msg);
 }
 
@@ -746,7 +746,7 @@ void Node::HandleImuMessage(const int trajectory_id,
   if (!sensor_samplers_.at(trajectory_id).imu_sampler.Pulse()) {
     return;
   }
-  auto sensor_bridge_ptr = map_builder_bridge_.sensor_bridge(trajectory_id);
+  auto sensor_bridge_ptr = map_builder_bridge_->sensor_bridge(trajectory_id);
   auto imu_data_ptr = sensor_bridge_ptr->ToImuData(msg);
   if (imu_data_ptr != nullptr) {
     extrapolators_.at(trajectory_id).AddImuData(*imu_data_ptr);
@@ -761,7 +761,7 @@ void Node::HandleLaserScanMessage(const int trajectory_id,
   if (!sensor_samplers_.at(trajectory_id).rangefinder_sampler.Pulse()) {
     return;
   }
-  map_builder_bridge_.sensor_bridge(trajectory_id)
+  map_builder_bridge_->sensor_bridge(trajectory_id)
       ->HandleLaserScanMessage(sensor_id, msg);
 }
 
@@ -772,7 +772,7 @@ void Node::HandleMultiEchoLaserScanMessage(
   if (!sensor_samplers_.at(trajectory_id).rangefinder_sampler.Pulse()) {
     return;
   }
-  map_builder_bridge_.sensor_bridge(trajectory_id)
+  map_builder_bridge_->sensor_bridge(trajectory_id)
       ->HandleMultiEchoLaserScanMessage(sensor_id, msg);
 }
 
@@ -783,7 +783,7 @@ void Node::HandlePointCloud2Message(
   if (!sensor_samplers_.at(trajectory_id).rangefinder_sampler.Pulse()) {
     return;
   }
-  map_builder_bridge_.sensor_bridge(trajectory_id)
+  map_builder_bridge_->sensor_bridge(trajectory_id)
       ->HandlePointCloud2Message(sensor_id, msg);
 }
 
@@ -791,14 +791,14 @@ void Node::SerializeState(const std::string& filename,
                           const bool include_unfinished_submaps) {
   absl::MutexLock lock(&mutex_);
   CHECK(
-      map_builder_bridge_.SerializeState(filename, include_unfinished_submaps))
+      map_builder_bridge_->SerializeState(filename, include_unfinished_submaps))
       << "Could not write state.";
 }
 
 void Node::LoadState(const std::string& state_filename,
                      const bool load_frozen_state) {
   absl::MutexLock lock(&mutex_);
-  map_builder_bridge_.LoadState(state_filename, load_frozen_state);
+  map_builder_bridge_->LoadState(state_filename, load_frozen_state);
 }
 
 void Node::MaybeWarnAboutTopicMismatch(

@@ -25,6 +25,7 @@
 #include "cartographer/sensor/odometry_data.h"
 #include "cartographer/transform/rigid_transform.h"
 #include "cartographer/transform/transform.h"
+#include "cartographer_ros/sensor_data_interface.h"
 #include "cartographer_ros/tf_bridge.h"
 #include "cartographer_ros_msgs/LandmarkList.h"
 #include "geometry_msgs/Transform.h"
@@ -43,9 +44,11 @@ namespace cartographer_ros {
 class SensorBridge {
  public:
   explicit SensorBridge(
-      int num_subdivisions_per_laser_scan, const std::string& tracking_frame,
-      double lookup_transform_timeout_sec, tf2_ros::Buffer* tf_buffer,
-      ::cartographer::mapping::TrajectoryBuilderInterface* trajectory_builder);
+      int trajectory_id, int num_subdivisions_per_laser_scan,
+      const std::string& tracking_frame, double lookup_transform_timeout_sec,
+      tf2_ros::Buffer* tf_buffer,
+      ::cartographer::mapping::TrajectoryBuilderInterface* trajectory_builder,
+      SensorDataInterface* sensor_data_interface);
 
   SensorBridge(const SensorBridge&) = delete;
   SensorBridge& operator=(const SensorBridge&) = delete;
@@ -84,12 +87,14 @@ class SensorBridge {
                          const std::string& frame_id,
                          const ::cartographer::sensor::TimedPointCloud& ranges);
 
+  int trajectory_id_;
   const int num_subdivisions_per_laser_scan_;
   std::map<std::string, cartographer::common::Time>
       sensor_to_previous_subdivision_time_;
   const TfBridge tf_bridge_;
   ::cartographer::mapping::TrajectoryBuilderInterface* const
       trajectory_builder_;
+  SensorDataInterface* sensor_data_interface_;
 
   absl::optional<::cartographer::transform::Rigid3d> ecef_to_local_frame_;
 };

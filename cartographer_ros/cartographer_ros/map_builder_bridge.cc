@@ -98,10 +98,12 @@ void PushAndResetLineMarker(visualization_msgs::Marker* marker,
 MapBuilderBridge::MapBuilderBridge(
     const NodeOptions& node_options,
     std::unique_ptr<cartographer::mapping::MapBuilderInterface> map_builder,
-    tf2_ros::Buffer* const tf_buffer)
+    tf2_ros::Buffer* const tf_buffer,
+    SensorDataInterface* sensor_data_interface)
     : node_options_(node_options),
       map_builder_(std::move(map_builder)),
-      tf_buffer_(tf_buffer) {}
+      tf_buffer_(tf_buffer),
+      sensor_data_interface_(sensor_data_interface) {}
 
 void MapBuilderBridge::LoadState(const std::string& state_filename,
                                  bool load_frozen_state) {
@@ -123,12 +125,20 @@ int MapBuilderBridge::AddTrajectory(
     const TrajectoryOptions& trajectory_options) {
   const int trajectory_id = map_builder_->AddTrajectoryBuilder(
       expected_sensor_ids, trajectory_options.trajectory_builder_options,
-      [this](const int trajectory_id, const ::cartographer::common::Time time,
-             const Rigid3d local_pose,
-             ::cartographer::sensor::RangeData range_data_in_local,
-             const std::unique_ptr<
-                 const ::cartographer::mapping::TrajectoryBuilderInterface::
-                     InsertionResult>) {
+      [this](
+          const int trajectory_id, const ::cartographer::common::Time time,
+          const Rigid3d local_pose,
+          ::cartographer::sensor::RangeData range_data_in_local,
+          const std::unique_ptr<const ::cartographer::mapping::
+                                    TrajectoryBuilderInterface::InsertionResult>
+              insertion_result) {
+        if (insertion_result && sensor_data_interface_) {
+          sensor_data_interface_->AddTrajectoryNodeData(
+              trajectory_id, insertion_result->constant_data);
+          for (auto submap : insertion_result->insertion_submaps) {
+            sensor_data_interface_->AddSubmap(trajectory_id, submap);
+          }
+        }
         OnLocalSlamResult(trajectory_id, time, local_pose, range_data_in_local);
       });
   LOG(INFO) << "Added trajectory with ID '" << trajectory_id << "'.";
@@ -136,10 +146,11 @@ int MapBuilderBridge::AddTrajectory(
   // Make sure there is no trajectory with 'trajectory_id' yet.
   CHECK_EQ(sensor_bridges_.count(trajectory_id), 0);
   sensor_bridges_[trajectory_id] = absl::make_unique<SensorBridge>(
-      trajectory_options.num_subdivisions_per_laser_scan,
+      trajectory_id, trajectory_options.num_subdivisions_per_laser_scan,
       trajectory_options.tracking_frame,
       node_options_.lookup_transform_timeout_sec, tf_buffer_,
-      map_builder_->GetTrajectoryBuilder(trajectory_id));
+      map_builder_->GetTrajectoryBuilder(trajectory_id),
+      sensor_data_interface_);
   auto emplace_result =
       trajectory_options_.emplace(trajectory_id, trajectory_options);
   CHECK(emplace_result.second == true);

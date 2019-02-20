@@ -40,13 +40,16 @@ const std::string& CheckNoLeadingSlash(const std::string& frame_id) {
 }  // namespace
 
 SensorBridge::SensorBridge(
-    const int num_subdivisions_per_laser_scan,
+    int trajectory_id, const int num_subdivisions_per_laser_scan,
     const std::string& tracking_frame,
     const double lookup_transform_timeout_sec, tf2_ros::Buffer* const tf_buffer,
-    carto::mapping::TrajectoryBuilderInterface* const trajectory_builder)
-    : num_subdivisions_per_laser_scan_(num_subdivisions_per_laser_scan),
+    carto::mapping::TrajectoryBuilderInterface* const trajectory_builder,
+    SensorDataInterface* const sensor_data_interface)
+    : trajectory_id_(trajectory_id),
+      num_subdivisions_per_laser_scan_(num_subdivisions_per_laser_scan),
       tf_bridge_(tracking_frame, lookup_transform_timeout_sec, tf_buffer),
-      trajectory_builder_(trajectory_builder) {}
+      trajectory_builder_(trajectory_builder),
+      sensor_data_interface_(sensor_data_interface) {}
 
 std::unique_ptr<carto::sensor::OdometryData> SensorBridge::ToOdometryData(
     const nav_msgs::Odometry::ConstPtr& msg) {
@@ -66,9 +69,11 @@ void SensorBridge::HandleOdometryMessage(
   std::unique_ptr<carto::sensor::OdometryData> odometry_data =
       ToOdometryData(msg);
   if (odometry_data != nullptr) {
-    trajectory_builder_->AddSensorData(
-        sensor_id,
-        carto::sensor::OdometryData{odometry_data->time, odometry_data->pose});
+    trajectory_builder_->AddSensorData(sensor_id, *odometry_data);
+    if (sensor_data_interface_) {
+      sensor_data_interface_->AddOdometryData(trajectory_id_, sensor_id,
+                                              *odometry_data);
+    }
   }
 }
 
@@ -146,10 +151,10 @@ void SensorBridge::HandleImuMessage(const std::string& sensor_id,
                                     const sensor_msgs::Imu::ConstPtr& msg) {
   std::unique_ptr<carto::sensor::ImuData> imu_data = ToImuData(msg);
   if (imu_data != nullptr) {
-    trajectory_builder_->AddSensorData(
-        sensor_id,
-        carto::sensor::ImuData{imu_data->time, imu_data->linear_acceleration,
-                               imu_data->angular_velocity});
+    trajectory_builder_->AddSensorData(sensor_id, *imu_data);
+    if (sensor_data_interface_) {
+      sensor_data_interface_->AddImuData(trajectory_id_, sensor_id, *imu_data);
+    }
   }
 }
 

@@ -26,7 +26,6 @@
 
 #include "absl/synchronization/mutex.h"
 #include "cartographer/common/fixed_ratio_sampler.h"
-#include "cartographer/mapping/map_builder_interface.h"
 #include "cartographer/mapping/pose_extrapolator.h"
 #include "cartographer_ros/map_builder_bridge.h"
 #include "cartographer_ros/metrics/family_factory.h"
@@ -59,7 +58,7 @@ namespace cartographer_ros {
 class Node {
  public:
   Node(const NodeOptions& node_options,
-       std::unique_ptr<cartographer::mapping::MapBuilderInterface> map_builder,
+       std::unique_ptr<MapBuilderBridge> map_builder_bridge,
        tf2_ros::Buffer* tf_buffer, bool collect_metrics);
   ~Node();
 
@@ -179,7 +178,7 @@ class Node {
   tf2_ros::TransformBroadcaster tf_broadcaster_;
 
   absl::Mutex mutex_;
-  MapBuilderBridge map_builder_bridge_ GUARDED_BY(mutex_);
+  std::unique_ptr<MapBuilderBridge> map_builder_bridge_ GUARDED_BY(mutex_);
 
   ::ros::NodeHandle node_handle_;
   ::ros::Publisher submap_list_publisher_;

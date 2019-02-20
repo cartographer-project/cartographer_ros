@@ -29,6 +29,7 @@
 #include "cartographer/mapping/trajectory_builder_interface.h"
 #include "cartographer_ros/node_options.h"
 #include "cartographer_ros/sensor_bridge.h"
+#include "cartographer_ros/sensor_data_interface.h"
 #include "cartographer_ros/tf_bridge.h"
 #include "cartographer_ros/trajectory_options.h"
 #include "cartographer_ros_msgs/SubmapEntry.h"
@@ -65,7 +66,7 @@ class MapBuilderBridge {
   MapBuilderBridge(
       const NodeOptions& node_options,
       std::unique_ptr<cartographer::mapping::MapBuilderInterface> map_builder,
-      tf2_ros::Buffer* tf_buffer);
+      tf2_ros::Buffer* tf_buffer, SensorDataInterface* sensor_data_interface);
 
   MapBuilderBridge(const MapBuilderBridge&) = delete;
   MapBuilderBridge& operator=(const MapBuilderBridge&) = delete;
@@ -111,6 +112,7 @@ class MapBuilderBridge {
       local_slam_data_ GUARDED_BY(mutex_);
   std::unique_ptr<cartographer::mapping::MapBuilderInterface> map_builder_;
   tf2_ros::Buffer* const tf_buffer_;
+  SensorDataInterface* sensor_data_interface_;
 
   std::unordered_map<std::string /* landmark ID */, int> landmark_to_index_;
 
