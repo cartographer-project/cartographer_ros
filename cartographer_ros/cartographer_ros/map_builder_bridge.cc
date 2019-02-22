@@ -21,6 +21,7 @@
 #include "cartographer/io/proto_stream.h"
 #include "cartographer/mapping/pose_graph.h"
 #include "cartographer_ros/msg_conversion.h"
+#include "cartographer_ros/time_conversion.h"
 #include "cartographer_ros_msgs/StatusCode.h"
 #include "cartographer_ros_msgs/StatusResponse.h"
 
@@ -255,6 +256,51 @@ MapBuilderBridge::GetLocalTrajectoryData() {
         trajectory_options_[trajectory_id]};
   }
   return local_trajectory_data;
+}
+
+void MapBuilderBridge::HandleTrajectoryQuery(
+    cartographer_ros_msgs::TrajectoryQuery::Request& request,
+    cartographer_ros_msgs::TrajectoryQuery::Response& response) {
+  const auto trajectory_states = GetTrajectoryStates();
+  if (!trajectory_states.count(request.trajectory_id)) {
+    response.status.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
+    response.status.message = "Requested trajectory ID doesn't exist.";
+    return;
+  } else if (trajectory_states.at(request.trajectory_id) ==
+             cartographer::mapping::PoseGraphInterface::TrajectoryState::
+                 DELETED) {
+    response.status.code =
+        cartographer_ros_msgs::StatusCode::RESOURCE_EXHAUSTED;
+    response.status.message = "Requested trajectory was deleted.";
+    return;
+  }
+  const cartographer::common::Time start_time = FromRos(request.start_time);
+  const cartographer::common::Time end_time = FromRos(request.end_time);
+  const auto node_poses = map_builder_->pose_graph()->GetTrajectoryNodePoses();
+  for (const auto& node_id_data :
+       node_poses.trajectory(request.trajectory_id)) {
+    if (!node_id_data.data.constant_pose_data.has_value()) {
+      continue;
+    }
+    const cartographer::common::Time node_time =
+        node_id_data.data.constant_pose_data.value().time;
+    if (node_time < start_time || node_time > end_time) {
+      continue;
+    }
+    geometry_msgs::PoseStamped pose_stamped;
+    pose_stamped.header.frame_id = node_options_.map_frame;
+    pose_stamped.header.stamp =
+        ToRos(node_id_data.data.constant_pose_data.value().time);
+    pose_stamped.pose = ToGeometryMsgPose(node_id_data.data.global_pose);
+    response.trajectory.push_back(pose_stamped);
+  }
+  if (response.trajectory.empty()) {
+    response.status.code = cartographer_ros_msgs::StatusCode::NOT_FOUND;
+    response.status.message =
+        "No trajectory poses available for requested time bounds.";
+    return;
+  }
+  response.status.code = cartographer_ros_msgs::StatusCode::OK;
 }
 
 visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
