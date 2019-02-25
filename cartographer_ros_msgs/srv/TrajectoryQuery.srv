@@ -13,8 +13,8 @@
 # limitations under the License.
 
 int32 trajectory_id
-time start_time
-time end_time
+time min_time
+time max_time
 ---
 cartographer_ros_msgs/StatusResponse status
 geometry_msgs/PoseStamped[] trajectory
