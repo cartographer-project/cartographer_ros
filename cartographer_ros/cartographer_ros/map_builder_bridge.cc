@@ -300,8 +300,11 @@ void MapBuilderBridge::HandleTrajectoryQuery(
   }
   if (response.trajectory.empty()) {
     response.status.code = cartographer_ros_msgs::StatusCode::NOT_FOUND;
-    response.status.message =
-        "No trajectory poses available for requested time bounds.";
+    response.status.message = absl::StrCat(
+        "Trajectory with ID ", std::to_string(request.trajectory_id),
+        " has no poses available within time bounds [",
+        std::to_string(request.min_time.toSec()), ", ",
+        std::to_string(request.max_time.toSec()), "].");
     return;
   }
   response.status.code = cartographer_ros_msgs::StatusCode::OK;
