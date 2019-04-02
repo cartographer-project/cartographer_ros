@@ -265,17 +265,17 @@ void MapBuilderBridge::HandleTrajectoryQuery(
   if (!trajectory_states.count(request.trajectory_id)) {
     response.status.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
     response.status.message =
-        absl::StrCat("Requested trajectory with ID ",
-                     std::to_string(request.trajectory_id), " doesn't exist.");
+        absl::StrCat("Requested trajectory with ID ", request.trajectory_id,
+                     " doesn't exist.");
     return;
   } else if (trajectory_states.at(request.trajectory_id) ==
              cartographer::mapping::PoseGraphInterface::TrajectoryState::
                  DELETED) {
     response.status.code =
         cartographer_ros_msgs::StatusCode::RESOURCE_EXHAUSTED;
-    response.status.message = absl::StrCat(
-        "Requested trajectory with ID ", std::to_string(request.trajectory_id),
-        " has been deleted.");
+    response.status.message =
+        absl::StrCat("Requested trajectory with ID ", request.trajectory_id,
+                     " has been deleted.");
     return;
   }
   const cartographer::common::Time min_time = FromRos(request.min_time);
@@ -301,18 +301,17 @@ void MapBuilderBridge::HandleTrajectoryQuery(
   if (response.trajectory.empty()) {
     response.status.code = cartographer_ros_msgs::StatusCode::NOT_FOUND;
     response.status.message = absl::StrCat(
-        "Trajectory with ID ", std::to_string(request.trajectory_id),
+        "Trajectory with ID ", request.trajectory_id,
         " has no poses available within time bounds [",
-        std::to_string(request.min_time.toSec()), ", ",
-        std::to_string(request.max_time.toSec()), "].");
+        request.min_time.toSec(), ", ", request.max_time.toSec(), "].");
     return;
   }
   response.status.code = cartographer_ros_msgs::StatusCode::OK;
-  response.status.message = absl::StrCat(
-      "Found ", std::to_string(response.trajectory.size()),
-      " trajectory nodes within time interval [",
-      std::to_string(response.trajectory.front().header.stamp.toSec()), ", ",
-      std::to_string(response.trajectory.back().header.stamp.toSec()), "].");
+  response.status.message =
+      absl::StrCat("Found ", response.trajectory.size(),
+                   " trajectory nodes within time interval [",
+                   response.trajectory.front().header.stamp.toSec(), ", ",
+                   response.trajectory.back().header.stamp.toSec(), "].");
 }
 
 visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
