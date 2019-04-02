@@ -36,7 +36,7 @@ A GPS publishing on a ``sensor_msgs/NavSatFix`` topic named ``fix`` can improve 
 
     use_nav_sat = true
 
-For landmarks publishing on a ``cartographer_ros_msgs/LandmarkList`` (`message defined in cartographer_ros`_) topic named ``landmarks``:
+For landmarks publishing on a ``cartographer_ros_msgs/LandmarkList`` (`message defined in cartographer_ros`_) topic named ``landmark``:
 
 ..  code-block:: lua
 

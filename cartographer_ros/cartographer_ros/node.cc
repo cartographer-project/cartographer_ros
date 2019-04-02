@@ -22,6 +22,7 @@
 
 #include "Eigen/Core"
 #include "absl/memory/memory.h"
+#include "absl/strings/str_cat.h"
 #include "cartographer/common/configuration_file_resolver.h"
 #include "cartographer/common/lua_parameter_dictionary.h"
 #include "cartographer/common/port.h"
@@ -471,8 +472,8 @@ cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
 
   cartographer_ros_msgs::StatusResponse status_response;
   if (trajectories_scheduled_for_finish_.count(trajectory_id)) {
-    const std::string message = "Trajectory " + std::to_string(trajectory_id) +
-                                " already pending to finish.";
+    const std::string message = absl::StrCat("Trajectory ", trajectory_id,
+                                             " already pending to finish.");
     status_response.code = cartographer_ros_msgs::StatusCode::OK;
     status_response.message = message;
     LOG(INFO) << message;
@@ -482,21 +483,21 @@ cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
   // First, check if we can actually finish the trajectory.
   if (!(trajectory_states.count(trajectory_id))) {
     const std::string error =
-        "Trajectory " + std::to_string(trajectory_id) + " doesn't exist.";
+        absl::StrCat("Trajectory ", trajectory_id, " doesn't exist.");
     LOG(ERROR) << error;
     status_response.code = cartographer_ros_msgs::StatusCode::NOT_FOUND;
     status_response.message = error;
     return status_response;
   } else if (trajectory_states.at(trajectory_id) == TrajectoryState::FROZEN) {
     const std::string error =
-        "Trajectory " + std::to_string(trajectory_id) + " is frozen.";
+        absl::StrCat("Trajectory ", trajectory_id, " is frozen.");
     LOG(ERROR) << error;
     status_response.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
     status_response.message = error;
     return status_response;
   } else if (trajectory_states.at(trajectory_id) == TrajectoryState::FINISHED) {
-    const std::string error = "Trajectory " + std::to_string(trajectory_id) +
-                              " has already been finished.";
+    const std::string error = absl::StrCat("Trajectory ", trajectory_id,
+                                           " has already been finished.");
     LOG(ERROR) << error;
     status_response.code =
         cartographer_ros_msgs::StatusCode::RESOURCE_EXHAUSTED;
@@ -504,7 +505,7 @@ cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
     return status_response;
   } else if (trajectory_states.at(trajectory_id) == TrajectoryState::DELETED) {
     const std::string error =
-        "Trajectory " + std::to_string(trajectory_id) + " has been deleted.";
+        absl::StrCat("Trajectory ", trajectory_id, " has been deleted.");
     LOG(ERROR) << error;
     status_response.code =
         cartographer_ros_msgs::StatusCode::RESOURCE_EXHAUSTED;
@@ -525,7 +526,7 @@ cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
   map_builder_bridge_.FinishTrajectory(trajectory_id);
   trajectories_scheduled_for_finish_.emplace(trajectory_id);
   const std::string message =
-      "Finished trajectory " + std::to_string(trajectory_id) + ".";
+      absl::StrCat("Finished trajectory ", trajectory_id, ".");
   status_response.code = cartographer_ros_msgs::StatusCode::OK;
   status_response.message = message;
   return status_response;
@@ -641,10 +642,12 @@ bool Node::HandleWriteState(
   if (map_builder_bridge_.SerializeState(request.filename,
                                          request.include_unfinished_submaps)) {
     response.status.code = cartographer_ros_msgs::StatusCode::OK;
-    response.status.message = "State written to '" + request.filename + "'.";
+    response.status.message =
+        absl::StrCat("State written to '", request.filename, "'.");
   } else {
     response.status.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
-    response.status.message = "Failed to write '" + request.filename + "'.";
+    response.status.message =
+        absl::StrCat("Failed to write '", request.filename, "'.");
   }
   return true;
 }
