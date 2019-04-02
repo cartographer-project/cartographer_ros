@@ -40,15 +40,15 @@ geometry_msgs::TransformStamped ToTransformStamped(
     const std::string& child_frame_id,
     const cartographer::transform::proto::Rigid3d& parent_T_child) {
   static int64_t seq = 0;
-  geometry_msgs::TransformStamped xfm;
-  xfm.header.seq = ++seq;
-  xfm.header.frame_id = parent_frame_id;
-  xfm.header.stamp = cartographer_ros::ToRos(
+  geometry_msgs::TransformStamped transform_stamped;
+  transform_stamped.header.seq = ++seq;
+  transform_stamped.header.frame_id = parent_frame_id;
+  transform_stamped.header.stamp = cartographer_ros::ToRos(
       ::cartographer::common::FromUniversal(timestamp_uts));
-  xfm.child_frame_id = child_frame_id;
-  xfm.transform = cartographer_ros::ToGeometryMsgTransform(
+  transform_stamped.child_frame_id = child_frame_id;
+  transform_stamped.transform = cartographer_ros::ToGeometryMsgTransform(
       ::cartographer::transform::ToRigid3(parent_T_child));
-  return xfm;
+  return transform_stamped;
 }
 
 void pbstream_trajectories_to_bag(const std::string& pbstream_filename,
@@ -61,13 +61,18 @@ void pbstream_trajectories_to_bag(const std::string& pbstream_filename,
   for (const auto trajectory : pose_graph.trajectory()) {
     const auto child_frame_id =
         absl::StrCat("trajectory_", trajectory.trajectory_id());
-    LOG(INFO) << "Writing tf for trajectory id " << trajectory.trajectory_id()
-              << " with " << trajectory.node_size() << " nodes.";
+    LOG(INFO)
+        << "Writing tf and geometry_msgs/TransformStamped for trajectory id "
+        << trajectory.trajectory_id() << " with " << trajectory.node_size()
+        << " nodes.";
     for (const auto& node : trajectory.node()) {
       tf2_msgs::TFMessage tf_msg;
-      tf_msg.transforms.push_back(ToTransformStamped(
-          node.timestamp(), parent_frame_id, child_frame_id, node.pose()));
-      bag.write("/tf", tf_msg.transforms[0].header.stamp, tf_msg);
+      geometry_msgs::TransformStamped transform_stamped = ToTransformStamped(
+          node.timestamp(), parent_frame_id, child_frame_id, node.pose());
+      tf_msg.transforms.push_back(transform_stamped);
+      bag.write(child_frame_id, transform_stamped.header.stamp,
+                transform_stamped);
+      bag.write("/tf", transform_stamped.header.stamp, tf_msg);
     }
   }
 }
@@ -81,10 +86,12 @@ int main(int argc, char* argv[]) {
   google::SetUsageMessage(
       "\n\n"
       "Extracts all trajectories from the pbstream and creates a bag file with "
-      "the trajectory poses stored in /tf.\nFor each trajectory, the tool will "
-      "write transforms with the tf parent_frame_id set according to the "
-      "`parent_frame` commandline flag and child_frame_id to `trajectory_i`, "
-      "with `i` corresponding to the `trajectory_id`.");
+      "the trajectory poses stored in /tf.\nAdditionally, each trajectory is "
+      "also written separately to a geometry_msgs/TransformStamped topic named "
+      "after the TF child_frame_id of the trajectory.\n For each trajectory, "
+      "the tool will write transforms with the tf parent_frame_id set "
+      "according to the `parent_frame` commandline flag and child_frame_id to "
+      "`trajectory_i`, with `i` corresponding to the `trajectory_id`.");
   google::ParseCommandLineFlags(&argc, &argv, true);
   CHECK(!FLAGS_input.empty()) << "-input pbstream is missing.";
   CHECK(!FLAGS_output.empty()) << "-output is missing.";
