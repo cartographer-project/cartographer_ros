@@ -16,11 +16,12 @@
 
 #ifndef CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_PLAYABLE_BAG_H
 #define CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_PLAYABLE_BAG_H
+#include <cartographer_ros_msgs/BagfileProgress.h>
+#include <ros/node_handle.h>
+
 #include <functional>
 #include <queue>
 
-#include <cartographer_ros_msgs/BagfileProgress.h>
-#include <ros/node_handle.h>
 #include "rosbag/bag.h"
 #include "rosbag/view.h"
 #include "tf2_ros/buffer.h"
