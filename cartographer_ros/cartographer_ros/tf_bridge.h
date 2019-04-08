@@ -20,9 +20,8 @@
 #include <memory>
 
 #include "cartographer/transform/rigid_transform.h"
-#include "tf2_ros/buffer.h"
-
 #include "cartographer_ros/time_conversion.h"
+#include "tf2_ros/buffer.h"
 
 namespace cartographer_ros {
 
