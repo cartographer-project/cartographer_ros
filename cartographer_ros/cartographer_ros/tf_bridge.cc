@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-#include "absl/memory/memory.h"
-
-#include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/tf_bridge.h"
+
+#include "absl/memory/memory.h"
+#include "cartographer_ros/msg_conversion.h"
 
 namespace cartographer_ros {
 
