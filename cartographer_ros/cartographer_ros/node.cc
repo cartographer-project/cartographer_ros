@@ -514,15 +514,15 @@ bool Node::HandleStartTrajectory(
     ::cartographer_ros_msgs::StartTrajectory::Request& request,
     ::cartographer_ros_msgs::StartTrajectory::Response& response) {
   const auto trajectory_states = map_builder_bridge_.GetTrajectoryStates();
-  if (!(trajectory_states.count(request.to_trajectory_id)) ||
-      trajectory_states.at(request.to_trajectory_id) ==
+  if (!(trajectory_states.count(request.relative_to_trajectory_id)) ||
+      trajectory_states.at(request.relative_to_trajectory_id) ==
           TrajectoryState::DELETED) {
     const std::string error =
-        absl::StrCat("Trajectory ", std::to_string(request.to_trajectory_id),
+        absl::StrCat("Trajectory ", request.relative_to_trajectory_id,
                      " doesn't exist or has been deleted.");
-    LOG(ERROR) << error;
-    response.status.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
     response.status.message = error;
+    LOG(ERROR) << response.status.message;
+    response.status.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
     return true;
   }
 
@@ -535,16 +535,17 @@ bool Node::HandleStartTrajectory(
     if (!pose.IsValid()) {
       const std::string error =
           "Invalid pose argument. Orientation quaternion must be normalized.";
-      LOG(ERROR) << error;
+      response.status.message = error;
+      LOG(ERROR) << response.status.message;
       response.status.code =
           cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
-      response.status.message = error;
       return true;
     }
 
     ::cartographer::mapping::proto::InitialTrajectoryPose
         initial_trajectory_pose;
-    initial_trajectory_pose.set_to_trajectory_id(request.to_trajectory_id);
+    initial_trajectory_pose.set_to_trajectory_id(
+        request.relative_to_trajectory_id);
     *initial_trajectory_pose.mutable_relative_pose() =
         cartographer::transform::ToProto(pose);
     initial_trajectory_pose.set_timestamp(cartographer::common::ToUniversal(
@@ -555,14 +556,14 @@ bool Node::HandleStartTrajectory(
 
   if (!ValidateTrajectoryOptions(trajectory_options)) {
     const std::string error = "Invalid trajectory options.";
-    LOG(ERROR) << error;
-    response.status.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
     response.status.message = error;
+    LOG(ERROR) << response.status.message;
+    response.status.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
   } else if (!ValidateTopicNames(trajectory_options)) {
     const std::string error = "Topics are already used by another trajectory.";
-    LOG(ERROR) << error;
-    response.status.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
     response.status.message = error;
+    LOG(ERROR) << response.status.message;
+    response.status.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
   } else {
     response.trajectory_id = AddTrajectory(trajectory_options);
     response.status.code = cartographer_ros_msgs::StatusCode::OK;
