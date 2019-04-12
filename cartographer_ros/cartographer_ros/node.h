@@ -175,9 +175,10 @@ class Node {
   void MaybeWarnAboutTopicMismatch(const ::ros::WallTimerEvent&);
 
   // Helper function for service handlers that need to check trajectory states.
-  cartographer_ros_msgs::StatusResponse CheckTrajectoryState(
+  cartographer_ros_msgs::StatusResponse TrajectoryStateToStatus(
       int trajectory_id,
-      std::set<cartographer::mapping::PoseGraphInterface::TrajectoryState>
+      const std::set<
+          cartographer::mapping::PoseGraphInterface::TrajectoryState>&
           valid_states);
   const NodeOptions node_options_;
 

@@ -49,6 +49,12 @@
 
 namespace cartographer_ros {
 
+namespace carto = ::cartographer;
+
+using carto::transform::Rigid3d;
+using TrajectoryState =
+    ::cartographer::mapping::PoseGraphInterface::TrajectoryState;
+
 namespace {
 
 cartographer_ros_msgs::SensorTopics DefaultSensorTopics() {
@@ -80,13 +86,21 @@ template <typename MessageType>
           }));
 }
 
+std::string TrajectoryStateToString(const TrajectoryState trajectory_state) {
+  switch (trajectory_state) {
+    case TrajectoryState::ACTIVE:
+      return "ACTIVE";
+    case TrajectoryState::FINISHED:
+      return "FINISHED";
+    case TrajectoryState::FROZEN:
+      return "FROZEN";
+    case TrajectoryState::DELETED:
+      return "DELETED";
+  }
+  return "";
+}
+
 }  // namespace
-
-namespace carto = ::cartographer;
-
-using carto::transform::Rigid3d;
-using TrajectoryState =
-    ::cartographer::mapping::PoseGraphInterface::TrajectoryState;
 
 Node::Node(
     const NodeOptions& node_options,
@@ -466,8 +480,8 @@ bool Node::ValidateTopicNames(
   return true;
 }
 
-cartographer_ros_msgs::StatusResponse Node::CheckTrajectoryState(
-    int trajectory_id, std::set<TrajectoryState> valid_states) {
+cartographer_ros_msgs::StatusResponse Node::TrajectoryStateToStatus(
+    const int trajectory_id, const std::set<TrajectoryState>& valid_states) {
   const auto trajectory_states = map_builder_bridge_.GetTrajectoryStates();
   cartographer_ros_msgs::StatusResponse status_response;
 
@@ -479,15 +493,9 @@ cartographer_ros_msgs::StatusResponse Node::CheckTrajectoryState(
   }
 
   const auto trajectory_state = trajectory_states.at(trajectory_id);
-  const std::map<TrajectoryState, std::string> state_to_string = {
-      {TrajectoryState::ACTIVE, "ACTIVE"},
-      {TrajectoryState::FINISHED, "FINISHED"},
-      {TrajectoryState::FROZEN, "FROZEN"},
-      {TrajectoryState::DELETED, "DELETED"},
-  };
   status_response.message =
       absl::StrCat("Trajectory ", trajectory_id, " is in '",
-                   state_to_string.at(trajectory_state), "' state.");
+                   TrajectoryStateToString(trajectory_state), "' state.");
   if (valid_states.count(trajectory_state)) {
     status_response.code = cartographer_ros_msgs::StatusCode::OK;
   } else {
@@ -508,11 +516,11 @@ cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
   }
 
   // First, check if we can actually finish the trajectory.
-  cartographer_ros_msgs::StatusResponse check_response = CheckTrajectoryState(
+  status_response = TrajectoryStateToStatus(
       trajectory_id, {TrajectoryState::ACTIVE} /* valid states */);
-  if (check_response.code != cartographer_ros_msgs::StatusCode::OK) {
-    LOG(ERROR) << "Can't finish trajectory: " << check_response.message;
-    return check_response;
+  if (status_response.code != cartographer_ros_msgs::StatusCode::OK) {
+    LOG(ERROR) << "Can't finish trajectory: " << status_response.message;
+    return status_response;
   }
 
   // Shutdown the subscribers of this trajectory.
@@ -527,10 +535,9 @@ cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
   }
   map_builder_bridge_.FinishTrajectory(trajectory_id);
   trajectories_scheduled_for_finish_.emplace(trajectory_id);
-  const std::string message =
+  status_response.message =
       absl::StrCat("Finished trajectory ", trajectory_id, ".");
   status_response.code = cartographer_ros_msgs::StatusCode::OK;
-  status_response.message = message;
   return status_response;
 }
 
