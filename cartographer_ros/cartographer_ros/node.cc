@@ -511,7 +511,7 @@ cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
   cartographer_ros_msgs::StatusResponse check_response = CheckTrajectoryState(
       trajectory_id, {TrajectoryState::ACTIVE} /* valid states */);
   if (check_response.code != cartographer_ros_msgs::StatusCode::OK) {
-    LOG(ERROR) << "Can't finish trajectory: "<< check_response.message;
+    LOG(ERROR) << "Can't finish trajectory: " << check_response.message;
     return check_response;
   }
 
