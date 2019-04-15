@@ -174,6 +174,12 @@ class Node {
       int trajectory_id) EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   void MaybeWarnAboutTopicMismatch(const ::ros::WallTimerEvent&);
 
+  // Helper function for service handlers that need to check trajectory states.
+  cartographer_ros_msgs::StatusResponse TrajectoryStateToStatus(
+      int trajectory_id,
+      const std::set<
+          cartographer::mapping::PoseGraphInterface::TrajectoryState>&
+          valid_states);
   const NodeOptions node_options_;
 
   tf2_ros::TransformBroadcaster tf_broadcaster_;
