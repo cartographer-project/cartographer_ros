@@ -85,6 +85,8 @@ The other values you need to define are related to the number and type of sensor
 
 You can also enable the usage of landmarks and GPS as additional sources of localization using ``use_landmarks`` and ``use_nav_sat``. The rest of the variables in the ``options`` block should typically be left untouched.
 
+.. note:: even if you use a 2D SLAM, the landmarks are 3D objects and can mislead you if viewed only on the 2D plane due to their third dimension.
+
 However, there is one global variable that you absolutely need to adapt to the needs of your bag: ``TRAJECTORY_BUILDER_3D.num_accumulated_range_data`` or ``TRAJECTORY_BUILDER_2D.num_accumulated_range_data``.
 This variable defines the number of messages required to construct a full scan (typically, a full revolution).
 If you follow ``cartographer_rosbag_validate``'s advices and use 100 ROS messages per scan, you can set this variable to 100.

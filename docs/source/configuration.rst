@@ -68,8 +68,8 @@ use_nav_sat
 
 use_landmarks
   If enabled, subscribes to `cartographer_ros_msgs/LandmarkList`_ on the topic
-  "landmarks".  Landmarks must be provided in this case, and the information
-  will be included in SLAM.
+  "landmarks".  Landmarks must be provided, as `cartographer_ros_msgs/LandmarkEntry`_ within `cartographer_ros_msgs/LandmarkList`_.  If `cartographer_ros_msgs/LandmarkEntry`_ data is provided the information
+  will be included in the SLAM accoding to the ID of the `cartographer_ros_msgs/LandmarkEntry`_. The `cartographer_ros_msgs/LandmarkList`_ should be provided at a sample rate comparable to the other sensors.  The list can be empty but has to be provided because Cartographer strictly time orders sensor data in order to make the landmarks deterministic. However it is possible to set the trajectory builder option "collate_landmarks" to false and allow for a non-deterministic but also non-blocking approach.
 
 num_laser_scans
   Number of laser scan topics to subscribe to. Subscribes to
@@ -130,5 +130,6 @@ landmarks_sampling_ratio
 .. _sensor_msgs/MultiEchoLaserScan: http://docs.ros.org/api/sensor_msgs/html/msg/MultiEchoLaserScan.html
 .. _sensor_msgs/PointCloud2: http://docs.ros.org/api/sensor_msgs/html/msg/PointCloud2.html
 .. _sensor_msgs/NavSatFix: http://docs.ros.org/api/sensor_msgs/html/msg/NavSatFix.html
-.. _cartographer_ros_msgs/LandmarkList: https://github.com/googlecartographer/cartographer_ros/blob/4b39ee68c7a4d518bf8d01a509331e2bc1f514a0/cartographer_ros_msgs/msg/LandmarkList.msg
+.. _cartographer_ros_msgs/LandmarkList: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/msg/LandmarkList.msg
+.. _cartographer_ros_msgs/LandmarkEntry: https://github.com/googlecartographer/cartographer_ros/blob/4b39ee68c7a4d518bf8d01a509331e2bc1f514a0/cartographer_ros_msgs/msg/LandmarkEntry.msg
 .. _tf2: http://wiki.ros.org/tf2

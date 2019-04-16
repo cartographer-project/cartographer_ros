@@ -22,6 +22,7 @@
 
 #include "Eigen/Core"
 #include "absl/memory/memory.h"
+#include "absl/strings/str_cat.h"
 #include "cartographer/common/configuration_file_resolver.h"
 #include "cartographer/common/lua_parameter_dictionary.h"
 #include "cartographer/common/port.h"
@@ -47,6 +48,12 @@
 #include "visualization_msgs/MarkerArray.h"
 
 namespace cartographer_ros {
+
+namespace carto = ::cartographer;
+
+using carto::transform::Rigid3d;
+using TrajectoryState =
+    ::cartographer::mapping::PoseGraphInterface::TrajectoryState;
 
 namespace {
 
@@ -79,13 +86,21 @@ template <typename MessageType>
           }));
 }
 
+std::string TrajectoryStateToString(const TrajectoryState trajectory_state) {
+  switch (trajectory_state) {
+    case TrajectoryState::ACTIVE:
+      return "ACTIVE";
+    case TrajectoryState::FINISHED:
+      return "FINISHED";
+    case TrajectoryState::FROZEN:
+      return "FROZEN";
+    case TrajectoryState::DELETED:
+      return "DELETED";
+  }
+  return "";
+}
+
 }  // namespace
-
-namespace carto = ::cartographer;
-
-using carto::transform::Rigid3d;
-using TrajectoryState =
-    ::cartographer::mapping::PoseGraphInterface::TrajectoryState;
 
 Node::Node(
     const NodeOptions& node_options,
@@ -465,50 +480,46 @@ bool Node::ValidateTopicNames(
   return true;
 }
 
+cartographer_ros_msgs::StatusResponse Node::TrajectoryStateToStatus(
+    const int trajectory_id, const std::set<TrajectoryState>& valid_states) {
+  const auto trajectory_states = map_builder_bridge_.GetTrajectoryStates();
+  cartographer_ros_msgs::StatusResponse status_response;
+
+  if (!(trajectory_states.count(trajectory_id))) {
+    status_response.message =
+        absl::StrCat("Trajectory ", trajectory_id, " doesn't exist.");
+    status_response.code = cartographer_ros_msgs::StatusCode::NOT_FOUND;
+    return status_response;
+  }
+
+  const auto trajectory_state = trajectory_states.at(trajectory_id);
+  status_response.message =
+      absl::StrCat("Trajectory ", trajectory_id, " is in '",
+                   TrajectoryStateToString(trajectory_state), "' state.");
+  if (valid_states.count(trajectory_state)) {
+    status_response.code = cartographer_ros_msgs::StatusCode::OK;
+  } else {
+    status_response.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
+  }
+  return status_response;
+}
+
 cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
     const int trajectory_id) {
-  auto trajectory_states = map_builder_bridge_.GetTrajectoryStates();
-
   cartographer_ros_msgs::StatusResponse status_response;
   if (trajectories_scheduled_for_finish_.count(trajectory_id)) {
-    const std::string message = "Trajectory " + std::to_string(trajectory_id) +
-                                " already pending to finish.";
+    status_response.message = absl::StrCat("Trajectory ", trajectory_id,
+                                           " already pending to finish.");
     status_response.code = cartographer_ros_msgs::StatusCode::OK;
-    status_response.message = message;
-    LOG(INFO) << message;
+    LOG(INFO) << status_response.message;
     return status_response;
   }
 
   // First, check if we can actually finish the trajectory.
-  if (!(trajectory_states.count(trajectory_id))) {
-    const std::string error =
-        "Trajectory " + std::to_string(trajectory_id) + " doesn't exist.";
-    LOG(ERROR) << error;
-    status_response.code = cartographer_ros_msgs::StatusCode::NOT_FOUND;
-    status_response.message = error;
-    return status_response;
-  } else if (trajectory_states.at(trajectory_id) == TrajectoryState::FROZEN) {
-    const std::string error =
-        "Trajectory " + std::to_string(trajectory_id) + " is frozen.";
-    LOG(ERROR) << error;
-    status_response.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
-    status_response.message = error;
-    return status_response;
-  } else if (trajectory_states.at(trajectory_id) == TrajectoryState::FINISHED) {
-    const std::string error = "Trajectory " + std::to_string(trajectory_id) +
-                              " has already been finished.";
-    LOG(ERROR) << error;
-    status_response.code =
-        cartographer_ros_msgs::StatusCode::RESOURCE_EXHAUSTED;
-    status_response.message = error;
-    return status_response;
-  } else if (trajectory_states.at(trajectory_id) == TrajectoryState::DELETED) {
-    const std::string error =
-        "Trajectory " + std::to_string(trajectory_id) + " has been deleted.";
-    LOG(ERROR) << error;
-    status_response.code =
-        cartographer_ros_msgs::StatusCode::RESOURCE_EXHAUSTED;
-    status_response.message = error;
+  status_response = TrajectoryStateToStatus(
+      trajectory_id, {TrajectoryState::ACTIVE} /* valid states */);
+  if (status_response.code != cartographer_ros_msgs::StatusCode::OK) {
+    LOG(ERROR) << "Can't finish trajectory: " << status_response.message;
     return status_response;
   }
 
@@ -524,10 +535,9 @@ cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
   }
   map_builder_bridge_.FinishTrajectory(trajectory_id);
   trajectories_scheduled_for_finish_.emplace(trajectory_id);
-  const std::string message =
-      "Finished trajectory " + std::to_string(trajectory_id) + ".";
+  status_response.message =
+      absl::StrCat("Finished trajectory ", trajectory_id, ".");
   status_response.code = cartographer_ros_msgs::StatusCode::OK;
-  status_response.message = message;
   return status_response;
 }
 
@@ -641,10 +651,12 @@ bool Node::HandleWriteState(
   if (map_builder_bridge_.SerializeState(request.filename,
                                          request.include_unfinished_submaps)) {
     response.status.code = cartographer_ros_msgs::StatusCode::OK;
-    response.status.message = "State written to '" + request.filename + "'.";
+    response.status.message =
+        absl::StrCat("State written to '", request.filename, "'.");
   } else {
     response.status.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
-    response.status.message = "Failed to write '" + request.filename + "'.";
+    response.status.message =
+        absl::StrCat("Failed to write '", request.filename, "'.");
   }
   return true;
 }
