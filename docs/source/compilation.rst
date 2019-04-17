@@ -63,6 +63,13 @@ The command 'sudo rosdep init' will print an error if you have already executed 
     rosdep update
     rosdep install --from-paths src --ignore-src --rosdistro=${ROS_DISTRO} -y
 
+If you build cartographer from master. Change/remove the version in the cartographer_ros.rosinstall.
+
+Additionally, uninstall the ros abseil-cpp using
+
+.. code-block:: bash
+   sudo apt-get remove ros-${ROS_DISTRO}-abseil-cpp 
+
 Build and install.
 
 .. code-block:: bash
