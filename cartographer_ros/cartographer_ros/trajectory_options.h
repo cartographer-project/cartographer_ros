@@ -47,16 +47,8 @@ struct TrajectoryOptions {
   double landmarks_sampling_ratio;
 };
 
-::cartographer::mapping::proto::InitialTrajectoryPose
-CreateInitialTrajectoryPose(
-    ::cartographer::common::LuaParameterDictionary* lua_parameter_dictionary);
-
 TrajectoryOptions CreateTrajectoryOptions(
     ::cartographer::common::LuaParameterDictionary* lua_parameter_dictionary);
-
-TrajectoryOptions CreateTrajectoryOptions(
-    ::cartographer::common::LuaParameterDictionary* lua_parameter_dictionary,
-    ::cartographer::common::LuaParameterDictionary* initial_trajectory_pose);
 
 }  // namespace cartographer_ros
 

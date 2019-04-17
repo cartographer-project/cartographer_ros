@@ -79,30 +79,4 @@ TrajectoryOptions CreateTrajectoryOptions(
   CheckTrajectoryOptions(options);
   return options;
 }
-
-TrajectoryOptions CreateTrajectoryOptions(
-    ::cartographer::common::LuaParameterDictionary* lua_parameter_dictionary,
-    ::cartographer::common::LuaParameterDictionary* initial_trajectory_pose) {
-  TrajectoryOptions options = CreateTrajectoryOptions(lua_parameter_dictionary);
-  *options.trajectory_builder_options.mutable_initial_trajectory_pose() =
-      CreateInitialTrajectoryPose(initial_trajectory_pose);
-  return options;
-}
-
-::cartographer::mapping::proto::InitialTrajectoryPose
-CreateInitialTrajectoryPose(
-    ::cartographer::common::LuaParameterDictionary* lua_parameter_dictionary) {
-  ::cartographer::mapping::proto::InitialTrajectoryPose pose;
-  pose.set_to_trajectory_id(
-      lua_parameter_dictionary->GetNonNegativeInt("to_trajectory_id"));
-  *pose.mutable_relative_pose() =
-      cartographer::transform::ToProto(cartographer::transform::FromDictionary(
-          lua_parameter_dictionary->GetDictionary("relative_pose").get()));
-  pose.set_timestamp(
-      lua_parameter_dictionary->HasKey("timestamp")
-          ? lua_parameter_dictionary->GetNonNegativeInt("timestamp")
-          : cartographer::common::ToUniversal(FromRos(ros::Time::now())));
-  return pose;
-}
-
 }  // namespace cartographer_ros

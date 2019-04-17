@@ -522,25 +522,12 @@ cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
 bool Node::HandleStartTrajectory(
     ::cartographer_ros_msgs::StartTrajectory::Request& request,
     ::cartographer_ros_msgs::StartTrajectory::Response& response) {
-  const auto trajectory_states = map_builder_bridge_.GetTrajectoryStates();
-  if (!(trajectory_states.count(request.relative_to_trajectory_id)) ||
-      trajectory_states.at(request.relative_to_trajectory_id) ==
-          TrajectoryState::DELETED) {
-    const std::string error =
-        absl::StrCat("Trajectory ", request.relative_to_trajectory_id,
-                     " doesn't exist or has been deleted.");
-    response.status.message = error;
-    LOG(ERROR) << response.status.message;
-    response.status.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
-    return true;
-  }
-
   TrajectoryOptions trajectory_options;
   std::tie(std::ignore, trajectory_options) = LoadOptions(
       request.configuration_directory, request.configuration_basename);
 
-  const auto pose = ToRigid3d(request.initial_pose);
   if (request.use_initial_pose) {
+    const auto pose = ToRigid3d(request.initial_pose);
     if (!pose.IsValid()) {
       const std::string error =
           "Invalid pose argument. Orientation quaternion must be normalized.";
@@ -548,6 +535,17 @@ bool Node::HandleStartTrajectory(
       LOG(ERROR) << response.status.message;
       response.status.code =
           cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
+      return true;
+    }
+
+    // Check if the requested trajectory for the relative initial pose exists.
+    response.status = TrajectoryStateToStatus(
+        request.relative_to_trajectory_id,
+        {TrajectoryState::ACTIVE, TrajectoryState::FROZEN,
+         TrajectoryState::FINISHED} /* valid states */);
+    if (response.status.code != cartographer_ros_msgs::StatusCode::OK) {
+      LOG(ERROR) << "Can't start a trajectory with initial pose: "
+                 << response.status.message;
       return true;
     }
 
