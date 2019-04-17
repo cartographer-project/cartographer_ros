@@ -63,6 +63,11 @@ DEFINE_string(load_state_filename, "",
               "a saved SLAM state.");
 DEFINE_bool(load_frozen_state, true,
             "Load the saved state as frozen (non-optimized) trajectories.");
+DEFINE_string(save_state_filename, "",
+              "Explicit name of the file to which the serialized state will be "
+              "written before shutdown. If left empty, the filename will be "
+              "inferred from the first bagfile's name as: "
+              "<bag_filenames[0]>.pbstream");
 DEFINE_bool(keep_running, false,
             "Keep running the offline node after all messages from the bag "
             "have been processed.");
@@ -371,15 +376,19 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory) {
   LOG(INFO) << "Peak memory usage: " << usage.ru_maxrss << " KiB";
 #endif
 
-  if (::ros::ok() && bag_filenames.size() > 0) {
-    const std::string output_filename = bag_filenames.front();
-    const std::string suffix = ".pbstream";
-    const std::string state_output_filename = output_filename + suffix;
+  // Serialize unless we have neither a bagfile nor an explicit state filename.
+  if (::ros::ok() &&
+      !(bag_filenames.empty() && FLAGS_save_state_filename.empty())) {
+    const std::string state_output_filename =
+        FLAGS_save_state_filename.empty()
+            ? absl::StrCat(bag_filenames.front(), ".pbstream")
+            : FLAGS_save_state_filename;
     LOG(INFO) << "Writing state to '" << state_output_filename << "'...";
     node.SerializeState(state_output_filename,
                         true /* include_unfinished_submaps */);
   }
   if (FLAGS_keep_running) {
+    LOG(INFO) << "Finished processing and waiting for shutdown.";
     ::ros::waitForShutdown();
   }
 }
