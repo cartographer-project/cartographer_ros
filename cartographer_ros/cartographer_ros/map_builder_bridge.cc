@@ -17,6 +17,7 @@
 #include "cartographer_ros/map_builder_bridge.h"
 
 #include "absl/memory/memory.h"
+#include "absl/strings/str_cat.h"
 #include "cartographer/io/color.h"
 #include "cartographer/io/proto_stream.h"
 #include "cartographer/mapping/pose_graph.h"
@@ -45,7 +46,7 @@ constexpr double kConstraintMarkerScale = 0.025;
 visualization_msgs::Marker CreateTrajectoryMarker(const int trajectory_id,
                                                   const std::string& frame_id) {
   visualization_msgs::Marker marker;
-  marker.ns = "Trajectory " + std::to_string(trajectory_id);
+  marker.ns = absl::StrCat("Trajectory ", trajectory_id);
   marker.id = 0;
   marker.type = visualization_msgs::Marker::LINE_STRIP;
   marker.header.stamp = ::ros::Time::now();
