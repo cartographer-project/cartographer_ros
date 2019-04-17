@@ -401,37 +401,33 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
       (node_options_.map_builder_options.use_trajectory_builder_2d() &&
        options.trajectory_builder_options.trajectory_builder_2d_options()
            .use_imu_data())) {
-    std::string topic = kImuTopic;
     subscribers_[trajectory_id].push_back(
         {SubscribeWithHandler<sensor_msgs::Imu>(&Node::HandleImuMessage,
-                                                trajectory_id, topic,
+                                                trajectory_id, kImuTopic,
                                                 &node_handle_, this),
-         topic});
+         kImuTopic});
   }
 
   if (options.use_odometry) {
-    std::string topic = kOdometryTopic;
     subscribers_[trajectory_id].push_back(
         {SubscribeWithHandler<nav_msgs::Odometry>(&Node::HandleOdometryMessage,
-                                                  trajectory_id, topic,
+                                                  trajectory_id, kOdometryTopic,
                                                   &node_handle_, this),
-         topic});
+         kOdometryTopic});
   }
   if (options.use_nav_sat) {
-    std::string topic = kNavSatFixTopic;
     subscribers_[trajectory_id].push_back(
         {SubscribeWithHandler<sensor_msgs::NavSatFix>(
-             &Node::HandleNavSatFixMessage, trajectory_id, topic, &node_handle_,
-             this),
-         topic});
+             &Node::HandleNavSatFixMessage, trajectory_id, kNavSatFixTopic,
+             &node_handle_, this),
+         kNavSatFixTopic});
   }
   if (options.use_landmarks) {
-    std::string topic = kLandmarkTopic;
     subscribers_[trajectory_id].push_back(
         {SubscribeWithHandler<cartographer_ros_msgs::LandmarkList>(
-             &Node::HandleLandmarkMessage, trajectory_id, topic, &node_handle_,
-             this),
-         topic});
+             &Node::HandleLandmarkMessage, trajectory_id, kLandmarkTopic,
+             &node_handle_, this),
+         kLandmarkTopic});
   }
 }
 
@@ -529,9 +525,8 @@ bool Node::HandleStartTrajectory(
   if (request.use_initial_pose) {
     const auto pose = ToRigid3d(request.initial_pose);
     if (!pose.IsValid()) {
-      const std::string error =
+      response.status.message =
           "Invalid pose argument. Orientation quaternion must be normalized.";
-      response.status.message = error;
       LOG(ERROR) << response.status.message;
       response.status.code =
           cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
@@ -562,19 +557,17 @@ bool Node::HandleStartTrajectory(
   }
 
   if (!ValidateTrajectoryOptions(trajectory_options)) {
-    const std::string error = "Invalid trajectory options.";
-    response.status.message = error;
+    response.status.message = "Invalid trajectory options.";
     LOG(ERROR) << response.status.message;
     response.status.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
   } else if (!ValidateTopicNames(trajectory_options)) {
-    const std::string error = "Topics are already used by another trajectory.";
-    response.status.message = error;
+    response.status.message = "Topics are already used by another trajectory.";
     LOG(ERROR) << response.status.message;
     response.status.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
   } else {
+    response.status.message = "Success.";
     response.trajectory_id = AddTrajectory(trajectory_options);
     response.status.code = cartographer_ros_msgs::StatusCode::OK;
-    response.status.message = "Success.";
   }
   return true;
 }
