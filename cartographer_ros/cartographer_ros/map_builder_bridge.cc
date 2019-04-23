@@ -22,6 +22,7 @@
 #include "cartographer/io/proto_stream.h"
 #include "cartographer/mapping/pose_graph.h"
 #include "cartographer_ros/msg_conversion.h"
+#include "cartographer_ros/time_conversion.h"
 #include "cartographer_ros_msgs/StatusCode.h"
 #include "cartographer_ros_msgs/StatusResponse.h"
 
@@ -256,6 +257,30 @@ MapBuilderBridge::GetLocalTrajectoryData() {
         trajectory_options_[trajectory_id]};
   }
   return local_trajectory_data;
+}
+
+void MapBuilderBridge::HandleTrajectoryQuery(
+    cartographer_ros_msgs::TrajectoryQuery::Request& request,
+    cartographer_ros_msgs::TrajectoryQuery::Response& response) {
+  // This query is safe if the trajectory doesn't exist (returns 0 poses).
+  // However, we can filter unwanted states at the higher level in the node.
+  const auto node_poses = map_builder_->pose_graph()->GetTrajectoryNodePoses();
+  for (const auto& node_id_data :
+       node_poses.trajectory(request.trajectory_id)) {
+    if (!node_id_data.data.constant_pose_data.has_value()) {
+      continue;
+    }
+    geometry_msgs::PoseStamped pose_stamped;
+    pose_stamped.header.frame_id = node_options_.map_frame;
+    pose_stamped.header.stamp =
+        ToRos(node_id_data.data.constant_pose_data.value().time);
+    pose_stamped.pose = ToGeometryMsgPose(node_id_data.data.global_pose);
+    response.trajectory.push_back(pose_stamped);
+  }
+  response.status.code = cartographer_ros_msgs::StatusCode::OK;
+  response.status.message = absl::StrCat(
+      "Retrieved ", response.trajectory.size(),
+      " trajectory nodes from trajectory ", request.trajectory_id, ".");
 }
 
 visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
