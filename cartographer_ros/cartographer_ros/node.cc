@@ -515,11 +515,10 @@ cartographer_ros_msgs::StatusResponse Node::TrajectoryStateToStatus(
   status_response.message =
       absl::StrCat("Trajectory ", trajectory_id, " is in '",
                    TrajectoryStateToString(it->second), "' state.");
-  if (valid_states.count(it->second)) {
-    status_response.code = cartographer_ros_msgs::StatusCode::OK;
-  } else {
-    status_response.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
-  }
+  status_response.code =
+      valid_states.count(it->second)
+          ? cartographer_ros_msgs::StatusCode::OK
+          : cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
   return status_response;
 }
 
