@@ -180,6 +180,15 @@ bool Node::HandleTrajectoryQuery(
     ::cartographer_ros_msgs::TrajectoryQuery::Request& request,
     ::cartographer_ros_msgs::TrajectoryQuery::Response& response) {
   absl::MutexLock lock(&mutex_);
+  response.status = TrajectoryStateToStatus(
+      request.trajectory_id,
+      {TrajectoryState::ACTIVE, TrajectoryState::FINISHED,
+       TrajectoryState::FROZEN} /* valid states */);
+  if (response.status.code != cartographer_ros_msgs::StatusCode::OK) {
+    LOG(ERROR) << "Can't query trajectory from pose graph: "
+               << response.status.message;
+    return true;
+  }
   map_builder_bridge_.HandleTrajectoryQuery(request, response);
   return true;
 }

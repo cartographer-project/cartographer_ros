@@ -262,17 +262,8 @@ MapBuilderBridge::GetLocalTrajectoryData() {
 void MapBuilderBridge::HandleTrajectoryQuery(
     cartographer_ros_msgs::TrajectoryQuery::Request& request,
     cartographer_ros_msgs::TrajectoryQuery::Response& response) {
-  const auto trajectory_states = GetTrajectoryStates();
-  if (!trajectory_states.count(request.trajectory_id) ||
-      trajectory_states.at(request.trajectory_id) ==
-          cartographer::mapping::PoseGraphInterface::TrajectoryState::DELETED) {
-    response.status.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
-    response.status.message =
-        absl::StrCat("Requested trajectory with ID ", request.trajectory_id,
-                     " doesn't exist or has been deleted.");
-    LOG(ERROR) << response.status.message;
-    return;
-  }
+  // This query is safe if the trajectory doesn't exist (returns 0 poses).
+  // However, we can filter unwanted states at the higher level in the node.
   const auto node_poses = map_builder_->pose_graph()->GetTrajectoryNodePoses();
   for (const auto& node_id_data :
        node_poses.trajectory(request.trajectory_id)) {
