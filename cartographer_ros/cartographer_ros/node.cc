@@ -495,18 +495,18 @@ cartographer_ros_msgs::StatusResponse Node::TrajectoryStateToStatus(
   const auto trajectory_states = map_builder_bridge_.GetTrajectoryStates();
   cartographer_ros_msgs::StatusResponse status_response;
 
-  if (!(trajectory_states.count(trajectory_id))) {
+  const auto it = trajectory_states.find(trajectory_id);
+  if (it == trajectory_states.end()) {
     status_response.message =
         absl::StrCat("Trajectory ", trajectory_id, " doesn't exist.");
     status_response.code = cartographer_ros_msgs::StatusCode::NOT_FOUND;
     return status_response;
   }
 
-  const auto trajectory_state = trajectory_states.at(trajectory_id);
   status_response.message =
       absl::StrCat("Trajectory ", trajectory_id, " is in '",
-                   TrajectoryStateToString(trajectory_state), "' state.");
-  if (valid_states.count(trajectory_state)) {
+                   TrajectoryStateToString(it->second), "' state.");
+  if (valid_states.count(it->second)) {
     status_response.code = cartographer_ros_msgs::StatusCode::OK;
   } else {
     status_response.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
