@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cartographer_ros_msgs/TrajectoryOptions options
-cartographer_ros_msgs/SensorTopics topics
+string configuration_directory
+string configuration_basename
+bool use_initial_pose
+geometry_msgs/Pose initial_pose
+int32 relative_to_trajectory_id
 ---
 cartographer_ros_msgs/StatusResponse status
 int32 trajectory_id

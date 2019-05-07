@@ -56,19 +56,6 @@ using TrajectoryState =
     ::cartographer::mapping::PoseGraphInterface::TrajectoryState;
 
 namespace {
-
-cartographer_ros_msgs::SensorTopics DefaultSensorTopics() {
-  cartographer_ros_msgs::SensorTopics topics;
-  topics.laser_scan_topic = kLaserScanTopic;
-  topics.multi_echo_laser_scan_topic = kMultiEchoLaserScanTopic;
-  topics.point_cloud2_topic = kPointCloud2Topic;
-  topics.imu_topic = kImuTopic;
-  topics.odometry_topic = kOdometryTopic;
-  topics.nav_sat_fix_topic = kNavSatFixTopic;
-  topics.landmark_topic = kLandmarkTopic;
-  return topics;
-}
-
 // Subscribes to the 'topic' for 'trajectory_id' using the 'node_handle' and
 // calls 'handler' on the 'node' to handle messages. Returns the subscriber.
 template <typename MessageType>
@@ -342,24 +329,21 @@ void Node::PublishConstraintList(
 }
 
 std::set<cartographer::mapping::TrajectoryBuilderInterface::SensorId>
-Node::ComputeExpectedSensorIds(
-    const TrajectoryOptions& options,
-    const cartographer_ros_msgs::SensorTopics& topics) const {
+Node::ComputeExpectedSensorIds(const TrajectoryOptions& options) const {
   using SensorId = cartographer::mapping::TrajectoryBuilderInterface::SensorId;
   using SensorType = SensorId::SensorType;
   std::set<SensorId> expected_topics;
   // Subscribe to all laser scan, multi echo laser scan, and point cloud topics.
+  for (const std::string& topic :
+       ComputeRepeatedTopicNames(kLaserScanTopic, options.num_laser_scans)) {
+    expected_topics.insert(SensorId{SensorType::RANGE, topic});
+  }
   for (const std::string& topic : ComputeRepeatedTopicNames(
-           topics.laser_scan_topic, options.num_laser_scans)) {
+           kMultiEchoLaserScanTopic, options.num_multi_echo_laser_scans)) {
     expected_topics.insert(SensorId{SensorType::RANGE, topic});
   }
   for (const std::string& topic :
-       ComputeRepeatedTopicNames(topics.multi_echo_laser_scan_topic,
-                                 options.num_multi_echo_laser_scans)) {
-    expected_topics.insert(SensorId{SensorType::RANGE, topic});
-  }
-  for (const std::string& topic : ComputeRepeatedTopicNames(
-           topics.point_cloud2_topic, options.num_point_clouds)) {
+       ComputeRepeatedTopicNames(kPointCloud2Topic, options.num_point_clouds)) {
     expected_topics.insert(SensorId{SensorType::RANGE, topic});
   }
   // For 2D SLAM, subscribe to the IMU if we expect it. For 3D SLAM, the IMU is
@@ -368,17 +352,16 @@ Node::ComputeExpectedSensorIds(
       (node_options_.map_builder_options.use_trajectory_builder_2d() &&
        options.trajectory_builder_options.trajectory_builder_2d_options()
            .use_imu_data())) {
-    expected_topics.insert(SensorId{SensorType::IMU, topics.imu_topic});
+    expected_topics.insert(SensorId{SensorType::IMU, kImuTopic});
   }
   // Odometry is optional.
   if (options.use_odometry) {
-    expected_topics.insert(
-        SensorId{SensorType::ODOMETRY, topics.odometry_topic});
+    expected_topics.insert(SensorId{SensorType::ODOMETRY, kOdometryTopic});
   }
   // NavSatFix is optional.
   if (options.use_nav_sat) {
     expected_topics.insert(
-        SensorId{SensorType::FIXED_FRAME_POSE, topics.nav_sat_fix_topic});
+        SensorId{SensorType::FIXED_FRAME_POSE, kNavSatFixTopic});
   }
   // Landmark is optional.
   if (options.use_landmarks) {
@@ -387,15 +370,14 @@ Node::ComputeExpectedSensorIds(
   return expected_topics;
 }
 
-int Node::AddTrajectory(const TrajectoryOptions& options,
-                        const cartographer_ros_msgs::SensorTopics& topics) {
+int Node::AddTrajectory(const TrajectoryOptions& options) {
   const std::set<cartographer::mapping::TrajectoryBuilderInterface::SensorId>
-      expected_sensor_ids = ComputeExpectedSensorIds(options, topics);
+      expected_sensor_ids = ComputeExpectedSensorIds(options);
   const int trajectory_id =
       map_builder_bridge_.AddTrajectory(expected_sensor_ids, options);
   AddExtrapolator(trajectory_id, options);
   AddSensorSamplers(trajectory_id, options);
-  LaunchSubscribers(options, topics, trajectory_id);
+  LaunchSubscribers(options, trajectory_id);
   wall_timers_.push_back(node_handle_.createWallTimer(
       ::ros::WallDuration(kTopicMismatchCheckDelaySec),
       &Node::MaybeWarnAboutTopicMismatch, this, /*oneshot=*/true));
@@ -406,27 +388,25 @@ int Node::AddTrajectory(const TrajectoryOptions& options,
 }
 
 void Node::LaunchSubscribers(const TrajectoryOptions& options,
-                             const cartographer_ros_msgs::SensorTopics& topics,
                              const int trajectory_id) {
-  for (const std::string& topic : ComputeRepeatedTopicNames(
-           topics.laser_scan_topic, options.num_laser_scans)) {
+  for (const std::string& topic :
+       ComputeRepeatedTopicNames(kLaserScanTopic, options.num_laser_scans)) {
     subscribers_[trajectory_id].push_back(
         {SubscribeWithHandler<sensor_msgs::LaserScan>(
              &Node::HandleLaserScanMessage, trajectory_id, topic, &node_handle_,
              this),
          topic});
   }
-  for (const std::string& topic :
-       ComputeRepeatedTopicNames(topics.multi_echo_laser_scan_topic,
-                                 options.num_multi_echo_laser_scans)) {
+  for (const std::string& topic : ComputeRepeatedTopicNames(
+           kMultiEchoLaserScanTopic, options.num_multi_echo_laser_scans)) {
     subscribers_[trajectory_id].push_back(
         {SubscribeWithHandler<sensor_msgs::MultiEchoLaserScan>(
              &Node::HandleMultiEchoLaserScanMessage, trajectory_id, topic,
              &node_handle_, this),
          topic});
   }
-  for (const std::string& topic : ComputeRepeatedTopicNames(
-           topics.point_cloud2_topic, options.num_point_clouds)) {
+  for (const std::string& topic :
+       ComputeRepeatedTopicNames(kPointCloud2Topic, options.num_point_clouds)) {
     subscribers_[trajectory_id].push_back(
         {SubscribeWithHandler<sensor_msgs::PointCloud2>(
              &Node::HandlePointCloud2Message, trajectory_id, topic,
@@ -440,37 +420,33 @@ void Node::LaunchSubscribers(const TrajectoryOptions& options,
       (node_options_.map_builder_options.use_trajectory_builder_2d() &&
        options.trajectory_builder_options.trajectory_builder_2d_options()
            .use_imu_data())) {
-    std::string topic = topics.imu_topic;
     subscribers_[trajectory_id].push_back(
         {SubscribeWithHandler<sensor_msgs::Imu>(&Node::HandleImuMessage,
-                                                trajectory_id, topic,
+                                                trajectory_id, kImuTopic,
                                                 &node_handle_, this),
-         topic});
+         kImuTopic});
   }
 
   if (options.use_odometry) {
-    std::string topic = topics.odometry_topic;
     subscribers_[trajectory_id].push_back(
         {SubscribeWithHandler<nav_msgs::Odometry>(&Node::HandleOdometryMessage,
-                                                  trajectory_id, topic,
+                                                  trajectory_id, kOdometryTopic,
                                                   &node_handle_, this),
-         topic});
+         kOdometryTopic});
   }
   if (options.use_nav_sat) {
-    std::string topic = topics.nav_sat_fix_topic;
     subscribers_[trajectory_id].push_back(
         {SubscribeWithHandler<sensor_msgs::NavSatFix>(
-             &Node::HandleNavSatFixMessage, trajectory_id, topic, &node_handle_,
-             this),
-         topic});
+             &Node::HandleNavSatFixMessage, trajectory_id, kNavSatFixTopic,
+             &node_handle_, this),
+         kNavSatFixTopic});
   }
   if (options.use_landmarks) {
-    std::string topic = topics.landmark_topic;
     subscribers_[trajectory_id].push_back(
         {SubscribeWithHandler<cartographer_ros_msgs::LandmarkList>(
-             &Node::HandleLandmarkMessage, trajectory_id, topic, &node_handle_,
-             this),
-         topic});
+             &Node::HandleLandmarkMessage, trajectory_id, kLandmarkTopic,
+             &node_handle_, this),
+         kLandmarkTopic});
   }
 }
 
@@ -486,10 +462,8 @@ bool Node::ValidateTrajectoryOptions(const TrajectoryOptions& options) {
   return false;
 }
 
-bool Node::ValidateTopicNames(
-    const ::cartographer_ros_msgs::SensorTopics& topics,
-    const TrajectoryOptions& options) {
-  for (const auto& sensor_id : ComputeExpectedSensorIds(options, topics)) {
+bool Node::ValidateTopicNames(const TrajectoryOptions& options) {
+  for (const auto& sensor_id : ComputeExpectedSensorIds(options)) {
     const std::string& topic = sensor_id.id;
     if (subscribed_topics_.count(topic) > 0) {
       LOG(ERROR) << "Topic name [" << topic << "] is already used.";
@@ -562,23 +536,56 @@ cartographer_ros_msgs::StatusResponse Node::FinishTrajectoryUnderLock(
 bool Node::HandleStartTrajectory(
     ::cartographer_ros_msgs::StartTrajectory::Request& request,
     ::cartographer_ros_msgs::StartTrajectory::Response& response) {
-  absl::MutexLock lock(&mutex_);
-  TrajectoryOptions options;
-  if (!FromRosMessage(request.options, &options) ||
-      !ValidateTrajectoryOptions(options)) {
-    const std::string error = "Invalid trajectory options.";
-    LOG(ERROR) << error;
+  TrajectoryOptions trajectory_options;
+  std::tie(std::ignore, trajectory_options) = LoadOptions(
+      request.configuration_directory, request.configuration_basename);
+
+  if (request.use_initial_pose) {
+    const auto pose = ToRigid3d(request.initial_pose);
+    if (!pose.IsValid()) {
+      response.status.message =
+          "Invalid pose argument. Orientation quaternion must be normalized.";
+      LOG(ERROR) << response.status.message;
+      response.status.code =
+          cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
+      return true;
+    }
+
+    // Check if the requested trajectory for the relative initial pose exists.
+    response.status = TrajectoryStateToStatus(
+        request.relative_to_trajectory_id,
+        {TrajectoryState::ACTIVE, TrajectoryState::FROZEN,
+         TrajectoryState::FINISHED} /* valid states */);
+    if (response.status.code != cartographer_ros_msgs::StatusCode::OK) {
+      LOG(ERROR) << "Can't start a trajectory with initial pose: "
+                 << response.status.message;
+      return true;
+    }
+
+    ::cartographer::mapping::proto::InitialTrajectoryPose
+        initial_trajectory_pose;
+    initial_trajectory_pose.set_to_trajectory_id(
+        request.relative_to_trajectory_id);
+    *initial_trajectory_pose.mutable_relative_pose() =
+        cartographer::transform::ToProto(pose);
+    initial_trajectory_pose.set_timestamp(cartographer::common::ToUniversal(
+        ::cartographer_ros::FromRos(ros::Time(0))));
+    *trajectory_options.trajectory_builder_options
+         .mutable_initial_trajectory_pose() = initial_trajectory_pose;
+  }
+
+  if (!ValidateTrajectoryOptions(trajectory_options)) {
+    response.status.message = "Invalid trajectory options.";
+    LOG(ERROR) << response.status.message;
     response.status.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
-    response.status.message = error;
-  } else if (!ValidateTopicNames(request.topics, options)) {
-    const std::string error = "Invalid topics.";
-    LOG(ERROR) << error;
+  } else if (!ValidateTopicNames(trajectory_options)) {
+    response.status.message = "Topics are already used by another trajectory.";
+    LOG(ERROR) << response.status.message;
     response.status.code = cartographer_ros_msgs::StatusCode::INVALID_ARGUMENT;
-    response.status.message = error;
   } else {
-    response.trajectory_id = AddTrajectory(options, request.topics);
-    response.status.code = cartographer_ros_msgs::StatusCode::OK;
     response.status.message = "Success.";
+    response.trajectory_id = AddTrajectory(trajectory_options);
+    response.status.code = cartographer_ros_msgs::StatusCode::OK;
   }
   return true;
 }
@@ -586,7 +593,7 @@ bool Node::HandleStartTrajectory(
 void Node::StartTrajectoryWithDefaultTopics(const TrajectoryOptions& options) {
   absl::MutexLock lock(&mutex_);
   CHECK(ValidateTrajectoryOptions(options));
-  AddTrajectory(options, DefaultSensorTopics());
+  AddTrajectory(options);
 }
 
 std::vector<
@@ -601,8 +608,7 @@ Node::ComputeDefaultSensorIdsForMultipleBags(
       prefix = "bag_" + std::to_string(i + 1) + "_";
     }
     std::set<SensorId> unique_sensor_ids;
-    for (const auto& sensor_id :
-         ComputeExpectedSensorIds(bags_options.at(i), DefaultSensorTopics())) {
+    for (const auto& sensor_id : ComputeExpectedSensorIds(bags_options.at(i))) {
       unique_sensor_ids.insert(SensorId{sensor_id.type, prefix + sensor_id.id});
     }
     bags_sensor_ids.push_back(unique_sensor_ids);
