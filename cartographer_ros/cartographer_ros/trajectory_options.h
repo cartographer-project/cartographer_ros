@@ -22,7 +22,6 @@
 #include "cartographer/common/lua_parameter_dictionary.h"
 #include "cartographer/common/port.h"
 #include "cartographer/mapping/proto/trajectory_builder_options.pb.h"
-#include "cartographer_ros_msgs/TrajectoryOptions.h"
 
 namespace cartographer_ros {
 
@@ -48,24 +47,8 @@ struct TrajectoryOptions {
   double landmarks_sampling_ratio;
 };
 
-::cartographer::mapping::proto::InitialTrajectoryPose
-CreateInitialTrajectoryPose(
-    ::cartographer::common::LuaParameterDictionary* lua_parameter_dictionary);
-
 TrajectoryOptions CreateTrajectoryOptions(
     ::cartographer::common::LuaParameterDictionary* lua_parameter_dictionary);
-
-TrajectoryOptions CreateTrajectoryOptions(
-    ::cartographer::common::LuaParameterDictionary* lua_parameter_dictionary,
-    ::cartographer::common::LuaParameterDictionary* initial_trajectory_pose);
-
-// Try to convert 'msg' into 'options'. Returns false on failure.
-bool FromRosMessage(const cartographer_ros_msgs::TrajectoryOptions& msg,
-                    TrajectoryOptions* options);
-
-// Converts 'trajectory_options' into a ROS message.
-cartographer_ros_msgs::TrajectoryOptions ToRosMessage(
-    const TrajectoryOptions& trajectory_options);
 
 }  // namespace cartographer_ros
 
