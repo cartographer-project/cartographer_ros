@@ -19,7 +19,6 @@ project(cartographer_rviz)
 set(PACKAGE_DEPENDENCIES
   cartographer_ros
   cartographer_ros_msgs
-  eigen_conversions
   message_runtime
   roscpp
   roslib

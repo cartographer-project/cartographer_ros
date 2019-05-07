@@ -43,7 +43,6 @@
 
   <depend version_gte="1.0.0">cartographer</depend>
   <depend version_gte="1.0.0">cartographer_ros_msgs</depend>
-  <depend>eigen_conversions</depend>
   <depend>geometry_msgs</depend>
   <depend>libgflags-dev</depend>
   <depend>libgoogle-glog-dev</depend>
