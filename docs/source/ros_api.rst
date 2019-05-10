@@ -94,9 +94,11 @@ submap_query (`cartographer_ros_msgs/SubmapQuery`_)
   Fetches the requested submap.
 
 start_trajectory (`cartographer_ros_msgs/StartTrajectory`_)
-  Starts another trajectory by specifying its sensor topics and trajectory
-  options as an binary-encoded proto. Returns an assigned trajectory ID.
-  The ``start_trajectory`` executable provides a convenient wrapper to use this service.
+  Starts a trajectory using default sensor topics and the provided configuration. 
+  An initial pose can be optionally specified. Returns an assigned trajectory ID.
+
+trajectory_query (`cartographer_ros_msgs/TrajectoryQuery`_)
+  Returns the trajectory data from the pose graph.
 
 finish_trajectory (`cartographer_ros_msgs/FinishTrajectory`_)
   Finishes the given `trajectory_id`'s trajectory by running a final optimization.
@@ -141,6 +143,7 @@ If *provide_odom_frame* is enabled in the :doc:`configuration`, a continuous
 .. _cartographer_ros_msgs/SubmapList: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/msg/SubmapList.msg
 .. _cartographer_ros_msgs/SubmapQuery: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/srv/SubmapQuery.srv
 .. _cartographer_ros_msgs/StartTrajectory: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/srv/StartTrajectory.srv
+.. _cartographer_ros_msgs/TrajectoryQuery: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/srv/TrajectoryQuery.srv
 .. _cartographer_ros_msgs/WriteState: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/srv/WriteState.srv
 .. _cartographer_ros_msgs/GetTrajectoryStates: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/srv/GetTrajectoryStates.srv
 .. _cartographer_ros_msgs/ReadMetrics: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/srv/ReadMetrics.srv
