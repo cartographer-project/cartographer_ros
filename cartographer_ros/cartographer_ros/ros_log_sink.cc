@@ -18,11 +18,16 @@
 
 #include <chrono>
 #include <cstring>
+#include <iostream>
 #include <string>
 #include <thread>
 
 #include "glog/log_severity.h"
-#include "ros/console.h"
+
+#define ROS_INFO_STREAM(str) std::cout << str << std::endl;
+#define ROS_WARN_STREAM(str) std::cout << str << std::endl;
+#define ROS_ERROR_STREAM(str) std::cerr << str << std::endl;
+#define ROS_FATAL_STREAM(str) std::cerr << str << std::endl;
 
 namespace cartographer_ros {
 
@@ -44,6 +49,7 @@ void ScopedRosLogSink::send(const ::google::LogSeverity severity,
                             const struct std::tm* const tm_time,
                             const char* const message,
                             const size_t message_len) {
+  (void)base_filename;
   const std::string message_string = ::google::LogSink::ToString(
       severity, GetBasename(filename), line, tm_time, message, message_len);
   switch (severity) {

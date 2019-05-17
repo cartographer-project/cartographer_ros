@@ -19,7 +19,9 @@
 #include "cartographer_ros/node_options.h"
 #include "cartographer_ros/ros_log_sink.h"
 #include "gflags/gflags.h"
-#include "tf2_ros/transform_listener.h"
+
+#include <rclcpp/rclcpp.hpp>
+#include <tf2_ros/transform_listener.h>
 
 DEFINE_string(configuration_directory, "",
               "First directory in which configuration files are searched, "
@@ -40,13 +42,11 @@ DEFINE_string(
     save_state_filename, "",
     "If non-empty, serialize state and write it to disk before shutting down.");
 
+
 namespace cartographer_ros {
 namespace {
 
 void Run() {
-  constexpr double kTfBufferCacheTimeInSeconds = 10.;
-  tf2_ros::Buffer tf_buffer{::ros::Duration(kTfBufferCacheTimeInSeconds)};
-  tf2_ros::TransformListener tf(tf_buffer);
   NodeOptions node_options;
   TrajectoryOptions trajectory_options;
   std::tie(node_options, trajectory_options) =
@@ -55,22 +55,24 @@ void Run() {
   auto map_builder =
       cartographer::common::make_unique<cartographer::mapping::MapBuilder>(
           node_options.map_builder_options);
-  Node node(node_options, std::move(map_builder), &tf_buffer);
+
+  auto node = std::make_shared<cartographer_ros::Cartographer>(node_options, std::move(map_builder));
+
   if (!FLAGS_load_state_filename.empty()) {
-    node.LoadState(FLAGS_load_state_filename, FLAGS_load_frozen_state);
+    node->LoadState(FLAGS_load_state_filename, FLAGS_load_frozen_state);
   }
 
   if (FLAGS_start_trajectory_with_default_topics) {
-    node.StartTrajectoryWithDefaultTopics(trajectory_options);
+    node->StartTrajectoryWithDefaultTopics(trajectory_options);
   }
 
-  ::ros::spin();
+  rclcpp::spin(node);
 
-  node.FinishAllTrajectories();
-  node.RunFinalOptimization();
+  node->FinishAllTrajectories();
+  node->RunFinalOptimization();
 
   if (!FLAGS_save_state_filename.empty()) {
-    node.SerializeState(FLAGS_save_state_filename);
+    node->SerializeState(FLAGS_save_state_filename);
   }
 }
 
@@ -86,10 +88,9 @@ int main(int argc, char** argv) {
   CHECK(!FLAGS_configuration_basename.empty())
       << "-configuration_basename is missing.";
 
-  ::ros::init(argc, argv, "cartographer_node");
-  ::ros::start();
+  ::rclcpp::init(argc, argv);
 
   cartographer_ros::ScopedRosLogSink ros_log_sink;
   cartographer_ros::Run();
-  ::ros::shutdown();
+  ::rclcpp::shutdown();
 }

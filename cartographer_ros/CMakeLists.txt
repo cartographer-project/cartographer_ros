@@ -12,46 +12,51 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 2.8.12)  # Ships with Ubuntu 14.04 (Trusty)
+cmake_minimum_required(VERSION 3.5)
 
 project(cartographer_ros)
 
-set(PACKAGE_DEPENDENCIES
-  cartographer_ros_msgs
-  eigen_conversions
-  geometry_msgs
-  message_runtime
-  nav_msgs
-  pcl_conversions
-  rosbag
-  roscpp
-  roslib
-  sensor_msgs
-  std_msgs
-  tf2
-  tf2_eigen
-  tf2_ros
-  urdf
-  visualization_msgs
-)
+find_package(ament_cmake REQUIRED)
+
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra)
+endif()
 
 find_package(cartographer REQUIRED)
 include("${CARTOGRAPHER_CMAKE_DIR}/functions.cmake")
 set(BUILD_SHARED_LIBS OFF)
 option(BUILD_GRPC "build features that require Cartographer gRPC support" false)
-google_initialize_cartographer_project()
-google_enable_testing()
 
-find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
+google_initialize_cartographer_project()
+# google_enable_testing()
+
+find_package(cartographer_ros_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(pcl_conversions REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_eigen REQUIRED)
+find_package(tf2_msgs REQUIRED)
+# find_package(urdf REQUIRED)
+find_package(visualization_msgs REQUIRED)
 
 include(FindPkgConfig)
 
 find_package(LuaGoogle REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common)
 find_package(Eigen3 REQUIRED)
-find_package(Boost REQUIRED COMPONENTS system iostreams)
-
+# find_package(Boost REQUIRED COMPONENTS system iostreams)
 find_package(urdfdom_headers REQUIRED)
+
 if(DEFINED urdfdom_headers_VERSION)
   if(${urdfdom_headers_VERSION} GREATER 0.4.1)
     add_definitions(-DURDFDOM_HEADERS_HAS_SHARED_PTR_DEFS)
@@ -59,40 +64,47 @@ if(DEFINED urdfdom_headers_VERSION)
 endif()
 
 include_directories(
-  ${urdfdom_headers_INCLUDE_DIRS}
+  include
+  "."
+  ${cartographer_INCLUDE_DIRS}
+  ${cartographer_ros_msgs_INCLUDE_DIRS}
+  ${geometry_msgs_INCLUDE_DIRS}
+  ${nav_msgs_INCLUDE_DIRS}
+  ${pcl_conversions_INCLUDE_DIRS}
+  ${rclcpp_INCLUDE_DIRS}
+  ${sensor_msgs_INCLUDE_DIRS}
+  ${std_msgs_INCLUDE_DIRS}
+  ${tf2_INCLUDE_DIRS}
+  ${tf2_msgs_INCLUDE_DIRS}
+  ${tf2_ros_INCLUDE_DIRS}
+  ${tf2_eigen_INCLUDE_DIRS}
+  ${visualization_msgs_INCLUDE_DIRS}
 )
 
-# Override Catkin's GTest configuration to use GMock.
-set(GTEST_FOUND TRUE)
-set(GTEST_INCLUDE_DIRS ${GMOCK_INCLUDE_DIRS})
-set(GTEST_LIBRARIES ${GMOCK_LIBRARIES})
+# # Override Catkin's GTest configuration to use GMock.
+# set(GTEST_FOUND TRUE)
+# set(GTEST_INCLUDE_DIRS ${GMOCK_INCLUDE_DIRS})
+# set(GTEST_LIBRARIES ${GMOCK_LIBRARIES})
 
-catkin_package(
-  CATKIN_DEPENDS
-    ${PACKAGE_DEPENDENCIES}
-  DEPENDS
-    # TODO(damonkohler): This should be here but causes Catkin to abort because
-    # protobuf specifies a library '-lpthread' instead of just 'pthread'.
-    # CARTOGRAPHER
-    PCL
-    EIGEN3
-    Boost
-    urdfdom_headers
-  INCLUDE_DIRS "."
-  LIBRARIES ${PROJECT_NAME}
-)
+# file(GLOB_RECURSE ALL_SRCS "*.cc" "*.h")
+# file(GLOB_RECURSE ALL_TESTS "*_test.cc")
+# file(GLOB_RECURSE ALL_EXECUTABLES "*_main.cc")
+# list(REMOVE_ITEM ALL_SRCS ${ALL_TESTS})
+# list(REMOVE_ITEM ALL_SRCS ${ALL_EXECUTABLES})
 
-file(GLOB_RECURSE ALL_SRCS "*.cc" "*.h")
-file(GLOB_RECURSE ALL_TESTS "*_test.cc")
-file(GLOB_RECURSE ALL_EXECUTABLES "*_main.cc")
-file(GLOB_RECURSE ALL_GRPC_FILES "cartographer_ros/cartographer_grpc/*")
-list(REMOVE_ITEM ALL_SRCS ${ALL_TESTS})
-list(REMOVE_ITEM ALL_SRCS ${ALL_EXECUTABLES})
-if (NOT ${BUILD_GRPC})
-  list(REMOVE_ITEM ALL_SRCS ${ALL_GRPC_FILES})
-  list(REMOVE_ITEM ALL_TESTS ${ALL_GRPC_FILES})
-  list(REMOVE_ITEM ALL_EXECUTABLES ${ALL_GRPC_FILES})
-endif()
+set(ALL_SRCS
+  "cartographer_ros/map_builder_bridge.cc"
+  "cartographer_ros/msg_conversion.cc"
+  "cartographer_ros/node.cc"
+  "cartographer_ros/node_constants.cc"
+  "cartographer_ros/node_options.cc"
+  "cartographer_ros/ros_log_sink.cc"
+  "cartographer_ros/sensor_bridge.cc"
+  "cartographer_ros/tf_bridge.cc"
+  "cartographer_ros/time_conversion.cc"
+  "cartographer_ros/trajectory_options.cc"
+  "cartographer_ros/submap.cc"
+  )
 add_library(${PROJECT_NAME} ${ALL_SRCS})
 add_subdirectory("cartographer_ros")
 
@@ -117,15 +129,17 @@ endforeach()
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
   "${EIGEN3_INCLUDE_DIR}")
 
-# Boost
-target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
-  "${Boost_INCLUDE_DIRS}")
-target_link_libraries(${PROJECT_NAME} PUBLIC ${Boost_LIBRARIES})
+# # Boost
+# target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
+#   "${Boost_INCLUDE_DIRS}")
+# target_link_libraries(${PROJECT_NAME} PUBLIC ${Boost_LIBRARIES})
 
-# Catkin
-target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${catkin_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${catkin_LIBRARIES})
-add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
+# YAML
+target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${YAMLCPP_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${YAMLCPP_LIBRARIES})
+
+# URDFDOM
+target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${urdfdom_headers_INCLUDE_DIRS})
 
 # Add the binary directory first, so that port.h is included after it has
 # been generated.
@@ -139,46 +153,31 @@ set(TARGET_COMPILE_FLAGS "${TARGET_COMPILE_FLAGS} ${GOOG_CXX_FLAGS}")
 set_target_properties(${PROJECT_NAME} PROPERTIES
   COMPILE_FLAGS ${TARGET_COMPILE_FLAGS})
 
-if (CATKIN_ENABLE_TESTING)
-  foreach(TEST_SOURCE_FILENAME ${ALL_TESTS})
-    get_filename_component(TEST_NAME ${TEST_SOURCE_FILENAME} NAME_WE)
-    catkin_add_gtest(${TEST_NAME} ${TEST_SOURCE_FILENAME})
-    # catkin_add_gtest uses a plain (i.e. no PUBLIC/PRIVATE/INTERFACE) call to
-    # target_link_libraries. That forces us to do the same.
-    target_include_directories(${TEST_NAME} SYSTEM PUBLIC ${LUA_INCLUDE_DIR})
-    target_link_libraries(${TEST_NAME} ${LUA_LIBRARIES})
-    target_include_directories(${TEST_NAME} SYSTEM PUBLIC ${catkin_INCLUDE_DIRS})
-    target_link_libraries(${TEST_NAME} ${catkin_LIBRARIES})
-    add_dependencies(${TEST_NAME} ${catkin_EXPORTED_TARGETS})
-    target_link_libraries(${TEST_NAME} cartographer)
-    target_link_libraries(${TEST_NAME} ${PROJECT_NAME})
-    set_target_properties(${TEST_NAME} PROPERTIES COMPILE_FLAGS ${TARGET_COMPILE_FLAGS})
-  endforeach()
-endif()
+# install(PROGRAMS scripts/tf_remove_frames.py
+#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+# )
 
-install(DIRECTORY launch urdf configuration_files
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+install(DIRECTORY configuration_files
+  DESTINATION share/${PROJECT_NAME}/
 )
 
-install(PROGRAMS scripts/tf_remove_frames.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+install(TARGETS
+  ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin)
 
-install(TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-)
+# # Install source headers.
+# file(GLOB_RECURSE HDRS "*.h")
+# foreach(HDR ${HDRS})
+#   file(RELATIVE_PATH REL_FIL ${PROJECT_SOURCE_DIR} ${HDR})
+#   get_filename_component(INSTALL_DIR ${REL_FIL} DIRECTORY)
+#   install(
+#     FILES
+#       ${HDR}
+#     DESTINATION
+#       include/${INSTALL_DIR}
+#   )
+# endforeach()
 
-# Install source headers.
-file(GLOB_RECURSE HDRS "*.h")
-foreach(HDR ${HDRS})
-  file(RELATIVE_PATH REL_FIL ${PROJECT_SOURCE_DIR} ${HDR})
-  get_filename_component(INSTALL_DIR ${REL_FIL} DIRECTORY)
-  install(
-    FILES
-      ${HDR}
-    DESTINATION
-      include/${INSTALL_DIR}
-  )
-endforeach()
+ament_package()

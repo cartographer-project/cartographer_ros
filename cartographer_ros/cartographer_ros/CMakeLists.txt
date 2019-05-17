@@ -12,144 +12,103 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-google_binary(cartographer_assets_writer
-  SRCS
-    assets_writer_main.cc
-    ros_map_writing_points_processor.h
-    ros_map_writing_points_processor.cc
+add_executable(cartographer_node
+  node_main.cc)
+target_include_directories(cartographer_node SYSTEM PUBLIC ${LUA_INCLUDE_DIR})
+target_link_libraries(cartographer_node ${PROJECT_NAME})
+ament_target_dependencies(cartographer_node
+  "cartographer_ros_msgs"
+  "geometry_msgs"
+  "nav_msgs"
+  "pcl_conversions"
+  "rclcpp"
+  "std_msgs"
+  "sensor_msgs"
+  "tf2"
+  "tf2_msgs"
+  "tf2_ros"
+  "visualization_msgs"
 )
 
-install(TARGETS cartographer_assets_writer
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+add_executable(occupancy_grid_node
+  occupancy_grid_node_main.cc)
+target_include_directories(occupancy_grid_node SYSTEM PUBLIC ${LUA_INCLUDE_DIR})
+target_link_libraries(occupancy_grid_node ${PROJECT_NAME})
+ament_target_dependencies(occupancy_grid_node
+  "cartographer_ros_msgs"
+  "nav_msgs"
+  "rclcpp"
+  "std_msgs"
 )
 
-google_binary(cartographer_node
-  SRCS
-    node_main.cc
-)
+install(TARGETS
+  cartographer_node
+  occupancy_grid_node
+  DESTINATION lib/${PROJECT_NAME})
 
-install(TARGETS cartographer_node
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-google_binary(cartographer_offline_node
-  SRCS
-    offline_node_main.cc
-)
-
-install(TARGETS cartographer_offline_node
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-google_binary(cartographer_start_trajectory
-  SRCS
-    start_trajectory_main.cc
-)
-
-install(TARGETS cartographer_start_trajectory
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-google_binary(cartographer_occupancy_grid_node
-  SRCS
-    occupancy_grid_node_main.cc
-)
-
-install(TARGETS cartographer_occupancy_grid_node
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-google_binary(cartographer_rosbag_validate
-  SRCS
-    rosbag_validate_main.cc
-)
-
-install(TARGETS cartographer_rosbag_validate
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-google_binary(cartographer_pbstream_to_ros_map
-  SRCS
-    pbstream_to_ros_map_main.cc
-)
-
-install(TARGETS cartographer_pbstream_to_ros_map
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-google_binary(cartographer_pbstream_map_publisher
-  SRCS
-    pbstream_map_publisher_main.cc
-)
-
-install(TARGETS cartographer_pbstream_map_publisher
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-google_binary(cartographer_dev_rosbag_publisher
-  SRCS
-  dev/rosbag_publisher_main.cc
-)
-
-install(TARGETS cartographer_dev_rosbag_publisher
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-google_binary(cartographer_dev_trajectory_comparison
-  SRCS
-  dev/trajectory_comparison_main.cc
-)
-
-install(TARGETS cartographer_dev_trajectory_comparison
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-# TODO(cschuet): Add support for shared library case.
-if (${BUILD_GRPC})
-  google_binary(cartographer_grpc_node
-    SRCS
-      cartographer_grpc/node_grpc_main.cc
-  )
-
-  install(TARGETS cartographer_grpc_node
-    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-  )
-
-  google_binary(cartographer_grpc_offline_node
-    SRCS
-      cartographer_grpc/offline_node_grpc_main.cc
-  )
-
-  install(TARGETS cartographer_grpc_offline_node
-    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-  )
-
-  install(PROGRAMS
-    ../scripts/cartographer_grpc_server.sh
-    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-  )
-endif()
+# google_binary(cartographer_assets_writer
+#   SRCS
+#     assets_writer_main.cc
+#     ros_map_writing_points_processor.h
+#     ros_map_writing_points_processor.cc
+# )
+#
+# install(TARGETS cartographer_assets_writer
+#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+#
+# google_binary(cartographer_offline_node
+#   SRCS
+#     offline_node_main.cc
+# )
+#
+# install(TARGETS cartographer_offline_node
+#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+# )
+#
+# google_binary(cartographer_start_trajectory
+#   SRCS
+#     start_trajectory_main.cc
+# )
+#
+# install(TARGETS cartographer_start_trajectory
+#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+# )
+#
+# google_binary(cartographer_occupancy_grid_node
+#   SRCS
+#     occupancy_grid_node_main.cc
+# )
+#
+# install(TARGETS cartographer_occupancy_grid_node
+#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+# )
+#
+# google_binary(cartographer_rosbag_validate
+#   SRCS
+#     rosbag_validate_main.cc
+# )
+#
+# install(TARGETS cartographer_rosbag_validate
+#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+# )
+#
+# google_binary(cartographer_pbstream_to_ros_map
+#   SRCS
+#     pbstream_to_ros_map_main.cc
+# )
+#
+# install(TARGETS cartographer_pbstream_to_ros_map
+#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+# )

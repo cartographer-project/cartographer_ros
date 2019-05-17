@@ -18,13 +18,13 @@
 #define CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_TIME_CONVERSION_H
 
 #include "cartographer/common/time.h"
-#include "ros/ros.h"
+#include <builtin_interfaces/msg/time.hpp>
 
 namespace cartographer_ros {
 
-::ros::Time ToRos(::cartographer::common::Time time);
+builtin_interfaces::msg::Time ToRos(::cartographer::common::Time time);
 
-::cartographer::common::Time FromRos(const ::ros::Time& time);
+::cartographer::common::Time FromRos(const builtin_interfaces::msg::Time& time);
 
 }  // namespace cartographer_ros
 
