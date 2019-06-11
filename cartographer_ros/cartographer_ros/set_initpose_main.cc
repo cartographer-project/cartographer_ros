@@ -24,6 +24,7 @@
 #include "cartographer_ros/node_options.h"
 #include "cartographer_ros/ros_log_sink.h"
 #include "cartographer_ros_msgs/FinishTrajectory.h"
+#include "cartographer_ros_msgs/GetTrajectoryStates.h"
 #include "cartographer_ros_msgs/StartTrajectory.h"
 #include "cartographer_ros_msgs/StatusCode.h"
 #include "geometry_msgs/PoseWithCovarianceStamped.h"
@@ -44,7 +45,6 @@ DEFINE_string(load_state_filename, "",
               "Filename of a pbstream to draw a map from.");
 
 namespace {
-int current_trajectory_id_ = 1;
 std::unique_ptr<cartographer::mapping::MapBuilder> map_builder_;
 }  // namespace
 
@@ -53,12 +53,43 @@ void move_base_simple_callback(
     const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg) {
   ::ros::NodeHandle nh;
 
-  // stop the old trajectory
+  // find the active active trajectory
+  ::ros::ServiceClient client_get_trajectroy_states =
+      nh.serviceClient<cartographer_ros_msgs::GetTrajectoryStates>(
+          cartographer_ros::kGetTrajectoryStatesServiceName);
+
+  cartographer_ros_msgs::GetTrajectoryStates srv_get_trajectroy_states;
+  if (!client_get_trajectroy_states.call(srv_get_trajectroy_states)) {
+     LOG(ERROR) << "Failed to call "
+               << cartographer_ros::kGetTrajectoryStatesServiceName << ".";
+   }
+  if (srv_get_trajectroy_states.response.status.code !=
+      cartographer_ros_msgs::StatusCode::OK) {
+    LOG(ERROR) << "Error get trajectory states - message: '"
+               << srv_get_trajectroy_states.response.status.message
+               << "' (status code: "
+               << std::to_string(srv_get_trajectroy_states.response.status.code)
+               << ").";
+    return;
+  }
+
+  int current_trajectory_id = -1;
+  for(size_t i = 0; i < srv_get_trajectroy_states.response.trajectory_states.trajectory_state.size(); i++) {
+    if(srv_get_trajectroy_states.response.trajectory_states.trajectory_state.at(i) == cartographer_ros_msgs::TrajectoryStates::ACTIVE)
+      current_trajectory_id = srv_get_trajectroy_states.response.trajectory_states.trajectory_id.at(i);
+  }
+
+  if(current_trajectory_id == -1) {
+    LOG(ERROR) << "No active trajectory!";
+    return;
+  }
+
+  // stop the current active trajectory
   ::ros::ServiceClient client_finish_trajectroy =
       nh.serviceClient<cartographer_ros_msgs::FinishTrajectory>(
           cartographer_ros::kFinishTrajectoryServiceName);
   cartographer_ros_msgs::FinishTrajectory srv_finish_trajectroy;
-  srv_finish_trajectroy.request.trajectory_id = current_trajectory_id_++;
+  srv_finish_trajectroy.request.trajectory_id = current_trajectory_id++;
 
   if (!client_finish_trajectroy.call(srv_finish_trajectroy)) {
     LOG(ERROR) << "Failed to call "
