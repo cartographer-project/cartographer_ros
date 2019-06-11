@@ -121,29 +121,6 @@ void move_base_simple_callback(
   // get init pose w.r.t /map
   tf2::Transform map_tf;
   tf2::fromMsg(msg->pose.pose, map_tf);
-
-  // have to set the corret z for the initial pose, since Rviz can only assign
-  // 2D position
-  const auto submap_poses = map_builder_->pose_graph()->GetAllSubmapPoses();
-  double min_dist = 1e6;
-  for (auto itr = submap_poses.begin(); itr != submap_poses.end(); ++itr) {
-    // get the origin of submap w.r.t /map
-    tf2::Vector3 submap_origin(itr->data.pose.translation().x(),
-                               itr->data.pose.translation().y(),
-                               itr->data.pose.translation().z());
-
-    // calculate the distance between submap origin and initial pose
-    tf2::Vector3 delta_pos = submap_origin - map_tf.getOrigin();
-    delta_pos.setZ(0);  // only check horinzontal location
-
-    // find the best submap, which is closest to the initial pose
-    // and assign the height (i.e. z value) of this submap to the initial pose
-    if (delta_pos.length() < min_dist) {
-      map_tf.getOrigin().setZ(submap_origin.z());
-      min_dist = delta_pos.length();
-    }
-  }
-
   tf2::Transform relative_initpose_tf = traj_ref_tf.inverse() * map_tf;
 
   // set the start trajectory service call
