@@ -60,9 +60,9 @@ void move_base_simple_callback(
 
   cartographer_ros_msgs::GetTrajectoryStates srv_get_trajectroy_states;
   if (!client_get_trajectroy_states.call(srv_get_trajectroy_states)) {
-     LOG(ERROR) << "Failed to call "
+    LOG(ERROR) << "Failed to call "
                << cartographer_ros::kGetTrajectoryStatesServiceName << ".";
-   }
+  }
   if (srv_get_trajectroy_states.response.status.code !=
       cartographer_ros_msgs::StatusCode::OK) {
     LOG(ERROR) << "Error get trajectory states - message: '"
@@ -74,12 +74,17 @@ void move_base_simple_callback(
   }
 
   int current_trajectory_id = -1;
-  for(size_t i = 0; i < srv_get_trajectroy_states.response.trajectory_states.trajectory_state.size(); i++) {
-    if(srv_get_trajectroy_states.response.trajectory_states.trajectory_state.at(i) == cartographer_ros_msgs::TrajectoryStates::ACTIVE)
-      current_trajectory_id = srv_get_trajectroy_states.response.trajectory_states.trajectory_id.at(i);
+  for (size_t i = 0; i < srv_get_trajectroy_states.response.trajectory_states
+                             .trajectory_state.size();
+       i++) {
+    if (srv_get_trajectroy_states.response.trajectory_states.trajectory_state
+            .at(i) == cartographer_ros_msgs::TrajectoryStates::ACTIVE)
+      current_trajectory_id =
+          srv_get_trajectroy_states.response.trajectory_states.trajectory_id.at(
+              i);
   }
 
-  if(current_trajectory_id == -1) {
+  if (current_trajectory_id == -1) {
     LOG(ERROR) << "No active trajectory!";
     return;
   }
