@@ -58,8 +58,8 @@ class OccupancyGridNode : public rclcpp::Node
   {
     client_ = this->create_client<cartographer_ros_msgs::srv::SubmapQuery>(kSubmapQueryServiceName);
 
-    occupancy_grid_publisher_ =  this->create_publisher<::nav_msgs::msg::OccupancyGrid>(
-          kOccupancyGridTopic, 10);
+    occupancy_grid_publisher_ = this->create_publisher<::nav_msgs::msg::OccupancyGrid>(
+        kOccupancyGridTopic, rclcpp::QoS(10).transient_local());
 
     occupancy_grid_publisher_timer_ = this->create_wall_timer(
       std::chrono::milliseconds(int(publish_period_sec * 1000)),
