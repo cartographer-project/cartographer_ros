@@ -18,7 +18,6 @@ project(cartographer_ros)
 
 set(PACKAGE_DEPENDENCIES
   cartographer_ros_msgs
-  eigen_conversions
   geometry_msgs
   message_runtime
   nav_msgs
