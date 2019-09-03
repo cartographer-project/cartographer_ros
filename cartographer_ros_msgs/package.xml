@@ -17,7 +17,13 @@
 
 <package format="3">
   <name>cartographer_ros_msgs</name>
-  <version>2.1.1</version>
+  <!-- See cartographer_ros/package.xml for details about the versioning scheme. -->
+  <!--
+  Log of versions:
+
+  1.0.9000 = googlecartographer/cartographer_ros@3cb7efd62c38125081b86844c5b2fee3147d0667 + ros2 port
+  -->
+  <version>1.0.9000</version>
   <description>
     ROS messages for the cartographer_ros package.
   </description>
