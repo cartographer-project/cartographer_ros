@@ -274,12 +274,15 @@ void Node::PublishLocalTrajectoryData(const ::ros::TimerEvent& timer_event) {
       if (trajectory_data.trajectory_options.provide_odom_frame) {
         std::vector<geometry_msgs::TransformStamped> stamped_transforms;
 
-        stamped_transform.header.frame_id = node_options_.map_frame;
-        stamped_transform.child_frame_id =
+        if (trajectory_data.trajectory_options.pub_map_odom_transform){
+
+          stamped_transform.header.frame_id = node_options_.map_frame;
+          stamped_transform.child_frame_id =
             trajectory_data.trajectory_options.odom_frame;
-        stamped_transform.transform =
+          stamped_transform.transform =
             ToGeometryMsgTransform(trajectory_data.local_to_map);
-        stamped_transforms.push_back(stamped_transform);
+          stamped_transforms.push_back(stamped_transform);
+        }
 
         stamped_transform.header.frame_id =
             trajectory_data.trajectory_options.odom_frame;

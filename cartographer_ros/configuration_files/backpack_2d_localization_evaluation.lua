@@ -16,6 +16,7 @@ include "backpack_2d_localization.lua"
 
 -- output map to base_link for evaluation
 options.provide_odom_frame = false
+options.pub_map_odom_transform = true
 POSE_GRAPH.optimization_problem.log_solver_summary = true
 
 -- fast localization

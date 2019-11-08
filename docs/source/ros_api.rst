@@ -137,6 +137,8 @@ If *provide_odom_frame* is enabled in the :doc:`configuration`, a continuous
 (i.e. unaffected by loop closure) transform between the :doc:`configured
 <configuration>` *odom_frame* and *published_frame* will be provided.
 
+If *provide_odom_frame* is enabled and *pub_map_odom_transform* is disabled, the transformation between the *map_frame* and the *odom_frame* is not provided.
+
 .. _robot_state_publisher: http://wiki.ros.org/robot_state_publisher
 .. _static_transform_publisher: http://wiki.ros.org/tf#static_transform_publisher
 .. _cartographer_ros_msgs/FinishTrajectory: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/srv/FinishTrajectory.srv

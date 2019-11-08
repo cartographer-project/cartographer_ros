@@ -32,6 +32,7 @@ struct TrajectoryOptions {
   std::string published_frame;
   std::string odom_frame;
   bool provide_odom_frame;
+  bool pub_map_odom_transform;
   bool use_odometry;
   bool use_nav_sat;
   bool use_landmarks;

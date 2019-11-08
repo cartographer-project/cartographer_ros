@@ -23,6 +23,7 @@ options = {
   published_frame = "odom",
   odom_frame = "odom",
   provide_odom_frame = false,
+  pub_map_odom_transform = true,
   publish_frame_projected_to_2d = false,
   use_pose_extrapolator = true,
   use_odometry = true,
