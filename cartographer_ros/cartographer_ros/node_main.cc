@@ -80,17 +80,18 @@ void Run() {
 }  // namespace cartographer_ros
 
 int main(int argc, char** argv) {
-  // It is important to initialize rclcpp first or copy argv,
-  // because the google commands eat the arguments
-  ::rclcpp::init(argc, argv);
+  // Keep going if an unknown flag is encountered
+  // https://github.com/gflags/gflags/issues/148#issuecomment-318826625
+  google::AllowCommandLineReparsing();
   google::InitGoogleLogging(argv[0]);
-  google::ParseCommandLineFlags(&argc, &argv, true);
+  google::ParseCommandLineFlags(&argc, &argv, false);
 
   CHECK(!FLAGS_configuration_directory.empty())
       << "-configuration_directory is missing.";
   CHECK(!FLAGS_configuration_basename.empty())
       << "-configuration_basename is missing.";
 
+  ::rclcpp::init(argc, argv);
 
   cartographer_ros::ScopedRosLogSink ros_log_sink;
   cartographer_ros::Run();

@@ -183,8 +183,11 @@ class OccupancyGridNode : public rclcpp::Node
 }  // namespace cartographer_ros
 
 int main(int argc, char** argv) {
+  // Keep going if an unknown flag is encountered
+  // https://github.com/gflags/gflags/issues/148#issuecomment-318826625
+  google::AllowCommandLineReparsing();
   google::InitGoogleLogging(argv[0]);
-  google::ParseCommandLineFlags(&argc, &argv, true);
+  google::ParseCommandLineFlags(&argc, &argv, false);
 
   ::rclcpp::init(argc, argv);
 
