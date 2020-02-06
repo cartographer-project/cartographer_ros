@@ -2,6 +2,9 @@
 Changelog for package cartographer_ros_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.3.0 (2017-11-23)
 ------------------
 * https://github.com/googlecartographer/cartographer_ros/compare/0.2.0...0.3.0
