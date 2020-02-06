@@ -23,7 +23,7 @@
 
   1.0.9000 = googlecartographer/cartographer_ros@3cb7efd62c38125081b86844c5b2fee3147d0667 + ros2 port
   -->
-  <version>1.0.9000</version>
+  <version>1.0.9001</version>
   <description>
     ROS messages for the cartographer_ros package.
   </description>
