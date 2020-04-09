@@ -36,7 +36,7 @@ The assets writer takes as input
 4. and a pipeline configuration, which is defined in a ``.lua`` file.
 
 The assets writer runs through the ``.bag`` data in batches with the trajectory found in the ``.pbstream``.
-The pipeline can be can be used to color, filter and export SLAM point cloud data into a variety of formats.
+The pipeline can be used to color, filter and export SLAM point cloud data into a variety of formats.
 There are multiple of such points processing steps that can be interleaved in a pipeline - several ones are already available from `cartographer/io`_.
 
 Sample Usage
