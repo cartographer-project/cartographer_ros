@@ -33,7 +33,7 @@ incorporates motion estimation by combining constant velocity and IMU
 measurements, for matching. Since there are two VLP-16s, 160 UDP packets is
 enough for roughly 2 revolutions, one per VLP-16.
 
-__ https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros/configuration_files/backpack_3d.lua
+__ https://github.com/cartographer-project/cartographer_ros/blob/master/cartographer_ros/configuration_files/backpack_3d.lua
 
 Why is IMU data required for 3D SLAM but not for 2D?
 ----------------------------------------------------

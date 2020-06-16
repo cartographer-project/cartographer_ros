@@ -18,10 +18,10 @@ ARG CARTOGRAPHER_VERSION=master
 
 # Xenial's base image doesn't ship with sudo.
 RUN apt-get update && apt-get install -y sudo time && rm -rf /var/lib/apt/lists/*
-# First, we invalidate the entire cache if googlecartographer/cartographer has
+# First, we invalidate the entire cache if cartographer-project/cartographer has
 # changed. This file's content changes whenever master changes. See:
 # http://stackoverflow.com/questions/36996046/how-to-prevent-dockerfile-caching-git-clone
-ADD https://api.github.com/repos/googlecartographer/cartographer/git/refs/heads/master \
+ADD https://api.github.com/repos/cartographer-project/cartographer/git/refs/heads/master \
     cartographer_ros/cartographer_version.json
 
 # wstool needs the updated rosinstall file to clone the correct repos.
