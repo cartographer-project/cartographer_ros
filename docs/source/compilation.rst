@@ -23,9 +23,7 @@ The Cartographer ROS requirements are the same as `the ones from Cartographer`_.
 
 The following `ROS distributions`_ are currently supported:
 
-* Indigo
 * Kinetic
-* Lunar
 * Melodic
 
 .. _the ones from Cartographer: https://google-cartographer.readthedocs.io/en/latest/#system-requirements
