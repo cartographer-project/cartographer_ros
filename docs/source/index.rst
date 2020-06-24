@@ -38,5 +38,5 @@ configurations. This project provides Cartographer's ROS integration.
    data
    faq
 
-.. _Cartographer: https://github.com/googlecartographer/cartographer
+.. _Cartographer: https://github.com/cartographer-project/cartographer
 .. _SLAM: https://en.wikipedia.org/wiki/Simultaneous_localization_and_mapping

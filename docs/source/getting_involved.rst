@@ -32,15 +32,15 @@ If you want to stay tuned with announcements (such as new major releases or new 
 If you think you've found an issue in Cartographer, you are welcome to open a `GitHub issue`_ but don't forget to provide a way to reproduce your bug!
 Typically, join a ``.bag`` and a link to a fork of the ``cartographer_ros`` repository containing your configuration and launch files.
 
-.. _GitHub issue: https://github.com/googlecartographer/cartographer/issues
+.. _GitHub issue: https://github.com/cartographer-project/cartographer/issues
 
 If you have an idea of a significant change that should be documented and discussed before finding its way into Cartographer, you should submit it as a pull request to `the RFCs repository`_ first.
 Simpler changes can also be discussed in GitHub issues so that developers can help you get things right from the first try.
 
-.. _the RFCs repository: https://github.com/googlecartographer/rfcs
+.. _the RFCs repository: https://github.com/cartographer-project/rfcs
 
 If you want to contribute code or documentation, this is done through `GitHub pull requests`_.
 However, make sure you have signed (online) the `Contributor License Agreement`_ first!
 
-.. _GitHub pull requests: https://github.com/googlecartographer/cartographer/pulls
-.. _Contributor License Agreement: https://github.com/googlecartographer/cartographer/blob/master/CONTRIBUTING.md
+.. _GitHub pull requests: https://github.com/cartographer-project/cartographer/pulls
+.. _Contributor License Agreement: https://github.com/cartographer-project/cartographer/blob/master/CONTRIBUTING.md
