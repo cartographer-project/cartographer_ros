@@ -66,7 +66,7 @@ When running as an online node, Cartographer doesn't know when your bag (or sens
 
 Once you've retrieved your ``.pbstream`` file, you can run the assets writer with the `sample pipeline`_ for the 3D backpack:
 
-.. _sample pipeline: https://github.com/googlecartographer/cartographer_ros/blob/44459e18102305745c56f92549b87d8e91f434fe/cartographer_ros/configuration_files/assets_writer_backpack_3d.lua
+.. _sample pipeline: https://github.com/cartographer-project/cartographer_ros/blob/44459e18102305745c56f92549b87d8e91f434fe/cartographer_ros/configuration_files/assets_writer_backpack_3d.lua
 
 .. code-block:: bash
 
@@ -83,17 +83,17 @@ Configuration
 The assets writer is modeled as a pipeline of `PointsProcessor`_s.
 `PointsBatch`_\ s flow through each processor and they all have the chance to modify the ``PointsBatch`` before passing it on.
 
-.. _PointsProcessor: https://github.com/googlecartographer/cartographer/blob/30f7de1a325d6604c780f2f74d9a345ec369d12d/cartographer/io/points_processor.h
-.. _PointsBatch: https://github.com/googlecartographer/cartographer/blob/30f7de1a325d6604c780f2f74d9a345ec369d12d/cartographer/io/points_batch.h
+.. _PointsProcessor: https://github.com/cartographer-project/cartographer/blob/30f7de1a325d6604c780f2f74d9a345ec369d12d/cartographer/io/points_processor.h
+.. _PointsBatch: https://github.com/cartographer-project/cartographer/blob/30f7de1a325d6604c780f2f74d9a345ec369d12d/cartographer/io/points_batch.h
 
 For example the `assets_writer_backpack_3d.lua`_ pipeline uses ``min_max_range_filter`` to remove points that are either too close or too far from the sensor.
 After this, it saves "*X-Rays*" (translucent side views of the map), then recolors the ``PointsBatch``\ s depending on the sensor frame ids and writes another set of X-Rays using these new colors.
 
-.. _assets_writer_backpack_3d.lua: https://github.com/googlecartographer/cartographer_ros/blob/44459e18102305745c56f92549b87d8e91f434fe/cartographer_ros/configuration_files/assets_writer_backpack_3d.lua
+.. _assets_writer_backpack_3d.lua: https://github.com/cartographer-project/cartographer_ros/blob/44459e18102305745c56f92549b87d8e91f434fe/cartographer_ros/configuration_files/assets_writer_backpack_3d.lua
 
 The available ``PointsProcessor``\ s are all defined in the `cartographer/io`_ sub-directory and documented in their individual header files.
 
-.. _cartographer/io: https://github.com/googlecartographer/cartographer/tree/f1ac8967297965b8eb6f2f4b08a538e052b5a75b/cartographer/io
+.. _cartographer/io: https://github.com/cartographer-project/cartographer/tree/f1ac8967297965b8eb6f2f4b08a538e052b5a75b/cartographer/io
 
 * **color_points**: Colors points with a fixed color by frame_id.
 * **dump_num_points**: Passes through points, but keeps track of how many points it saw and output that on Flush.
@@ -115,18 +115,18 @@ First-person visualization of point clouds
 Two ``PointsProcessor``\ s are of particular interest: ``pcd_writing`` and ``ply_writing`` can save a point cloud in a ``.pcd`` or ``.ply`` file format.
 These file formats can then be used by specialized software such as `point_cloud_viewer`_ or `meshlab`_ to navigate through the high resolution map.
 
-.. _point_cloud_viewer: https://github.com/googlecartographer/point_cloud_viewer
+.. _point_cloud_viewer: https://github.com/cartographer-project/point_cloud_viewer
 .. _meshlab: http://www.meshlab.net/
 
 The typical assets writer pipeline for this outcome is composed of an IntensityToColorPointsProcessor_ giving points a non-white color, then a PlyWritingPointsProcessor_ exporting the results to a ``.ply`` point cloud.
 An example of such a pipeline is in `assets_writer_backpack_2d.lua`_.
 
-.. _IntensityToColorPointsProcessor: https://github.com/googlecartographer/cartographer/blob/30f7de1a325d6604c780f2f74d9a345ec369d12d/cartographer/io/intensity_to_color_points_processor.cc
-.. _PlyWritingPointsProcessor: https://github.com/googlecartographer/cartographer/blob/30f7de1a325d6604c780f2f74d9a345ec369d12d/cartographer/io/ply_writing_points_processor.h
-.. _assets_writer_backpack_2d.lua: https://github.com/googlecartographer/cartographer_ros/blob/44459e18102305745c56f92549b87d8e91f434fe/cartographer_ros/configuration_files/assets_writer_backpack_2d.lua
+.. _IntensityToColorPointsProcessor: https://github.com/cartographer-project/cartographer/blob/30f7de1a325d6604c780f2f74d9a345ec369d12d/cartographer/io/intensity_to_color_points_processor.cc
+.. _PlyWritingPointsProcessor: https://github.com/cartographer-project/cartographer/blob/30f7de1a325d6604c780f2f74d9a345ec369d12d/cartographer/io/ply_writing_points_processor.h
+.. _assets_writer_backpack_2d.lua: https://github.com/cartographer-project/cartographer_ros/blob/44459e18102305745c56f92549b87d8e91f434fe/cartographer_ros/configuration_files/assets_writer_backpack_2d.lua
 
 Once you have the ``.ply``, follow the README of `point_cloud_viewer`_ to generate an on-disk octree data structure which can be viewed by one of the viewers (SDL or web based) in the same repo.
 
-.. _point_cloud_viewer: https://github.com/googlecartographer/point_cloud_viewer
+.. _point_cloud_viewer: https://github.com/cartographer-project/point_cloud_viewer
 
 .. image:: point_cloud_viewer_demo_3d.jpg

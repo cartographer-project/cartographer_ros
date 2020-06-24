@@ -87,7 +87,7 @@ options = {
 
     -- We also write a PLY file at this stage, because gray points look good.
     -- The points in the PLY can be visualized using
-    -- https://github.com/googlecartographer/point_cloud_viewer.
+    -- https://github.com/cartographer-project/point_cloud_viewer.
     {
       action = "write_ply",
       filename = "points.ply",

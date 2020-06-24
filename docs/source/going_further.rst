@@ -42,7 +42,7 @@ For landmarks publishing on a ``cartographer_ros_msgs/LandmarkList`` (`message d
 
     use_landmarks = true
 
-.. _message defined in cartographer_ros: https://github.com/googlecartographer/cartographer_ros/blob/4b39ee68c7a4d518bf8d01a509331e2bc1f514a0/cartographer_ros_msgs/msg/LandmarkList.msg
+.. _message defined in cartographer_ros: https://github.com/cartographer-project/cartographer_ros/blob/4b39ee68c7a4d518bf8d01a509331e2bc1f514a0/cartographer_ros_msgs/msg/LandmarkList.msg
 
 Localization only
 =================

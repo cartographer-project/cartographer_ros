@@ -46,8 +46,8 @@ It is visible in the laser scan data that contradicting information is passed to
 But the slipping also indicates that we trust the point cloud matching too much and disregard the other sensors quite strongly.
 Our aim is to improve the situation through tuning.
 
-.. _aba4575: https://github.com/googlecartographer/cartographer/commit/aba4575d937df4c9697f61529200c084f2562584
-.. _99c23b6: https://github.com/googlecartographer/cartographer_ros/commit/99c23b6ac7874f7974e9ed808ace841da6f2c8b0
+.. _aba4575: https://github.com/cartographer-project/cartographer/commit/aba4575d937df4c9697f61529200c084f2562584
+.. _99c23b6: https://github.com/cartographer-project/cartographer_ros/commit/99c23b6ac7874f7974e9ed808ace841da6f2c8b0
 
 If we only look at this particular submap, that the error is fully contained in one submap.
 We also see that over time, global SLAM figures out that something weird happened and partially corrects for it.
@@ -103,7 +103,7 @@ Before checking them in, we normalize all weights, since they only have relative
 The result of this tuning was `PR 428`_.
 In general, always try to tune for a platform, not a particular bag.
 
-.. _PR 428: https://github.com/googlecartographer/cartographer/pull/428
+.. _PR 428: https://github.com/cartographer-project/cartographer/pull/428
 
 Special Cases
 -------------
@@ -203,7 +203,7 @@ Developers are keen to help, but they can only be helpful if you follow `an issu
 
    There are already lots of GitHub issues with all sorts of problems solved by the developers. Going through `the closed issues of cartographer_ros`_ and `of cartographer`_ is a great way to learn more about Cartographer and maybe find a solution to your problem !
 
-.. _GitHub issue: https://github.com/googlecartographer/cartographer_ros/issues
-.. _an issue template: https://github.com/googlecartographer/cartographer_ros/issues/new?labels=question
-.. _the closed issues of cartographer_ros: https://github.com/googlecartographer/cartographer_ros/issues?q=is%3Aissue+is%3Aclosed
-.. _of cartographer: https://github.com/googlecartographer/cartographer_ros/issues?q=is%3Aissue+is%3Aclosed
+.. _GitHub issue: https://github.com/cartographer-project/cartographer_ros/issues
+.. _an issue template: https://github.com/cartographer-project/cartographer_ros/issues/new?labels=question
+.. _the closed issues of cartographer_ros: https://github.com/cartographer-project/cartographer_ros/issues?q=is%3Aissue+is%3Aclosed
+.. _of cartographer: https://github.com/cartographer-project/cartographer_ros/issues?q=is%3Aissue+is%3Aclosed

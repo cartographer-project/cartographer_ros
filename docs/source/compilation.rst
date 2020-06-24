@@ -23,9 +23,7 @@ The Cartographer ROS requirements are the same as `the ones from Cartographer`_.
 
 The following `ROS distributions`_ are currently supported:
 
-* Indigo
 * Kinetic
-* Lunar
 * Melodic
 
 .. _the ones from Cartographer: https://google-cartographer.readthedocs.io/en/latest/#system-requirements
@@ -50,7 +48,7 @@ Create a new cartographer_ros workspace in 'catkin_ws'.
     mkdir catkin_ws
     cd catkin_ws
     wstool init src
-    wstool merge -t src https://raw.githubusercontent.com/googlecartographer/cartographer_ros/master/cartographer_ros.rosinstall
+    wstool merge -t src https://raw.githubusercontent.com/cartographer-project/cartographer_ros/master/cartographer_ros.rosinstall
     wstool update -t src
 
 Install cartographer_ros' dependencies (proto3 and deb packages).

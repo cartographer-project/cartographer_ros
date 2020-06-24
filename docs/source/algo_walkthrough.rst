@@ -31,8 +31,8 @@ IEEE, 2016. pp. 1271–1278.
 Overview
 --------
 
-.. image:: https://raw.githubusercontent.com/googlecartographer/cartographer/master/docs/source/high_level_system_overview.png
-     :target: https://github.com/googlecartographer/cartographer/blob/master/docs/source/high_level_system_overview.png
+.. image:: https://raw.githubusercontent.com/cartographer-project/cartographer/master/docs/source/high_level_system_overview.png
+     :target: https://github.com/cartographer-project/cartographer/blob/master/docs/source/high_level_system_overview.png
 
 Cartographer can be seen as two separate, but related subsystems.
 The first one is **local SLAM** (sometimes also called **frontend** or local trajectory builder).
@@ -40,8 +40,8 @@ Its job is to build a succession of **submaps**.
 Each submap is meant to be locally consistent but we accept that local SLAM drifts over time.
 Most of the local SLAM options can be found in `install_isolated/share/cartographer/configuration_files/trajectory_builder_2d.lua`_ for 2D and `install_isolated/share/cartographer/configuration_files/trajectory_builder_3d.lua`_ for 3D. (for the rest of this page we will refer to `TRAJECTORY_BUILDER_nD` for the common options)
 
-.. _install_isolated/share/cartographer/configuration_files/trajectory_builder_2d.lua: https://github.com/googlecartographer/cartographer/blob/df337194e21f98f8c7b0b88dab33f878066d4b56/configuration_files/trajectory_builder_2d.lua
-.. _install_isolated/share/cartographer/configuration_files/trajectory_builder_3d.lua: https://github.com/googlecartographer/cartographer/blob/df337194e21f98f8c7b0b88dab33f878066d4b56/configuration_files/trajectory_builder_3d.lua
+.. _install_isolated/share/cartographer/configuration_files/trajectory_builder_2d.lua: https://github.com/cartographer-project/cartographer/blob/df337194e21f98f8c7b0b88dab33f878066d4b56/configuration_files/trajectory_builder_2d.lua
+.. _install_isolated/share/cartographer/configuration_files/trajectory_builder_3d.lua: https://github.com/cartographer-project/cartographer/blob/df337194e21f98f8c7b0b88dab33f878066d4b56/configuration_files/trajectory_builder_3d.lua
 
 The other subsystem is **global SLAM** (sometimes called the **backend**).
 It runs in background threads and its main job is to find **loop closure constraints**.
@@ -50,7 +50,7 @@ It also incorporates other sensor data to get a higher level view and identify t
 In 3D, it also tries to find the direction of gravity.
 Most of its options can be found in `install_isolated/share/cartographer/configuration_files/pose_graph.lua`_
 
-.. _install_isolated/share/cartographer/configuration_files/pose_graph.lua: https://github.com/googlecartographer/cartographer/blob/df337194e21f98f8c7b0b88dab33f878066d4b56/configuration_files/pose_graph.lua
+.. _install_isolated/share/cartographer/configuration_files/pose_graph.lua: https://github.com/cartographer-project/cartographer/blob/df337194e21f98f8c7b0b88dab33f878066d4b56/configuration_files/pose_graph.lua
 
 On a higher abstraction, the job of local SLAM is to generate good submaps and the job of global SLAM is to tie them most consistently together.
 

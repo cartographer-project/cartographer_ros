@@ -25,7 +25,7 @@ jobs:
       choco upgrade %ROS_METAPACKAGE% -y
       choco upgrade ros-melodic-perception -y
       robocopy "." ".\src\cartographer_ros" /E /MOVE /XD "src" > NUL
-      git clone https://github.com/googlecartographer/cartographer src\cartographer
+      git clone https://github.com/cartographer-project/cartographer src\cartographer
       call "C:\opt\ros\melodic\x64\env.bat" rosdep install --from-paths src --ignore-src -r -y
     env:
       ROS_METAPACKAGE: 'ros-melodic-desktop'

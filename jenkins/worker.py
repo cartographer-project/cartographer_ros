@@ -104,7 +104,7 @@ def get_head_git_sha1():
   """Returns the SHA-1 hash of the commit tagged HEAD."""
   output = subprocess.check_output([
       'git', 'ls-remote',
-      'https://github.com/googlecartographer/cartographer.git'
+      'https://github.com/cartographer-project/cartographer.git'
   ])
   parsed = GIT_SHA1_PATTERN.extract(output)
   return parsed['sha1']

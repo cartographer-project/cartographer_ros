@@ -130,6 +130,6 @@ landmarks_sampling_ratio
 .. _sensor_msgs/MultiEchoLaserScan: http://docs.ros.org/api/sensor_msgs/html/msg/MultiEchoLaserScan.html
 .. _sensor_msgs/PointCloud2: http://docs.ros.org/api/sensor_msgs/html/msg/PointCloud2.html
 .. _sensor_msgs/NavSatFix: http://docs.ros.org/api/sensor_msgs/html/msg/NavSatFix.html
-.. _cartographer_ros_msgs/LandmarkList: https://github.com/googlecartographer/cartographer_ros/blob/master/cartographer_ros_msgs/msg/LandmarkList.msg
-.. _cartographer_ros_msgs/LandmarkEntry: https://github.com/googlecartographer/cartographer_ros/blob/4b39ee68c7a4d518bf8d01a509331e2bc1f514a0/cartographer_ros_msgs/msg/LandmarkEntry.msg
+.. _cartographer_ros_msgs/LandmarkList: https://github.com/cartographer-project/cartographer_ros/blob/master/cartographer_ros_msgs/msg/LandmarkList.msg
+.. _cartographer_ros_msgs/LandmarkEntry: https://github.com/cartographer-project/cartographer_ros/blob/4b39ee68c7a4d518bf8d01a509331e2bc1f514a0/cartographer_ros_msgs/msg/LandmarkEntry.msg
 .. _tf2: http://wiki.ros.org/tf2
