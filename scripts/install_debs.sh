@@ -17,13 +17,10 @@
 set -o errexit
 set -o verbose
 
-# Install CMake 3.2 for Ubuntu Trusty and Debian Jessie.
+# Install CMake 3.2 for Debian Jessie.
 sudo apt-get update
 sudo apt-get install lsb-release -y
-if [[ "$(lsb_release -sc)" = "trusty" ]]
-then
-  sudo apt-get install cmake3 -y
-elif [[ "$(lsb_release -sc)" = "jessie" ]]
+if [[ "$(lsb_release -sc)" = "jessie" ]]
 then
   sudo sh -c "echo 'deb http://ftp.debian.org/debian jessie-backports main' >> /etc/apt/sources.list"
   sudo apt-get update
@@ -36,9 +33,9 @@ fi
 
 cd catkin_ws
 
-# Install Ninja.
+# Install Ninja and stow.
 apt-get update
-apt-get install -y ninja-build
+apt-get install -y ninja-build stow
 
 # Install rosdep dependencies.
 rosdep update
