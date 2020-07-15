@@ -48,6 +48,11 @@ find_package(cartographer REQUIRED)
 include("${CARTOGRAPHER_CMAKE_DIR}/functions.cmake")
 option(BUILD_GRPC "build features that require Cartographer gRPC support" false)
 google_initialize_cartographer_project()
+# PCL requires C++14 since version 1.10.0 - override if needed.
+if (NOT ${PCL_VERSION} VERSION_LESS "1.10.0")
+  message("Using C++14, as required by PCL.")
+  set(CMAKE_CXX_STANDARD 14)
+endif()
 google_enable_testing()
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
