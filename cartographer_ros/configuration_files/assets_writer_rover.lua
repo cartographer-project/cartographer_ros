@@ -29,7 +29,7 @@ options = {
     {
         action = "vertical_range_filter",
         min_z = -0.2,
-        max_z = 1.0
+        max_z = 0.7
       },
     {
       action = "voxel_filter_and_remove_moving_objects",
