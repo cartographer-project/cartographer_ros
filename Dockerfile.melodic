@@ -14,7 +14,7 @@
 
 FROM ros:melodic
 
-ARG CARTOGRAPHER_VERSION=master
+ARG CARTOGRAPHER_VERSION=trajectory_markers
 
 # We require a GitHub access token to be passed.
 ARG github_token
