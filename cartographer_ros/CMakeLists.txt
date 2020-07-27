@@ -49,6 +49,7 @@ include("${CARTOGRAPHER_CMAKE_DIR}/functions.cmake")
 option(BUILD_GRPC "build features that require Cartographer gRPC support" false)
 google_initialize_cartographer_project()
 google_enable_testing()
+set(CARTOGRAPHER_GMOCK_LIBRARIES ${GMOCK_LIBRARIES})
 
 find_package(catkin REQUIRED COMPONENTS ${PACKAGE_DEPENDENCIES})
 
@@ -72,7 +73,7 @@ include_directories(
 # Override Catkin's GTest configuration to use GMock.
 set(GTEST_FOUND TRUE)
 set(GTEST_INCLUDE_DIRS ${GMOCK_INCLUDE_DIRS})
-set(GTEST_LIBRARIES ${GMOCK_LIBRARIES})
+set(GTEST_LIBRARIES ${CARTOGRAPHER_GMOCK_LIBRARIES})
 
 catkin_package(
   CATKIN_DEPENDS
@@ -152,6 +153,7 @@ if (CATKIN_ENABLE_TESTING)
     catkin_add_gtest(${TEST_NAME} ${TEST_SOURCE_FILENAME})
     # catkin_add_gtest uses a plain (i.e. no PUBLIC/PRIVATE/INTERFACE) call to
     # target_link_libraries. That forces us to do the same.
+    target_link_libraries(${TEST_NAME} ${GMOCK_LIBRARIES} ${GTEST_MAIN_LIBRARIES})
     target_include_directories(${TEST_NAME} SYSTEM PUBLIC ${LUA_INCLUDE_DIR})
     target_link_libraries(${TEST_NAME} ${LUA_LIBRARIES})
     target_include_directories(${TEST_NAME} SYSTEM PUBLIC ${catkin_INCLUDE_DIRS})
