@@ -95,12 +95,12 @@
 <joint name="l_tof_camera_link_joint" type="fixed">
     <parent link="base_link" />
     <child link="l_tof_camera_link" />
-    <origin xyz=".232 -.102 .064" rpy="0 -1.18 -1.57" />
+    <origin xyz=".232 .102 .064" rpy="0 -1.169 -1.57" />
   </joint>
 
 <joint name="r_tof_camera_link_joint" type="fixed">
     <parent link="base_link" />
     <child link="r_tof_camera_link" />
-    <origin xyz=".33 .102 .064" rpy="0 -1.18 1.57" />
+    <origin xyz=".33 -.102 .064" rpy="0 -1.169 1.57" />
   </joint>
 </robot>
