@@ -23,12 +23,12 @@ options = {
   pipeline = {
     {
       action = "min_max_range_filter",
-      min_range = 1.,
-      max_range = 30.,
+      min_range = .1,
+      max_range = 12.,
     },
     {
         action = "vertical_range_filter",
-        min_z = -0.2,
+        min_z = 0.,
         max_z = 0.7
       },
     {
