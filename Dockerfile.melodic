@@ -43,7 +43,6 @@ RUN cartographer_ros/scripts/install_debs.sh
 
 # Install Abseil and proto3.
 RUN /catkin_ws/src/cartographer/scripts/install_abseil.sh
-RUN /catkin_ws/src/cartographer/scripts/install_proto3.sh
 
 # Build, install, and test all packages individually to allow caching. The
 # ordering of these steps must match the topological package ordering as
