@@ -45,7 +45,7 @@ COPY cartographer_rviz/package.xml catkin_ws/src/cartographer_ros/cartographer_r
 COPY scripts/install_debs.sh cartographer_ros/scripts/
 RUN cartographer_ros/scripts/install_debs.sh
 
-# Install Abseil and proto3.
+# Install Abseil.
 RUN /catkin_ws/src/cartographer/scripts/install_abseil.sh
 
 # Build, install, and test all packages individually to allow caching. The
