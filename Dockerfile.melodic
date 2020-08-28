@@ -56,7 +56,7 @@ RUN cartographer_ros/scripts/install.sh --pkg cartographer_ros_msgs && \
         --catkin-make-args run_tests && \
     cartographer_ros/scripts/catkin_test_results.sh build_isolated/cartographer_ros_msgs
 
-RUN cartographer_ros/scripts/install.sh --pkg ceres-solver
+RUN apt-get install -y libceres-dev
 
 RUN cartographer_ros/scripts/install.sh --pkg cartographer && \
     cartographer_ros/scripts/install.sh --pkg cartographer --make-args test
