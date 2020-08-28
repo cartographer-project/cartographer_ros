@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ros:noetic
+FROM osrf/ros:noetic-desktop
 
 ARG CARTOGRAPHER_VERSION=master
 
