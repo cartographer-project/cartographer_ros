@@ -37,7 +37,7 @@ In order to build Cartographer ROS, we recommend using `wstool <http://wiki.ros.
 <http://wiki.ros.org/rosdep>`_. For faster builds, we also recommend using
 `Ninja <https://ninja-build.org>`_.
 
-On Ubuntu Focal with ROS Noetic to install these tools:
+On Ubuntu Focal with ROS Noetic use these commands to install the above tools:
 
 .. code-block:: bash
 
