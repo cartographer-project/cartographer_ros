@@ -25,6 +25,7 @@ The following `ROS distributions`_ are currently supported:
 
 * Kinetic
 * Melodic
+* Noetic
 
 .. _the ones from Cartographer: https://google-cartographer.readthedocs.io/en/latest/#system-requirements
 .. _ROS distributions: http://wiki.ros.org/Distributions
@@ -36,12 +37,21 @@ In order to build Cartographer ROS, we recommend using `wstool <http://wiki.ros.
 <http://wiki.ros.org/rosdep>`_. For faster builds, we also recommend using
 `Ninja <https://ninja-build.org>`_.
 
+On Ubuntu Focal with ROS Noetic use these commands to install the above tools:
+
+.. code-block:: bash
+
+    sudo apt-get update
+    sudo apt-get install -y python3-wstool python3-rosdep ninja-build
+
+On older distributions:
+
 .. code-block:: bash
 
     sudo apt-get update
     sudo apt-get install -y python-wstool python-rosdep ninja-build
 
-Create a new cartographer_ros workspace in 'catkin_ws'.
+After the tools are installed, create a new cartographer_ros workspace in 'catkin_ws'.
 
 .. code-block:: bash
 
