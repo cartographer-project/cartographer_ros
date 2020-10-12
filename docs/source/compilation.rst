@@ -76,6 +76,7 @@ If you build cartographer from master. Change/remove the version in the cartogra
 Additionally, uninstall the ros abseil-cpp using
 
 .. code-block:: bash
+
    sudo apt-get remove ros-${ROS_DISTRO}-abseil-cpp 
 
 Build and install.
