@@ -81,7 +81,7 @@ Generate the map (wait until cartographer_offline_node finishes) and then run pu
        bag_filename:=${HOME}/Downloads/b3-2016-04-05-15-52-20.bag
 
 Static landmarks
-========
+================
 
   .. raw:: html
 
