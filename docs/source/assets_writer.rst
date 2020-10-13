@@ -80,8 +80,8 @@ For the last example, if you specify ``points.ply`` in the pipeline configuratio
 Configuration
 -------------
 
-The assets writer is modeled as a pipeline of `PointsProcessor`_s.
-`PointsBatch`_\ s flow through each processor and they all have the chance to modify the ``PointsBatch`` before passing it on.
+The assets writer is modeled as a pipeline of `PointsProcessor`_ steps.
+`PointsBatch`_ data flows through each processor and they all have the chance to modify the ``PointsBatch`` before passing it on.
 
 .. _PointsProcessor: https://github.com/cartographer-project/cartographer/blob/30f7de1a325d6604c780f2f74d9a345ec369d12d/cartographer/io/points_processor.h
 .. _PointsBatch: https://github.com/cartographer-project/cartographer/blob/30f7de1a325d6604c780f2f74d9a345ec369d12d/cartographer/io/points_batch.h
