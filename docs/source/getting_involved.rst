@@ -19,18 +19,11 @@ Getting involved
 Cartographer is developed in the open and allows anyone to contribute to the project.
 There are multiple ways to get involved!
 
-Twice a month, the project hosts "Open House Hangouts" sessions that are essentially meetings open to everyone to join in.
-The call typically recaps the recent and ongoing development around Cartographer and Cartographer ROS.
-The developers are then open to questions from the community, this is a great time to ask about contribution ideas.
-If you don't feel like talking or being seen, you are free to join anyway and skulk!
-The slides are also made available after each session but there is no video recording.
-
-If you want to stay tuned with announcements (such as new major releases or new open house sessions), you can join `the Cartographer mailing list`_ although you can not interact with this mailing list anymore.
+If you want to stay tuned with announcements (such as new major releases), you can join `the Cartographer mailing list`_ although you can not interact with this mailing list anymore.
 
 .. _the Cartographer mailing list: https://groups.google.com/forum/#!forum/google-cartographer
 
-If you think you've found an issue in Cartographer, you are welcome to open a `GitHub issue`_ but don't forget to provide a way to reproduce your bug!
-Typically, join a ``.bag`` and a link to a fork of the ``cartographer_ros`` repository containing your configuration and launch files.
+If you think you've found an issue in Cartographer, you are welcome to open a `GitHub issue`_.
 
 .. _GitHub issue: https://github.com/cartographer-project/cartographer/issues
 
@@ -40,7 +33,7 @@ Simpler changes can also be discussed in GitHub issues so that developers can he
 .. _the RFCs repository: https://github.com/cartographer-project/rfcs
 
 If you want to contribute code or documentation, this is done through `GitHub pull requests`_.
-However, make sure you have signed (online) the `Contributor License Agreement`_ first!
+Pull requests need to follow the `contribution guidelines`_.
 
 .. _GitHub pull requests: https://github.com/cartographer-project/cartographer/pulls
-.. _Contributor License Agreement: https://github.com/cartographer-project/cartographer/blob/master/CONTRIBUTING.md
+.. _contribution guidelines: https://github.com/cartographer-project/cartographer/blob/master/CONTRIBUTING.md
