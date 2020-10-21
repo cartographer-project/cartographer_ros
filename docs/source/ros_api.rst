@@ -82,6 +82,10 @@ submap_list (`cartographer_ros_msgs/SubmapList`_)
   List of all submaps, including the pose and latest version number of each
   submap, across all trajectories.
 
+tracked_pose (`geometry_msgs/PoseStamped`_)
+  Only published if the parameter ``publish_tracked_pose`` is set to ``true``.
+  The pose of the tracked frame with respect to the map frame.
+
 Services
 --------
 
@@ -94,7 +98,7 @@ submap_query (`cartographer_ros_msgs/SubmapQuery`_)
   Fetches the requested submap.
 
 start_trajectory (`cartographer_ros_msgs/StartTrajectory`_)
-  Starts a trajectory using default sensor topics and the provided configuration. 
+  Starts a trajectory using default sensor topics and the provided configuration.
   An initial pose can be optionally specified. Returns an assigned trajectory ID.
 
 trajectory_query (`cartographer_ros_msgs/TrajectoryQuery`_)
@@ -131,9 +135,9 @@ Provided tf Transforms
 ----------------------
 
 The transformation between the :doc:`configured <configuration>` *map_frame*
-and *published_frame* is always provided.
+and *published_frame* is provided unless the parameter ``publish_to_tf`` is set to ``false``.
 
-If *provide_odom_frame* is enabled in the :doc:`configuration`, a continuous
+If *provide_odom_frame* is enabled in the :doc:`configuration`, additionally a continuous
 (i.e. unaffected by loop closure) transform between the :doc:`configured
 <configuration>` *odom_frame* and *published_frame* will be provided.
 
@@ -147,6 +151,7 @@ If *provide_odom_frame* is enabled in the :doc:`configuration`, a continuous
 .. _cartographer_ros_msgs/WriteState: https://github.com/cartographer-project/cartographer_ros/blob/master/cartographer_ros_msgs/srv/WriteState.srv
 .. _cartographer_ros_msgs/GetTrajectoryStates: https://github.com/cartographer-project/cartographer_ros/blob/master/cartographer_ros_msgs/srv/GetTrajectoryStates.srv
 .. _cartographer_ros_msgs/ReadMetrics: https://github.com/cartographer-project/cartographer_ros/blob/master/cartographer_ros_msgs/srv/ReadMetrics.srv
+.. _geometry_msgs/PoseStamped: http://docs.ros.org/api/geometry_msgs/html/msg/PoseStamped.html
 .. _nav_msgs/OccupancyGrid: http://docs.ros.org/api/nav_msgs/html/msg/OccupancyGrid.html
 .. _nav_msgs/Odometry: http://docs.ros.org/api/nav_msgs/html/msg/Odometry.html
 .. _sensor_msgs/Imu: http://docs.ros.org/api/sensor_msgs/html/msg/Imu.html
