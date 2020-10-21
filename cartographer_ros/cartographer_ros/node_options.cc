@@ -40,6 +40,14 @@ NodeOptions CreateNodeOptions(
       lua_parameter_dictionary->GetDouble("pose_publish_period_sec");
   options.trajectory_publish_period_sec =
       lua_parameter_dictionary->GetDouble("trajectory_publish_period_sec");
+  if (lua_parameter_dictionary->HasKey("publish_to_tf")) {
+    options.publish_to_tf =
+        lua_parameter_dictionary->GetBool("publish_to_tf");
+  }
+  if (lua_parameter_dictionary->HasKey("publish_tracked_pose")) {
+    options.publish_tracked_pose =
+        lua_parameter_dictionary->GetBool("publish_tracked_pose");
+  }
   if (lua_parameter_dictionary->HasKey("use_pose_extrapolator")) {
     options.use_pose_extrapolator =
         lua_parameter_dictionary->GetBool("use_pose_extrapolator");

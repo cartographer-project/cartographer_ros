@@ -103,6 +103,12 @@ pose_publish_period_sec
   Interval in seconds at which to publish poses, e.g. 5e-3 for a frequency of
   200 Hz.
 
+publish_to_tf
+  Enable or disable providing of TF transforms.
+
+publish_tracked_pose_msg
+  Enable publishing of tracked pose as a `geometry_msgs/PoseStamped`_ to topic "tracked_pose".
+
 trajectory_publish_period_sec
   Interval in seconds at which to publish the trajectory markers, e.g. 30e-3
   for 30 milliseconds.
@@ -124,6 +130,7 @@ landmarks_sampling_ratio
 
 .. _REP 105: http://www.ros.org/reps/rep-0105.html
 .. _ROS Names: http://wiki.ros.org/Names
+.. _geometry_msgs/PoseStamped: http://docs.ros.org/api/geometry_msgs/html/msg/PoseStamped.html
 .. _nav_msgs/OccupancyGrid: http://docs.ros.org/api/nav_msgs/html/msg/OccupancyGrid.html
 .. _nav_msgs/Odometry: http://docs.ros.org/api/nav_msgs/html/msg/Odometry.html
 .. _sensor_msgs/LaserScan: http://docs.ros.org/api/sensor_msgs/html/msg/LaserScan.html
