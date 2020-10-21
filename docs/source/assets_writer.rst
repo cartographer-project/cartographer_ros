@@ -105,7 +105,7 @@ The available ``PointsProcessor``\ s are all defined in the `cartographer/io`_ s
 * **voxel_filter_and_remove_moving_objects**: Voxel filters the data and only passes on points that we believe are on non-moving objects.
 * **write_pcd**: Streams a PCD file to disk. The header is written in 'Flush'.
 * **write_ply**: Streams a PLY file to disk. The header is written in 'Flush'.
-* **write_probability_grid**: Creates a probability grid with the specified 'resolution'. As all points are projected into the x-y plane the z component of the data is ignored. 'range_data_inserter' options are used to cofnigure the range data ray tracing through the probability grid.
+* **write_probability_grid**: Creates a probability grid with the specified 'resolution'. As all points are projected into the x-y plane the z component of the data is ignored. 'range_data_inserter' options are used to configure the range data ray tracing through the probability grid.
 * **write_xray_image**: Creates X-ray cuts through the points with pixels being 'voxel_size' big.
 * **write_xyz**: Writes ASCII xyz points.
 
@@ -126,6 +126,7 @@ An example of such a pipeline is in `assets_writer_backpack_2d.lua`_.
 .. _assets_writer_backpack_2d.lua: https://github.com/cartographer-project/cartographer_ros/blob/44459e18102305745c56f92549b87d8e91f434fe/cartographer_ros/configuration_files/assets_writer_backpack_2d.lua
 
 Once you have the ``.ply``, follow the README of `point_cloud_viewer`_ to generate an on-disk octree data structure which can be viewed by one of the viewers (SDL or web based) in the same repo.
+Note that color is required for ``point_cloud_viewer`` to function.
 
 .. _point_cloud_viewer: https://github.com/cartographer-project/point_cloud_viewer
 
