@@ -1,3 +1,2 @@
 - git: {local-name: cartographer, uri: 'https://github.com/cartographer-project/cartographer.git', version: 'master'}
 - git: {local-name: cartographer_ros, uri: 'https://github.com/cartographer-project/cartographer_ros.git', version: 'master'}
-- git: {local-name: ceres-solver, uri: 'https://ceres-solver.googlesource.com/ceres-solver.git', version: '1.13.0'}
