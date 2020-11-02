@@ -50,9 +50,15 @@ COPY scripts/install_and_test.sh cartographer_ros/scripts/
 
 RUN cartographer_ros/scripts/install_and_test.sh cartographer
 
-# TODO(MichaelGrupp): add all build steps for ROS2.
-COPY cartographer_ros_msgs dev_ws/src/cartographer_ros/cartographer_ros_msgs
-RUN cartographer_ros/scripts/install_and_test.sh cartographer_ros_msgs
+# TODO(MichaelGrupp): Activate all build steps for ROS2 once they work.
+# COPY cartographer_ros_msgs dev_ws/src/cartographer_ros/cartographer_ros_msgs
+# RUN cartographer_ros/scripts/install_and_test.sh cartographer_ros_msgs
+
+# COPY cartographer_ros dev_ws/src/cartographer_ros/cartographer_ros
+# RUN cartographer_ros/scripts/install_and_test.sh cartographer_ros
+
+# COPY cartographer_rviz dev_ws/src/cartographer_ros/cartographer_rviz
+# RUN cartographer_ros/scripts/install_and_test.sh cartographer_rviz
 
 RUN rm -rf /var/lib/apt/lists/*
 # A BTRFS bug may prevent us from cleaning up these directories.
