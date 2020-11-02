@@ -35,5 +35,5 @@ cd dev_ws
 rosdep update
 # TODO(MichaelGrupp): explicitly declare paths during the ROS2 migration.
 # Once everything in src works, switch back to "--from-paths src".
-WORKING_PATHS="src/cartographer src/cartographer_ros/cartographer_ros_msgs"
+WORKING_PATHS="src/cartographer"
 rosdep install --from-paths ${WORKING_PATHS} --ignore-src --rosdistro=${ROS_DISTRO} -y
