@@ -19,7 +19,7 @@ ARG CARTOGRAPHER_VERSION=master
 # We require a GitHub access token to be passed.
 ARG github_token
 
-# Bionic's base image doesn't ship with sudo and wstool.
+# The base image doesn't ship with sudo and wstool.
 RUN apt-get update && apt-get install -y sudo python3-wstool
 
 # First, we invalidate the entire cache if cartographer-project/cartographer has
