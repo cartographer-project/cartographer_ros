@@ -19,14 +19,9 @@ set -o verbose
 
 . /opt/ros/${ROS_DISTRO}/setup.sh
 
-cd catkin_ws
+cd dev_ws
 
-# Build, install, and test.
-#
-# It's necessary to use the '--install' flag for every call to
-# 'catkin_make_isolated' in order to avoid the use of 'devel_isolated' as the
-# 'CMAKE_INSTALL_PREFIX' for non-test targets. This in itself is important to
-# avoid any issues caused by using 'CMAKE_INSTALL_PREFIX' during the
-# configuration phase of the build (e.g. cartographer/common/config.h.cmake).
-export BUILD_FLAGS="--use-ninja --install-space /opt/cartographer_ros --install"
-catkin_make_isolated ${BUILD_FLAGS} $@
+# Build, install, and test a single package provided as argument to this script.
+export COLCON_FLAGS="--install-base /opt/cartographer_ros --event-handlers console_direct+"
+colcon build ${COLCON_FLAGS} --packages-select $@
+colcon test ${COLCON_FLAGS} --return-code-on-test-failure --packages-select $@

@@ -29,11 +29,11 @@ fi
 
 . /opt/ros/${ROS_DISTRO}/setup.sh
 
-cd catkin_ws
+cd dev_ws
 
 # Install rosdep dependencies.
 rosdep update
-rosdep install --from-paths src --ignore-src --rosdistro=${ROS_DISTRO} -y
-
-# Update rosconsole-bridge to fix build issue with Docker image for Kinetic
-sudo apt-get install ros-${ROS_DISTRO}-rosconsole-bridge -y
+# TODO(MichaelGrupp): explicitly declare paths during the ROS2 migration.
+# Once everything in src works, switch back to "--from-paths src".
+WORKING_PATHS="src/cartographer src/cartographer_ros/cartographer_ros_msgs"
+rosdep install --from-paths ${WORKING_PATHS} --ignore-src --rosdistro=${ROS_DISTRO} -y
