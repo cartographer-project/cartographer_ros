@@ -29,12 +29,11 @@ int main(int argc, char** argv) {
 
   cartographer_ros::ScopedRosLogSink ros_log_sink;
 
-  const cartographer_ros::MapBuilderFactory map_builder_factory =
-      [](const ::cartographer::mapping::proto::MapBuilderOptions&
-             map_builder_options) {
-        return absl::make_unique< ::cartographer::mapping::MapBuilder>(
-            map_builder_options);
-      };
+  const cartographer_ros::MapBuilderFactory map_builder_factory = [](
+      const ::cartographer::mapping::proto::MapBuilderOptions&
+          map_builder_options) {
+    return ::cartographer::mapping::CreateMapBuilder(map_builder_options);
+  };
 
   cartographer_ros::RunOfflineNode(map_builder_factory);
 
