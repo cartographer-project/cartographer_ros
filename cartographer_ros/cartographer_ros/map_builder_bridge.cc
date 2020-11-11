@@ -20,7 +20,6 @@
 #include "absl/strings/str_cat.h"
 #include "cartographer/io/color.h"
 #include "cartographer/io/proto_stream.h"
-#include "cartographer/mapping/pose_graph.h"
 #include "cartographer_ros/msg_conversion.h"
 #include "cartographer_ros/time_conversion.h"
 #include "cartographer_ros_msgs/StatusCode.h"
@@ -207,7 +206,7 @@ MapBuilderBridge::GetTrajectoryStates() {
   for (const auto& sensor_bridge : sensor_bridges_) {
     trajectory_states.insert(std::make_pair(
         sensor_bridge.first,
-        ::cartographer::mapping::PoseGraph::TrajectoryState::ACTIVE));
+        ::cartographer::mapping::PoseGraphInterface::TrajectoryState::ACTIVE));
   }
   return trajectory_states;
 }
@@ -299,7 +298,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetTrajectoryNodeList() {
   const auto constraints = map_builder_->pose_graph()->constraints();
   for (const auto& constraint : constraints) {
     if (constraint.tag ==
-        cartographer::mapping::PoseGraph::Constraint::INTER_SUBMAP) {
+        cartographer::mapping::PoseGraphInterface::Constraint::INTER_SUBMAP) {
       if (constraint.node_id.trajectory_id ==
           constraint.submap_id.trajectory_id) {
         trajectory_to_last_inter_submap_constrained_node[constraint.node_id
@@ -451,7 +450,7 @@ visualization_msgs::MarkerArray MapBuilderBridge::GetConstraintList() {
     visualization_msgs::Marker *constraint_marker, *residual_marker;
     std_msgs::ColorRGBA color_constraint, color_residual;
     if (constraint.tag ==
-        cartographer::mapping::PoseGraph::Constraint::INTRA_SUBMAP) {
+        cartographer::mapping::PoseGraphInterface::Constraint::INTRA_SUBMAP) {
       constraint_marker = &constraint_intra_marker;
       residual_marker = &residual_intra_marker;
       // Color mapping for submaps of various trajectories - add trajectory id
