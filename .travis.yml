@@ -22,9 +22,8 @@ cache:
     - /home/travis/docker/
 
 env:
-  - ROS_RELEASE=kinetic DOCKER_CACHE_FILE=/home/travis/docker/kinetic-cache.tar.gz
-  - ROS_RELEASE=melodic DOCKER_CACHE_FILE=/home/travis/docker/melodic-cache.tar.gz
-  - ROS_RELEASE=noetic DOCKER_CACHE_FILE=/home/travis/docker/noetic-cache.tar.gz
+  - ROS_RELEASE=dashing DOCKER_CACHE_FILE=/home/travis/docker/dashing-cache.tar.gz
+  - ROS_RELEASE=foxy DOCKER_CACHE_FILE=/home/travis/docker/foxy-cache.tar.gz
 
 before_install:
   # $GITHUB_TOKEN must be a valid GitHub access token without access rights (https://github.com/settings/tokens).
