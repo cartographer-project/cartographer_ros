@@ -261,6 +261,15 @@ void Node::PublishLocalTrajectoryData(const ::ros::TimerEvent& timer_event) {
         node_options_.use_pose_extrapolator
             ? ToRos(now)
             : ToRos(trajectory_data.local_slam_data->time);
+
+    // Suppress publishing if we already published a transform at this time.
+    // Due to 2020-07 changes to geometry2, tf buffer will issue warnings for
+    // repeated transforms with the same timestamp.
+    if (last_published_tf_stamps_.count(entry.first) &&
+        last_published_tf_stamps_[entry.first] == stamped_transform.header.stamp)
+      continue;
+    last_published_tf_stamps_[entry.first] = stamped_transform.header.stamp;
+
     const Rigid3d tracking_to_local_3d =
         node_options_.use_pose_extrapolator
             ? extrapolator.ExtrapolatePose(now)
