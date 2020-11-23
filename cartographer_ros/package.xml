@@ -17,56 +17,71 @@
 
 <package format="2">
   <name>cartographer_ros</name>
-  <version>1.0.0</version>
+  <!--
+  We add 900 to the patch part of the version and then multiply it by 10,
+  i.e. our version = `(upstream_patch_version + 900) * 10`,
+  so we can have intermediate releases as well as release any future official 1.0.x versions.
+
+  This is basically packing the patch part of the version and a fourth version part together
+  into the third part of the version.
+
+  The use of `900` instead of something else like `100` is arbitrary, but it might
+  help people recognize that this is a "special" version number.
+  It is needed however, because we cannot have a leading `0` in our patch version.
+
+  Consider these possible future versions as an example:
+
+  1.0.9000 -> current state of this repository, 1.0.0 + some commits from us and upstream
+  1.0.9010 -> upstream 1.0.1
+  1.0.9011 -> upstream 1.0.1 + additional commits from upstream or us
+  1.0.9012 -> upstream 1.0.1 + additional commits from 1.0.1011 + more new commits
+  1.0.9020 -> upstream 1.0.2
+  and so on...
+  -->
+  <!--
+  Log of versions:
+
+  1.0.9000 = googlecartographer/cartographer_ros@3cb7efd62c38125081b86844c5b2fee3147d0667 + ros2 port
+  -->
+  <version>1.0.9001</version>
   <description>
     Cartographer is a system that provides real-time simultaneous localization
     and mapping (SLAM) in 2D and 3D across multiple platforms and sensor
     configurations. This package provides Cartographer's ROS integration.
   </description>
-  <maintainer email="cartographer-owners@googlegroups.com">
-    The Cartographer Authors
-  </maintainer>
+  <maintainer email="clalancette@openrobotics.org">Chris Lalancette</maintainer>
+  <maintainer email="pyo@robotis.com">Pyo</maintainer>
   <license>Apache 2.0</license>
-
-  <url>https://github.com/googlecartographer/cartographer_ros</url>
+  <url>https://github.com/ros2/cartographer_ros</url>
 
   <author email="google-cartographer@googlegroups.com">
     The Cartographer Authors
   </author>
 
-  <buildtool_depend>catkin</buildtool_depend>
+  <author email="thlim@robotis.com">Darby Lim</author>
 
-  <build_depend>google-mock</build_depend>
-  <build_depend>g++-static</build_depend>
-  <build_depend>protobuf-dev</build_depend>
-  <build_depend>python-sphinx</build_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <depend version_gte="1.0.0">cartographer</depend>
-  <depend version_gte="1.0.0">cartographer_ros_msgs</depend>
-  <depend>eigen_conversions</depend>
-  <depend>geometry_msgs</depend>
-  <depend>libgflags-dev</depend>
-  <depend>libgoogle-glog-dev</depend>
-  <depend>libpcl-all-dev</depend>
-  <depend>message_runtime</depend>
+  <build_depend>eigen</build_depend>
+  <build_depend>pcl_conversions</build_depend>
+  <build_depend>tf2_eigen</build_depend>
+  <build_depend>urdfdom_headers</build_depend>
+
+  <depend>cartographer</depend>
+  <depend>cartographer_ros_msgs</depend>
+  <depend>lua5.2-dev</depend>
   <depend>nav_msgs</depend>
-  <depend>pcl_conversions</depend>
-  <depend>robot_state_publisher</depend>
-  <depend>rosbag</depend>
-  <depend>roscpp</depend>
-  <depend>roslaunch</depend>
-  <depend>roslib</depend>
+  <depend>libpcl-all-dev</depend>
+  <depend>rclcpp</depend>
   <depend>sensor_msgs</depend>
-  <depend>std_msgs</depend>
   <depend>tf2</depend>
-  <depend>tf2_eigen</depend>
   <depend>tf2_ros</depend>
-  <depend>urdf</depend>
+  <!-- <depend>urdf</depend> -->
   <depend>visualization_msgs</depend>
-
-  <test_depend>rosunit</test_depend>
+  <depend>tf2_msgs</depend>
+  <depend>yaml-cpp</depend>
 
   <export>
-      <rviz plugin="${prefix}/rviz_plugin_description.xml" />
+    <build_type>ament_cmake</build_type>
   </export>
 </package>

@@ -17,6 +17,7 @@
 #ifndef CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_SUBMAP_H
 #define CARTOGRAPHER_ROS_CARTOGRAPHER_ROS_SUBMAP_H
 
+#include <chrono>
 #include <memory>
 #include <string>
 #include <vector>
@@ -25,15 +26,16 @@
 #include "cartographer/io/submap_painter.h"
 #include "cartographer/mapping/id.h"
 #include "cartographer/transform/rigid_transform.h"
-#include "ros/ros.h"
+// #include "ros/ros.h"
+#include "cartographer_ros_msgs/srv/submap_query.hpp"
+#include "rclcpp/rclcpp.hpp"
 
 namespace cartographer_ros {
 
 // Fetch 'submap_id' using the 'client' and returning the response or 'nullptr'
 // on error.
 std::unique_ptr<::cartographer::io::SubmapTextures> FetchSubmapTextures(
-    const ::cartographer::mapping::SubmapId& submap_id,
-    ros::ServiceClient* client);
+    std::shared_ptr<::cartographer_ros_msgs::srv::SubmapQuery::Response> result);
 
 }  // namespace cartographer_ros
 

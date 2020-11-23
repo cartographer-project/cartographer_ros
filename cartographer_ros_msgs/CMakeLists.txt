@@ -12,45 +12,51 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.5)
 
 project(cartographer_ros_msgs)
 
-set(PACKAGE_DEPENDENCIES
-  geometry_msgs
-  std_msgs
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  # we dont use add_compile_options with pedantic in message packages
+  # because the Python C extensions dont comply with it
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
+endif()
+
+find_package(ament_cmake REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+find_package(std_msgs REQUIRED)
+
+set(msg_files
+  "msg/LandmarkEntry.msg"
+  "msg/LandmarkList.msg"
+  "msg/SensorTopics.msg"
+  "msg/StatusCode.msg"
+  "msg/StatusResponse.msg"
+  "msg/SubmapEntry.msg"
+  "msg/SubmapList.msg"
+  "msg/SubmapTexture.msg"
+  "msg/TrajectoryOptions.msg"
+)
+set(srv_files
+  "srv/FinishTrajectory.srv"
+  "srv/StartTrajectory.srv"
+  "srv/SubmapQuery.srv"
+  "srv/WriteState.srv"
 )
 
-find_package(catkin REQUIRED COMPONENTS message_generation ${PACKAGE_DEPENDENCIES})
-
-add_message_files(
-  FILES
-    LandmarkEntry.msg
-    LandmarkList.msg
-    StatusCode.msg
-    StatusResponse.msg
-    SubmapList.msg
-    SubmapEntry.msg
-    SubmapTexture.msg
-    SensorTopics.msg
-    TrajectoryOptions.msg
+rosidl_generate_interfaces(${PROJECT_NAME}
+  ${msg_files}
+  ${srv_files}
+  DEPENDENCIES geometry_msgs std_msgs
+  ADD_LINTER_TESTS
 )
 
-add_service_files(
-  FILES
-    SubmapQuery.srv
-    FinishTrajectory.srv
-    StartTrajectory.srv
-    WriteState.srv
-)
+ament_export_dependencies(rosidl_default_runtime)
 
-generate_messages(
-  DEPENDENCIES
-    ${PACKAGE_DEPENDENCIES}
-)
-
-catkin_package(
-  CATKIN_DEPENDS
-    ${PACKAGE_DEPENDENCIES}
-    message_runtime
-)
+ament_package()
