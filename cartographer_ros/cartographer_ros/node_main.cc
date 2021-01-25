@@ -56,8 +56,8 @@ void Run() {
   std::tie(node_options, trajectory_options) =
       LoadOptions(FLAGS_configuration_directory, FLAGS_configuration_basename);
 
-  auto map_builder = absl::make_unique<cartographer::mapping::MapBuilder>(
-      node_options.map_builder_options);
+  auto map_builder =
+      cartographer::mapping::CreateMapBuilder(node_options.map_builder_options);
   Node node(node_options, std::move(map_builder), &tf_buffer,
             FLAGS_collect_metrics);
   if (!FLAGS_load_state_filename.empty()) {
