@@ -25,7 +25,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra)
 endif()
 
-add_compile_options(-g)
+#add_compile_options(-g)
 
 find_package(cartographer REQUIRED)
 include("${CARTOGRAPHER_CMAKE_DIR}/functions.cmake")
@@ -49,7 +49,7 @@ find_package(visualization_msgs REQUIRED)
 find_package(rosbag2_compression REQUIRED)
 find_package(rosbag2_cpp REQUIRED)
 find_package(rosbag2_storage REQUIRED)
-find_package(backward_ros REQUIRED)
+#find_package(backward_ros REQUIRED)
 
 find_package(absl REQUIRED)
 find_package(LuaGoogle REQUIRED)
@@ -84,7 +84,7 @@ endif()
 
 add_library(${PROJECT_NAME} STATIC ${ALL_SRCS})
 ament_target_dependencies(${PROJECT_NAME} PUBLIC
-  backward_ros
+  #backward_ros
   cartographer
   cartographer_ros_msgs
   geometry_msgs
