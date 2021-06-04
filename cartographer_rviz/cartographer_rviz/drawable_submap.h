@@ -29,15 +29,15 @@
 #include "cartographer/mapping/id.h"
 #include "cartographer/transform/rigid_transform.h"
 #include "cartographer_ros/submap.h"
-#include "cartographer_ros_msgs/SubmapEntry.h"
-#include "cartographer_ros_msgs/SubmapQuery.h"
+#include "cartographer_ros_msgs/msg/submap_entry.hpp"
+#include "cartographer_ros_msgs/srv/submap_query.hpp"
 #include "cartographer_rviz/ogre_slice.h"
-#include "ros/ros.h"
-#include "rviz/display_context.h"
-#include "rviz/frame_manager.h"
+#include <rclcpp/rclcpp.hpp>
+#include <rviz_common/display_context.hpp>
+#include <rviz_common/frame_manager_iface.hpp>
 #include "rviz/ogre_helpers/axes.h"
 #include "rviz/ogre_helpers/movable_text.h"
-#include "rviz/properties/bool_property.h"
+#include <rviz_common/properties/bool_property.hpp>
 
 namespace cartographer_rviz {
 

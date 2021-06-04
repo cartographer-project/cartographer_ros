@@ -20,16 +20,16 @@
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
 #include "cartographer/mapping/id.h"
-#include "cartographer_ros_msgs/SubmapList.h"
-#include "cartographer_ros_msgs/SubmapQuery.h"
-#include "geometry_msgs/TransformStamped.h"
+#include "cartographer_ros_msgs/msg/submap_list.hpp"
+#include "cartographer_ros_msgs/srv/submap_query.hpp"
+#include <geometry_msgs/msg/transform_stamped.hpp>
 #include "pluginlib/class_list_macros.h"
 #include "ros/package.h"
-#include "ros/ros.h"
-#include "rviz/display_context.h"
-#include "rviz/frame_manager.h"
-#include "rviz/properties/bool_property.h"
-#include "rviz/properties/string_property.h"
+#include <rclcpp/rclcpp.hpp>
+#include <rviz_common/display_context.hpp>
+#include <rviz_common/frame_manager_iface.hpp>
+#include <rviz_common/properties/bool_property.hpp>
+#include <rviz_common/properties/string_property.hpp>
 
 namespace cartographer_rviz {
 
