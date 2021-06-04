@@ -26,8 +26,8 @@
 #include "absl/memory/memory.h"
 #include "cartographer/common/port.h"
 #include "cartographer_ros/msg_conversion.h"
-#include "cartographer_ros_msgs/SubmapQuery.h"
-#include "ros/ros.h"
+#include "cartographer_ros_msgs/srv/submap_query.hpp"
+#include <rclcpp/rclcpp.hpp>
 
 namespace cartographer_rviz {
 

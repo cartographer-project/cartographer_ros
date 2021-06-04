@@ -15,9 +15,9 @@
   limitations under the License.
 -->
 
-<package format="2">
+<package format="3">
   <name>cartographer_rviz</name>
-  <version>1.0.0</version>
+  <version>2.0.0</version>
   <description>
     Cartographer is a system that provides real-time simultaneous localization
     and mapping (SLAM) in 2D and 3D across multiple platforms and sensor
@@ -34,23 +34,28 @@
     The Cartographer Authors
   </author>
 
-  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
   <build_depend>git</build_depend>
 
-  <depend version_gte="1.0.0">cartographer</depend>
-  <depend version_gte="1.0.0">cartographer_ros</depend>
-  <depend version_gte="1.0.0">cartographer_ros_msgs</depend>
+  <depend>cartographer</depend>
+  <depend>cartographer_ros</depend>
+  <depend>cartographer_ros_msgs</depend>
   <depend>libqt5-core</depend>
   <depend>libqt5-gui</depend>
   <depend>libqt5-widgets</depend>
-  <depend>message_runtime</depend>
   <depend>qtbase5-dev</depend>
-  <depend>roscpp</depend>
-  <depend>roslib</depend>
-  <depend>rviz</depend>
+  <depend>rclcpp</depend>
+  <!--<depend>roslib</depend>-->
+  <depend>rviz2</depend>
+  <depend>rviz_ogre_vendor</depend>
+  <depend>rviz_assimp_vendor</depend>
+  <depend>rviz_rendering</depend>
+  <depend>rviz_common</depend>
+  <depend>rviz_default_plugins</depend>
 
   <export>
-      <rviz plugin="${prefix}/rviz_plugin_description.xml" />
+      <build_type>ament_cmake</build_type>
+      <rviz2 plugin="${prefix}/rviz_plugin_description.xml" />
   </export>
 </package>

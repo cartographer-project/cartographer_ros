@@ -24,11 +24,11 @@
 
 #include "absl/synchronization/mutex.h"
 #include "cartographer/common/port.h"
-#include "cartographer_ros_msgs/SubmapList.h"
+#include "cartographer_ros_msgs/msg/submap_list.hpp"
 #include "cartographer_rviz/drawable_submap.h"
-#include "rviz/message_filter_display.h"
-#include "rviz/properties/bool_property.h"
-#include "rviz/properties/float_property.h"
+#include <rviz_common/message_filter_display.hpp>
+#include <rviz_common/properties/bool_property.hpp>
+#include <rviz_common/properties/float_property.hpp>
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_listener.h"
 
