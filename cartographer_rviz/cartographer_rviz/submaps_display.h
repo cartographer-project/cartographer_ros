@@ -60,7 +60,7 @@ struct Trajectory : public QObject {
 // every submap containing pre-multiplied alpha and grayscale values, these are
 // then alpha blended together.
 class SubmapsDisplay
-    : public ::rviz_common::MessageFilterDisplay<::cartographer_ros_msgs::msg::SubmapList> {
+    : public ::rviz_common::MessageFilterDisplay<::cartographer_ros_msgs::msg::SubmapList>, rclcpp::Node {
   Q_OBJECT
 
  public:
@@ -83,11 +83,11 @@ class SubmapsDisplay
   void onInitialize() override;
   void reset() override;
   void processMessage(
-      const ::cartographer_ros_msgs::msg::SubmapList::ConstPtr& msg) override;
+      const ::cartographer_ros_msgs::msg::SubmapList::ConstPtr& msg); //override;
   void update(float wall_dt, float ros_dt) override;
 
-  ::tf2_ros::Buffer tf_buffer_;
-  ::tf2_ros::TransformListener tf_listener_;
+  std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
+  std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
   rclcpp::Client<cartographer_ros_msgs::srv::SubmapQuery>::SharedPtr client_;
   ::rviz_common::properties::StringProperty* submap_query_service_property_;
   std::unique_ptr<std::string> map_frame_;
