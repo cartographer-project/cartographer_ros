@@ -111,7 +111,7 @@ class DrawableSubmap : public QObject {
   ::cartographer::transform::Rigid3d pose_ GUARDED_BY(mutex_);
   ::rviz_rendering::Axes pose_axes_;
   bool pose_axes_visible_;
-  ::rviz_rendering::MovableText submap_id_text;
+  ::rviz_rendering::MovableText submap_id_text_;
   std::chrono::milliseconds last_query_timestamp_ GUARDED_BY(mutex_);
   bool query_in_progress_ GUARDED_BY(mutex_) = false;
   int metadata_version_ GUARDED_BY(mutex_) = -1;

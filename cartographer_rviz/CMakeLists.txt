@@ -37,9 +37,11 @@ find_package(absl REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(cartographer_ros REQUIRED)
 find_package(cartographer_ros_msgs REQUIRED)
+find_package(pcl_conversions REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rviz2 REQUIRED)
 find_package(rviz_ogre_vendor REQUIRED)
+find_package(PCL REQUIRED COMPONENTS common)
 find_package(rviz_assimp_vendor REQUIRED)
 find_package(rviz_rendering REQUIRED)
 find_package(rviz_common REQUIRED)
@@ -64,11 +66,24 @@ ament_target_dependencies(${PROJECT_NAME} PUBLIC
   rviz_rendering
   rviz_common
   rviz_default_plugins
-
+  pcl_conversions
 #  rviz
 )
 
 ament_export_dependencies(rosidl_default_runtime)
+
+# PCL
+target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${PCL_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${PCL_LIBRARIES})
+set(BLACKLISTED_PCL_DEFINITIONS " -march=native -msse4.2 -mfpmath=sse ")
+foreach(DEFINITION ${PCL_DEFINITIONS})
+  list (FIND BLACKLISTED_PCL_DEFINITIONS "${DEFINITION}" DEFINITIONS_INDEX)
+  if (${DEFINITIONS_INDEX} GREATER -1)
+    continue()
+  endif()
+  set(TARGET_COMPILE_FLAGS "${TARGET_COMPILE_FLAGS} ${DEFINITION}")
+endforeach()
+
 
 #if(rviz2_QT_VERSION VERSION_LESS "5")
 #  message(STATUS "Using Qt4 based on the rviz2_QT_VERSION: ${rviz2_QT_VERSION}")

@@ -32,8 +32,7 @@
 #include "geometry_msgs/msg/vector3.hpp"
 #include "glog/logging.h"
 #include "nav_msgs/msg/occupancy_grid.hpp"
-#include <pcl_ros/point_cloud.hpp>
-//#include "pcl/point_cloud.h"
+#include "pcl/point_cloud.h"
 #include "pcl/point_types.h"
 #include "pcl_conversions/pcl_conversions.h"
 #include "builtin_interfaces/msg/time.hpp"
