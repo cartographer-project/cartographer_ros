@@ -32,8 +32,12 @@
 #include "geometry_msgs/msg/vector3.hpp"
 #include "glog/logging.h"
 #include "nav_msgs/msg/occupancy_grid.hpp"
+
+// WHY ARE THESE NOT COMPILING? THERE ARE BEING USED IN THE CARTO_ROS PKG WITHOUT A PROB
 #include "pcl/point_cloud.h"
 #include "pcl/point_types.h"
+//#include "rviz_rendering/objects/point_cloud.hpp"
+
 #include "pcl_conversions/pcl_conversions.h"
 #include "builtin_interfaces/msg/time.hpp"
 //#include "ros/serialization.h"

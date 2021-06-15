@@ -43,7 +43,7 @@ namespace cartographer_rviz {
 
 // Contains all the information needed to render a submap onto the final
 // texture representing the whole map.
-class DrawableSubmap : public QObject {
+class DrawableSubmap : public QObject, rclcpp::Node{
   Q_OBJECT
 
  public:

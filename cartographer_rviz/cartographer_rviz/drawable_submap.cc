@@ -43,6 +43,9 @@ constexpr int kNumberOfSlicesPerSubmap = 2;
 
 }  // namespace
 
+
+
+// DECLARED IT AS A ROS NODE
 DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
                                ::rviz_common::DisplayContext* const display_context,
                                Ogre::SceneNode* const map_node,
@@ -61,7 +64,7 @@ DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
                           .arg(id.trajectory_id)
                           .arg(id.submap_index)
                           .toStdString()),
-      last_query_timestamp_(0) {
+      last_query_timestamp_(0), Node("DrawableSubmap") {
   for (int slice_index = 0; slice_index < kNumberOfSlicesPerSubmap;
        ++slice_index) {
     ogre_slices_.emplace_back(absl::make_unique<OgreSlice>(
@@ -129,9 +132,19 @@ bool DrawableSubmap::MaybeFetchTexture(rclcpp::Client<cartographer_ros_msgs::srv
   }
   query_in_progress_ = true;
   last_query_timestamp_ = now;
+
+//  rclcpp::CallbackGroup::SharedPtr sync_srv_client_callback_group = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive, false);
+//  rclcpp::executors::SingleThreadedExecutor::SharedPtr callback_group_executor;
+//  std::thread callback_group_executor_thread;
+
+//  callback_group_executor_thread = std::thread([this]() {
+//    callback_group_executor.add_callback_group(sync_srv_client_callback_group, this->get_node_base_interface());
+//    callback_group_executor.spin();
+//  });
+
   rpc_request_future_ = std::async(std::launch::async, [this, client]() {
     std::unique_ptr<::cartographer::io::SubmapTextures> submap_textures =
-        ::cartographer_ros::FetchSubmapTextures(id_, client); // Missing callbackgroup and timeout but this class isn't a ros node
+        ::cartographer_ros::FetchSubmapTextures(id_, client,callback_group_executor,std::chrono::milliseconds(10000)); // Missing callbackgroup and timeout but this class isn't a ros node
     absl::MutexLock locker(&mutex_);
     query_in_progress_ = false;
     if (submap_textures != nullptr) {
