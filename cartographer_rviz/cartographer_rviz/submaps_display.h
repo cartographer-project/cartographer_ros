@@ -41,11 +41,11 @@ struct Trajectory : public QObject {
   Q_OBJECT
 
  public:
-  Trajectory(std::unique_ptr<::rviz::BoolProperty> property,
+  Trajectory(std::unique_ptr<::rviz_common::properties::BoolProperty> property,
              bool pose_markers_enabled);
 
-  std::unique_ptr<::rviz::BoolProperty> visibility;
-  std::unique_ptr<::rviz::BoolProperty> pose_markers_visibility;
+  std::unique_ptr<::rviz_common::properties::BoolProperty> visibility;
+  std::unique_ptr<::rviz_common::properties::BoolProperty> pose_markers_visibility;
   std::map<int, std::unique_ptr<DrawableSubmap>> submaps;
 
  private Q_SLOTS:
@@ -60,7 +60,7 @@ struct Trajectory : public QObject {
 // every submap containing pre-multiplied alpha and grayscale values, these are
 // then alpha blended together.
 class SubmapsDisplay
-    : public ::rviz::MessageFilterDisplay<::cartographer_ros_msgs::SubmapList> {
+    : public ::rviz_common::MessageFilterDisplay<::cartographer_ros_msgs::msg::SubmapList> {
   Q_OBJECT
 
  public:
@@ -83,24 +83,24 @@ class SubmapsDisplay
   void onInitialize() override;
   void reset() override;
   void processMessage(
-      const ::cartographer_ros_msgs::SubmapList::ConstPtr& msg) override;
+      const ::cartographer_ros_msgs::msg::SubmapList::ConstPtr& msg) override;
   void update(float wall_dt, float ros_dt) override;
 
   ::tf2_ros::Buffer tf_buffer_;
   ::tf2_ros::TransformListener tf_listener_;
-  ros::ServiceClient client_;
-  ::rviz::StringProperty* submap_query_service_property_;
+  rclcpp::Client client_;
+  ::rviz_common::properties::StringProperty* submap_query_service_property_;
   std::unique_ptr<std::string> map_frame_;
-  ::rviz::StringProperty* tracking_frame_property_;
+  ::rviz_common::properties::StringProperty* tracking_frame_property_;
   Ogre::SceneNode* map_node_ = nullptr;  // Represents the map frame.
   std::map<int, std::unique_ptr<Trajectory>> trajectories_ GUARDED_BY(mutex_);
   absl::Mutex mutex_;
-  ::rviz::BoolProperty* slice_high_resolution_enabled_;
-  ::rviz::BoolProperty* slice_low_resolution_enabled_;
-  ::rviz::Property* trajectories_category_;
-  ::rviz::BoolProperty* visibility_all_enabled_;
-  ::rviz::BoolProperty* pose_markers_all_enabled_;
-  ::rviz::FloatProperty* fade_out_start_distance_in_meters_;
+  ::rviz_common::properties::BoolProperty* slice_high_resolution_enabled_;
+  ::rviz_common::properties::BoolProperty* slice_low_resolution_enabled_;
+  ::rviz_common::properties::Property* trajectories_category_;
+  ::rviz_common::properties::BoolProperty* visibility_all_enabled_;
+  ::rviz_common::properties::BoolProperty* pose_markers_all_enabled_;
+  ::rviz_common::properties::FloatProperty* fade_out_start_distance_in_meters_;
 };
 
 }  // namespace cartographer_rviz
