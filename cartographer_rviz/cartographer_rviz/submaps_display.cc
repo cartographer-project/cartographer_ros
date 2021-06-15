@@ -30,6 +30,7 @@
 #include <rviz_common/frame_manager_iface.hpp>
 #include <rviz_common/properties/bool_property.hpp>
 #include <rviz_common/properties/string_property.hpp>
+#include <rviz_common/message_filter_display.hpp>
 
 namespace cartographer_rviz {
 
@@ -95,7 +96,7 @@ SubmapsDisplay::~SubmapsDisplay() {
 void SubmapsDisplay::Reset() { reset(); }
 
 void SubmapsDisplay::CreateClient() {
-  client_ = update_nh_.serviceClient<::cartographer_ros_msgs::msg::SubmapQuery>(
+  client_ = update_nh_.serviceClient<::cartographer_ros_msgs::srv::SubmapQuery>(
       submap_query_service_property_->getStdString());
 }
 

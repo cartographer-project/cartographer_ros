@@ -28,7 +28,6 @@
 #include "cartographer/io/submap_painter.h"
 #include "cartographer/mapping/id.h"
 #include "cartographer/transform/rigid_transform.h"
-//#include <cartographer/mapping/submaps.h>
 #include "cartographer_rviz/submap.h"
 #include "cartographer_ros_msgs/msg/submap_entry.hpp"
 #include "cartographer_ros_msgs/srv/submap_query.hpp"
@@ -64,7 +63,7 @@ class DrawableSubmap : public QObject {
 
   // If an update is needed, it will send an RPC using 'client' to request the
   // new data for the submap and returns true.
-  bool MaybeFetchTexture(rclcpp::Client* client);
+  bool MaybeFetchTexture(rclcpp::Client<cartographer_ros_msgs::srv::SubmapQuery>::SharedPtr client);
 
   // Returns whether an RPC is in progress.
   bool QueryInProgress();
