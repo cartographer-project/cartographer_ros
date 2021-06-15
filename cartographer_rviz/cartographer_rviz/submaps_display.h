@@ -88,7 +88,7 @@ class SubmapsDisplay
 
   ::tf2_ros::Buffer tf_buffer_;
   ::tf2_ros::TransformListener tf_listener_;
-  rclcpp::Client client_;
+  rclcpp::Client<cartographer_ros_msgs::srv::SubmapQuery>::SharedPtr client_;
   ::rviz_common::properties::StringProperty* submap_query_service_property_;
   std::unique_ptr<std::string> map_frame_;
   ::rviz_common::properties::StringProperty* tracking_frame_property_;
