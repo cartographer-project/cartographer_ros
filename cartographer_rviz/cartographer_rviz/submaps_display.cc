@@ -45,7 +45,7 @@ constexpr char kDefaultSubmapQueryServiceName[] = "/submap_query";
 
 }  // namespace
 
-SubmapsDisplay::SubmapsDisplay() : tf_listener_(tf_buffer_) {
+SubmapsDisplay::SubmapsDisplay() : Node("SubmapsDisplay") {
   submap_query_service_property_ = new ::rviz_common::properties::StringProperty(
       "Submap query service", kDefaultSubmapQueryServiceName,
       "Submap query service to connect to.", this, SLOT(Reset()));
@@ -58,7 +58,7 @@ SubmapsDisplay::SubmapsDisplay() : tf_listener_(tf_buffer_) {
   slice_low_resolution_enabled_ = new ::rviz_common::properties::BoolProperty(
       "Low Resolution", false, "Display low resolution slices.", this,
       SLOT(ResolutionToggled()), this);
-  client_ = update_nh_.serviceClient<::cartographer_ros_msgs::msg::SubmapQuery>("");
+  client_ = this->create_client<::cartographer_ros_msgs::srv::SubmapQuery>("");//update_nh_.serviceClient<::cartographer_ros_msgs::msg::SubmapQuery>("");
   trajectories_category_ = new ::rviz_common::properties::Property(
       "Submaps", QVariant(), "List of all submaps, organized by trajectories.",
       this);
@@ -85,10 +85,13 @@ SubmapsDisplay::SubmapsDisplay() : tf_listener_(tf_buffer_) {
       package_path + kMaterialsDirectory + kScriptsDirectory, "FileSystem",
       ROS_PACKAGE_NAME);
   Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
+
+  tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
+  tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 }
 
 SubmapsDisplay::~SubmapsDisplay() {
-  client_.shutdown();
+  client_.reset();
   trajectories_.clear();
   scene_manager_->destroySceneNode(map_node_);
 }
@@ -96,7 +99,7 @@ SubmapsDisplay::~SubmapsDisplay() {
 void SubmapsDisplay::Reset() { reset(); }
 
 void SubmapsDisplay::CreateClient() {
-  client_ = update_nh_.serviceClient<::cartographer_ros_msgs::srv::SubmapQuery>(
+  client_ = this->create_client<::cartographer_ros_msgs::srv::SubmapQuery>(//update_nh_.serviceClient<::cartographer_ros_msgs::srv::SubmapQuery>(
       submap_query_service_property_->getStdString());
 }
 
@@ -109,7 +112,7 @@ void SubmapsDisplay::onInitialize() {
 void SubmapsDisplay::reset() {
   MFDClass::reset();
   absl::MutexLock locker(&mutex_);
-  client_.shutdown();
+  client_.reset();
   trajectories_.clear();
   CreateClient();
 }
@@ -216,7 +219,7 @@ void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
          it != trajectory_by_id.second->submaps.rend() &&
          num_ongoing_requests < kMaxOnGoingRequestsPerTrajectory;
          ++it) {
-      if (it->second->MaybeFetchTexture(&client_)) {
+      if (it->second->MaybeFetchTexture(client_)) {
         ++num_ongoing_requests;
       }
     }
@@ -225,11 +228,10 @@ void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
     return;
   }
   // Update the fading by z distance.
-  const ros::Time kLatest(0);
   try {
     const ::geometry_msgs::msg::TransformStamped transform_stamped =
-        tf_buffer_.lookupTransform(
-            *map_frame_, tracking_frame_property_->getStdString(), kLatest);
+        tf_buffer_->lookupTransform(
+            *map_frame_, tracking_frame_property_->getStdString(), tf2::TimePointZero);
     for (auto& trajectory_by_id : trajectories_) {
       for (auto& submap_entry : trajectory_by_id.second->submaps) {
         submap_entry.second->SetAlpha(
@@ -243,7 +245,7 @@ void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
   // Update the map frame to fixed frame transform.
   Ogre::Vector3 position;
   Ogre::Quaternion orientation;
-  if (context_->getFrameManager()->getTransform(*map_frame_, kLatest, position,
+  if (context_->getFrameManager()->getTransform(*map_frame_, this->now(), position,
                                                 orientation)) {
     map_node_->setPosition(position);
     map_node_->setOrientation(orientation);
