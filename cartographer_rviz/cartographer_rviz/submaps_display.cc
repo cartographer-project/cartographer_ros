@@ -127,8 +127,7 @@ void SubmapsDisplay::reset() {
   CreateClient();
 }
 
-void SubmapsDisplay::processMessage(
-    const ::cartographer_ros_msgs::msg::SubmapList::ConstPtr& msg) {
+void SubmapsDisplay::processMessage(::cartographer_ros_msgs::msg::SubmapList::SharedPtr msg) {
   absl::MutexLock locker(&mutex_);
   map_frame_ = absl::make_unique<std::string>(msg->header.frame_id);
   // In case Cartographer node is relaunched, destroy trajectories from the
@@ -321,4 +320,6 @@ Trajectory::Trajectory(std::unique_ptr<::rviz_common::properties::BoolProperty> 
 }
 
 }  // namespace cartographer_rviz
-//PLUGINLIB_EXPORT_CLASS(cartographer_rviz::SubmapsDisplay, ::rviz_common::Display)
+
+#include <pluginlib/class_list_macros.hpp>
+PLUGINLIB_EXPORT_CLASS(cartographer_rviz::SubmapsDisplay, ::rviz_common::Display)

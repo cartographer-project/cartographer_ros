@@ -65,7 +65,9 @@ class SubmapsDisplay
 
  public:
   SubmapsDisplay();
-  ~SubmapsDisplay() override;
+  virtual ~SubmapsDisplay() override;
+
+
 
   SubmapsDisplay(const SubmapsDisplay&) = delete;
   SubmapsDisplay& operator=(const SubmapsDisplay&) = delete;
@@ -80,10 +82,11 @@ class SubmapsDisplay
   void CreateClient();
 
   // These are called by RViz and therefore do not adhere to the style guide.
+  using ::rviz_common::MessageFilterDisplay<::cartographer_ros_msgs::msg::SubmapList>::processMessage;
   void onInitialize() override;
   void reset() override;
   void processMessage(
-      const ::cartographer_ros_msgs::msg::SubmapList::ConstPtr& msg); //override;
+      ::cartographer_ros_msgs::msg::SubmapList::SharedPtr msg);
   void update(float wall_dt, float ros_dt) override;
 
   std::unique_ptr<tf2_ros::Buffer> tf_buffer_;

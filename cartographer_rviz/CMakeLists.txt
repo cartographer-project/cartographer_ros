@@ -46,6 +46,7 @@ find_package(rviz_assimp_vendor REQUIRED)
 find_package(rviz_rendering REQUIRED)
 find_package(rviz_common REQUIRED)
 find_package(rviz_default_plugins REQUIRED)
+find_package(pluginlib REQUIRED)
 #find_package(rviz REQUIRED)
 
 include_directories(
@@ -133,9 +134,15 @@ target_link_libraries(${PROJECT_NAME} PUBLIC cartographer)
 target_link_libraries(${PROJECT_NAME} PUBLIC rviz_ogre_vendor)
 target_link_libraries(${PROJECT_NAME} PUBLIC cartographer_ros)
 
+pluginlib_export_plugin_description_file(rviz_common rviz_plugin_description.xml)
+
 #install(DIRECTORY configuration_files
 #  DESTINATION share/${PROJECT_NAME}/
 #)
+
+install(FILES
+  rviz_plugin_description.xml
+  DESTINATION share/${PROJECT_NAME})
 
 install(DIRECTORY ogre_media
   DESTINATION share/${PROJECT_NAME}/
