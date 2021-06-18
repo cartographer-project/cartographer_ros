@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright 2016 The Cartographer Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -133,18 +133,12 @@ bool DrawableSubmap::MaybeFetchTexture(rclcpp::Client<cartographer_ros_msgs::srv
   query_in_progress_ = true;
   last_query_timestamp_ = now;
 
-//  rclcpp::CallbackGroup::SharedPtr sync_srv_client_callback_group = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive, false);
-//  rclcpp::executors::SingleThreadedExecutor::SharedPtr callback_group_executor;
-//  std::thread callback_group_executor_thread;
 
-//  callback_group_executor_thread = std::thread([this]() {
-//    callback_group_executor.add_callback_group(sync_srv_client_callback_group, this->get_node_base_interface());
-//    callback_group_executor.spin();
-//  });
 
   rpc_request_future_ = std::async(std::launch::async, [this, client]() {
     std::unique_ptr<::cartographer::io::SubmapTextures> submap_textures =
-        ::cartographer_ros::FetchSubmapTextures(id_, client);//,callback_group_executor,std::chrono::milliseconds(10000)); // Missing callbackgroup and timeout but this class isn't a ros node
+        ::cartographer_ros::FetchSubmapTextures(id_, client,std::chrono::milliseconds(10000));
+    //,callback_group_executor,std::chrono::milliseconds(10000)); // Missing callbackgroup and timeout but this class isn't a ros node
     absl::MutexLock locker(&mutex_);
     query_in_progress_ = false;
     if (submap_textures != nullptr) {

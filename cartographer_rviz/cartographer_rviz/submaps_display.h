@@ -101,6 +101,11 @@ class SubmapsDisplay
   ::rviz_common::properties::BoolProperty* visibility_all_enabled_;
   ::rviz_common::properties::BoolProperty* pose_markers_all_enabled_;
   ::rviz_common::properties::FloatProperty* fade_out_start_distance_in_meters_;
+
+  rclcpp::CallbackGroup::SharedPtr sync_srv_client_callback_group;
+  rclcpp::executors::SingleThreadedExecutor::SharedPtr callback_group_executor;
+  std::thread callback_group_executor_thread;
+
 };
 
 }  // namespace cartographer_rviz
