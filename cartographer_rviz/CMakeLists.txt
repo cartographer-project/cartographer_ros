@@ -133,9 +133,9 @@ target_link_libraries(${PROJECT_NAME} PUBLIC cartographer)
 target_link_libraries(${PROJECT_NAME} PUBLIC rviz_ogre_vendor)
 target_link_libraries(${PROJECT_NAME} PUBLIC cartographer_ros)
 
-install(DIRECTORY configuration_files
-  DESTINATION share/${PROJECT_NAME}/
-)
+#install(DIRECTORY configuration_files
+#  DESTINATION share/${PROJECT_NAME}/
+#)
 
 install(DIRECTORY ogre_media
   DESTINATION share/${PROJECT_NAME}/
