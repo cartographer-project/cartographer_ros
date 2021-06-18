@@ -28,7 +28,6 @@ namespace cartographer_ros {
 std::unique_ptr<::cartographer::io::SubmapTextures> FetchSubmapTextures(
     const ::cartographer::mapping::SubmapId& submap_id,
     rclcpp::Client<cartographer_ros_msgs::srv::SubmapQuery>::SharedPtr client,
-    rclcpp::executors::SingleThreadedExecutor::SharedPtr callback_group_executor,
     const std::chrono::milliseconds timeout)
 {
   auto request = std::make_shared<cartographer_ros_msgs::srv::SubmapQuery::Request>();
@@ -36,11 +35,13 @@ std::unique_ptr<::cartographer::io::SubmapTextures> FetchSubmapTextures(
   request->submap_index = submap_id.submap_index;
   auto future_result = client->async_send_request(request);
 
-  if (callback_group_executor->spin_until_future_complete(future_result, timeout) !=
-    rclcpp::FutureReturnCode::SUCCESS)
-  {
+
+  auto status = future_result.wait_for(timeout);
+  if (status != std::future_status::ready){
+
     return nullptr;
   }
+
   auto result = future_result.get();
 
   if (result->status.code != ::cartographer_ros_msgs::msg::StatusCode::OK ||

@@ -32,6 +32,9 @@
 #include <rviz_common/properties/string_property.hpp>
 #include <rviz_common/message_filter_display.hpp>
 
+// Include ament_index_cpp::get_package_share_directory
+#include <ament_index_cpp/get_package_share_directory.hpp>
+
 namespace cartographer_rviz {
 
 namespace {
@@ -58,7 +61,14 @@ SubmapsDisplay::SubmapsDisplay() : Node("SubmapsDisplay") {
   slice_low_resolution_enabled_ = new ::rviz_common::properties::BoolProperty(
       "Low Resolution", false, "Display low resolution slices.", this,
       SLOT(ResolutionToggled()), this);
-  client_ = this->create_client<::cartographer_ros_msgs::srv::SubmapQuery>("");//update_nh_.serviceClient<::cartographer_ros_msgs::msg::SubmapQuery>("");
+
+  sync_srv_client_callback_group = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive, false);
+  callback_group_executor_thread = std::thread([&]() {
+    callback_group_executor->add_callback_group(sync_srv_client_callback_group, this->get_node_base_interface());
+    callback_group_executor->spin();
+  });
+
+  client_ = this->create_client<::cartographer_ros_msgs::srv::SubmapQuery>("",rmw_qos_profile_services_default, sync_srv_client_callback_group);//update_nh_.serviceClient<::cartographer_ros_msgs::msg::SubmapQuery>("");
   trajectories_category_ = new ::rviz_common::properties::Property(
       "Submaps", QVariant(), "List of all submaps, organized by trajectories.",
       this);
@@ -75,15 +85,15 @@ SubmapsDisplay::SubmapsDisplay() : Node("SubmapsDisplay") {
                                 "Distance in meters in z-direction beyond "
                                 "which submaps will start to fade out.",
                                 this);
-  const std::string package_path = ::ros::package::getPath(ROS_PACKAGE_NAME);
+  const std::string package_path = ament_index_cpp::get_package_share_directory("cartographer_rviz");
   Ogre::ResourceGroupManager::getSingleton().addResourceLocation(
-      package_path + kMaterialsDirectory, "FileSystem", ROS_PACKAGE_NAME);
+      package_path + kMaterialsDirectory, "FileSystem", "cartographer_rviz");
   Ogre::ResourceGroupManager::getSingleton().addResourceLocation(
       package_path + kMaterialsDirectory + kGlsl120Directory, "FileSystem",
-      ROS_PACKAGE_NAME);
+      "cartographer_rviz");
   Ogre::ResourceGroupManager::getSingleton().addResourceLocation(
       package_path + kMaterialsDirectory + kScriptsDirectory, "FileSystem",
-      ROS_PACKAGE_NAME);
+      "cartographer_rviz");
   Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
 
   tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
