@@ -53,7 +53,7 @@ DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
                                const bool visible, const bool pose_axes_visible,
                                const float pose_axes_length,
                                const float pose_axes_radius)
-    : id_(id),
+    : rclcpp::Node("drawable_submap"), id_(id),
       display_context_(display_context),
       submap_node_(map_node->createChildSceneNode()),
       submap_id_text_node_(submap_node_->createChildSceneNode()),
@@ -64,7 +64,7 @@ DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
                           .arg(id.trajectory_id)
                           .arg(id.submap_index)
                           .toStdString()),
-      last_query_timestamp_(0), Node("DrawableSubmap") {
+      last_query_timestamp_(0){
   for (int slice_index = 0; slice_index < kNumberOfSlicesPerSubmap;
        ++slice_index) {
     ogre_slices_.emplace_back(absl::make_unique<OgreSlice>(

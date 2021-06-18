@@ -48,7 +48,7 @@ constexpr char kDefaultSubmapQueryServiceName[] = "/submap_query";
 
 }  // namespace
 
-SubmapsDisplay::SubmapsDisplay() : Node("SubmapsDisplay") {
+SubmapsDisplay::SubmapsDisplay() : rclcpp::Node("submaps_display") {
   submap_query_service_property_ = new ::rviz_common::properties::StringProperty(
       "Submap query service", kDefaultSubmapQueryServiceName,
       "Submap query service to connect to.", this, SLOT(Reset()));
@@ -321,5 +321,4 @@ Trajectory::Trajectory(std::unique_ptr<::rviz_common::properties::BoolProperty> 
 }
 
 }  // namespace cartographer_rviz
-
-PLUGINLIB_EXPORT_CLASS(cartographer_rviz::SubmapsDisplay, ::rviz_common::Display)
+//PLUGINLIB_EXPORT_CLASS(cartographer_rviz::SubmapsDisplay, ::rviz_common::Display)
