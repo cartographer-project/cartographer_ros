@@ -23,7 +23,7 @@
 #include "cartographer_ros_msgs/msg/submap_list.hpp"
 #include "cartographer_ros_msgs/srv/submap_query.hpp"
 #include <geometry_msgs/msg/transform_stamped.hpp>
-#include "pluginlib/class_list_macros.h"
+#include <pluginlib/class_list_macros.hpp>
 //#include "ros/package.h"
 #include <rclcpp/rclcpp.hpp>
 #include <rviz_common/display_context.hpp>
@@ -321,5 +321,4 @@ Trajectory::Trajectory(std::unique_ptr<::rviz_common::properties::BoolProperty> 
 
 }  // namespace cartographer_rviz
 
-#include <pluginlib/class_list_macros.hpp>
 PLUGINLIB_EXPORT_CLASS(cartographer_rviz::SubmapsDisplay, ::rviz_common::Display)
