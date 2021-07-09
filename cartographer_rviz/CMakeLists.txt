@@ -35,12 +35,12 @@ google_initialize_cartographer_project()
 
 find_package(absl REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(cartographer_ros REQUIRED)
+#find_package(cartographer_ros REQUIRED)
 find_package(cartographer_ros_msgs REQUIRED)
 find_package(pcl_conversions REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rviz2 REQUIRED)
-find_package(rviz_ogre_vendor REQUIRED)
+#find_package(rviz_ogre_vendor REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common)
 find_package(rviz_assimp_vendor REQUIRED)
 find_package(rviz_rendering REQUIRED)
@@ -56,13 +56,24 @@ include_directories(
 file(GLOB_RECURSE ALL_SRCS "cartographer_rviz/*.cc" "cartographer_rviz/*.h")
 set(CMAKE_AUTOMOC ON)
 
-add_library(${PROJECT_NAME} ${ALL_SRCS})
+add_library(${PROJECT_NAME} SHARED ${ALL_SRCS})
+
+# Causes the visibility macros to use dllexport rather than dllimport,
+# which is appropriate when building the dll but not consuming it.
+target_compile_definitions(${PROJECT_NAME} PRIVATE "RVIZ_DEFAULT_PLUGINS_BUILDING_LIBRARY")
+
+# prevent pluginlib from using boost
+target_compile_definitions(${PROJECT_NAME} PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
+
+pluginlib_export_plugin_description_file(rviz_common rviz_plugin_description.xml)
+
+
 ament_target_dependencies(${PROJECT_NAME} PUBLIC
   rclcpp
-  cartographer_ros
+#  cartographer_ros
   cartographer_ros_msgs
   rviz2
-  rviz_ogre_vendor
+#  rviz_ogre_vendor
   rviz_assimp_vendor
   rviz_rendering
   rviz_common
@@ -114,31 +125,34 @@ target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
   "${EIGEN3_INCLUDE_DIR}")
 target_link_libraries(${PROJECT_NAME} PUBLIC ${EIGEN3_LIBRARIES})
 
-target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
-  "${CARTOGRAPHER_ROS_INCLUDE_DIR}")
-target_link_libraries(${PROJECT_NAME} PUBLIC ${CARTOGRAPHER_ROS_LIBRARIES})
+#target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
+#  "${CARTOGRAPHER_ROS_INCLUDE_DIR}")
+#target_link_libraries(${PROJECT_NAME} PUBLIC ${CARTOGRAPHER_ROS_LIBRARIES})
 
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
   "${Boost_INCLUDE_DIRS}")
 target_link_libraries(${PROJECT_NAME} PUBLIC ${Boost_LIBRARIES})
 
-target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
-  "${RVIZ_OGRE_VENDOR_INCLUDE_DIRS}")
-target_link_libraries(${PROJECT_NAME} PUBLIC ${RVIZ_OGRE_VENDOR_LIBRARIES})
+#target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
+#  "${RVIZ_OGRE_VENDOR_INCLUDE_DIRS}")
+#target_link_libraries(${PROJECT_NAME} PUBLIC ${RVIZ_OGRE_VENDOR_LIBRARIES})
 
 set(TARGET_COMPILE_FLAGS "${TARGET_COMPILE_FLAGS} ${GOOG_CXX_FLAGS}")
 set_target_properties(${PROJECT_NAME} PROPERTIES
   COMPILE_FLAGS ${TARGET_COMPILE_FLAGS})
 
 target_link_libraries(${PROJECT_NAME} PUBLIC cartographer)
-target_link_libraries(${PROJECT_NAME} PUBLIC rviz_ogre_vendor)
-target_link_libraries(${PROJECT_NAME} PUBLIC cartographer_ros)
+#target_link_libraries(${PROJECT_NAME} PUBLIC rviz_ogre_vendor)
+#target_link_libraries(${PROJECT_NAME} PUBLIC cartographer_ros)
 
 pluginlib_export_plugin_description_file(rviz_common rviz_plugin_description.xml)
 
 #install(DIRECTORY configuration_files
 #  DESTINATION share/${PROJECT_NAME}/
 #)
+
+
+
 
 install(FILES
   rviz_plugin_description.xml
@@ -148,10 +162,19 @@ install(DIRECTORY ogre_media
   DESTINATION share/${PROJECT_NAME}/
 )
 
-install(TARGETS
-  ${PROJECT_NAME}
+install(
+  TARGETS ${PROJECT_NAME}
+  EXPORT ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
+
+# replaces catkin_package(LIBRARIES ${PROJECT_NAME})
+ament_export_libraries(${PROJECT_NAME})
+
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
+endif()
 
 ament_package()
