@@ -39,7 +39,6 @@
   <build_depend>git</build_depend>
 
   <depend>cartographer</depend>
-  <depend>cartographer_ros</depend>
   <depend>cartographer_ros_msgs</depend>
   <depend>libqt5-core</depend>
   <depend>libqt5-gui</depend>
@@ -50,7 +49,6 @@
   <depend>libpcl-all-dev</depend>
   <depend>pcl_conversions</depend>
   <depend>rviz2</depend>
-  <depend>rviz_ogre_vendor</depend>
   <depend>rviz_assimp_vendor</depend>
   <depend>rviz_rendering</depend>
   <depend>rviz_common</depend>
@@ -58,6 +56,6 @@
 
   <export>
       <build_type>ament_cmake</build_type>
-      <rviz plugin="${prefix}/rviz_plugin_description.xml" />
+      <rviz plugin="rviz_plugin_description.xml" />
   </export>
 </package>
