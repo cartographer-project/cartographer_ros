@@ -15,7 +15,7 @@
 -->
 
 <library path="cartographer_rviz">
-  <class name="cartographer_rviz/Submaps"
+  <class name="cartographer_rviz/SubmapsDisplay"
          type="cartographer_rviz::SubmapsDisplay"
          base_class_type="rviz_common::Display">
     <description>

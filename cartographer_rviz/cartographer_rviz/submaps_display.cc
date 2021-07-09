@@ -35,6 +35,15 @@
 // Include ament_index_cpp::get_package_share_directory
 #include <ament_index_cpp/get_package_share_directory.hpp>
 
+#include "backward.hpp"
+
+namespace backward {
+
+backward::SignalHandling sh2;
+
+} // namespace backward
+
+
 namespace cartographer_rviz {
 
 namespace {
