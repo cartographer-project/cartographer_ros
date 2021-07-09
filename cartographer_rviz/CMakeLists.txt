@@ -48,6 +48,7 @@ find_package(rviz_common REQUIRED)
 find_package(rviz_default_plugins REQUIRED)
 find_package(pluginlib REQUIRED)
 #find_package(rviz REQUIRED)
+find_package(backward_ros REQUIRED)
 
 include_directories(
   include
