@@ -21,7 +21,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-
+#include <dlfcn.h>
 #include "absl/synchronization/mutex.h"
 #include "cartographer/common/port.h"
 #include "cartographer_ros_msgs/msg/submap_list.hpp"

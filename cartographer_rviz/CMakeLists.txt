@@ -47,6 +47,7 @@ find_package(rviz_rendering REQUIRED)
 find_package(rviz_common REQUIRED)
 find_package(rviz_default_plugins REQUIRED)
 find_package(pluginlib REQUIRED)
+find_package(rcutils REQUIRED)
 #find_package(rviz REQUIRED)
 find_package(backward_ros REQUIRED)
 
@@ -71,6 +72,7 @@ pluginlib_export_plugin_description_file(rviz_common rviz_plugin_description.xml
 
 ament_target_dependencies(${PROJECT_NAME} PUBLIC
   rclcpp
+  cartographer
 #  cartographer_ros
   cartographer_ros_msgs
   rviz2
@@ -80,9 +82,22 @@ ament_target_dependencies(${PROJECT_NAME} PUBLIC
   rviz_common
   rviz_default_plugins
   pcl_conversions
+  libdw
+  rcutils
 #  rviz
 )
 
+target_link_libraries(${PROJECT_NAME} PUBLIC
+#  usb-1.0
+  -lstdc++fs
+  -ldl
+#  -lexiv2
+  -lboost_thread)
+#  exiv2lib
+#  nlohmann_json::nlohmann_json
+#  ${gphoto2_LIBRARIES}
+#  ${Boost_SYSTEM_LIBRARY})
+ament_export_include_directories(include)
 ament_export_dependencies(rosidl_default_runtime)
 
 # PCL
@@ -173,6 +188,7 @@ install(
 # replaces catkin_package(LIBRARIES ${PROJECT_NAME})
 ament_export_libraries(${PROJECT_NAME})
 
+#LD_LIBRARY_PATH()
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
