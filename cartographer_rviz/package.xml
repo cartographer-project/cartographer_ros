@@ -53,10 +53,10 @@
   <depend>rviz_rendering</depend>
   <depend>rviz_common</depend>
   <depend>rviz_default_plugins</depend>
-  <depend>backward_ros</depend>
+  <depend>rcutils</depend>
 
   <export>
       <build_type>ament_cmake</build_type>
-      <rviz plugin="${prefix}/rviz_plugin_description.xml" />
+      <rviz plugin="rviz_plugin_description.xml" />
   </export>
 </package>

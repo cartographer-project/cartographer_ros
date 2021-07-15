@@ -19,7 +19,7 @@
 
 #include <future>
 #include <memory>
-
+#include <dlfcn.h>
 #include "Eigen/Core"
 #include "Eigen/Geometry"
 #include "OgreSceneManager.h"
