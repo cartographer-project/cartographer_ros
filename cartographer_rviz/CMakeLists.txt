@@ -15,11 +15,13 @@
 cmake_minimum_required(VERSION 3.5)
 
 project(cartographer_rviz)
+set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 
+#add_subdirectory(../../../../../../abseil-cpp/)
 find_package(ament_cmake REQUIRED)
 
 # Default to C++17
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 11)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra)
@@ -71,6 +73,7 @@ pluginlib_export_plugin_description_file(rviz_common rviz_plugin_description.xml
 
 
 ament_target_dependencies(${PROJECT_NAME} PUBLIC
+  absl
   rclcpp
   cartographer
 #  cartographer_ros
@@ -92,7 +95,21 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
   -lstdc++fs
   -ldl
 #  -lexiv2
-  -lboost_thread)
+  -lboost_thread
+  absl::algorithm
+  absl::base
+  absl::debugging
+  absl::flat_hash_map
+  absl::flags
+  absl::memory
+  absl::meta
+  absl::numeric
+  absl::random_random
+  absl::strings
+  absl::synchronization
+  absl::time
+  absl::utility
+  )
 #  exiv2lib
 #  nlohmann_json::nlohmann_json
 #  ${gphoto2_LIBRARIES}

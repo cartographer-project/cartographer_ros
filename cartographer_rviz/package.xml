@@ -45,6 +45,7 @@
   <depend>libqt5-widgets</depend>
   <depend>qtbase5-dev</depend>
   <depend>rclcpp</depend>
+  <depend>absl</depend>
   <!--<depend>roslib</depend>-->
   <depend>libpcl-all-dev</depend>
   <depend>pcl_conversions</depend>
