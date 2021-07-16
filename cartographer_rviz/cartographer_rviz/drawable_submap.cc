@@ -31,11 +31,11 @@
 
 #include "backward.hpp"
 
-namespace backward {
+//namespace backward {
 
-backward::SignalHandling sh;
+//backward::SignalHandling sh;
 
-} // namespace backward
+//} // namespace backward
 
 
 namespace cartographer_rviz {

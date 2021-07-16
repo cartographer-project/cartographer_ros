@@ -19,6 +19,7 @@
 #include "OgreResourceGroupManager.h"
 #include "absl/memory/memory.h"
 #include "absl/synchronization/mutex.h"
+
 #include "cartographer/mapping/id.h"
 #include "cartographer_ros_msgs/msg/submap_list.hpp"
 #include "cartographer_ros_msgs/srv/submap_query.hpp"
@@ -37,11 +38,11 @@
 
 #include "backward.hpp"
 
-namespace backward {
+//namespace backward {
 
-backward::SignalHandling sh2;
+//backward::SignalHandling sh2;
 
-} // namespace backward
+//} // namespace backward
 
 
 namespace cartographer_rviz {
