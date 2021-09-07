@@ -48,10 +48,15 @@
   <depend>libgflags-dev</depend>
   <depend>libgoogle-glog-dev</depend>
   <depend>libpcl-all-dev</depend>
+  <depend>builtin_interfaces</depend>
+  <depend>rosidl_default_generators</depend>
   <depend>nav_msgs</depend>
   <depend>pcl_conversions</depend>
   <depend>robot_state_publisher</depend>
+  <depend>rosbag2</depend>
+  <depend>rosbag2_transport</depend>
   <depend>rclcpp</depend>
+  <depend>launch</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>tf2</depend>
