@@ -34,8 +34,6 @@
     The Cartographer Authors
   </author>
 
-  <buildtool_depend>catkin</buildtool_depend>
-
   <build_depend>git</build_depend>
 
   <depend version_gte="1.0.0">cartographer</depend>
@@ -47,7 +45,6 @@
   <depend>message_runtime</depend>
   <depend>qtbase5-dev</depend>
   <depend>roscpp</depend>
-  <depend>roslib</depend>
   <depend>rviz</depend>
 
   <export>
