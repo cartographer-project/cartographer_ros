@@ -17,7 +17,7 @@ cmake_minimum_required(VERSION 3.5)
 project(cartographer_rviz)
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 
-#add_subdirectory(../../../../../../abseil-cpp/)
+add_subdirectory(../../../../../../abseil-cpp/ build)
 find_package(ament_cmake REQUIRED)
 
 # Default to C++17
@@ -36,7 +36,7 @@ google_initialize_cartographer_project()
 
 add_compile_options(-g)
 
-find_package(absl REQUIRED)
+#find_package(absl REQUIRED)
 find_package(Eigen3 REQUIRED)
 #find_package(cartographer_ros REQUIRED)
 find_package(cartographer_ros_msgs REQUIRED)
@@ -75,7 +75,7 @@ register_rviz_ogre_media_exports(DIRECTORIES "ogre_media/materials/scripts")
 register_rviz_ogre_media_exports(DIRECTORIES "ogre_media/materials/glsl120")
 
 ament_target_dependencies(${PROJECT_NAME} PUBLIC
-  absl
+#  absl
   rclcpp
   cartographer
 #  cartographer_ros
@@ -92,26 +92,22 @@ ament_target_dependencies(${PROJECT_NAME} PUBLIC
 #  rviz
 )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC
-#  usb-1.0
-  -lstdc++fs
-  -ldl
-#  -lexiv2
-  -lboost_thread
+target_link_libraries(${PROJECT_NAME} PUBLIC ${PROTOBUF_LIBRARY}
   absl::algorithm
   absl::base
   absl::debugging
+  absl::container
   absl::flat_hash_map
-#  absl::flags
   absl::memory
   absl::meta
   absl::numeric
-#  absl::random_random
+  absl::str_format
   absl::strings
   absl::synchronization
   absl::time
   absl::utility
-  )
+)
+
 #  exiv2lib
 #  nlohmann_json::nlohmann_json
 #  ${gphoto2_LIBRARIES}
@@ -179,11 +175,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 target_link_libraries(${PROJECT_NAME} PUBLIC cartographer)
 #target_link_libraries(${PROJECT_NAME} PUBLIC rviz_ogre_vendor)
 #target_link_libraries(${PROJECT_NAME} PUBLIC cartographer_ros)
-
-pluginlib_export_plugin_description_file(rviz_common rviz_plugin_description.xml)
-#register_rviz_ogre_media_exports(DIRECTORIES "ogre_media/materials/scripts")
-#register_rviz_ogre_media_exports(DIRECTORIES "ogre_media/materials/glsl120")
-
 
 
 #install(DIRECTORY configuration_files
