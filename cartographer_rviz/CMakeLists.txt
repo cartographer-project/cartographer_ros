@@ -21,7 +21,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 find_package(ament_cmake REQUIRED)
 
 # Default to C++17
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra)
@@ -51,7 +51,7 @@ find_package(rviz_default_plugins REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rcutils REQUIRED)
 #find_package(rviz REQUIRED)
-find_package(backward_ros REQUIRED)
+#find_package(backward_ros REQUIRED)
 
 include_directories(
   include
@@ -70,7 +70,8 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE "RVIZ_DEFAULT_PLUGINS_BUILDIN
 target_compile_definitions(${PROJECT_NAME} PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 
 pluginlib_export_plugin_description_file(rviz_common rviz_plugin_description.xml)
-
+register_rviz_ogre_media_exports(DIRECTORIES "ogre_media/materials/scripts")
+register_rviz_ogre_media_exports(DIRECTORIES "ogre_media/materials/glsl120")
 
 ament_target_dependencies(${PROJECT_NAME} PUBLIC
   absl
@@ -85,7 +86,7 @@ ament_target_dependencies(${PROJECT_NAME} PUBLIC
   rviz_common
   rviz_default_plugins
   pcl_conversions
-  libdw
+#  libdw
   rcutils
 #  rviz
 )
@@ -100,11 +101,11 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
   absl::base
   absl::debugging
   absl::flat_hash_map
-  absl::flags
+#  absl::flags
   absl::memory
   absl::meta
   absl::numeric
-  absl::random_random
+#  absl::random_random
   absl::strings
   absl::synchronization
   absl::time
@@ -192,8 +193,7 @@ install(FILES
   DESTINATION share/${PROJECT_NAME})
 
 install(DIRECTORY ogre_media
-  DESTINATION share/${PROJECT_NAME}/
-)
+  DESTINATION share/${PROJECT_NAME})
 
 install(
   TARGETS ${PROJECT_NAME}
