@@ -55,6 +55,7 @@
   <depend>rviz_common</depend>
   <depend>rviz_default_plugins</depend>
   <depend>rcutils</depend>
+  <depend>backward_ros</depend>
 
   <export>
       <build_type>ament_cmake</build_type>
