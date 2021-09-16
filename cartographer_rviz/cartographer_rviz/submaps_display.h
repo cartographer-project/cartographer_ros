@@ -60,8 +60,7 @@ struct Trajectory : public QObject {
 // every submap containing pre-multiplied alpha and grayscale values, these are
 // then alpha blended together.
 class SubmapsDisplay
-    : public ::rviz_common::MessageFilterDisplay<::cartographer_ros_msgs::msg::SubmapList>, rclcpp::Node { //::rviz_common::RosTopicDisplay<::cartographer_ros_msgs::msg::SubmapList>, rclcpp::Node { //
-  //
+    : public ::rviz_common::RosTopicDisplay<::cartographer_ros_msgs::msg::SubmapList>, rclcpp::Node { //::rviz_common::MessageFilterDisplay<::cartographer_ros_msgs::msg::SubmapList>, rclcpp::Node {
   Q_OBJECT
 
  public:

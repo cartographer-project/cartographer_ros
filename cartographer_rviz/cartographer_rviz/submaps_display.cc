@@ -78,7 +78,7 @@ SubmapsDisplay::SubmapsDisplay() : rclcpp::Node("submaps_display") {
     callback_group_executor->spin();
   });
 
-  client_ = this->create_client<::cartographer_ros_msgs::srv::SubmapQuery>("",rmw_qos_profile_services_default, sync_srv_client_callback_group);//update_nh_.serviceClient<::cartographer_ros_msgs::msg::SubmapQuery>("");
+  client_ = this->create_client<::cartographer_ros_msgs::srv::SubmapQuery>(kDefaultSubmapQueryServiceName,rmw_qos_profile_services_default, sync_srv_client_callback_group);//update_nh_.serviceClient<::cartographer_ros_msgs::msg::SubmapQuery>("");
   trajectories_category_ = new ::rviz_common::properties::Property(
       "Submaps", QVariant(), "List of all submaps, organized by trajectories.",
       this);
@@ -124,13 +124,13 @@ void SubmapsDisplay::CreateClient() {
 }
 
 void SubmapsDisplay::onInitialize() {
-  MFDClass::onInitialize();
+  RTDClass::onInitialize();
   map_node_ = scene_manager_->getRootSceneNode()->createChildSceneNode();
   CreateClient();
 }
 
 void SubmapsDisplay::reset() {
-  MFDClass::reset();
+  RTDClass::reset();
   absl::MutexLock locker(&mutex_);
   client_.reset();
   trajectories_.clear();
