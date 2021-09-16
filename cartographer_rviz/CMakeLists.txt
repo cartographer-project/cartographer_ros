@@ -34,6 +34,7 @@ set(BUILD_SHARED_LIBS OFF)
 option(BUILD_GRPC "build features that require Cartographer gRPC support" false)
 google_initialize_cartographer_project()
 
+add_compile_options(-g)
 
 find_package(absl REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -51,7 +52,7 @@ find_package(rviz_default_plugins REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rcutils REQUIRED)
 #find_package(rviz REQUIRED)
-#find_package(backward_ros REQUIRED)
+find_package(backward_ros REQUIRED)
 
 include_directories(
   include
@@ -180,6 +181,10 @@ target_link_libraries(${PROJECT_NAME} PUBLIC cartographer)
 #target_link_libraries(${PROJECT_NAME} PUBLIC cartographer_ros)
 
 pluginlib_export_plugin_description_file(rviz_common rviz_plugin_description.xml)
+register_rviz_ogre_media_exports(DIRECTORIES "ogre_media/materials/scripts")
+register_rviz_ogre_media_exports(DIRECTORIES "ogre_media/materials/glsl120")
+
+
 
 #install(DIRECTORY configuration_files
 #  DESTINATION share/${PROJECT_NAME}/

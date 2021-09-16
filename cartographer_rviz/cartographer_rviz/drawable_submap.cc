@@ -29,14 +29,6 @@
 #include "cartographer_ros_msgs/srv/submap_query.hpp"
 #include <rclcpp/rclcpp.hpp>
 
-#include "backward.hpp"
-
-//namespace backward {
-
-//backward::SignalHandling sh;
-
-//} // namespace backward
-
 
 namespace cartographer_rviz {
 
