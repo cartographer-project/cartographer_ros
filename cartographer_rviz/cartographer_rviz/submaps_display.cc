@@ -63,13 +63,13 @@ SubmapsDisplay::SubmapsDisplay() : rclcpp::Node("submaps_display") {
       "Low Resolution", false, "Display low resolution slices.", this,
       SLOT(ResolutionToggled()), this);
 
-  sync_srv_client_callback_group = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive, false);
-  callback_group_executor_thread = std::thread([&]() {
-    callback_group_executor->add_callback_group(sync_srv_client_callback_group, this->get_node_base_interface());
-    callback_group_executor->spin();
-  });
+//  sync_srv_client_callback_group = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive, false);
+//  callback_group_executor_thread = std::thread([&]() {
+//    callback_group_executor->add_callback_group(sync_srv_client_callback_group, this->get_node_base_interface());
+//    callback_group_executor->spin();
+//  });
 
-  client_ = this->create_client<::cartographer_ros_msgs::srv::SubmapQuery>(kDefaultSubmapQueryServiceName,rmw_qos_profile_services_default, sync_srv_client_callback_group);//update_nh_.serviceClient<::cartographer_ros_msgs::msg::SubmapQuery>("");
+  client_ = this->create_client<::cartographer_ros_msgs::srv::SubmapQuery>(kDefaultSubmapQueryServiceName,rmw_qos_profile_services_default);//update_nh_.serviceClient<::cartographer_ros_msgs::msg::SubmapQuery>("");
   trajectories_category_ = new ::rviz_common::properties::Property(
       "Submaps", QVariant(), "List of all submaps, organized by trajectories.",
       this);
@@ -115,13 +115,13 @@ void SubmapsDisplay::CreateClient() {
 }
 
 void SubmapsDisplay::onInitialize() {
-  RTDClass::onInitialize();
+  MFDClass::onInitialize();
   map_node_ = scene_manager_->getRootSceneNode()->createChildSceneNode();
   CreateClient();
 }
 
 void SubmapsDisplay::reset() {
-  RTDClass::reset();
+  MFDClass::reset();
   absl::MutexLock locker(&mutex_);
   client_.reset();
   trajectories_.clear();

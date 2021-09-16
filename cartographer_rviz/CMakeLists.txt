@@ -181,8 +181,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC cartographer)
 #target_link_libraries(${PROJECT_NAME} PUBLIC cartographer_ros)
 
 pluginlib_export_plugin_description_file(rviz_common rviz_plugin_description.xml)
-register_rviz_ogre_media_exports(DIRECTORIES "ogre_media/materials/scripts")
-register_rviz_ogre_media_exports(DIRECTORIES "ogre_media/materials/glsl120")
+#register_rviz_ogre_media_exports(DIRECTORIES "ogre_media/materials/scripts")
+#register_rviz_ogre_media_exports(DIRECTORIES "ogre_media/materials/glsl120")
 
 
 
