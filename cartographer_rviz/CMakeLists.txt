@@ -17,7 +17,7 @@ cmake_minimum_required(VERSION 3.5)
 project(cartographer_rviz)
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 
-add_subdirectory(../../../../../../abseil-cpp/ build)
+#add_subdirectory(../../../../../../abseil-cpp/ build)
 find_package(ament_cmake REQUIRED)
 
 # Default to C++17
@@ -53,6 +53,10 @@ find_package(pluginlib REQUIRED)
 find_package(rcutils REQUIRED)
 #find_package(rviz REQUIRED)
 find_package(backward_ros REQUIRED)
+
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+find_package(Threads REQUIRED)
 
 include_directories(
   include
@@ -93,19 +97,24 @@ ament_target_dependencies(${PROJECT_NAME} PUBLIC
 )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC ${PROTOBUF_LIBRARY}
-  absl::algorithm
-  absl::base
-  absl::debugging
-  absl::container
-  absl::flat_hash_map
-  absl::memory
-  absl::meta
-  absl::numeric
-  absl::str_format
-  absl::strings
-  absl::synchronization
-  absl::time
-  absl::utility
+
+  -lstdc++fs
+  -ldl
+  -lboost_thread
+
+#  absl::algorithm
+#  absl::base
+#  absl::debugging
+#  absl::container
+#  absl::flat_hash_map
+#  absl::memory
+#  absl::meta
+#  absl::numeric
+#  absl::str_format
+#  absl::strings
+#  absl::synchronization
+#  absl::time
+#  absl::utility
 )
 
 #  exiv2lib
