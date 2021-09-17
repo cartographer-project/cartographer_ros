@@ -31,17 +31,15 @@ namespace cartographer_rviz {
 
 namespace {
 
-constexpr char kManualObjectPrefix[] = "ManualObjectSubmap";
-constexpr char kSubmapSourceMaterialName[] = "cartographer_ros/Submap";
-constexpr char kSubmapMaterialPrefix[] = "SubmapMaterial";
-constexpr char kSubmapTexturePrefix[] = "SubmapTexture";
+std::string kManualObjectPrefix = "ManualObjectSubmap";
+std::string kSubmapSourceMaterialName = "cartographer_ros/Submap";
+std::string kSubmapMaterialPrefix = "SubmapMaterial";
+std::string kSubmapTexturePrefix = "SubmapTexture";
 
 std::string GetSliceIdentifier(
     const ::cartographer::mapping::SubmapId& submap_id, const int slice_id) {
-    std::string x;
-    x= std::to_string(submap_id.trajectory_id) + "-" + std::to_string(submap_id.submap_index) + "-" + std::to_string(slice_id);
   //return absl::StrCat(submap_id.trajectory_id, "-", submap_id.submap_index, "-",slice_id);
-    return x;
+    return (std::to_string(submap_id.trajectory_id) + "-" + std::to_string(submap_id.submap_index) + "-" + std::to_string(slice_id));
 }
 
 }  // namespace
