@@ -250,7 +250,7 @@ void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
       }
     }
   } catch (const tf2::TransformException& ex) {
-    //ROS_WARN_THROTTLE(1., "Could not compute submap fading: %s", ex.what());
+    RCLCPP_WARN(this->get_logger(), "Could not compute submap fading: %s", ex.what());
   }
   // Update the map frame to fixed frame transform.
   Ogre::Vector3 position;
