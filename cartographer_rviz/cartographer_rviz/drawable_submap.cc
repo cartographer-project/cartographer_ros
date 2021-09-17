@@ -45,8 +45,6 @@ constexpr int kNumberOfSlicesPerSubmap = 2;
 }  // namespace
 
 
-
-// DECLARED IT AS A ROS NODE
 DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
                                ::rviz_common::DisplayContext* const display_context,
                                Ogre::SceneNode* const map_node,
