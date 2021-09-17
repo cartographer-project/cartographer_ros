@@ -24,7 +24,7 @@
 #include "OgreMaterialManager.h"
 #include "OgreTechnique.h"
 #include "OgreTextureManager.h"
-#include "absl/strings/str_cat.h"
+//#include "absl/strings/str_cat.h"
 #include "cartographer/common/port.h"
 
 namespace cartographer_rviz {
@@ -38,8 +38,10 @@ constexpr char kSubmapTexturePrefix[] = "SubmapTexture";
 
 std::string GetSliceIdentifier(
     const ::cartographer::mapping::SubmapId& submap_id, const int slice_id) {
-  return absl::StrCat(submap_id.trajectory_id, "-", submap_id.submap_index, "-",
-                      slice_id);
+    std::string x;
+    x= std::to_string(submap_id.trajectory_id) + "-" + std::to_string(submap_id.submap_index) + "-" + std::to_string(slice_id);
+  //return absl::StrCat(submap_id.trajectory_id, "-", submap_id.submap_index, "-",slice_id);
+    return x;
 }
 
 }  // namespace
@@ -60,12 +62,12 @@ OgreSlice::OgreSlice(const ::cartographer::mapping::SubmapId& id, int slice_id,
       scene_manager_(scene_manager),
       submap_node_(submap_node),
       slice_node_(submap_node_->createChildSceneNode()),
-      manual_object_(scene_manager_->createManualObject(absl::StrCat(
-          kManualObjectPrefix, GetSliceIdentifier(id, slice_id)))) {
+      manual_object_(scene_manager_->createManualObject(
+          kManualObjectPrefix + GetSliceIdentifier(id, slice_id))) {
   material_ = Ogre::MaterialManager::getSingleton().getByName(
       kSubmapSourceMaterialName);
   material_ = material_->clone(
-      absl::StrCat(kSubmapMaterialPrefix, GetSliceIdentifier(id_, slice_id_)));
+      kSubmapMaterialPrefix + GetSliceIdentifier(id_, slice_id_));
   material_->setReceiveShadows(false);
   material_->getTechnique(0)->setLightingEnabled(false);
   material_->setCullingMode(Ogre::CULL_NONE);
@@ -126,7 +128,7 @@ void OgreSlice::Update(
     texture_.setNull();
   }
   const std::string texture_name =
-      absl::StrCat(kSubmapTexturePrefix, GetSliceIdentifier(id_, slice_id_));
+      kSubmapTexturePrefix + GetSliceIdentifier(id_, slice_id_);
   texture_ = Ogre::TextureManager::getSingleton().loadRawData(
       texture_name, Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
       pixel_stream, submap_texture.width, submap_texture.height,

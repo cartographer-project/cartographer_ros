@@ -54,7 +54,7 @@ DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
                                const bool visible, const bool pose_axes_visible,
                                const float pose_axes_length,
                                const float pose_axes_radius)
-    : rclcpp::Node("drawable_submap"), id_(id),
+    : id_(id),
       display_context_(display_context),
       submap_node_(map_node->createChildSceneNode()),
       submap_id_text_node_(submap_node_->createChildSceneNode()),
