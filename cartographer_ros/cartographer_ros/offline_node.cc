@@ -99,7 +99,9 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory,
   CHECK(!(FLAGS_bag_filenames.empty() && FLAGS_load_state_filename.empty()))
       << "-bag_filenames and -load_state_filename cannot both be unspecified.";
   std::vector<std::string> bag_filenames;
-  boost::split(bag_filenames, FLAGS_bag_filenames, boost::is_any_of(","));
+  if (!FLAGS_bag_filenames.empty()){
+    boost::split(bag_filenames, FLAGS_bag_filenames, boost::is_any_of(","));
+  }
   cartographer_ros::NodeOptions node_options;
   std::vector<std::string> configuration_basenames;
   boost::split(configuration_basenames, FLAGS_configuration_basenames, boost::is_any_of(","));
