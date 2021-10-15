@@ -77,7 +77,7 @@ void Run(const std::string& pbstream_filename, const std::string& map_topic,
             << " (frame_id: " << map_frame_id
             << ", resolution:" << std::to_string(resolution) << ").";
   pub->publish(*msg_ptr);
-  //rclcpp::spin(cartographer_pbstream_map_publisher_node);
+  rclcpp::spin(cartographer_pbstream_map_publisher_node);
 }
 
 }  // namespace
