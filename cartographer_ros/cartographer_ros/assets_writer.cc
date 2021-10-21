@@ -146,7 +146,7 @@ AssetsWriter::AssetsWriter(const std::string& pose_graph_filename,
       << "Pose graphs contains " << pose_graph_.trajectory_size()
       << " trajectories while " << bag_filenames_.size()
       << " bags were provided. This tool requires one bag for each "
-         "trajectory in the same order as the correponding trajectories in the "
+         "trajectory in the same order as the corresponding trajectories in the "
          "pose graph proto.";
 
   // This vector must outlive the pipeline.
