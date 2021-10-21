@@ -26,8 +26,8 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
-import os
+# import os
+# import sys
 from datetime import datetime
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -214,7 +214,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [('index', 'CartographerROS.tex',
                     u'Cartographer ROS Documentation',
-                    u'The Cartographer Authors', 'manual'),]
+                    u'The Cartographer Authors', 'manual'), ]
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
