@@ -75,8 +75,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE "RVIZ_DEFAULT_PLUGINS_BUILDIN
 target_compile_definitions(${PROJECT_NAME} PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
 
 pluginlib_export_plugin_description_file(rviz_common rviz_plugin_description.xml)
-register_rviz_ogre_media_exports(DIRECTORIES "ogre_media/materials/scripts")
-register_rviz_ogre_media_exports(DIRECTORIES "ogre_media/materials/glsl120")
+register_rviz_ogre_media_exports(DIRECTORIES "ogre_media/materials/glsl120" "ogre_media/materials/scripts")
 
 ament_target_dependencies(${PROJECT_NAME} PUBLIC
 #  absl
@@ -197,8 +196,9 @@ install(FILES
   rviz_plugin_description.xml
   DESTINATION share/${PROJECT_NAME})
 
-install(DIRECTORY ogre_media
-  DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ogre_media"
+  DESTINATION "share/${PROJECT_NAME}"
+  )
 
 install(
   TARGETS ${PROJECT_NAME}
