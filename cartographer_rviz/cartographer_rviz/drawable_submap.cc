@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2016 The Cartographer Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -115,7 +115,9 @@ void DrawableSubmap::Update(
           .arg(metadata_version_));
 }
 
-bool DrawableSubmap::MaybeFetchTexture(rclcpp::Client<cartographer_ros_msgs::srv::SubmapQuery>::SharedPtr const client) {
+bool DrawableSubmap::MaybeFetchTexture(
+    rclcpp::Client<cartographer_ros_msgs::srv::SubmapQuery>::SharedPtr const client,
+    rclcpp::executors::SingleThreadedExecutor::SharedPtr callback_group_executor) {
   absl::MutexLock locker(&mutex_);
   // Received metadata version can also be lower if we restarted Cartographer.
   const bool newer_version_available =
@@ -132,11 +134,9 @@ bool DrawableSubmap::MaybeFetchTexture(rclcpp::Client<cartographer_ros_msgs::srv
   query_in_progress_ = true;
   last_query_timestamp_ = now;
 
-
-
-  rpc_request_future_ = std::async(std::launch::async, [this, client]() {
+  rpc_request_future_ = std::async(std::launch::async, [this, client, callback_group_executor]() {
     std::unique_ptr<::cartographer::io::SubmapTextures> submap_textures =
-        ::cartographer_ros::FetchSubmapTextures(id_, client,std::chrono::milliseconds(10000));
+        ::cartographer_ros::FetchSubmapTextures(id_, client, callback_group_executor, std::chrono::milliseconds(10000));
     //,callback_group_executor,std::chrono::milliseconds(10000)); // Missing callbackgroup and timeout but this class isn't a ros node
     absl::MutexLock locker(&mutex_);
     query_in_progress_ = false;

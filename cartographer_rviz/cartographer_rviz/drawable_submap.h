@@ -63,7 +63,8 @@ class DrawableSubmap : public QObject{
 
   // If an update is needed, it will send an RPC using 'client' to request the
   // new data for the submap and returns true.
-  bool MaybeFetchTexture(rclcpp::Client<cartographer_ros_msgs::srv::SubmapQuery>::SharedPtr client);
+  bool MaybeFetchTexture(rclcpp::Client<cartographer_ros_msgs::srv::SubmapQuery>::SharedPtr client,
+                         rclcpp::executors::SingleThreadedExecutor::SharedPtr callback_group_executor);
 
   // Returns whether an RPC is in progress.
   bool QueryInProgress();
