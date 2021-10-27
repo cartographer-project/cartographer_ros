@@ -31,10 +31,10 @@ namespace cartographer_rviz {
 
 namespace {
 
-std::string kManualObjectPrefix = "ManualObjectSubmap";
-std::string kSubmapSourceMaterialName = "cartographer_ros/Submap";
-std::string kSubmapMaterialPrefix = "SubmapMaterial";
-std::string kSubmapTexturePrefix = "SubmapTexture";
+constexpr char kManualObjectPrefix[] = "ManualObjectSubmap";
+constexpr char kSubmapSourceMaterialName[] = "cartographer_ros/Submap";
+constexpr char kSubmapMaterialPrefix[] = "SubmapMaterial";
+constexpr char kSubmapTexturePrefix[] = "SubmapTexture";
 
 std::string GetSliceIdentifier(
     const ::cartographer::mapping::SubmapId& submap_id, const int slice_id) {
@@ -62,10 +62,9 @@ OgreSlice::OgreSlice(const ::cartographer::mapping::SubmapId& id, int slice_id,
       slice_node_(submap_node_->createChildSceneNode()),
       manual_object_(scene_manager_->createManualObject(
           kManualObjectPrefix + GetSliceIdentifier(id, slice_id))) {
-  material_ = Ogre::MaterialManager::getSingleton().getByName(
-      kSubmapSourceMaterialName);
+  material_ = Ogre::MaterialManager::getSingleton().getByName(kSubmapSourceMaterialName);
   material_ = material_->clone(
-      kSubmapMaterialPrefix + GetSliceIdentifier(id_, slice_id_));
+      kSubmapMaterialPrefix + GetSliceIdentifier(id_, slice_id_), true, "General");
   material_->setReceiveShadows(false);
   material_->getTechnique(0)->setLightingEnabled(false);
   material_->setCullingMode(Ogre::CULL_NONE);
