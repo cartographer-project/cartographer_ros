@@ -49,16 +49,9 @@
   <depend>qtbase5-dev</depend>
   <depend>rclcpp</depend>
   <depend>absl</depend>
-  <!--<depend>roslib</depend>-->
   <depend>libpcl-all-dev</depend>
   <depend>pcl_conversions</depend>
-  <depend>rviz2</depend>
-  <depend>rviz_assimp_vendor</depend>
-  <depend>rviz_rendering</depend>
-  <depend>rviz_common</depend>
-  <depend>rviz_default_plugins</depend>
   <depend>rcutils</depend>
-  <depend>backward_ros</depend>
 
   <export>
       <build_type>ament_cmake</build_type>

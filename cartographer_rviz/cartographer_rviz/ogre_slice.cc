@@ -24,7 +24,6 @@
 #include "OgreMaterialManager.h"
 #include "OgreTechnique.h"
 #include "OgreTextureManager.h"
-//#include "absl/strings/str_cat.h"
 #include "cartographer/common/port.h"
 
 namespace cartographer_rviz {
@@ -38,7 +37,6 @@ constexpr char kSubmapTexturePrefix[] = "SubmapTexture";
 
 std::string GetSliceIdentifier(
     const ::cartographer::mapping::SubmapId& submap_id, const int slice_id) {
-  //return absl::StrCat(submap_id.trajectory_id, "-", submap_id.submap_index, "-",slice_id);
     return (std::to_string(submap_id.trajectory_id) + "-" + std::to_string(submap_id.submap_index) + "-" + std::to_string(slice_id));
 }
 
