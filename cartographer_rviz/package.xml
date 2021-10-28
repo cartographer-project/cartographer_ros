@@ -51,11 +51,6 @@
   <depend>absl</depend>
   <depend>libpcl-all-dev</depend>
   <depend>pcl_conversions</depend>
-  <depend>rviz2</depend>
-  <depend>rviz_assimp_vendor</depend>
-  <depend>rviz_rendering</depend>
-  <depend>rviz_common</depend>
-  <depend>rviz_default_plugins</depend>
   <depend>rcutils</depend>
 
   <export>
