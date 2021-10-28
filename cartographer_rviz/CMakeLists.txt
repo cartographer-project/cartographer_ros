@@ -17,7 +17,6 @@ cmake_minimum_required(VERSION 3.5)
 project(cartographer_rviz)
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 
-#add_subdirectory(../../../../../../abseil-cpp/ build)
 find_package(ament_cmake REQUIRED)
 
 # Default to C++17
@@ -34,16 +33,12 @@ set(BUILD_SHARED_LIBS OFF)
 option(BUILD_GRPC "build features that require Cartographer gRPC support" false)
 google_initialize_cartographer_project()
 
-add_compile_options(-g)
-
-#find_package(absl REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(cartographer_ros REQUIRED)
 find_package(cartographer_ros_msgs REQUIRED)
 find_package(pcl_conversions REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rviz2 REQUIRED)
-#find_package(rviz_ogre_vendor REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common)
 find_package(rviz_assimp_vendor REQUIRED)
 find_package(rviz_rendering REQUIRED)
@@ -51,8 +46,6 @@ find_package(rviz_common REQUIRED)
 find_package(rviz_default_plugins REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rcutils REQUIRED)
-#find_package(rviz REQUIRED)
-find_package(backward_ros REQUIRED)
 
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
@@ -80,21 +73,17 @@ pluginlib_export_plugin_description_file(rviz_common rviz_plugin_description.xml
 register_rviz_ogre_media_exports(DIRECTORIES "ogre_media/materials/glsl120" "ogre_media/materials/scripts")
 
 ament_target_dependencies(${PROJECT_NAME} PUBLIC
-#  absl
   rclcpp
   cartographer
   cartographer_ros
   cartographer_ros_msgs
   rviz2
-#  rviz_ogre_vendor
   rviz_assimp_vendor
   rviz_rendering
   rviz_common
   rviz_default_plugins
   pcl_conversions
-#  libdw
   rcutils
-#  rviz
 )
 
 
@@ -120,20 +109,13 @@ foreach(DEFINITION ${PCL_DEFINITIONS})
 endforeach()
 
 
-#if(rviz2_QT_VERSION VERSION_LESS "5")
-#  message(STATUS "Using Qt4 based on the rviz2_QT_VERSION: ${rviz2_QT_VERSION}")
-  #find_package(Qt4 ${rviz2_QT_VERSION} EXACT REQUIRED QtCore QtGui)
+message(STATUS "Using Qt5 based on the rviz2_QT_VERSION: ${rviz2_QT_VERSION}")
+find_package(Qt5 ${rviz2_QT_VERSION} EXACT REQUIRED Core Widgets)
+set(QT_LIBRARIES Qt5::Core Qt5::Widgets)
+include_directories(${Qt5Widgets_INCLUDE_DIRS})
 
-#  include(${QT_USE_FILE})
-#else()
-  message(STATUS "Using Qt5 based on the rviz2_QT_VERSION: ${rviz2_QT_VERSION}")
-  find_package(Qt5 ${rviz2_QT_VERSION} EXACT REQUIRED Core Widgets)
-  set(QT_LIBRARIES Qt5::Core Qt5::Widgets)
-  include_directories(${Qt5Widgets_INCLUDE_DIRS})
-#endif()
 
 add_definitions(-DQT_NO_KEYWORDS)
-#add_library(${PROJECT_NAME} ${ALL_SRCS})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${QT_LIBRARIES})
 
 # Add the binary directory first, so that port.h is included after it has
@@ -148,33 +130,15 @@ target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
   "${EIGEN3_INCLUDE_DIR}")
 target_link_libraries(${PROJECT_NAME} PUBLIC ${EIGEN3_LIBRARIES})
 
-#target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
-#  "${CARTOGRAPHER_ROS_INCLUDE_DIR}")
-#target_link_libraries(${PROJECT_NAME} PUBLIC ${CARTOGRAPHER_ROS_LIBRARIES})
-
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
   "${Boost_INCLUDE_DIRS}")
 target_link_libraries(${PROJECT_NAME} PUBLIC ${Boost_LIBRARIES})
-
-#target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
-#  "${RVIZ_OGRE_VENDOR_INCLUDE_DIRS}")
-#target_link_libraries(${PROJECT_NAME} PUBLIC ${RVIZ_OGRE_VENDOR_LIBRARIES})
 
 set(TARGET_COMPILE_FLAGS "${TARGET_COMPILE_FLAGS} ${GOOG_CXX_FLAGS}")
 set_target_properties(${PROJECT_NAME} PROPERTIES
   COMPILE_FLAGS ${TARGET_COMPILE_FLAGS})
 
 target_link_libraries(${PROJECT_NAME} PUBLIC cartographer)
-#target_link_libraries(${PROJECT_NAME} PUBLIC rviz_ogre_vendor)
-#target_link_libraries(${PROJECT_NAME} PUBLIC cartographer_ros)
-
-
-#install(DIRECTORY configuration_files
-#  DESTINATION share/${PROJECT_NAME}/
-#)
-
-
-
 
 install(FILES
   rviz_plugin_description.xml

@@ -137,7 +137,6 @@ bool DrawableSubmap::MaybeFetchTexture(
   rpc_request_future_ = std::async(std::launch::async, [this, client, callback_group_executor]() {
     std::unique_ptr<::cartographer::io::SubmapTextures> submap_textures =
         ::cartographer_ros::FetchSubmapTextures(id_, client, callback_group_executor, std::chrono::milliseconds(10000));
-    //,callback_group_executor,std::chrono::milliseconds(10000)); // Missing callbackgroup and timeout but this class isn't a ros node
     absl::MutexLock locker(&mutex_);
     query_in_progress_ = false;
     if (submap_textures != nullptr) {

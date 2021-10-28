@@ -60,7 +60,7 @@ struct Trajectory : public QObject {
 // every submap containing pre-multiplied alpha and grayscale values, these are
 // then alpha blended together.
 class SubmapsDisplay
-    : public ::rviz_common::MessageFilterDisplay<::cartographer_ros_msgs::msg::SubmapList>, rclcpp::Node { //::rviz_common::RosTopicDisplay<::cartographer_ros_msgs::msg::SubmapList>, rclcpp::Node {
+    : public ::rviz_common::MessageFilterDisplay<::cartographer_ros_msgs::msg::SubmapList>, rclcpp::Node {
   Q_OBJECT
 
  public:
@@ -105,10 +105,6 @@ class SubmapsDisplay
   ::rviz_common::properties::BoolProperty* visibility_all_enabled_;
   ::rviz_common::properties::BoolProperty* pose_markers_all_enabled_;
   ::rviz_common::properties::FloatProperty* fade_out_start_distance_in_meters_;
-
-//  rclcpp::CallbackGroup::SharedPtr sync_srv_client_callback_group;
-//  rclcpp::executors::SingleThreadedExecutor::SharedPtr callback_group_executor;
-//  std::thread callback_group_executor_thread;
 
 };
 

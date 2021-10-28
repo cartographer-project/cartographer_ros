@@ -41,7 +41,6 @@
   <build_depend>protobuf-dev</build_depend>
   <build_depend>python3-sphinx</build_depend>
 
-<!--  <depend>backward_ros</depend>-->
   <depend>cartographer</depend>
   <depend>cartographer_ros_msgs</depend>
   <depend>geometry_msgs</depend>
