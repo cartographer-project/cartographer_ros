@@ -38,12 +38,8 @@ find_package(cartographer_ros REQUIRED)
 find_package(cartographer_ros_msgs REQUIRED)
 find_package(pcl_conversions REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(rviz2 REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common)
-find_package(rviz_assimp_vendor REQUIRED)
-find_package(rviz_rendering REQUIRED)
 find_package(rviz_common REQUIRED)
-find_package(rviz_default_plugins REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rcutils REQUIRED)
 
@@ -58,9 +54,7 @@ include_directories(
 file(GLOB_RECURSE ALL_SRCS "cartographer_rviz/*.cc" "cartographer_rviz/*.h")
 set(CMAKE_AUTOMOC ON)
 
-
 add_library(${PROJECT_NAME} SHARED ${ALL_SRCS})
-
 
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
@@ -77,15 +71,10 @@ ament_target_dependencies(${PROJECT_NAME} PUBLIC
   cartographer
   cartographer_ros
   cartographer_ros_msgs
-  rviz2
-  rviz_assimp_vendor
-  rviz_rendering
   rviz_common
-  rviz_default_plugins
   pcl_conversions
   rcutils
 )
-
 
 target_link_libraries(${PROJECT_NAME} PUBLIC ${PROTOBUF_LIBRARY}
   ${cartographer_ros_LIBRARIES}
@@ -108,12 +97,10 @@ foreach(DEFINITION ${PCL_DEFINITIONS})
   set(TARGET_COMPILE_FLAGS "${TARGET_COMPILE_FLAGS} ${DEFINITION}")
 endforeach()
 
-
 message(STATUS "Using Qt5 based on the rviz2_QT_VERSION: ${rviz2_QT_VERSION}")
 find_package(Qt5 ${rviz2_QT_VERSION} EXACT REQUIRED Core Widgets)
 set(QT_LIBRARIES Qt5::Core Qt5::Widgets)
 include_directories(${Qt5Widgets_INCLUDE_DIRS})
-
 
 add_definitions(-DQT_NO_KEYWORDS)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${QT_LIBRARIES})
