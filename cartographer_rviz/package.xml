@@ -52,6 +52,9 @@
   <depend>libpcl-all-dev</depend>
   <depend>pcl_conversions</depend>
   <depend>rcutils</depend>
+  <depend>rviz2</depend>
+  <depend>rviz_common</depend>
+
 
   <export>
       <build_type>ament_cmake</build_type>
