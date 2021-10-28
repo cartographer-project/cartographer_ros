@@ -25,15 +25,12 @@
 #include "cartographer_ros_msgs/srv/submap_query.hpp"
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <pluginlib/class_list_macros.hpp>
-//#include "ros/package.h"
 #include <rclcpp/rclcpp.hpp>
 #include <rviz_common/display_context.hpp>
 #include <rviz_common/frame_manager_iface.hpp>
 #include <rviz_common/properties/bool_property.hpp>
 #include <rviz_common/properties/string_property.hpp>
 #include <rviz_common/message_filter_display.hpp>
-
-// Include ament_index_cpp::get_package_share_directory
 #include <ament_index_cpp/get_package_share_directory.hpp>
 
 namespace cartographer_rviz {
