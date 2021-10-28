@@ -38,7 +38,7 @@ add_compile_options(-g)
 
 #find_package(absl REQUIRED)
 find_package(Eigen3 REQUIRED)
-#find_package(cartographer_ros REQUIRED)
+find_package(cartographer_ros REQUIRED)
 find_package(cartographer_ros_msgs REQUIRED)
 find_package(pcl_conversions REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -65,7 +65,9 @@ include_directories(
 file(GLOB_RECURSE ALL_SRCS "cartographer_rviz/*.cc" "cartographer_rviz/*.h")
 set(CMAKE_AUTOMOC ON)
 
+
 add_library(${PROJECT_NAME} SHARED ${ALL_SRCS})
+
 
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
@@ -81,7 +83,7 @@ ament_target_dependencies(${PROJECT_NAME} PUBLIC
 #  absl
   rclcpp
   cartographer
-#  cartographer_ros
+  cartographer_ros
   cartographer_ros_msgs
   rviz2
 #  rviz_ogre_vendor
@@ -95,31 +97,13 @@ ament_target_dependencies(${PROJECT_NAME} PUBLIC
 #  rviz
 )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC ${PROTOBUF_LIBRARY}
 
+target_link_libraries(${PROJECT_NAME} PUBLIC ${PROTOBUF_LIBRARY}
+  ${cartographer_ros_LIBRARIES}
   -lstdc++fs
   -ldl
   -lboost_thread
-
-#  absl::algorithm
-#  absl::base
-#  absl::debugging
-#  absl::container
-#  absl::flat_hash_map
-#  absl::memory
-#  absl::meta
-#  absl::numeric
-#  absl::str_format
-#  absl::strings
-#  absl::synchronization
-#  absl::time
-#  absl::utility
-)
-
-#  exiv2lib
-#  nlohmann_json::nlohmann_json
-#  ${gphoto2_LIBRARIES}
-#  ${Boost_SYSTEM_LIBRARY})
+  )
 ament_export_include_directories(include)
 ament_export_dependencies(rosidl_default_runtime)
 
