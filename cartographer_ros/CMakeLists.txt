@@ -71,6 +71,7 @@ include_directories(
 )
 
 file(GLOB_RECURSE ALL_SRCS "cartographer_ros/*.cc" "cartographer_ros/*.h")
+file(GLOB_RECURSE ALL_HEADERS "cartographer_ros/*.h")
 file(GLOB_RECURSE ALL_TESTS "cartographer_ros/*_test.cc")
 file(GLOB_RECURSE ALL_EXECUTABLES "cartographer_ros/*_main.cc")
 file(GLOB_RECURSE ALL_GRPC_FILES "cartographer_ros/cartographer_grpc/*")
@@ -106,6 +107,26 @@ ament_target_dependencies(${PROJECT_NAME} PUBLIC
 )
 add_subdirectory("cartographer_ros")
 target_link_libraries(${PROJECT_NAME} PUBLIC cartographer)
+ament_export_targets(${PROJECT_NAME}_targets HAS_LIBRARY_TARGET)
+ament_export_dependencies(
+  cartographer
+  cartographer_ros_msgs
+  geometry_msgs
+  nav_msgs
+  pcl_conversions
+  rclcpp
+  sensor_msgs
+  std_msgs
+  tf2
+  tf2_eigen
+  tf2_msgs
+  tf2_ros
+  visualization_msgs
+  rosbag2_compression
+  rosbag2_cpp
+  rosbag2_storage
+  urdf
+  urdfdom_headers)
 
 # Lua
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${LUA_INCLUDE_DIR})
@@ -176,11 +197,43 @@ install(DIRECTORY configuration_files
   DESTINATION share/${PROJECT_NAME}/
 )
 
-install(TARGETS
-  ${PROJECT_NAME}
+install(
+  FILES ${ALL_HEADERS}
+  DESTINATION include/${PROJECT_NAME}/include
+)
+
+install(
+  TARGETS ${PROJECT_NAME}
+  EXPORT ${PROJECT_NAME}_targets
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin)
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include)
+
+ament_export_targets(${PROJECT_NAME}_targets HAS_LIBRARY_TARGET)
+ament_export_dependencies(
+  cartographer
+  cartographer_ros_msgs
+  geometry_msgs
+  nav_msgs
+  pcl_conversions
+  rclcpp
+  sensor_msgs
+  std_msgs
+  tf2
+  tf2_eigen
+  tf2_msgs
+  tf2_ros
+  visualization_msgs
+  rosbag2_compression
+  rosbag2_cpp
+  rosbag2_storage
+  urdf
+  urdfdom_headers)
+ament_export_libraries(${PROJECT_NAME})
+ament_export_include_directories(include)
+
+# Lua
 
 
 # ros1 install

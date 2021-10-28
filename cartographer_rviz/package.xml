@@ -39,6 +39,7 @@
   <build_depend>git</build_depend>
 
   <depend>cartographer</depend>
+  <depend>cartographer_ros</depend>
   <depend>cartographer_ros_msgs</depend>
   <depend>libqt5-core</depend>
   <depend>libqt5-gui</depend>
