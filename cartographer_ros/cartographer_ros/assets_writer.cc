@@ -178,7 +178,7 @@ void AssetsWriter::Run(const std::string& configuration_directory,
   const std::string tracking_frame =
       lua_parameter_dictionary->GetString("tracking_frame");
 
-  rclcpp::Clock::SharedPtr clock = std::make_shared<rclcpp::Clock>(RCL_SYSTEM_TIME);
+  rclcpp::Clock::SharedPtr clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
   do {
     for (size_t trajectory_id = 0; trajectory_id < bag_filenames_.size();
          ++trajectory_id) {
