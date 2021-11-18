@@ -38,6 +38,7 @@ find_package(cartographer_ros REQUIRED)
 find_package(cartographer_ros_msgs REQUIRED)
 find_package(pcl_conversions REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rviz2 REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common)
 find_package(rviz_common REQUIRED)
 find_package(pluginlib REQUIRED)
@@ -71,6 +72,7 @@ ament_target_dependencies(${PROJECT_NAME} PUBLIC
   cartographer
   cartographer_ros
   cartographer_ros_msgs
+  rviz2
   rviz_common
   pcl_conversions
   rcutils

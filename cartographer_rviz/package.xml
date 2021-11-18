@@ -48,7 +48,12 @@
   <depend>rosidl_default_generators</depend>
   <depend>qtbase5-dev</depend>
   <depend>rclcpp</depend>
+  <depend>absl</depend>
+  <depend>libpcl-all-dev</depend>
+  <depend>pcl_conversions</depend>
+  <depend>rcutils</depend>
   <depend>rviz2</depend>
+  <depend>rviz_common</depend>
 
   <export>
       <build_type>ament_cmake</build_type>
