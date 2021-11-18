@@ -25,9 +25,10 @@
 #include "Eigen/Geometry"
 #include "absl/memory/memory.h"
 #include "cartographer/common/port.h"
-#include "cartographer_ros/msg_conversion.h"
-#include "cartographer_ros_msgs/SubmapQuery.h"
-#include "ros/ros.h"
+#include "cartographer_ros/include/msg_conversion.h"
+#include "cartographer_ros_msgs/srv/submap_query.hpp"
+#include <rclcpp/rclcpp.hpp>
+
 
 namespace cartographer_rviz {
 
@@ -43,10 +44,11 @@ constexpr int kNumberOfSlicesPerSubmap = 2;
 
 }  // namespace
 
+
 DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
-                               ::rviz::DisplayContext* const display_context,
+                               ::rviz_common::DisplayContext* const display_context,
                                Ogre::SceneNode* const map_node,
-                               ::rviz::Property* const submap_category,
+                               ::rviz_common::properties::Property* const submap_category,
                                const bool visible, const bool pose_axes_visible,
                                const float pose_axes_length,
                                const float pose_axes_radius)
@@ -61,7 +63,7 @@ DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
                           .arg(id.trajectory_id)
                           .arg(id.submap_index)
                           .toStdString()),
-      last_query_timestamp_(0) {
+      last_query_timestamp_(0){
   for (int slice_index = 0; slice_index < kNumberOfSlicesPerSubmap;
        ++slice_index) {
     ogre_slices_.emplace_back(absl::make_unique<OgreSlice>(
@@ -71,13 +73,13 @@ DrawableSubmap::DrawableSubmap(const ::cartographer::mapping::SubmapId& id,
   // (a unique_ptr is needed because the Qt parent of the visibility
   // property is the submap_category object - the BoolProperty needs
   // to be destroyed along with the DrawableSubmap)
-  visibility_ = absl::make_unique<::rviz::BoolProperty>(
+  visibility_ = absl::make_unique<::rviz_common::properties::BoolProperty>(
       "" /* title */, visible, "" /* description */, submap_category,
       SLOT(ToggleVisibility()), this);
   submap_id_text_.setCharacterHeight(kSubmapIdCharHeight);
   submap_id_text_.setColor(kSubmapIdColor);
-  submap_id_text_.setTextAlignment(::rviz::MovableText::H_CENTER,
-                                   ::rviz::MovableText::V_ABOVE);
+  submap_id_text_.setTextAlignment(::rviz_rendering::MovableText::H_CENTER,
+                                   ::rviz_rendering::MovableText::V_ABOVE);
   submap_id_text_node_->setPosition(ToOgre(kSubmapIdPosition));
   submap_id_text_node_->attachObject(&submap_id_text_);
   TogglePoseMarkerVisibility();
@@ -95,8 +97,8 @@ DrawableSubmap::~DrawableSubmap() {
 }
 
 void DrawableSubmap::Update(
-    const ::std_msgs::Header& header,
-    const ::cartographer_ros_msgs::SubmapEntry& metadata) {
+    const ::std_msgs::msg::Header& header,
+    const ::cartographer_ros_msgs::msg::SubmapEntry& metadata) {
   absl::MutexLock locker(&mutex_);
   metadata_version_ = metadata.submap_version;
   pose_ = ::cartographer_ros::ToRigid3d(metadata.pose);
@@ -113,7 +115,9 @@ void DrawableSubmap::Update(
           .arg(metadata_version_));
 }
 
-bool DrawableSubmap::MaybeFetchTexture(ros::ServiceClient* const client) {
+bool DrawableSubmap::MaybeFetchTexture(
+    rclcpp::Client<cartographer_ros_msgs::srv::SubmapQuery>::SharedPtr const client,
+    rclcpp::executors::SingleThreadedExecutor::SharedPtr callback_group_executor) {
   absl::MutexLock locker(&mutex_);
   // Received metadata version can also be lower if we restarted Cartographer.
   const bool newer_version_available =
@@ -129,9 +133,10 @@ bool DrawableSubmap::MaybeFetchTexture(ros::ServiceClient* const client) {
   }
   query_in_progress_ = true;
   last_query_timestamp_ = now;
-  rpc_request_future_ = std::async(std::launch::async, [this, client]() {
+
+  rpc_request_future_ = std::async(std::launch::async, [this, client, callback_group_executor]() {
     std::unique_ptr<::cartographer::io::SubmapTextures> submap_textures =
-        ::cartographer_ros::FetchSubmapTextures(id_, client);
+        ::cartographer_ros::FetchSubmapTextures(id_, client, callback_group_executor, std::chrono::milliseconds(10000));
     absl::MutexLock locker(&mutex_);
     query_in_progress_ = false;
     if (submap_textures != nullptr) {
