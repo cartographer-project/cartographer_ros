@@ -14,10 +14,10 @@
   limitations under the License.
 -->
 
-<library path="lib/libcartographer_rviz">
-  <class name="Submaps"
+<library path="cartographer_rviz">
+  <class name="cartographer_rviz/SubmapsDisplay"
          type="cartographer_rviz::SubmapsDisplay"
-         base_class_type="rviz::Display">
+         base_class_type="rviz_common::Display">
     <description>
       Displays submaps as a unified map in RViz.
       https://github.com/cartographer-project/cartographer_ros
