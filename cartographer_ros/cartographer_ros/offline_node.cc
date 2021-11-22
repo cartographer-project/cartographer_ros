@@ -33,8 +33,8 @@
 #include "tf2_ros/static_transform_broadcaster.h"
 #include "urdf/model.h"
 #include "rclcpp/exceptions.hpp"
-//#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string.hpp>
+#include <regex>
+#include <string>
 
 DEFINE_bool(collect_metrics, false,
             "Activates the collection of runtime metrics. If activated, the "
@@ -98,13 +98,24 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory,
   LOG(WARNING) << "FLAGS_configuration_basenames " << FLAGS_configuration_basenames;
   CHECK(!(FLAGS_bag_filenames.empty() && FLAGS_load_state_filename.empty()))
       << "-bag_filenames and -load_state_filename cannot both be unspecified.";
+  std::regex regex(",");
   std::vector<std::string> bag_filenames;
   if (!FLAGS_bag_filenames.empty()){
-    boost::split(bag_filenames, FLAGS_bag_filenames, boost::is_any_of(","));
+    std::regex regex(",");
+    std::vector<std::string> if_bag_filenames(
+      std::sregex_token_iterator(
+        FLAGS_bag_filenames.begin(), FLAGS_bag_filenames.end(), regex, -1),
+      std::sregex_token_iterator()
+      );
+    bag_filenames = if_bag_filenames;
   }
   cartographer_ros::NodeOptions node_options;
-  std::vector<std::string> configuration_basenames;
-  boost::split(configuration_basenames, FLAGS_configuration_basenames, boost::is_any_of(","));
+  std::vector<std::string> configuration_basenames(
+    std::sregex_token_iterator(
+      FLAGS_configuration_basenames.begin(), FLAGS_configuration_basenames.end(), regex, -1),
+    std::sregex_token_iterator()
+    );
+
   std::vector<TrajectoryOptions> bag_trajectory_options(1);
   std::tie(node_options, bag_trajectory_options.at(0)) =
       LoadOptions(FLAGS_configuration_directory, configuration_basenames.at(0));
@@ -142,8 +153,11 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory,
   std::vector<geometry_msgs::msg::TransformStamped> urdf_transforms;
 
   if (!FLAGS_urdf_filenames.empty()) {
-    std::vector<std::string> urdf_filenames;
-    boost::split(urdf_filenames, FLAGS_urdf_filenames, boost::is_any_of(","));
+    std::vector<std::string> urdf_filenames(
+      std::sregex_token_iterator(
+        FLAGS_urdf_filenames.begin(), FLAGS_urdf_filenames.end(), regex, -1),
+      std::sregex_token_iterator()
+      );
     for (const auto& urdf_filename : urdf_filenames) {
       const auto current_urdf_transforms =
           ReadStaticTransformsFromUrdf(urdf_filename, tf_buffer);

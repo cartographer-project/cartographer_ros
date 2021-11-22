@@ -28,11 +28,7 @@ std::vector<geometry_msgs::msg::TransformStamped> ReadStaticTransformsFromUrdf(
     const std::string& urdf_filename, std::shared_ptr<tf2_ros::Buffer> tf_buffer) {
   urdf::Model model;
   CHECK(model.initFile(urdf_filename));
-#if URDFDOM_HEADERS_HAS_SHARED_PTR_DEFS
   std::vector<urdf::LinkSharedPtr> links;
-#else
-  std::vector<boost::shared_ptr<urdf::Link> > links;
-#endif
   model.getLinks(links);
   std::vector<geometry_msgs::msg::TransformStamped> transforms;
   for (const auto& link : links) {

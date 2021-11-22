@@ -55,13 +55,6 @@ find_package(Eigen3 REQUIRED)
 find_package(urdf REQUIRED)
 find_package(urdfdom_headers REQUIRED)
 
-if(DEFINED urdfdom_headers_VERSION)
-  if(${urdfdom_headers_VERSION} GREATER 0.4.1)
-    add_definitions(-DURDFDOM_HEADERS_HAS_SHARED_PTR_DEFS)
-  endif()
-endif()
-
-
 include_directories(
   include
   "."

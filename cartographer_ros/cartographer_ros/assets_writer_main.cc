@@ -17,7 +17,8 @@
 #include "cartographer_ros/assets_writer.h"
 #include "gflags/gflags.h"
 #include "glog/logging.h"
-#include <boost/algorithm/string.hpp>
+#include <regex>
+#include <string>
 
 DEFINE_string(configuration_directory, "",
               "First directory in which configuration files are searched, "
@@ -58,8 +59,12 @@ int main(int argc, char** argv) {
   CHECK(!FLAGS_pose_graph_filename.empty())
       << "-pose_graph_filename is missing.";
 
-  std::vector<std::string> bag_filenames;
-  boost::split(bag_filenames, FLAGS_bag_filenames, boost::is_any_of(","));
+  std::regex regex(",");
+  std::vector<std::string> bag_filenames(
+    std::sregex_token_iterator(
+      FLAGS_bag_filenames.begin(), FLAGS_bag_filenames.end(), regex, -1),
+    std::sregex_token_iterator()
+    );
 
   ::cartographer_ros::AssetsWriter asset_writer(
       FLAGS_pose_graph_filename,
