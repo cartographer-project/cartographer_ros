@@ -219,6 +219,10 @@ void SubmapsDisplay::processMessage( const ::cartographer_ros_msgs::msg::SubmapL
 }
 
 void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
+
+  (void) wall_dt;
+  (void) ros_dt;
+
   absl::MutexLock locker(&mutex_);
   // Schedule fetching of new submap textures.
   for (const auto& trajectory_by_id : trajectories_) {

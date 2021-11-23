@@ -43,6 +43,8 @@ void ScopedRosLogSink::send(const ::google::LogSeverity severity,
                             const struct std::tm* const tm_time,
                             const char* const message,
                             const size_t message_len) {
+  (void) base_filename;
+
   const std::string message_string = ::google::LogSink::ToString(
       severity, GetBasename(filename), line, tm_time, message, message_len);
   switch (severity) {

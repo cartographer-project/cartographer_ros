@@ -100,7 +100,7 @@ foreach(DEFINITION ${PCL_DEFINITIONS})
 endforeach()
 
 message(STATUS "Using Qt5 based on the rviz2_QT_VERSION: ${rviz2_QT_VERSION}")
-find_package(Qt5 ${rviz2_QT_VERSION} EXACT REQUIRED Core Widgets)
+find_package(Qt5 ${rviz2_QT_VERSION} REQUIRED Core Widgets)
 set(QT_LIBRARIES Qt5::Core Qt5::Widgets)
 include_directories(${Qt5Widgets_INCLUDE_DIRS})
 

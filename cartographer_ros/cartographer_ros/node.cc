@@ -676,6 +676,9 @@ int Node::AddOfflineTrajectory(
 bool Node::handleGetTrajectoryStates(
     const cartographer_ros_msgs::srv::GetTrajectoryStates::Request::SharedPtr request,
     cartographer_ros_msgs::srv::GetTrajectoryStates::Response::SharedPtr response) {
+
+  (void) request;
+
   using TrajectoryState =
       ::cartographer::mapping::PoseGraphInterface::TrajectoryState;
   absl::MutexLock lock(&mutex_);
@@ -733,6 +736,9 @@ bool Node::handleWriteState(
 bool Node::handleReadMetrics(
     const cartographer_ros_msgs::srv::ReadMetrics::Request::SharedPtr request,
     cartographer_ros_msgs::srv::ReadMetrics::Response::SharedPtr response) {
+
+  (void) request;
+
   absl::MutexLock lock(&mutex_);
   response->timestamp = node_->now();
   if (!metrics_registry_) {

@@ -229,6 +229,10 @@ void SensorBridge::HandleRangefinder(
   if (!ranges.empty()) {
     CHECK_LE(ranges.back().time, 0.f);
   }
+
+  // This was added to get rid of the TimedPointCloudData warning for a missing argument
+  std::vector<float> intensities_;
+
   const auto sensor_to_tracking =
       tf_bridge_.LookupToTracking(time, CheckNoLeadingSlash(frame_id));
   if (sensor_to_tracking != nullptr) {
@@ -236,7 +240,7 @@ void SensorBridge::HandleRangefinder(
         sensor_id, carto::sensor::TimedPointCloudData{
                        time, sensor_to_tracking->translation().cast<float>(),
                        carto::sensor::TransformTimedPointCloud(
-                           ranges, sensor_to_tracking->cast<float>())});
+                           ranges, sensor_to_tracking->cast<float>()),intensities_});
   }
 }
 
