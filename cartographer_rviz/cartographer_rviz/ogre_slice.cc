@@ -73,7 +73,7 @@ OgreSlice::OgreSlice(const ::cartographer::mapping::SubmapId& id, int slice_id,
 
 OgreSlice::~OgreSlice() {
   Ogre::MaterialManager::getSingleton().remove(material_->getHandle());
-  if (!texture_.operator bool()) {
+  if (texture_) {
     Ogre::TextureManager::getSingleton().remove(texture_->getHandle());
     texture_.reset();
   }
@@ -118,7 +118,7 @@ void OgreSlice::Update(
   Ogre::DataStreamPtr pixel_stream;
   pixel_stream.reset(new Ogre::MemoryDataStream(rgb.data(), rgb.size()));
 
-  if (!texture_.operator bool()) {
+  if (texture_) {
     Ogre::TextureManager::getSingleton().remove(texture_->getHandle());
     texture_.reset();
   }
