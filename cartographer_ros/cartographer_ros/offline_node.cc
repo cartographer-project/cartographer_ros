@@ -364,42 +364,42 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory,
         rclcpp::SerializedMessage serialized_msg(*msg.serialized_data);
         sensor_msgs::msg::MultiEchoLaserScan::SharedPtr multi_echo_laser_scan_msg =
             std::make_shared<sensor_msgs::msg::MultiEchoLaserScan>();
-        multi_echo_laser_scan_serializer.deserialize_message(&serialized_msg, &multi_echo_laser_scan_msg);
+        multi_echo_laser_scan_serializer.deserialize_message(&serialized_msg, multi_echo_laser_scan_msg.get());
         node.HandleMultiEchoLaserScanMessage(trajectory_id, sensor_id,
                                      multi_echo_laser_scan_msg);
       } else if (topic_type == "sensor_msgs/msg/PointCloud2") {
         rclcpp::SerializedMessage serialized_msg(*msg.serialized_data);
         sensor_msgs::msg::PointCloud2::SharedPtr pcl2_scan_msg =
             std::make_shared<sensor_msgs::msg::PointCloud2>();
-        pcl2_serializer.deserialize_message(&serialized_msg, &pcl2_scan_msg);
+        pcl2_serializer.deserialize_message(&serialized_msg, pcl2_scan_msg.get());
         node.HandlePointCloud2Message(trajectory_id, sensor_id,
                                      pcl2_scan_msg);
       } else if (topic_type == "sensor_msgs/msg/Imu") {
         rclcpp::SerializedMessage serialized_msg(*msg.serialized_data);
         sensor_msgs::msg::Imu::SharedPtr imu_scan_msg =
             std::make_shared<sensor_msgs::msg::Imu>();
-        imu_serializer.deserialize_message(&serialized_msg, &imu_scan_msg);
+        imu_serializer.deserialize_message(&serialized_msg, imu_scan_msg.get());
         node.HandleImuMessage(trajectory_id, sensor_id,
                                      imu_scan_msg);
       } else if (topic_type == "nav_msgs/msg/Odometry") {
         rclcpp::SerializedMessage serialized_msg(*msg.serialized_data);
         nav_msgs::msg::Odometry::SharedPtr odom_scan_msg =
             std::make_shared<nav_msgs::msg::Odometry>();
-        odom_serializer.deserialize_message(&serialized_msg, &odom_scan_msg);
+        odom_serializer.deserialize_message(&serialized_msg, odom_scan_msg.get());
         node.HandleOdometryMessage(trajectory_id, sensor_id,
                                        odom_scan_msg);
       } else if (topic_type == "sensor_msgs/msg/NavSatFix") {
         rclcpp::SerializedMessage serialized_msg(*msg.serialized_data);
         sensor_msgs::msg::NavSatFix::SharedPtr nav_sat_fix_msg =
             std::make_shared<sensor_msgs::msg::NavSatFix>();
-        nav_sat_fix_serializer.deserialize_message(&serialized_msg, &nav_sat_fix_msg);
+        nav_sat_fix_serializer.deserialize_message(&serialized_msg, nav_sat_fix_msg.get());
         node.HandleNavSatFixMessage(trajectory_id, sensor_id,
                                      nav_sat_fix_msg);
       } else if (topic_type == "cartographer_ros_msgs/msg/LandmarkList") {
         rclcpp::SerializedMessage serialized_msg(*msg.serialized_data);
         cartographer_ros_msgs::msg::LandmarkList::SharedPtr landmark_list_msg =
             std::make_shared<cartographer_ros_msgs::msg::LandmarkList>();
-        landmark_list_serializer.deserialize_message(&serialized_msg, &landmark_list_msg);
+        landmark_list_serializer.deserialize_message(&serialized_msg, landmark_list_msg.get());
         node.HandleLandmarkMessage(trajectory_id, sensor_id,
                                      landmark_list_msg);
       }
