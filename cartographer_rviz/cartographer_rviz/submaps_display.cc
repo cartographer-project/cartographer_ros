@@ -244,12 +244,13 @@ void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
   if (map_frame_ == nullptr) {
     return;
   }
+
   // Update the fading by z distance.
-  rclcpp::Time now = this->get_clock()->now();
+  const auto klatest = this->get_clock()->now();
   try {
     const ::geometry_msgs::msg::TransformStamped transform_stamped =
         tf_buffer_->lookupTransform(
-            *map_frame_, tracking_frame_property_->getStdString(), now);
+            *map_frame_, tracking_frame_property_->getStdString(), tf2::TimePointZero);
     for (auto& trajectory_by_id : trajectories_) {
       for (auto& submap_entry : trajectory_by_id.second->submaps) {
         submap_entry.second->SetAlpha(
@@ -263,7 +264,7 @@ void SubmapsDisplay::update(const float wall_dt, const float ros_dt) {
   // Update the map frame to fixed frame transform.
   Ogre::Vector3 position;
   Ogre::Quaternion orientation;
-  if (context_->getFrameManager()->getTransform(*map_frame_, now, position,
+  if (context_->getFrameManager()->getTransform(*map_frame_, klatest, position,
                                                 orientation)) {
     map_node_->setPosition(position);
     map_node_->setOrientation(orientation);
