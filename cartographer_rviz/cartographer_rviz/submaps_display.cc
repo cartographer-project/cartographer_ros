@@ -246,7 +246,7 @@ void SubmapsDisplay::update(const float , const float) {
   try {
     const ::geometry_msgs::msg::TransformStamped transform_stamped =
         tf_buffer_->lookupTransform(
-            *map_frame_, tracking_frame_property_->getStdString(), tf2::TimePointZero);
+            *map_frame_, tracking_frame_property_->getStdString(), tf2::TimePointZero,std::chrono::milliseconds(100));
     for (auto& trajectory_by_id : trajectories_) {
       for (auto& submap_entry : trajectory_by_id.second->submaps) {
         submap_entry.second->SetAlpha(
