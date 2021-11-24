@@ -147,10 +147,9 @@ class Node {
       const cartographer_ros_msgs::srv::WriteState::Request::SharedPtr request,
       cartographer_ros_msgs::srv::WriteState::Response::SharedPtr response);
   bool handleGetTrajectoryStates(
-      const cartographer_ros_msgs::srv::GetTrajectoryStates::Request::SharedPtr request,
+      const cartographer_ros_msgs::srv::GetTrajectoryStates::Request::SharedPtr,
       cartographer_ros_msgs::srv::GetTrajectoryStates::Response::SharedPtr response);
-  bool handleReadMetrics(
-      const cartographer_ros_msgs::srv::ReadMetrics::Request::SharedPtr request,
+  bool handleReadMetrics(const cartographer_ros_msgs::srv::ReadMetrics::Request::SharedPtr,
       cartographer_ros_msgs::srv::ReadMetrics::Response::SharedPtr response);
 
   // Returns the set of SensorIds expected for a trajectory.

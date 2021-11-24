@@ -86,7 +86,7 @@ class SubmapsDisplay
   void reset() override;
   void processMessage(
         const ::cartographer_ros_msgs::msg::SubmapList::ConstSharedPtr msg) override;
-  void update(float wall_dt, float ros_dt) override;
+  void update(float , float) override;
 
   std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
   std::shared_ptr<tf2_ros::TransformListener> tf_listener_;

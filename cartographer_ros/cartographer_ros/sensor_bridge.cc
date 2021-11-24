@@ -240,7 +240,7 @@ void SensorBridge::HandleRangefinder(
         sensor_id, carto::sensor::TimedPointCloudData{
                        time, sensor_to_tracking->translation().cast<float>(),
                        carto::sensor::TransformTimedPointCloud(
-                           ranges, sensor_to_tracking->cast<float>()),intensities_});
+                           ranges, sensor_to_tracking->cast<float>()), intensities_});
   }
 }
 

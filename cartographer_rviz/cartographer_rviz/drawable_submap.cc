@@ -99,7 +99,7 @@ DrawableSubmap::~DrawableSubmap() {
 void DrawableSubmap::Update(
     const ::std_msgs::msg::Header& header,
     const ::cartographer_ros_msgs::msg::SubmapEntry& metadata) {
-  (void) header;
+  (void) header; // TODO: remove unused arg ?
   absl::MutexLock locker(&mutex_);
   metadata_version_ = metadata.submap_version;
   pose_ = ::cartographer_ros::ToRigid3d(metadata.pose);
