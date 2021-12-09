@@ -217,7 +217,6 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory,
     }
     for (const auto& expected_sensor_id :
          bag_expected_sensor_ids.at(current_bag_index)) {
-      // TODO: check resolved topic
       LOG(INFO) << "expected_sensor_id.id " << expected_sensor_id.id;
       const auto bag_resolved_topic = std::make_pair(
           static_cast<int>(current_bag_index),
@@ -277,9 +276,10 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory,
   std::set<std::string> bag_topics;
   std::stringstream bag_topics_string;
   for (const auto& topic : playable_bag_multiplexer.topics()) {
-    // TODO: check resolved topic
-    bag_topics.insert(topic);
-    bag_topics_string << topic << ",";
+    std::string resolved_topic = cartographer_offline_node->get_node_base_interface()->
+        resolve_topic_or_service_name(topic, false);
+    bag_topics.insert(resolved_topic);
+    bag_topics_string << resolved_topic << ",";
   }
   bool print_topics = false;
   for (const auto& entry : bag_topic_to_sensor_id) {
@@ -346,8 +346,8 @@ void RunOfflineNode(const MapBuilderFactory& map_builder_factory,
 
     const auto bag_topic = std::make_pair(
         bag_index,
-        // TODO: check resolved topic
-        msg.topic_name);
+        cartographer_offline_node->get_node_base_interface()->
+                resolve_topic_or_service_name(msg.topic_name, false));
     auto it = bag_topic_to_sensor_id.find(bag_topic);
 
     if (it != bag_topic_to_sensor_id.end()) {
