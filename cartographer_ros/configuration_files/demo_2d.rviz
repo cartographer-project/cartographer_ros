@@ -1,42 +1,35 @@
-# Copyright 2016 The Cartographer Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 Panels:
-  - Class: rviz/Displays
+  - Class: rviz_common/Displays
     Help Height: 78
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Submaps1
-        - /PointCloud21
-      Splitter Ratio: 0.600671
-    Tree Height: 821
-  - Class: rviz/Selection
+        - /Global Options1
+        - /RobotModel1/Description Topic1
+        - /map1/Topic1
+        - /SubmapsDisplay1/Submaps1
+        - /Trajectories1/Namespaces1
+      Splitter Ratio: 0.47058823704719543
+    Tree Height: 1147
+  - Class: rviz_common/Selection
     Name: Selection
-  - Class: rviz/Tool Properties
+  - Class: rviz_common/Tool Properties
     Expanded:
-      - /2D Pose Estimate1
-      - /2D Nav Goal1
+      - /2D Goal Pose1
       - /Publish Point1
     Name: Tool Properties
-    Splitter Ratio: 0.588679
-  - Class: rviz/Views
+    Splitter Ratio: 0.5886790156364441
+  - Class: rviz_common/Views
     Expanded:
       - /Current View1
     Name: Views
     Splitter Ratio: 0.5
-  - Class: rviz/Time
+  - Class: teleop_panel/Teleop
+    Name: Teleop
+    Topic: /rt_cmd_vel
+  - Class: wyca_rviz_plugin/Wyca
+    Name: Wyca
+  - Class: rviz_common/Time
     Experimental: false
     Name: Time
     SyncMode: 0
@@ -44,31 +37,36 @@ Panels:
 Visualization Manager:
   Class: ""
   Displays:
-    - Alpha: 0.5
-      Cell Size: 1
-      Class: rviz/Grid
-      Color: 160; 160; 164
+    - Alpha: 1
+      Class: rviz_default_plugins/RobotModel
+      Collision Enabled: false
+      Description File: ""
+      Description Source: Topic
+      Description Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /robot_description
       Enabled: true
-      Line Style:
-        Line Width: 0.03
-        Value: Lines
-      Name: Grid
-      Normal Cell Count: 0
-      Offset:
-        X: 0
-        Y: 0
-        Z: 0
-      Plane: XY
-      Plane Cell Count: 100
-      Reference Frame: <Fixed Frame>
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+      Name: RobotModel
+      TF Prefix: ""
+      Update Interval: 0
       Value: true
-    - Class: rviz/TF
+      Visual Enabled: true
+    - Class: rviz_default_plugins/TF
       Enabled: true
       Frame Timeout: 15
       Frames:
-        All Enabled: true
+        All Enabled: false
         base_link:
-          Value: true
+          Value: false
         horizontal_laser_link:
           Value: true
         imu_link:
@@ -79,7 +77,7 @@ Visualization Manager:
           Value: true
         vertical_laser_link:
           Value: true
-      Marker Scale: 1
+      Marker Scale: 0.30000001192092896
       Name: TF
       Show Arrows: true
       Show Axes: true
@@ -96,48 +94,26 @@ Visualization Manager:
                 {}
       Update Interval: 0
       Value: true
-    - Alpha: 1
-      Class: rviz/RobotModel
-      Collision Enabled: false
+    - Alpha: 0.699999988079071
+      Class: rviz_default_plugins/Map
+      Color Scheme: map
+      Draw Behind: false
       Enabled: true
-      Links:
-        All Links Enabled: true
-        Expand Joint Details: false
-        Expand Link Details: false
-        Expand Tree: false
-        Link Tree Style: Links in Alphabetic Order
-        base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        horizontal_laser_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        imu_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        vertical_laser_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-      Name: RobotModel
-      Robot Description: robot_description
-      TF Prefix: ""
-      Update Interval: 0
-      Value: true
-      Visual Enabled: true
-    - Class: Submaps
-      Enabled: true
-      Name: Submaps
-      Submap query service: /submap_query
-      Topic: /submap_list
-      Tracking frame: base_link
-      Unreliable: false
+      Name: map
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Best Effort
+        Value: /map
+      Update Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /map_updates
+      Use Timestamp: false
       Value: true
     - Alpha: 1
       Autocompute Intensity Bounds: true
@@ -147,8 +123,8 @@ Visualization Manager:
         Value: true
       Axis: Z
       Channel Name: intensity
-      Class: rviz/PointCloud2
-      Color: 0; 255; 0
+      Class: rviz_default_plugins/PointCloud2
+      Color: 239; 41; 41
       Color Transformer: FlatColor
       Decay Time: 0
       Enabled: true
@@ -159,86 +135,289 @@ Visualization Manager:
       Min Intensity: 0
       Name: PointCloud2
       Position Transformer: XYZ
-      Queue Size: 10
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.05
+      Size (m): 0.10000000149011612
       Style: Flat Squares
-      Topic: /scan_matched_points2
-      Unreliable: false
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /scan_matched_points2
       Use Fixed Frame: true
-      Use rainbow: true
+      Use rainbow: false
       Value: true
-    - Class: rviz/MarkerArray
+    - Class: cartographer_rviz/SubmapsDisplay
       Enabled: true
-      Marker Topic: /trajectory_node_list
+      Fade-out distance: 1
+      High Resolution: true
+      Low Resolution: false
+      Name: SubmapsDisplay
+      Submap query service: /submap_query
+      Submaps:
+        All: true
+        All Submap Pose Markers: true
+        Trajectory 0:
+          0.180: true
+          1.180: true
+          10.180: true
+          100.180: true
+          101.180: true
+          102.180: true
+          103.180: true
+          104.180: true
+          105.180: true
+          106.180: true
+          107.180: true
+          108.180: true
+          109.180: true
+          11.180: true
+          110.180: true
+          111.180: true
+          112.180: true
+          113.180: true
+          114.180: true
+          115.180: true
+          116.180: true
+          117.180: true
+          118.180: true
+          119.180: true
+          12.180: true
+          120.180: true
+          121.180: true
+          122.180: true
+          123.180: true
+          124.180: true
+          125.180: true
+          126.180: true
+          127.154: true
+          128.64: true
+          13.180: true
+          14.180: true
+          15.180: true
+          16.180: true
+          17.180: true
+          18.180: true
+          19.180: true
+          2.180: true
+          20.180: true
+          21.180: true
+          22.180: true
+          23.180: true
+          24.180: true
+          25.180: true
+          26.180: true
+          27.180: true
+          28.180: true
+          29.180: true
+          3.180: true
+          30.180: true
+          31.180: true
+          32.180: true
+          33.180: true
+          34.180: true
+          35.180: true
+          36.180: true
+          37.180: true
+          38.180: true
+          39.180: true
+          4.180: true
+          40.180: true
+          41.180: true
+          42.180: true
+          43.180: true
+          44.180: true
+          45.180: true
+          46.180: true
+          47.180: true
+          48.180: true
+          49.180: true
+          5.180: true
+          50.180: true
+          51.180: true
+          52.180: true
+          53.180: true
+          54.180: true
+          55.180: true
+          56.180: true
+          57.180: true
+          58.180: true
+          59.180: true
+          6.180: true
+          60.180: true
+          61.180: true
+          62.180: true
+          63.180: true
+          64.180: true
+          65.180: true
+          66.180: true
+          67.180: true
+          68.180: true
+          69.180: true
+          7.180: true
+          70.180: true
+          71.180: true
+          72.180: true
+          73.180: true
+          74.180: true
+          75.180: true
+          76.180: true
+          77.180: true
+          78.180: true
+          79.180: true
+          8.180: true
+          80.180: true
+          81.180: true
+          82.180: true
+          83.180: true
+          84.180: true
+          85.180: true
+          86.180: true
+          87.180: true
+          88.180: true
+          89.180: true
+          9.180: true
+          90.180: true
+          91.180: true
+          92.180: true
+          93.180: true
+          94.180: true
+          95.180: true
+          96.180: true
+          97.180: true
+          98.180: true
+          99.180: true
+          Submap Pose Markers: true
+          Value: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /submap_list
+      Tracking frame: base_link
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: false
       Name: Trajectories
       Namespaces:
-        "": true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/MarkerArray
+        {}
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /trajectory_node_list
+      Value: false
+    - Class: rviz_default_plugins/MarkerArray
       Enabled: true
-      Marker Topic: /landmark_poses_list
-      Name: Landmark Poses
-      Namespaces:
-        "": true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/MarkerArray
-      Enabled: true
-      Marker Topic: /constraint_list
       Name: Constraints
       Namespaces:
-        "": true
-      Queue Size: 100
+        Inter constraints, different trajectories: true
+        Inter constraints, same trajectory: true
+        Inter residuals, different trajectories: true
+        Inter residuals, same trajectory: true
+        Intra constraints: true
+        Intra residuals: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /constraint_list
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: Landmarks
+      Namespaces:
+        {}
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /landmark_poses_list
       Value: true
   Enabled: true
   Global Options:
-    Background Color: 100; 100; 100
+    Background Color: 48; 48; 48
     Fixed Frame: map
     Frame Rate: 30
   Name: root
   Tools:
-    - Class: rviz/Interact
+    - Class: rviz_default_plugins/Interact
       Hide Inactive Objects: true
-    - Class: rviz/MoveCamera
-    - Class: rviz/Select
-    - Class: rviz/FocusCamera
-    - Class: rviz/Measure
-    - Class: rviz/SetInitialPose
-      Topic: /initialpose
-    - Class: rviz/SetGoal
-      Topic: /move_base_simple/goal
-    - Class: rviz/PublishPoint
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/FocusCamera
+    - Class: rviz_default_plugins/Measure
+      Line color: 128; 128; 0
+    - Class: rviz_default_plugins/SetInitialPose
+      Covariance x: 0.25
+      Covariance y: 0.25
+      Covariance yaw: 0.06853891909122467
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /initialpose
+    - Class: rviz_default_plugins/SetGoal
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /goal_pose
+    - Class: rviz_default_plugins/PublishPoint
       Single click: true
-      Topic: /clicked_point
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /clicked_point
+    - Class: nav2_rviz_plugins/GoalTool
+  Transformation:
+    Current:
+      Class: rviz_default_plugins/TF
   Value: true
   Views:
     Current:
-      Angle: 0
-      Class: rviz/TopDownOrtho
+      Class: rviz_default_plugins/ThirdPersonFollower
+      Distance: 90.55636596679688
       Enable Stereo Rendering:
-        Stereo Eye Separation: 0.06
+        Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
+      Focal Point:
+        X: -25.26685333251953
+        Y: 3.4120447635650635
+        Z: -8.647453068988398e-05
+      Focal Shape Fixed Size: false
+      Focal Shape Size: 0.05000000074505806
+      Invert Z Axis: false
       Name: Current View
-      Near Clip Distance: 0.01
-      Scale: 10
-      Target Frame: <Fixed Frame>
-      Value: TopDownOrtho (rviz)
-      X: 0
-      Y: 0
+      Near Clip Distance: 0.009999999776482582
+      Pitch: 1.5697963237762451
+      Target Frame: cartomap
+      Value: ThirdPersonFollower (rviz_default_plugins)
+      Yaw: 6.123587131500244
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1123
+  Height: 1376
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd0000000400000000000001c5000003c0fc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006400fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c0061007900730100000041000003c0000000dd00fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f000003c0fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a005600690065007700730100000041000003c0000000b000fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000077e0000003efc0100000002fb0000000800540069006d006501000000000000077e000002f600fffffffb0000000800540069006d006501000000000000045000000000000000000000049e000003c000000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000400000000000001ac00000506fc020000000cfb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d00000506000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb00000018004e0061007600690067006100740069006f006e002000320000000324000000b70000000000000000fb0000000c00540065006c0065006f007000000002af00000164000000bb00fffffffb00000008005700790063006100000003a5000001000000006000fffffffb0000000800540069006d00650000000484000000bf0000003900ffffff000000010000010f00000506fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073010000003d00000506000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004420000003efc0100000001fb0000000800540069006d00650100000000000004500000000000000000000006e10000050600000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
+    collapsed: false
+  Teleop:
     collapsed: false
   Time:
     collapsed: false
@@ -246,6 +425,8 @@ Window Geometry:
     collapsed: false
   Views:
     collapsed: false
-  Width: 1918
-  X: 0
-  Y: 24
+  Width: 2472
+  Wyca:
+    collapsed: false
+  X: 2648
+  Y: 27

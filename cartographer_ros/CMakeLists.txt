@@ -156,7 +156,7 @@ set(TARGET_COMPILE_FLAGS "${TARGET_COMPILE_FLAGS} ${GOOG_CXX_FLAGS}")
 set_target_properties(${PROJECT_NAME} PROPERTIES
   COMPILE_FLAGS ${TARGET_COMPILE_FLAGS})
 
-install(DIRECTORY configuration_files
+install(DIRECTORY configuration_files urdf launch
   DESTINATION share/${PROJECT_NAME}/
 )
 
