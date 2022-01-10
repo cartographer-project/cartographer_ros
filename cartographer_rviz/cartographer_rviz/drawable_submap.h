@@ -28,7 +28,7 @@
 #include "cartographer/io/submap_painter.h"
 #include "cartographer/mapping/id.h"
 #include "cartographer/transform/rigid_transform.h"
-#include "cartographer_ros/include/submap.h"
+#include "cartographer_ros/submap.h"
 #include "cartographer_ros_msgs/msg/submap_entry.hpp"
 #include "cartographer_ros_msgs/srv/submap_query.hpp"
 #include "cartographer_rviz/ogre_slice.h"

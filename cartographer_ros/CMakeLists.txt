@@ -162,7 +162,7 @@ install(DIRECTORY configuration_files
 
 install(
   FILES ${ALL_HEADERS}
-  DESTINATION include/${PROJECT_NAME}/include
+  DESTINATION include/${PROJECT_NAME}
 )
 
 install(
