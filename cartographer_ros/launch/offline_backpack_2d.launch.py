@@ -43,8 +43,12 @@ def generate_launch_description():
             'configuration_directory': LaunchConfiguration('configuration_directory'),
             'configuration_basenames': LaunchConfiguration('configuration_basenames'),
             'urdf_filenames': LaunchConfiguration('urdf_filenames')}.items(),
+
         )
-    SetRemap('horizontal_laser_2d', 'echoes')
+    set_remap = SetRemap('horizontal_laser_2d', 'echoes')
+
+#        remappings = [
+#            ('horizontal_laser_2d', 'echoes')],
 
     return LaunchDescription([
         # Launch arguments
@@ -56,5 +60,6 @@ def generate_launch_description():
         urdf_filenames_arg,
 
         # Nodes
+        set_remap,
         offline_node_launch,
     ])

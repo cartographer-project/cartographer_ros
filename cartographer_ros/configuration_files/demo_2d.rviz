@@ -163,37 +163,8 @@ Visualization Manager:
           0.180: true
           1.180: true
           10.180: true
-          100.180: true
-          101.180: true
-          102.180: true
-          103.180: true
-          104.180: true
-          105.180: true
-          106.180: true
-          107.180: true
-          108.180: true
-          109.180: true
           11.180: true
-          110.180: true
-          111.180: true
-          112.180: true
-          113.180: true
-          114.180: true
-          115.180: true
-          116.180: true
-          117.180: true
-          118.180: true
-          119.180: true
           12.180: true
-          120.180: true
-          121.180: true
-          122.180: true
-          123.180: true
-          124.180: true
-          125.180: true
-          126.180: true
-          127.154: true
-          128.64: true
           13.180: true
           14.180: true
           15.180: true
@@ -214,81 +185,14 @@ Visualization Manager:
           29.180: true
           3.180: true
           30.180: true
-          31.180: true
-          32.180: true
-          33.180: true
-          34.180: true
-          35.180: true
-          36.180: true
-          37.180: true
-          38.180: true
-          39.180: true
+          31.155: true
+          32.65: true
           4.180: true
-          40.180: true
-          41.180: true
-          42.180: true
-          43.180: true
-          44.180: true
-          45.180: true
-          46.180: true
-          47.180: true
-          48.180: true
-          49.180: true
           5.180: true
-          50.180: true
-          51.180: true
-          52.180: true
-          53.180: true
-          54.180: true
-          55.180: true
-          56.180: true
-          57.180: true
-          58.180: true
-          59.180: true
           6.180: true
-          60.180: true
-          61.180: true
-          62.180: true
-          63.180: true
-          64.180: true
-          65.180: true
-          66.180: true
-          67.180: true
-          68.180: true
-          69.180: true
           7.180: true
-          70.180: true
-          71.180: true
-          72.180: true
-          73.180: true
-          74.180: true
-          75.180: true
-          76.180: true
-          77.180: true
-          78.180: true
-          79.180: true
           8.180: true
-          80.180: true
-          81.180: true
-          82.180: true
-          83.180: true
-          84.180: true
-          85.180: true
-          86.180: true
-          87.180: true
-          88.180: true
-          89.180: true
           9.180: true
-          90.180: true
-          91.180: true
-          92.180: true
-          93.180: true
-          94.180: true
-          95.180: true
-          96.180: true
-          97.180: true
-          98.180: true
-          99.180: true
           Submap Pose Markers: true
           Value: true
       Topic:
@@ -388,7 +292,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/ThirdPersonFollower
-      Distance: 90.55636596679688
+      Distance: 251.1199188232422
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -404,7 +308,7 @@ Visualization Manager:
       Name: Current View
       Near Clip Distance: 0.009999999776482582
       Pitch: 1.5697963237762451
-      Target Frame: cartomap
+      Target Frame: map
       Value: ThirdPersonFollower (rviz_default_plugins)
       Yaw: 6.123587131500244
     Saved: ~
