@@ -29,40 +29,37 @@ from launch.actions import Shutdown
 def generate_launch_description():
 
     ## ***** Launch arguments *****
-    bag_filenames_arg = DeclareLaunchArgument('bag_filenames')
-    no_rviz_arg = DeclareLaunchArgument('no_rviz')
-    rviz_config_arg = DeclareLaunchArgument('rviz_config')
-    configuration_directory_arg = DeclareLaunchArgument('configuration_directory')
-    configuration_basenames_arg = DeclareLaunchArgument('configuration_basenames')
-    urdf_filenames_arg = DeclareLaunchArgument('urdf_filenames')
+    bag_filenames_arg = DeclareLaunchArgument('bag_filename')
+    no_rviz_arg = DeclareLaunchArgument('no_rviz', default_value = 'False')
+    keep_running_arg = DeclareLaunchArgument('keep_running', default_value = 'False')
 
     ## ***** Nodes *****
     rviz_node = Node(
         package = 'rviz2',
         executable = 'rviz2',
         on_exit = Shutdown(),
-        arguments = ['-d', LaunchConfiguration('rviz_config')],
+        arguments = ['-d', FindPackageShare('cartographer_ros').find('cartographer_ros') + '/configuration_files/demo_2d.rviz'],
         parameters = [{'use_sim_time': True}],
         condition = UnlessCondition(LaunchConfiguration('no_rviz'))
     )
-
-    cartographer_occupancy_grid_node = Node(
-        package = 'cartographer_ros',
-        executable = 'cartographer_occupancy_grid_node',
-        parameters = [
-            {'use_sim_time': True},
-            {'resolution': 0.05}],
-        )
 
     cartographer_offline_node_node = Node(
         package = 'cartographer_ros',
         executable = 'cartographer_offline_node',
         parameters = [{'use_sim_time': True}],
         arguments = [
-            '-configuration_directory', LaunchConfiguration('configuration_directory'),
-            '-configuration_basenames', LaunchConfiguration('configuration_basenames'),
-            '-urdf_filenames', LaunchConfiguration('urdf_filenames'),
-            '-bag_filenames', LaunchConfiguration('bag_filenames')],
+            '-configuration_directory', FindPackageShare('cartographer_ros').find('cartographer_ros') + '/configuration_files',
+            '-configuration_basenames', 'mir-100-mapping.lua',
+            '-urdf_filenames', FindPackageShare('cartographer_ros').find('cartographer_ros') + '/urdf/mir-100.urdf',
+            '-use_bag_transforms', 'false',
+            '-keep_running', LaunchConfiguration('keep_running'),
+            '-bag_filenames', LaunchConfiguration('bag_filename')],
+        remappings = [
+            ('f_scan', 'scan_1'),
+            ( 'b_scan', 'scan_2'),
+            ( 'imu_data','imu'),
+            ('odom','ignore_odom'),
+            ('odom_enc','odom')],
         output = 'screen'
         )
 
@@ -71,13 +68,9 @@ def generate_launch_description():
         # Launch arguments
         bag_filenames_arg,
         no_rviz_arg,
-        rviz_config_arg,
-        configuration_directory_arg,
-        configuration_basenames_arg,
-        urdf_filenames_arg,
+        keep_running_arg,
 
         # Nodes
         rviz_node,
-        cartographer_occupancy_grid_node,
         cartographer_offline_node_node,
     ])

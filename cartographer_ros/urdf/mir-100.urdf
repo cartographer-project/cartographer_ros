@@ -1,0 +1,107 @@
+<!--
+  Copyright 2018 The Cartographer Authors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<robot name="mir-100">
+  <material name="orange">
+    <color rgba="1.0 0.5 0.2 1" />
+  </material>
+  <material name="gray">
+    <color rgba="0.2 0.2 0.2 1" />
+  </material>
+
+  <link name="imu_frame">
+    <visual>
+      <origin xyz="0 0 0" />
+      <geometry>
+        <box size="0.06 0.04 0.02" />
+      </geometry>
+      <material name="orange" />
+    </visual>
+  </link>
+
+  <link name="front_laser_link">
+    <visual>
+      <origin xyz="0 0 0" />
+      <geometry>
+        <cylinder length="0.05" radius="0.03" />
+      </geometry>
+      <material name="gray" />
+    </visual>
+  </link>
+
+  <link name="back_laser_link">
+    <visual>
+      <origin xyz="0 0 0" />
+      <geometry>
+        <cylinder length="0.05" radius="0.03" />
+      </geometry>
+      <material name="gray" />
+    </visual>
+  </link>
+
+  <link name="base_footprint" />
+
+  <joint name="base_footprint_joint" type="fixed">
+    <parent link="base_footprint" />
+    <child link="base_link" />
+  </joint>
+
+  <link name="base_link" />
+
+  <joint name="imu_frame_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="imu_frame" />
+    <origin xyz="0 0 0.25" />
+  </joint>
+
+  <link name="laser_link" />
+
+  <joint name="laser_link_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="laser_link" />
+  </joint>
+
+  <joint name="front_laser_link_joint" type="fixed">
+    <parent link="laser_link" />
+    <child link="front_laser_link" />
+    <!-- rotation xyzw 0 0 0.389708 0.920939 -->
+    <origin rpy="0 0 0.800628" xyz="0.419636 0.240427 0.200000" />
+  </joint>
+
+  <joint name="back_laser_link_joint" type="fixed">
+    <parent link="laser_link" />
+    <child link="back_laser_link" />
+    <!-- rotation xyzw 0 0 0.921845 -0.387558 -->
+    <origin rpy="0 0 3.937555" xyz="-0.359448 -0.241559 0.200000" />
+  </joint>
+
+  <link name="camera">
+    <visual>
+      <origin xyz="0 0 0" />
+      <geometry>
+        <box size="0.06 0.04 0.02" />
+      </geometry>
+      <material name="orange" />
+    </visual>
+  </link>
+
+  <joint name="camera_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="camera" />
+    <origin rpy="0 1.57 0" xyz="0.439636 0 0.57" />
+  </joint>
+</robot>
+

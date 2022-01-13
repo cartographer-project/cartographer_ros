@@ -5,12 +5,16 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
+        - /RobotModel1/Status1
         - /RobotModel1/Description Topic1
+        - /TF1/Tree1
+        - /TF1/Tree1/map1
+        - /TF1/Tree1/map1/odom1
         - /map1/Topic1
         - /SubmapsDisplay1/Submaps1
         - /Trajectories1/Namespaces1
-      Splitter Ratio: 0.47058823704719543
-    Tree Height: 1147
+      Splitter Ratio: 0.42203986644744873
+    Tree Height: 1174
   - Class: rviz_common/Selection
     Name: Selection
   - Class: rviz_common/Tool Properties
@@ -55,6 +59,25 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
+        base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        horizontal_laser_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        imu_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        vertical_laser_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
       Name: RobotModel
       TF Prefix: ""
       Update Interval: 0
@@ -85,13 +108,8 @@ Visualization Manager:
       Tree:
         map:
           odom:
-            base_link:
-              horizontal_laser_link:
-                {}
-              imu_link:
-                {}
-              vertical_laser_link:
-                {}
+            horizontal_laser_link:
+              {}
       Update Interval: 0
       Value: true
     - Alpha: 0.699999988079071
@@ -160,39 +178,23 @@ Visualization Manager:
         All: true
         All Submap Pose Markers: true
         Trajectory 0:
-          0.180: true
-          1.180: true
-          10.180: true
-          11.180: true
-          12.180: true
-          13.180: true
-          14.180: true
-          15.180: true
-          16.180: true
-          17.180: true
-          18.180: true
-          19.180: true
-          2.180: true
-          20.180: true
-          21.180: true
-          22.180: true
-          23.180: true
-          24.180: true
-          25.180: true
-          26.180: true
-          27.180: true
-          28.180: true
-          29.180: true
-          3.180: true
-          30.180: true
-          31.155: true
-          32.65: true
-          4.180: true
-          5.180: true
-          6.180: true
-          7.180: true
-          8.180: true
-          9.180: true
+          0.70: true
+          1.70: true
+          10.70: true
+          11.70: true
+          12.70: true
+          13.70: true
+          14.70: true
+          15.68: true
+          16.33: true
+          2.70: true
+          3.70: true
+          4.70: true
+          5.70: true
+          6.70: true
+          7.70: true
+          8.70: true
+          9.70: true
           Submap Pose Markers: true
           Value: true
       Topic:
@@ -202,7 +204,7 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /submap_list
-      Tracking frame: base_link
+      Tracking frame: odom
       Value: true
     - Class: rviz_default_plugins/MarkerArray
       Enabled: false
@@ -292,16 +294,16 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/ThirdPersonFollower
-      Distance: 251.1199188232422
+      Distance: 29.796886444091797
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -25.26685333251953
-        Y: 3.4120447635650635
-        Z: -8.647453068988398e-05
+        X: -11.516843795776367
+        Y: 13.40983772277832
+        Z: 7.403941708616912e-05
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
@@ -310,15 +312,15 @@ Visualization Manager:
       Pitch: 1.5697963237762451
       Target Frame: map
       Value: ThirdPersonFollower (rviz_default_plugins)
-      Yaw: 6.123587131500244
+      Yaw: 1.6953976154327393
     Saved: ~
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 1376
+  Height: 1403
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd0000000400000000000001ac00000506fc020000000cfb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d00000506000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb00000018004e0061007600690067006100740069006f006e002000320000000324000000b70000000000000000fb0000000c00540065006c0065006f007000000002af00000164000000bb00fffffffb00000008005700790063006100000003a5000001000000006000fffffffb0000000800540069006d00650000000484000000bf0000003900ffffff000000010000010f00000506fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073010000003d00000506000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004420000003efc0100000001fb0000000800540069006d00650100000000000004500000000000000000000006e10000050600000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000004000000000000028100000521fc020000000cfb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d00000521000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb00000018004e0061007600690067006100740069006f006e002000320000000324000000b70000000000000000fb0000000c00540065006c0065006f007000000002af00000164000000bb00fffffffb00000008005700790063006100000003a5000001000000006000fffffffb0000000800540069006d00650000000484000000bf0000003900ffffff000000010000010f00000521fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073010000003d00000521000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004420000003efc0100000001fb0000000800540069006d00650100000000000004500000000000000000000006640000052100000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Teleop:
@@ -329,8 +331,8 @@ Window Geometry:
     collapsed: false
   Views:
     collapsed: false
-  Width: 2472
+  Width: 2560
   Wyca:
     collapsed: false
-  X: 2648
-  Y: 27
+  X: 3840
+  Y: 0

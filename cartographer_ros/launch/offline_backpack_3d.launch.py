@@ -28,10 +28,10 @@ def generate_launch_description():
     ## ***** Launch arguments *****
     bag_filenames_arg = DeclareLaunchArgument('bag_filenames')
     no_rviz_arg = DeclareLaunchArgument('no_rviz', default_value='false')
-    rviz_config_arg = DeclareLaunchArgument('rviz_config', default_value = FindPackageShare('cartographer_ros').find('cartographer_ros') + '/configuration_files/demo_2d.rviz')
+    rviz_config_arg = DeclareLaunchArgument('rviz_config', default_value = FindPackageShare('cartographer_ros').find('cartographer_ros') + '/configuration_files/demo_3d.rviz')
     configuration_directory_arg = DeclareLaunchArgument('configuration_directory', default_value = FindPackageShare('cartographer_ros').find('cartographer_ros') + '/configuration_files')
-    configuration_basenames_arg = DeclareLaunchArgument('configuration_basenames', default_value = 'backpack_2d.lua')
-    urdf_filenames_arg = DeclareLaunchArgument('urdf_filenames', default_value = FindPackageShare('cartographer_ros').find('cartographer_ros') + '/urdf/backpack_2d.urdf')
+    configuration_basenames_arg = DeclareLaunchArgument('configuration_basenames', default_value = 'backpack_3d.lua')
+    urdf_filenames_arg = DeclareLaunchArgument('urdf_filenames', default_value = FindPackageShare('cartographer_ros').find('cartographer_ros') + '/urdf/backpack_3d.urdf')
 
     ## ***** Nodes *****
     offline_node_launch = IncludeLaunchDescription(
@@ -45,7 +45,8 @@ def generate_launch_description():
             'urdf_filenames': LaunchConfiguration('urdf_filenames')}.items(),
 
         )
-    set_remap = SetRemap('horizontal_laser_2d', 'echoes')
+    set_remap1 = SetRemap('horizontal_laser_3d', 'points2_1')
+    set_remap2 = SetRemap('vertical_laser_3d', 'points2_2')
 
     return LaunchDescription([
         # Launch arguments
@@ -57,6 +58,7 @@ def generate_launch_description():
         urdf_filenames_arg,
 
         # Nodes
-        set_remap,
+        set_remap1,
+        set_remap2,
         offline_node_launch,
     ])
