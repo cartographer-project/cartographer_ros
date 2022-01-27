@@ -15,8 +15,6 @@
   limitations under the License.
 """
 
-from os import getenv
-
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.conditions import IfCondition, UnlessCondition
