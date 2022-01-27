@@ -252,7 +252,7 @@ void AssetsWriter::Run(const std::string& configuration_directory,
               } else if (topic_info.topic_metadata.type == "sensor_msgs/msg/MultiEchoLaserScan") {
                 sensor_msgs::msg::MultiEchoLaserScan::SharedPtr multi_echo_laser_scan_msg =
                     std::make_shared<sensor_msgs::msg::MultiEchoLaserScan>();
-                multi_echo_laser_scan_serializer.deserialize_message(&serialized_msg, &multi_echo_laser_scan_msg);
+                multi_echo_laser_scan_serializer.deserialize_message(&serialized_msg, multi_echo_laser_scan_msg.get());
                 points_batch = HandleMessage(
                     multi_echo_laser_scan_msg,
                     tracking_frame, tf_buffer, transform_interpolation_buffer);
@@ -260,7 +260,7 @@ void AssetsWriter::Run(const std::string& configuration_directory,
               else if (topic_info.topic_metadata.type == "sensor_msgs/msg/PointCloud2") {
                 sensor_msgs::msg::PointCloud2::SharedPtr pcl2_scan_msg =
                     std::make_shared<sensor_msgs::msg::PointCloud2>();
-                pcl2_serializer.deserialize_message(&serialized_msg, &pcl2_scan_msg);
+                pcl2_serializer.deserialize_message(&serialized_msg, pcl2_scan_msg.get());
                 points_batch = HandleMessage(
                     pcl2_scan_msg,
                     tracking_frame, tf_buffer, transform_interpolation_buffer);
