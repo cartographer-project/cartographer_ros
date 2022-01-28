@@ -27,7 +27,9 @@ import os
 def generate_launch_description():
 
     ## ***** Launch arguments *****
+    configuration_directory_arg = DeclareLaunchArgument('configuration_directory', default_value = FindPackageShare('cartographer_ros').find('cartographer_ros') + '/configuration_files')
     config_file_arg = DeclareLaunchArgument('config_file', default_value = 'assets_writer_backpack_3d.lua')
+    urdf_filename_arg = DeclareLaunchArgument('urdf_filename', default_value = FindPackageShare('cartographer_ros').find('cartographer_ros') + '/urdf/backpack_3d.urdf')
     bag_filenames_arg = DeclareLaunchArgument('bag_filenames')
     pose_graph_filename_arg = DeclareLaunchArgument('pose_graph_filename')
 
@@ -37,16 +39,18 @@ def generate_launch_description():
         executable = 'cartographer_assets_writer',
         parameters = [{'use_sim_time': False}],
         arguments = [
-            '-configuration_directory', FindPackageShare('cartographer_ros').find('cartographer_ros') + '/configuration_files',
+            '-configuration_directory', LaunchConfiguration('configuration_directory'),
             '-configuration_basename', LaunchConfiguration('config_file'),
-            '-urdf_filename', FindPackageShare('cartographer_ros').find('cartographer_ros') + '/urdf/backpack_3d.urdf',
+            '-urdf_filename', LaunchConfiguration('urdf_filename'),
             '-bag_filenames', LaunchConfiguration('bag_filenames'),
             '-pose_graph_filename', LaunchConfiguration('pose_graph_filename')],
         output = 'screen'
         )
 
     return LaunchDescription([
+        configuration_directory_arg,
         config_file_arg,
+        urdf_filename_arg,
         bag_filenames_arg,
         pose_graph_filename_arg,
         # Nodes
