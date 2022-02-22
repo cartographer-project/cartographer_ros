@@ -1,4 +1,5 @@
 # Copyright 2016 The Cartographer Authors
+# Copyright 2022 Wyca Robotics (for the ROS2 conversion)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,13 +26,9 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra)
 endif()
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 find_package(cartographer REQUIRED)
-include("${CARTOGRAPHER_CMAKE_DIR}/functions.cmake")
-set(BUILD_SHARED_LIBS OFF)
-option(BUILD_GRPC "build features that require Cartographer gRPC support" false)
-
-google_initialize_cartographer_project()
-
 find_package(cartographer_ros_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
@@ -47,7 +44,6 @@ find_package(visualization_msgs REQUIRED)
 find_package(rosbag2_compression REQUIRED)
 find_package(rosbag2_cpp REQUIRED)
 find_package(rosbag2_storage REQUIRED)
-
 find_package(absl REQUIRED)
 find_package(LuaGoogle REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common)
@@ -57,24 +53,43 @@ find_package(urdfdom_headers REQUIRED)
 
 include_directories(
   include
-  "."
+  ${LUA_INCLUDE_DIR}
+  ${PCL_INCLUDE_DIRS}
+  ${urdfdom_headers_INCLUDE_DIRS}
 )
 
-file(GLOB_RECURSE ALL_SRCS "cartographer_ros/*.cc" "cartographer_ros/*.h")
-file(GLOB_RECURSE ALL_HEADERS "cartographer_ros/*.h")
-file(GLOB_RECURSE ALL_TESTS "cartographer_ros/*_test.cc")
-file(GLOB_RECURSE ALL_EXECUTABLES "cartographer_ros/*_main.cc")
-file(GLOB_RECURSE ALL_GRPC_FILES "cartographer_ros/cartographer_grpc/*")
-list(REMOVE_ITEM ALL_SRCS ${ALL_TESTS})
-list(REMOVE_ITEM ALL_SRCS ${ALL_EXECUTABLES})
-if (NOT ${BUILD_GRPC})
-  list(REMOVE_ITEM ALL_SRCS ${ALL_GRPC_FILES})
-  list(REMOVE_ITEM ALL_TESTS ${ALL_GRPC_FILES})
-  list(REMOVE_ITEM ALL_EXECUTABLES ${ALL_GRPC_FILES})
-endif()
+# Library
+add_library(${PROJECT_NAME}
+  src/assets_writer.cpp
+  src/assets_writer_main.cpp
+  src/map_builder_bridge.cpp
+  src/msg_conversion.cpp
+  src/node_constants.cpp
+  src/node.cpp
+  src/node_main.cpp
+  src/node_options.cpp
+  src/occupancy_grid_node_main.cpp
+  src/offline_node.cpp
+  src/offline_node_main.cpp
+  src/pbstream_map_publisher_main.cpp
+  src/pbstream_to_ros_map_main.cpp
+  src/playable_bag.cpp
+  src/rosbag_validate_main.cpp
+  src/ros_log_sink.cpp
+  src/ros_map.cpp
+  src/ros_map_writing_points_processor.cpp
+  src/sensor_bridge.cpp
+  src/submap.cpp
+  src/tf_bridge.cpp
+  src/time_conversion.cpp
+  src/trajectory_options.cpp
+  src/urdf_reader.cpp
+  src/metrics/family_factory.cpp
+  src/metrics/internal/family.cpp
+  src/metrics/internal/histogram.cpp
+  )
 
-add_library(${PROJECT_NAME} STATIC ${ALL_SRCS})
-ament_target_dependencies(${PROJECT_NAME} PUBLIC
+set(dependencies
   cartographer
   cartographer_ros_msgs
   geometry_msgs
@@ -92,108 +107,107 @@ ament_target_dependencies(${PROJECT_NAME} PUBLIC
   rosbag2_cpp
   rosbag2_storage
   urdf
-  urdfdom_headers
+  urdfdom
 )
-add_subdirectory("cartographer_ros")
-target_link_libraries(${PROJECT_NAME} PUBLIC cartographer)
-ament_export_targets(${PROJECT_NAME}_targets HAS_LIBRARY_TARGET)
-ament_export_dependencies(
-  cartographer
-  cartographer_ros_msgs
-  geometry_msgs
-  nav_msgs
-  pcl_conversions
-  rclcpp
-  sensor_msgs
-  std_msgs
-  tf2
-  tf2_eigen
-  tf2_msgs
-  tf2_ros
-  visualization_msgs
-  rosbag2_compression
-  rosbag2_cpp
-  rosbag2_storage
-  urdf
-  urdfdom_headers)
+ament_target_dependencies(${PROJECT_NAME}
+  ${dependencies}
+  )
+target_link_libraries(${PROJECT_NAME} cartographer ${PCL_LIBRARIES})
 
-# Lua
-target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${LUA_INCLUDE_DIR})
+# Executables
+add_executable(cartographer_node src/node_main.cpp)
+target_link_libraries(cartographer_node ${PROJECT_NAME})
+ament_target_dependencies(cartographer_node ${dependencies})
 
-# PCL
-target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${PCL_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${PCL_LIBRARIES})
-set(BLACKLISTED_PCL_DEFINITIONS " -march=native -msse4.2 -mfpmath=sse ")
-foreach(DEFINITION ${PCL_DEFINITIONS})
-  list (FIND BLACKLISTED_PCL_DEFINITIONS "${DEFINITION}" DEFINITIONS_INDEX)
-  if (${DEFINITIONS_INDEX} GREATER -1)
-    continue()
-  endif()
-  set(TARGET_COMPILE_FLAGS "${TARGET_COMPILE_FLAGS} ${DEFINITION}")
-endforeach()
+add_executable(cartographer_occupancy_grid_node src/occupancy_grid_node_main.cpp)
+target_link_libraries(cartographer_occupancy_grid_node ${PROJECT_NAME})
+ament_target_dependencies(cartographer_occupancy_grid_node ${dependencies})
 
-# Eigen
-target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
-  "${EIGEN3_INCLUDE_DIR}")
+add_executable(cartographer_offline_node src/offline_node_main.cpp)
+target_link_libraries(cartographer_offline_node ${PROJECT_NAME})
+ament_target_dependencies(cartographer_offline_node ${dependencies})
 
-# Boost not in ros2
-target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
-  "${Boost_INCLUDE_DIRS}")
-target_link_libraries(${PROJECT_NAME} PUBLIC ${Boost_LIBRARIES})
+add_executable(cartographer_assets_writer src/assets_writer_main.cpp)
+target_link_libraries(cartographer_assets_writer ${PROJECT_NAME})
+ament_target_dependencies(cartographer_assets_writer ${dependencies})
 
-## URDFDOM in ros2 1.0
-target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${urdfdom_headers_INCLUDE_DIRS})
+add_executable(cartographer_pbstream_map_publisher src/pbstream_map_publisher_main.cpp)
+target_link_libraries(cartographer_pbstream_map_publisher ${PROJECT_NAME})
+ament_target_dependencies(cartographer_pbstream_map_publisher ${dependencies})
 
-# Add the binary directory first, so that port.h is included after it has
-# been generated.
-target_include_directories(${PROJECT_NAME} PUBLIC
-    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
-    $<INSTALL_INTERFACE:include>
+add_executable(cartographer_pbstream_to_ros_map src/pbstream_to_ros_map_main.cpp)
+target_link_libraries(cartographer_pbstream_to_ros_map ${PROJECT_NAME})
+ament_target_dependencies(cartographer_pbstream_to_ros_map ${dependencies})
+
+add_executable(cartographer_rosbag_validate src/rosbag_validate_main.cpp)
+target_link_libraries(cartographer_rosbag_validate ${PROJECT_NAME})
+ament_target_dependencies(cartographer_rosbag_validate ${dependencies})
+
+
+install(TARGETS
+  ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
-set(TARGET_COMPILE_FLAGS "${TARGET_COMPILE_FLAGS} ${GOOG_CXX_FLAGS}")
-set_target_properties(${PROJECT_NAME} PROPERTIES
-  COMPILE_FLAGS ${TARGET_COMPILE_FLAGS})
+install(TARGETS
+  cartographer_node
+  cartographer_occupancy_grid_node
+  cartographer_offline_node
+  cartographer_assets_writer
+  cartographer_pbstream_map_publisher
+  cartographer_pbstream_to_ros_map
+  cartographer_rosbag_validate
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
+
+install(DIRECTORY include/
+  DESTINATION include/
+)
 
 install(DIRECTORY configuration_files urdf launch
   DESTINATION share/${PROJECT_NAME}/
 )
 
-install(
-  FILES ${ALL_HEADERS}
-  DESTINATION include/${PROJECT_NAME}
-)
-
-install(
-  TARGETS ${PROJECT_NAME}
-  EXPORT ${PROJECT_NAME}_targets
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
-  INCLUDES DESTINATION include)
-
-ament_export_targets(${PROJECT_NAME}_targets HAS_LIBRARY_TARGET)
-ament_export_dependencies(
-  cartographer
-  cartographer_ros_msgs
-  geometry_msgs
-  nav_msgs
-  pcl_conversions
-  rclcpp
-  sensor_msgs
-  std_msgs
-  tf2
-  tf2_eigen
-  tf2_msgs
-  tf2_ros
-  visualization_msgs
-  rosbag2_compression
-  rosbag2_cpp
-  rosbag2_storage
-  urdf
-  urdfdom_headers)
-ament_export_libraries(${PROJECT_NAME})
 ament_export_include_directories(include)
-
+ament_export_libraries(${PROJECT_NAME})
+ament_export_dependencies(${dependencies})
 ament_package()
+
+# Non converted bin:
+#google_binary(cartographer_dev_pbstream_trajectories_to_rosbag
+#  SRCS
+#  dev/pbstream_trajectories_to_rosbag_main.cc
+#)
+
+#google_binary(cartographer_dev_rosbag_publisher
+#  SRCS
+#  dev/rosbag_publisher_main.cc
+#)
+
+
+#google_binary(cartographer_dev_trajectory_comparison
+#  SRCS
+#  dev/trajectory_comparison_main.cc
+#)
+
+
+## TODO(cschuet): Add support for shared library case.
+#if (${BUILD_GRPC})
+#  google_binary(cartographer_grpc_node
+#    SRCS
+#      cartographer_grpc/node_grpc_main.cc
+#  )
+
+
+#  google_binary(cartographer_grpc_offline_node
+#    SRCS
+#      cartographer_grpc/offline_node_grpc_main.cc
+#  )
+
+#  install(PROGRAMS
+#    ../scripts/cartographer_grpc_server.sh
+#    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+#  )
+#endif()
