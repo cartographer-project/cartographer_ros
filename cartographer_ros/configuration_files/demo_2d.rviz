@@ -5,14 +5,12 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /RobotModel1/Status1
         - /RobotModel1/Description Topic1
         - /TF1/Tree1
-        - /TF1/Tree1/map1
-        - /TF1/Tree1/map1/odom1
         - /map1/Topic1
         - /SubmapsDisplay1/Submaps1
         - /Trajectories1/Namespaces1
+        - /Constraints1/Namespaces1
       Splitter Ratio: 0.42203986644744873
     Tree Height: 1174
   - Class: rviz_common/Selection
@@ -37,7 +35,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: PointCloud2
+    SyncSource: ""
 Visualization Manager:
   Class: ""
   Displays:
@@ -59,25 +57,6 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        horizontal_laser_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        imu_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        vertical_laser_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
       Name: RobotModel
       TF Prefix: ""
       Update Interval: 0
@@ -88,28 +67,13 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        base_link:
-          Value: false
-        horizontal_laser_link:
-          Value: true
-        imu_link:
-          Value: true
-        map:
-          Value: true
-        odom:
-          Value: true
-        vertical_laser_link:
-          Value: true
       Marker Scale: 0.30000001192092896
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        map:
-          odom:
-            horizontal_laser_link:
-              {}
+        {}
       Update Interval: 0
       Value: true
     - Alpha: 0.699999988079071
@@ -178,23 +142,180 @@ Visualization Manager:
         All: true
         All Submap Pose Markers: true
         Trajectory 0:
-          0.70: true
-          1.70: true
-          10.70: true
-          11.70: true
-          12.70: true
-          13.70: true
-          14.70: true
-          15.68: true
-          16.33: true
-          2.70: true
-          3.70: true
-          4.70: true
-          5.70: true
-          6.70: true
-          7.70: true
-          8.70: true
-          9.70: true
+          0.60: true
+          1.60: true
+          10.60: true
+          100.60: true
+          101.60: true
+          102.60: true
+          103.60: true
+          104.60: true
+          105.60: true
+          106.60: true
+          107.60: true
+          108.60: true
+          109.60: true
+          11.60: true
+          110.60: true
+          111.60: true
+          112.60: true
+          113.60: true
+          114.60: true
+          115.60: true
+          116.60: true
+          117.60: true
+          118.60: true
+          119.60: true
+          12.60: true
+          120.60: true
+          121.60: true
+          122.60: true
+          123.60: true
+          124.60: true
+          125.60: true
+          126.60: true
+          127.60: true
+          128.60: true
+          129.60: true
+          13.60: true
+          130.60: true
+          131.60: true
+          132.60: true
+          133.60: true
+          134.60: true
+          135.60: true
+          136.60: true
+          137.60: true
+          138.60: true
+          139.60: true
+          14.60: true
+          140.60: true
+          141.60: true
+          142.60: true
+          143.60: true
+          144.60: true
+          145.60: true
+          146.60: true
+          147.60: true
+          148.60: true
+          149.60: true
+          15.60: true
+          150.60: true
+          151.60: true
+          152.60: true
+          153.60: true
+          154.60: true
+          155.60: true
+          156.60: true
+          157.60: true
+          158.60: true
+          159.60: true
+          16.60: true
+          160.60: true
+          161.60: true
+          162.60: true
+          163.60: true
+          164.60: true
+          165.60: true
+          166.60: true
+          167.60: true
+          168.60: true
+          169.60: true
+          17.60: true
+          170.60: true
+          171.60: true
+          172.43: true
+          173.13: true
+          18.60: true
+          19.60: true
+          2.60: true
+          20.60: true
+          21.60: true
+          22.60: true
+          23.60: true
+          24.60: true
+          25.60: true
+          26.60: true
+          27.60: true
+          28.60: true
+          29.60: true
+          3.60: true
+          30.60: true
+          31.60: true
+          32.60: true
+          33.60: true
+          34.60: true
+          35.60: true
+          36.60: true
+          37.60: true
+          38.60: true
+          39.60: true
+          4.60: true
+          40.60: true
+          41.60: true
+          42.60: true
+          43.60: true
+          44.60: true
+          45.60: true
+          46.60: true
+          47.60: true
+          48.60: true
+          49.60: true
+          5.60: true
+          50.60: true
+          51.60: true
+          52.60: true
+          53.60: true
+          54.60: true
+          55.60: true
+          56.60: true
+          57.60: true
+          58.60: true
+          59.60: true
+          6.60: true
+          60.60: true
+          61.60: true
+          62.60: true
+          63.60: true
+          64.60: true
+          65.60: true
+          66.60: true
+          67.60: true
+          68.60: true
+          69.60: true
+          7.60: true
+          70.60: true
+          71.60: true
+          72.60: true
+          73.60: true
+          74.60: true
+          75.60: true
+          76.60: true
+          77.60: true
+          78.60: true
+          79.60: true
+          8.60: true
+          80.60: true
+          81.60: true
+          82.60: true
+          83.60: true
+          84.60: true
+          85.60: true
+          86.60: true
+          87.60: true
+          88.60: true
+          89.60: true
+          9.60: true
+          90.60: true
+          91.60: true
+          92.60: true
+          93.60: true
+          94.60: true
+          95.60: true
+          96.60: true
+          97.60: true
+          98.60: true
+          99.60: true
           Submap Pose Markers: true
           Value: true
       Topic:
@@ -204,7 +325,7 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /submap_list
-      Tracking frame: odom
+      Tracking frame: map
       Value: true
     - Class: rviz_default_plugins/MarkerArray
       Enabled: false
@@ -294,7 +415,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/ThirdPersonFollower
-      Distance: 29.796886444091797
+      Distance: 204.58663940429688
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
