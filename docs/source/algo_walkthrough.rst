@@ -278,7 +278,7 @@ The resulting net is called the "*pose graph*".
 
 - Non-global constraints (also known as intra submaps constraints) are built automatically between nodes that are closely following each other on a trajectory.
   Intuitively, those "*non-global ropes*" keep the local structure of the trajectory coherent.
-- Global constraints (also referred to as loop closure constraints or inter submaps contraints) are regularly searched between a new submap and previous nodes that are considered "*close enough*" in space (part of a certain **search window**) and a strong fit (a good match when running scan matching).
+- Global constraints (also referred to as loop closure constraints or inter submaps constraints) are regularly searched between a new submap and previous nodes that are considered "*close enough*" in space (part of a certain **search window**) and a strong fit (a good match when running scan matching).
   Intuitively, those "*global ropes*" introduce knots in the structure and firmly bring two strands closer.
 
 .. code-block:: lua
