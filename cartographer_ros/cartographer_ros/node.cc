@@ -771,7 +771,8 @@ void Node::HandleOdometryMessage(const int trajectory_id,
   }
   auto sensor_bridge_ptr = map_builder_bridge_.sensor_bridge(trajectory_id);
   auto odometry_data_ptr = sensor_bridge_ptr->ToOdometryData(msg);
-  if (odometry_data_ptr != nullptr) {
+  if (odometry_data_ptr != nullptr &&
+      !sensor_bridge_ptr->IgnoreMessage(sensor_id, odometry_data_ptr->time)) {
     extrapolators_.at(trajectory_id).AddOdometryData(*odometry_data_ptr);
   }
   sensor_bridge_ptr->HandleOdometryMessage(sensor_id, msg);
@@ -808,7 +809,8 @@ void Node::HandleImuMessage(const int trajectory_id,
   }
   auto sensor_bridge_ptr = map_builder_bridge_.sensor_bridge(trajectory_id);
   auto imu_data_ptr = sensor_bridge_ptr->ToImuData(msg);
-  if (imu_data_ptr != nullptr) {
+  if (imu_data_ptr != nullptr &&
+      !sensor_bridge_ptr->IgnoreMessage(sensor_id, imu_data_ptr->time)) {
     extrapolators_.at(trajectory_id).AddImuData(*imu_data_ptr);
   }
   sensor_bridge_ptr->HandleImuMessage(sensor_id, msg);
