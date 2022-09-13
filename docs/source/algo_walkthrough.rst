@@ -253,7 +253,7 @@ Scan matching starts by aligning far points of the low resolution point cloud wi
 Global SLAM
 -----------
 
-While the local SLAM generates its succession of submaps, a global optimization (usually refered to as "*the optimization problem*" or "*sparse pose adjustment*") task runs in background.
+While the local SLAM generates its succession of submaps, a global optimization (usually referred to as "*the optimization problem*" or "*sparse pose adjustment*") task runs in background.
 Its role is to re-arrange submaps between each other so that they form a coherent global map.
 For instance, this optimization is in charge of altering the currently built trajectory to properly align submaps with regards to loop closures.
 
@@ -269,7 +269,7 @@ The optimization is run in batches once a certain number of trajectory nodes was
 
 The global SLAM is a kind of "*GraphSLAM*", it is essentially a pose graph optimization which works by building **constraints** between **nodes** and submaps and then optimizing the resulting constraints graph.
 Constraints can intuitively be thought of as little ropes tying all nodes together.
-The sparse pose adjustement fastens those ropes altogether.
+The sparse pose adjustment fastens those ropes altogether.
 The resulting net is called the "*pose graph*".
 
 .. note::

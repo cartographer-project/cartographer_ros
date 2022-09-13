@@ -66,7 +66,7 @@ You can then use Cartographer as part of your calibration process to improve the
 Multi-trajectories SLAM
 =======================
 
-Cartographer can perform SLAM from multiple robots emiting data in parallel.
+Cartographer can perform SLAM from multiple robots emitting data in parallel.
 The global SLAM is able to detect shared paths and will merge the maps built by the different robots as soon as it becomes possible.
 This is achieved through the usage of two ROS services ``start_trajectory`` and ``finish_trajectory``. (refer to the ROS API reference documentation for more details on their usage)
 
