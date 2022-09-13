@@ -41,10 +41,11 @@ const std::string& CheckNoLeadingSlash(const std::string& frame_id) {
 
 SensorBridge::SensorBridge(
     const int num_subdivisions_per_laser_scan,
-    const std::string& tracking_frame,
+    const bool ignore_out_of_order_messages, const std::string& tracking_frame,
     const double lookup_transform_timeout_sec, tf2_ros::Buffer* const tf_buffer,
     carto::mapping::TrajectoryBuilderInterface* const trajectory_builder)
     : num_subdivisions_per_laser_scan_(num_subdivisions_per_laser_scan),
+      ignore_out_of_order_messages_(ignore_out_of_order_messages),
       tf_bridge_(tracking_frame, lookup_transform_timeout_sec, tf_buffer),
       trajectory_builder_(trajectory_builder) {}
 
@@ -61,11 +62,31 @@ std::unique_ptr<carto::sensor::OdometryData> SensorBridge::ToOdometryData(
           time, ToRigid3d(msg->pose.pose) * sensor_to_tracking->inverse()});
 }
 
+bool SensorBridge::IgnoreMessage(const std::string& sensor_id,
+                                 cartographer::common::Time sensor_time) {
+  if (!ignore_out_of_order_messages_) {
+    return false;
+  }
+  auto it = latest_sensor_time_.find(sensor_id);
+  if (it == latest_sensor_time_.end()) {
+    return false;
+  }
+  return sensor_time <= it->second;
+}
+
 void SensorBridge::HandleOdometryMessage(
     const std::string& sensor_id, const nav_msgs::Odometry::ConstPtr& msg) {
   std::unique_ptr<carto::sensor::OdometryData> odometry_data =
       ToOdometryData(msg);
   if (odometry_data != nullptr) {
+    if (IgnoreMessage(sensor_id, odometry_data->time)) {
+      LOG(WARNING) << "Ignored odometry message from sensor " << sensor_id
+                   << " because sensor time " << odometry_data->time
+                   << " is not before last odometry message time "
+                   << latest_sensor_time_[sensor_id];
+      return;
+    }
+    latest_sensor_time_[sensor_id] = odometry_data->time;
     trajectory_builder_->AddSensorData(
         sensor_id,
         carto::sensor::OdometryData{odometry_data->time, odometry_data->pose});
@@ -146,6 +167,14 @@ void SensorBridge::HandleImuMessage(const std::string& sensor_id,
                                     const sensor_msgs::Imu::ConstPtr& msg) {
   std::unique_ptr<carto::sensor::ImuData> imu_data = ToImuData(msg);
   if (imu_data != nullptr) {
+    if (IgnoreMessage(sensor_id, imu_data->time)) {
+      LOG(WARNING) << "Ignored IMU message from sensor " << sensor_id
+                   << " because sensor time " << imu_data->time
+                   << " is not before last IMU message time "
+                   << latest_sensor_time_[sensor_id];
+      return;
+    }
+    latest_sensor_time_[sensor_id] = imu_data->time;
     trajectory_builder_->AddSensorData(
         sensor_id,
         carto::sensor::ImuData{imu_data->time, imu_data->linear_acceleration,
@@ -232,6 +261,14 @@ void SensorBridge::HandleRangefinder(
   const auto sensor_to_tracking =
       tf_bridge_.LookupToTracking(time, CheckNoLeadingSlash(frame_id));
   if (sensor_to_tracking != nullptr) {
+    if (IgnoreMessage(sensor_id, time)) {
+      LOG(WARNING) << "Ignored Rangefinder message from sensor " << sensor_id
+                   << " because sensor time " << time
+                   << " is not before last Rangefinder message time "
+                   << latest_sensor_time_[sensor_id];
+      return;
+    }
+    latest_sensor_time_[sensor_id] = time;
     trajectory_builder_->AddSensorData(
         sensor_id, carto::sensor::TimedPointCloudData{
                        time, sensor_to_tracking->translation().cast<float>(),

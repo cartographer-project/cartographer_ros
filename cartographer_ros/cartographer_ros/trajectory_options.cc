@@ -76,6 +76,12 @@ TrajectoryOptions CreateTrajectoryOptions(
       lua_parameter_dictionary->GetDouble("imu_sampling_ratio");
   options.landmarks_sampling_ratio =
       lua_parameter_dictionary->GetDouble("landmarks_sampling_ratio");
+  if (lua_parameter_dictionary->HasKey("ignore_out_of_order")) {
+    options.ignore_out_of_order_messages =
+        lua_parameter_dictionary->GetBool("ignore_out_of_order");
+  } else {
+    options.ignore_out_of_order_messages = false;
+  }
   CheckTrajectoryOptions(options);
   return options;
 }

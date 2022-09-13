@@ -43,8 +43,9 @@ namespace cartographer_ros {
 class SensorBridge {
  public:
   explicit SensorBridge(
-      int num_subdivisions_per_laser_scan, const std::string& tracking_frame,
-      double lookup_transform_timeout_sec, tf2_ros::Buffer* tf_buffer,
+      int num_subdivisions_per_laser_scan, bool ignore_out_of_order_messages,
+      const std::string& tracking_frame, double lookup_transform_timeout_sec,
+      tf2_ros::Buffer* tf_buffer,
       ::cartographer::mapping::TrajectoryBuilderInterface* trajectory_builder);
 
   SensorBridge(const SensorBridge&) = delete;
@@ -73,6 +74,8 @@ class SensorBridge {
                                 const sensor_msgs::PointCloud2::ConstPtr& msg);
 
   const TfBridge& tf_bridge() const;
+  bool IgnoreMessage(const std::string& sensor_id,
+                     ::cartographer::common::Time sensor_time);
 
  private:
   void HandleLaserScan(
@@ -85,8 +88,10 @@ class SensorBridge {
                          const ::cartographer::sensor::TimedPointCloud& ranges);
 
   const int num_subdivisions_per_laser_scan_;
+  const bool ignore_out_of_order_messages_;
   std::map<std::string, cartographer::common::Time>
       sensor_to_previous_subdivision_time_;
+  std::map<std::string, cartographer::common::Time> latest_sensor_time_;
   const TfBridge tf_bridge_;
   ::cartographer::mapping::TrajectoryBuilderInterface* const
       trajectory_builder_;
