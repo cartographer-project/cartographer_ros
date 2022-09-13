@@ -338,7 +338,7 @@ The weights and Ceres options can be configured as described in the :ref:`local-
 
 .. note::
 
-    One can find useful information about the residuals used in the optimization problem by toggling ``POSE_GRAPH.max_num_final_iterations``
+    One can find useful information about the residuals used in the optimization problem by toggling ``POSE_GRAPH.log_residual_histograms``
 
 As part of its IMU residual, the optimization problem gives some flexibility to the IMU pose and, by default, Ceres is free to optimize the extrinsic calibration between your IMU and tracking frame.
 If you don't trust your IMU pose, the results of Ceres' global optimization can be logged and used to improve your extrinsic calibration.
