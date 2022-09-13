@@ -153,7 +153,7 @@ Sources of data include occupied space (points from the scan), translation and r
 
 .. code-block:: lua
 
-    TRAJECTORY_BUILDER_3D.ceres_scan_matcher.occupied_space_weight
+    TRAJECTORY_BUILDER_2D.ceres_scan_matcher.occupied_space_weight
     TRAJECTORY_BUILDER_3D.ceres_scan_matcher.occupied_space_weight_0
     TRAJECTORY_BUILDER_3D.ceres_scan_matcher.occupied_space_weight_1
     TRAJECTORY_BUILDER_nD.ceres_scan_matcher.translation_weight
