@@ -36,7 +36,8 @@ ADD https://api.github.com/repos/cartographer-project/cartographer/git/refs/head
 COPY cartographer_ros.rosinstall cartographer_ros/
 COPY scripts/prepare_catkin_workspace.sh cartographer_ros/scripts/
 RUN CARTOGRAPHER_VERSION=$CARTOGRAPHER_VERSION \
-    cartographer_ros/scripts/prepare_catkin_workspace.sh
+    cartographer_ros/scripts/prepare_catkin_workspace.sh && \
+    sed -i -e "s%<depend>libabsl-dev</depend>%<\!--<depend>libabsl-dev</depend>-->%g" catkin_ws/src/cartographer/package.xml
 
 # rosdep needs the updated package.xml files to install the correct debs.
 COPY cartographer_ros/package.xml catkin_ws/src/cartographer_ros/cartographer_ros/
