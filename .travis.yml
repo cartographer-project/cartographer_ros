@@ -22,7 +22,6 @@ cache:
     - /home/travis/docker/
 
 env:
-  - ROS_RELEASE=kinetic DOCKER_CACHE_FILE=/home/travis/docker/kinetic-cache.tar.gz
   - ROS_RELEASE=melodic DOCKER_CACHE_FILE=/home/travis/docker/melodic-cache.tar.gz
   - ROS_RELEASE=noetic DOCKER_CACHE_FILE=/home/travis/docker/noetic-cache.tar.gz
 
