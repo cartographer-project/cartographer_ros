@@ -14,23 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Cache intermediate Docker layers. For a description of how this works, see:
+# https://giorgos.sealabs.net/docker-cache-on-travis-and-docker-112.html
+
 set -o errexit
 set -o verbose
+set -o pipefail
 
-# Install CMake, Ninja, stow.
-sudo apt-get update
-sudo apt-get install -y lsb-release cmake ninja-build stow
-
-# Install GMock library and header files for newer distributions.
-if [[ "$(lsb_release -sc)" = "focal" || "$(lsb_release -sc)" = "buster" ]]
-then
-  sudo apt-get install -y libgmock-dev
+if [ "$#" -ne 1 ]; then
+  echo "Please provide an access token to $0" 1>&2
+  exit 1
 fi
+token=$1
 
-. /opt/ros/${ROS_DISTRO}/setup.sh
+CARTOGRAPHER_SHA=$(curl -s -H 'Authorization: token ${token}' https://api.github.com/repos/cartographer-project/cartographer/git/refs/heads/master | jq -j '.object.sha')
 
-cd catkin_ws
-
-# Install rosdep dependencies.
-rosdep update
-rosdep install --from-paths src --ignore-src --rosdistro=${ROS_DISTRO} -y
+docker build ${TRAVIS_BUILD_DIR} -t cartographer_ros:${ROS_RELEASE} -f Dockerfile.${ROS_RELEASE} --build-arg CARTOGRAPHER_SHA=${CARTOGRAPHER_SHA}

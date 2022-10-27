@@ -45,10 +45,10 @@ at `our Contribution page`_.
 
 .. _our Contribution page: https://github.com/cartographer-project/cartographer_ros/blob/master/CONTRIBUTING.md
 
-.. |build| image:: https://travis-ci.org/cartographer-project/cartographer_ros.svg?branch=master
+.. |build| image:: https://app.travis-ci.com/cartographer-project/cartographer_ros.svg?branch=master
     :alt: Build Status
     :scale: 100%
-    :target: https://travis-ci.org/cartographer-project/cartographer_ros
+    :target: https://app.travis-ci.com/cartographer-project/cartographer_ros
 .. |docs| image:: https://readthedocs.org/projects/google-cartographer-ros/badge/?version=latest
     :alt: Documentation Status
     :scale: 100%

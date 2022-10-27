@@ -15,9 +15,7 @@
 FROM osrf/ros:noetic-desktop
 
 ARG CARTOGRAPHER_VERSION=master
-
-# We require a GitHub access token to be passed.
-ARG github_token
+ARG CARTOGRAPHER_SHA=LATEST
 
 # Prevent any interaction required by apt-get.
 # https://stackoverflow.com/questions/22466255
@@ -26,16 +24,15 @@ ARG DEBIAN_FRONTEND=noninteractive
 # ROS Noetic's base image doesn't ship with sudo and git.
 RUN apt-get update && apt-get install -y sudo git
 
-# First, we invalidate the entire cache if cartographer-project/cartographer has
-# changed. This file's content changes whenever master changes. See:
-# http://stackoverflow.com/questions/36996046/how-to-prevent-dockerfile-caching-git-clone
-ADD https://api.github.com/repos/cartographer-project/cartographer/git/refs/heads/master?access_token=$github_token \
-    cartographer_ros/cartographer_version.json
-
 # wstool needs the updated rosinstall file to clone the correct repos.
 COPY cartographer_ros.rosinstall cartographer_ros/
 COPY scripts/prepare_catkin_workspace.sh cartographer_ros/scripts/
-RUN CARTOGRAPHER_VERSION=$CARTOGRAPHER_VERSION \
+
+# First, we invalidate the entire cache if cartographer-project/cartographer has
+# changed. CARTOGRAPHER_SHA ARG content changes whenever master changes. See:
+# http://stackoverflow.com/questions/36996046/how-to-prevent-dockerfile-caching-git-clone
+RUN CARTOGRAPHER_SHA=$CARTOGRAPHER_SHA \
+    CARTOGRAPHER_VERSION=$CARTOGRAPHER_VERSION \
     cartographer_ros/scripts/prepare_catkin_workspace.sh && \
     sed -i -e "s%<depend>libabsl-dev</depend>%<\!--<depend>libabsl-dev</depend>-->%g" catkin_ws/src/cartographer/package.xml
 
