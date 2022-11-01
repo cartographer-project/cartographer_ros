@@ -122,8 +122,8 @@ std::unique_ptr<carto::io::PointsBatch> HandleMessage(
     const carto::transform::Rigid3f sensor_to_map =
         (tracking_to_map * sensor_to_tracking).cast<float>();
     points_batch->points.push_back(
-        sensor_to_map *
-        carto::sensor::ToRangefinderPoint(point_cloud.points[i]));
+        sensor_to_map * carto::sensor::ToRangefinderPoint(
+                            point_cloud.points[i], Eigen::Vector3f::Zero()));
     points_batch->intensities.push_back(point_cloud.intensities[i]);
     // We use the last transform for the origin, which is approximately correct.
     points_batch->origin = sensor_to_map * Eigen::Vector3f::Zero();
