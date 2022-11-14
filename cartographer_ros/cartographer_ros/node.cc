@@ -235,7 +235,7 @@ void Node::PublishLocalTrajectoryData(const ::ros::TimerEvent& timer_event) {
         carto::sensor::TimedPointCloud point_cloud;
         point_cloud.reserve(trajectory_data.local_slam_data->range_data_in_local
                                 .returns.size());
-        for (const cartographer::sensor::RangefinderPoint point :
+        for (const cartographer::sensor::RangefinderPoint& point :
              trajectory_data.local_slam_data->range_data_in_local.returns) {
           point_cloud.push_back(cartographer::sensor::ToTimedRangefinderPoint(
               point, 0.f /* time */));
