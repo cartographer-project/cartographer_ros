@@ -7,10 +7,12 @@ global_costmap:
   transform_tolerance: 0.5
 
   static_layer:
+    enabled: true
     map_topic: /map
     subscribe_to_updates: false
-  inflater_layer:
-    inflation_radius: 0.2
+  inflation_layer:
+    enabled: true
+    inflation_radius: 1.0
     cost_scaling_factor: 1.0
 
   plugins: 
