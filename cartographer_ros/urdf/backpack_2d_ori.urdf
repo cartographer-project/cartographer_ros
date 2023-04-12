@@ -15,10 +15,10 @@
 -->
 <robot name="cartographer_backpack_2d">
   <material name="orange">
-    <color rgba="1 0 0 0" />
+    <color rgba="1.0 0.5 0.2 1" />
   </material>
   <material name="gray">
-    <color rgba="1 0 0 0" />
+    <color rgba="0.2 0.2 0.2 1" />
   </material>
   <link name="base_link" />
 
@@ -32,7 +32,9 @@
     </visual>
   </link>
 
-  <joint name="laser_link_joint" type="fixed" >
+
+
+  <joint name="laser_baselink" type="fixed">
     <parent link="base_link" />
     <child link="laser" />
     <origin xyz="0. 0 0.0" />
