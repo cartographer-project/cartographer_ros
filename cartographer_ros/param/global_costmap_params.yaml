@@ -10,10 +10,6 @@ global_costmap:
     enabled: true
     map_topic: /map
     subscribe_to_updates: false
-  inflation_layer:
-    enabled: true
-    inflation_radius: 1.0
-    cost_scaling_factor: 1.0
 
   plugins: 
     - name: static_layer
