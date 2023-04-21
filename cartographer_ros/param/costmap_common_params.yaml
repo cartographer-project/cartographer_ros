@@ -1,4 +1,3 @@
-map_type: costmap
 obstacle_range: 3.0
 raytrace_range: 3.5
 
@@ -12,5 +11,4 @@ lethal_cost_threshold: 60
 #map_type: costmap
 obstacle_layer:
   observation_sources: scan
-  combination_method: 0
   scan: {sensor_frame: laser, data_type: LaserScan, topic: /scan, marking: true, clearing: true}

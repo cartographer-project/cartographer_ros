@@ -3,7 +3,7 @@ local_costmap:
   robot_base_frame: base_link
 
   update_frequency: 5.0
-  publish_frequency: 2.0
+  publish_frequency: 5.0
   transform_tolerance: 0.5  
 
   # static_map: false  
