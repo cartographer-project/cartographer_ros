@@ -18,10 +18,10 @@
     <arg name="load_state_filename" value="$(arg load_state_filename)"/>
   </include>
 
-   <!-- move_base -->
+  <!-- move_base -->
   <include file="$(find cartographer_ros)/launch/move_base.launch">
     <arg name="move_forward_only" value="$(arg move_forward_only)"/>
-  </include>
+  </include> 
 
   <!-- rviz -->
   <group if="$(arg open_rviz)"> 

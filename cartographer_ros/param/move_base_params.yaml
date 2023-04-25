@@ -1,9 +1,10 @@
 shutdown_costmaps: false
-controller_frequency: 2.0 # freq to publish cmd_vel
+controller_frequency: 20.0 # freq to publish cmd_vel
 planner_patience: 10.0 # time for planner to plan before clean
 controller_patience: 15.0 # time of effeciency control before clean
 conservative_reset_dist: 3.0
 planner_frequency: 1.0 # planning freq
 oscillation_timeout: 10.0 
 oscillation_distance: 0.2
-
+recovery_behaviors: false
+clearing_rotation_allowed: false
