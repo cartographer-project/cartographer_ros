@@ -29,4 +29,6 @@
           args="-d $(find cartographer_ros)/configuration_files/navigation.rviz"/>
   </group>
 
+  <!-- listener -->
+
 </launch>
