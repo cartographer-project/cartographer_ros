@@ -1,0 +1,34 @@
+<launch>
+  <!-- Arguments -->
+  <arg name="map_file" default="$(find cartographer_ros)/maps/map.yaml"/>
+  <arg name="load_state_filename" default="/home/lnc/mymap.pbstream"/>
+  <arg name="open_rviz" default="true"/>
+  <arg name="move_forward_only" default="false"/>
+
+
+  <!-- rplidar -->
+  <include file="$(find rplidar_ros)/launch/rplidar.launch">
+  </include>
+
+  <!-- pbstream_map_publisher -->
+  <node pkg="cartographer_ros" name="cartographer_pbstream_map_publisher" type="cartographer_pbstream_map_publisher" args="-pbstream_filename=/home/lnc/mymap.pbstream"/>
+
+   <!-- cartographer(AMCL) -->
+  <include file="$(find cartographer_ros)/launch/demo_backpack_2d_localization.launch">
+    <arg name="load_state_filename" value="$(arg load_state_filename)"/>
+  </include>
+
+  <!-- move_base -->
+  <include file="$(find cartographer_ros)/launch/move_base.launch">
+    <arg name="move_forward_only" value="$(arg move_forward_only)"/>
+  </include> 
+
+  <!-- rviz -->
+  <group if="$(arg open_rviz)"> 
+    <node pkg="rviz" type="rviz" name="rviz" required="true"
+          args="-d $(find cartographer_ros)/configuration_files/navigation.rviz"/>
+  </group>
+
+  <!-- listener -->
+
+</launch>

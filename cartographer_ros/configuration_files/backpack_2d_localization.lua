@@ -12,10 +12,10 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-include "backpack_2d.lua"
+include "revo_lds.lua"
 
 TRAJECTORY_BUILDER.pure_localization_trimmer = {
-  max_submaps_to_keep = 3,
+  max_submaps_to_keep = 2,
 }
 POSE_GRAPH.optimize_every_n_nodes = 20
 

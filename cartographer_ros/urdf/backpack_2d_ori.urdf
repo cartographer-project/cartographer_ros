@@ -15,16 +15,16 @@
 -->
 <robot name="cartographer_backpack_2d">
   <material name="orange">
-    <color rgba="1 0 0 0" />
+    <color rgba="1.0 0.5 0.2 1" />
   </material>
   <material name="gray">
-    <color rgba="1 0 0 0" />
+    <color rgba="0.2 0.2 0.2 1" />
   </material>
   <link name="base_link" />
 
   <link name="laser">
     <visual>
-      <origin xyz="0 0 0.54" />
+      <origin xyz="0 0 0" />
       <geometry>
         <cylinder length="0.05" radius="0.03" />
       </geometry>
@@ -32,11 +32,12 @@
     </visual>
   </link>
 
-  <joint name="laser_link_joint" type="fixed" >
+
+
+  <joint name="laser_baselink" type="fixed">
     <parent link="base_link" />
     <child link="laser" />
-    <!-- 寶元需要修改, 因lidar裝反-->
-    <origin xyz="0. 0 0.0" rpy="0 0 3.14159"/>
+    <origin xyz="0. 0 0.0" />
   </joint>
 
 </robot>
