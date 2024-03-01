@@ -141,6 +141,11 @@ If *provide_odom_frame* is enabled in the :doc:`configuration`, additionally a c
 (i.e. unaffected by loop closure) transform between the :doc:`configured
 <configuration>` *odom_frame* and *published_frame* will be provided.
 
+If *provide_odom_frame_only* is enabled in the :doc:`configuration`,a continuous
+(i.e. unaffected by loop closure) transform between the :doc:`configured
+<configuration>` *odom_frame* and *published_frame* will be provided. No transform 
+between  *map_frame* and *odom_frame* will be provided in this case.
+
 .. _robot_state_publisher: http://wiki.ros.org/robot_state_publisher
 .. _static_transform_publisher: http://wiki.ros.org/tf#static_transform_publisher
 .. _cartographer_ros_msgs/FinishTrajectory: https://github.com/cartographer-project/cartographer_ros/blob/master/cartographer_ros_msgs/srv/FinishTrajectory.srv

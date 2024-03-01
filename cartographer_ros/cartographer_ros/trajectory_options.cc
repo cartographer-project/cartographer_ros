@@ -52,6 +52,8 @@ TrajectoryOptions CreateTrajectoryOptions(
   options.odom_frame = lua_parameter_dictionary->GetString("odom_frame");
   options.provide_odom_frame =
       lua_parameter_dictionary->GetBool("provide_odom_frame");
+  options.provide_odom_frame_only =
+      lua_parameter_dictionary->GetBool("provide_odom_frame_only");
   options.use_odometry = lua_parameter_dictionary->GetBool("use_odometry");
   options.use_nav_sat = lua_parameter_dictionary->GetBool("use_nav_sat");
   options.use_landmarks = lua_parameter_dictionary->GetBool("use_landmarks");
