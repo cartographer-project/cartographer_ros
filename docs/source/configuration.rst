@@ -51,6 +51,10 @@ provide_odom_frame
   If enabled, the local, non-loop-closed, continuous pose will be published as
   the *odom_frame* in the *map_frame*.
 
+provide_odom_frame_only
+  If enable, the local, non-loop-closed, continuous pose will be published with 
+  *odom_frame* as root.
+
 publish_frame_projected_to_2d
   If enabled, the published pose will be restricted to a pure 2D pose (no roll,
   pitch, or z-offset). This prevents potentially unwanted out-of-plane poses in

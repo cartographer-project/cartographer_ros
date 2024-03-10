@@ -306,12 +306,21 @@ void Node::PublishLocalTrajectoryData(const ::ros::TimerEvent& timer_event) {
           stamped_transforms.push_back(stamped_transform);
 
           tf_broadcaster_.sendTransform(stamped_transforms);
-        } else {
+        } else if(!trajectory_data.trajectory_options.provide_odom_frame && !trajectory_data.trajectory_options.provide_odom_frame_only) {
           stamped_transform.header.frame_id = node_options_.map_frame;
           stamped_transform.child_frame_id =
               trajectory_data.trajectory_options.published_frame;
           stamped_transform.transform = ToGeometryMsgTransform(
               tracking_to_map * (*trajectory_data.published_to_tracking));
+          tf_broadcaster_.sendTransform(stamped_transform);
+        }
+        else if(!trajectory_data.trajectory_options.provide_odom_frame && trajectory_data.trajectory_options.provide_odom_frame_only) {
+          stamped_transform.header.frame_id =
+              trajectory_data.trajectory_options.odom_frame;
+          stamped_transform.child_frame_id =
+              trajectory_data.trajectory_options.published_frame;
+          stamped_transform.transform = ToGeometryMsgTransform(
+              tracking_to_local * (*trajectory_data.published_to_tracking));
           tf_broadcaster_.sendTransform(stamped_transform);
         }
       }
